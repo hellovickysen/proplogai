@@ -71,42 +71,37 @@ export default async function DashboardPage() {
   const topMistake = report && Array.isArray(report.recurring_mistakes) ? report.recurring_mistakes[0] : null;
 
   if (list.length === 0) {
+    const steps = [
+      { n: '1', t: 'Log your first trade', d: 'Pair, direction, and your P&L — that is all it takes.' },
+      { n: '2', t: 'Journal it', d: 'Add emotions, a confidence rating, notes and a screenshot.' },
+      { n: '3', t: 'Get AI coaching', d: 'Instant per-trade analysis, plus a coach report across all trades.' },
+    ];
     return (
-      <div className="px-6 py-10">
-        <h1 className="font-display text-2xl font-bold">Dashboard</h1>
-        <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
-          <div
-            className="mx-auto mb-5 grid h-14 w-14 place-items-center rounded-2xl text-2xl"
-            style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}
-          >
-            &#9636;
-          </div>
-          <h2 className="font-display text-xl font-bold">No trades yet</h2>
-          <p className="mx-auto mt-2 max-w-sm text-white/60">
-            Log your first trade and your stats, equity curve, and AI insights will appear here.
-          </p>
-          <Link
-            href="/dashboard/trades/new"
-            className="mt-6 inline-block rounded-xl px-5 py-2.5 font-semibold text-[#08080f]"
-            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-          >
-            + Log your first trade
-          </Link>
+      <div className="px-4 py-8 sm:px-6 sm:py-10">
+        <h1 className="font-display text-2xl font-bold">Welcome to PipMind 👋</h1>
+        <p className="mt-1 text-sm text-white/55">Let's get your journal started.</p>
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          {steps.map((st) => (
+            <div key={st.n} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="font-display text-2xl font-bold" style={gradientText}>{st.n}</div>
+              <h3 className="mt-2 font-display text-base font-semibold">{st.t}</h3>
+              <p className="mt-1 text-sm text-white/55">{st.d}</p>
+            </div>
+          ))}
         </div>
+        <Link href="/dashboard/trades/new" className="mt-7 inline-block rounded-xl px-5 py-2.5 font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+          + Log your first trade
+        </Link>
       </div>
     );
   }
 
   const recent = list.slice(0, 6);
   return (
-    <div className="px-6 py-8">
+    <div className="px-4 py-8 sm:px-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
-        <Link
-          href="/dashboard/trades/new"
-          className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]"
-          style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-        >
+        <Link href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
           + New Trade
         </Link>
       </div>

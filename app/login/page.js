@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -13,6 +13,13 @@ export default function LoginPage() {
   const [error, setError] = useState(null);
   const [msg, setMsg] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    try {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('signup') === '1' || p.get('mode') === 'signup') setMode('signup');
+    } catch (e) {}
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -47,14 +54,8 @@ export default function LoginPage() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
-      <div
-        className="pointer-events-none absolute -left-24 -top-40 h-[55vw] w-[55vw] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.18), transparent 62%)', filter: 'blur(40px)' }}
-      />
-      <div
-        className="pointer-events-none absolute -bottom-40 -right-24 h-[55vw] w-[55vw] rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.14), transparent 62%)', filter: 'blur(40px)' }}
-      />
+      <div className="pointer-events-none absolute -left-24 -top-40 h-[55vw] w-[55vw] rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.18), transparent 62%)', filter: 'blur(40px)' }} />
+      <div className="pointer-events-none absolute -bottom-40 -right-24 h-[55vw] w-[55vw] rounded-full" style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.14), transparent 62%)', filter: 'blur(40px)' }} />
 
       <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.03] p-8">
         <Link href="/" className="mb-6 flex items-center gap-2.5">
@@ -70,51 +71,24 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
             <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60"
-              placeholder="you@email.com"
-            />
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60" placeholder="you@email.com" />
           </div>
           <div>
             <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Password</label>
-            <input
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60"
-              placeholder="At least 6 characters"
-            />
+            <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60" placeholder="At least 6 characters" />
           </div>
 
           {error ? <p className="text-sm text-red-400">{error}</p> : null}
           {msg ? <p className="text-sm text-emerald-400">{msg}</p> : null}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-1 rounded-xl px-4 py-2.5 font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5 disabled:opacity-60"
-            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-          >
+          <button type="submit" disabled={loading} className="mt-1 rounded-xl px-4 py-2.5 font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5 disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
             {loading ? 'Please wait...' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-white/50">
           {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
-          <button
-            onClick={() => {
-              setMode(mode === 'signin' ? 'signup' : 'signin');
-              setError(null);
-              setMsg(null);
-            }}
-            className="text-cyan-400 hover:underline"
-          >
+          <button onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); setMsg(null); }} className="text-cyan-400 hover:underline">
             {mode === 'signin' ? 'Sign up' : 'Sign in'}
           </button>
         </p>
