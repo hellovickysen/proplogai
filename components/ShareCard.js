@@ -113,12 +113,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
               {data.winRate != null && (
                 <StatPill label="Win Rate" value={data.winRate + '%'} />
               )}
-              {data.bestTrade != null && (
-                <StatPill label="Best" value={fmtMoney(data.bestTrade)} positive />
-              )}
-              {data.worstTrade != null && (
-                <StatPill label="Worst" value={fmtMoney(data.worstTrade)} />
-              )}
             </>
           ) : (
             <>
