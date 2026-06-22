@@ -6,6 +6,8 @@ import PnlCalendar from '@/components/PnlCalendar';
 
 export const dynamic = 'force-dynamic';
 
+const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+
 function EquityCurve({ series }) {
   if (!series || series.length < 2) {
     return (
@@ -23,8 +25,7 @@ function EquityCurve({ series }) {
   const stepX = (w - pad * 2) / (series.length - 1);
   const pts = series.map((v, i) => [pad + i * stepX, pad + (h - pad * 2) * (1 - (v - min) / range)]);
   const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
-  const area =
-    line + ' L ' + pts[pts.length - 1][0].toFixed(1) + ' ' + (h - pad) + ' L ' + pts[0][0].toFixed(1) + ' ' + (h - pad) + ' Z';
+  const area = line + ' L ' + pts[pts.length - 1][0].toFixed(1) + ' ' + (h - pad) + ' L ' + pts[0][0].toFixed(1) + ' ' + (h - pad) + ' Z';
   return (
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-[200px] w-full">
       <defs>
@@ -59,6 +60,15 @@ export default async function DashboardPage() {
   const list = trades || [];
   const s = computeStats(list);
   const series = equitySeries(list);
+  const { data: coach } = await supabase
+    .from('ai_insights')
+    .select('*')
+    .eq('type', 'coach_report')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const report = coach && coach.mistakes ? coach.mistakes : null;
+  const topMistake = report && Array.isArray(report.recurring_mistakes) ? report.recurring_mistakes[0] : null;
 
   if (list.length === 0) {
     return (
@@ -73,7 +83,7 @@ export default async function DashboardPage() {
           </div>
           <h2 className="font-display text-xl font-bold">No trades yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-white/60">
-            Log your first trade and your stats, equity curve, and (soon) AI insights will appear here.
+            Log your first trade and your stats, equity curve, and AI insights will appear here.
           </p>
           <Link
             href="/dashboard/trades/new"
@@ -117,6 +127,28 @@ export default async function DashboardPage() {
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <PnlCalendar trades={list} />
         </div>
+      </div>
+
+      <div className="mb-6 rounded-2xl border border-white/15 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-5">
+        <div className="flex items-center justify-between">
+          <div className="font-display text-base font-semibold" style={gradientText}>&#10022; AI Coach</div>
+          <Link href="/dashboard/coach" className="font-mono text-xs text-cyan-400">Open &rarr;</Link>
+        </div>
+        {report ? (
+          <div className="mt-2">
+            {coach.summary ? <p className="text-sm leading-relaxed text-white/80">{coach.summary}</p> : null}
+            {topMistake ? (
+              <p className="mt-2 text-xs text-white/50">
+                Top recurring leak: <span className="text-white/80">{topMistake.pattern}</span>
+                {topMistake.frequency ? ' (' + topMistake.frequency + ')' : ''}
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          <p className="mt-2 text-sm leading-relaxed text-white/55">
+            Generate a coaching report to see your recurring mistakes and trading psychology across all your trades.
+          </p>
+        )}
       </div>
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
