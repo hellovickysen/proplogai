@@ -113,6 +113,13 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       setError(res.error);
       setSaving(false);
     } else {
+      if (typeof window !== 'undefined' && window.posthog) {
+        window.posthog.capture(mode === 'edit' ? 'trade_updated' : 'trade_created', {
+          pair: form.pair,
+          direction: form.direction,
+          has_journal: !!(payload.journal),
+        });
+      }
       router.push(mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades');
       router.refresh();
     }

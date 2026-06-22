@@ -14,6 +14,14 @@ export default async function DashboardLayout({ children }) {
   } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // Check onboarding status (skip for the onboarding page itself)
+  const { data: prefs } = await supabase
+    .from('user_preferences')
+    .select('onboarding_complete')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const needsOnboarding = !prefs || !prefs.onboarding_complete;
+
   const today = new Date().toISOString().slice(0, 10);
   const { data: trades } = await supabase.from('trades').select('pnl, closed_at, created_at');
   let todayPnl = 0;
@@ -22,6 +30,11 @@ export default async function DashboardLayout({ children }) {
     if (raw.slice(0, 10) === today) todayPnl += num(t.pnl);
   });
   const tone = todayPnl >= 0 ? 'text-emerald-400' : 'text-red-400';
+
+  // Onboarding gets a clean full-screen layout (no sidebar/header)
+  if (needsOnboarding) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex min-h-screen">

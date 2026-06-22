@@ -17,6 +17,9 @@ export default function AnalyzeButton({ tradeId, label }) {
       setError(res.error);
       setBusy(false);
     } else {
+      if (typeof window !== 'undefined' && window.posthog) {
+        window.posthog.capture('ai_analysis_run', { trade_id: tradeId });
+      }
       router.refresh();
       setBusy(false);
     }
