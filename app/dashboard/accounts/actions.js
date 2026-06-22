@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { createAccount, getHistoricalTrades } from '@/lib/metaapi';
+import { createAccount, deployAccount, getHistoricalTrades } from '@/lib/metaapi';
 
 function numOrNull(v) {
   if (v === null || v === undefined || v === '') return null;
@@ -44,6 +44,9 @@ export async function connectAccount(form) {
     return { error: 'MetaApi did not return an account id. Response: ' + JSON.stringify(acc).slice(0, 200) };
   }
 
+  // Kick off deployment so the account connects to the broker.
+  await deployAccount(metaapiId);
+
   const { error } = await supabase.from('accounts').insert({
     user_id: user.id,
     broker: form.broker || null,
@@ -52,7 +55,7 @@ export async function connectAccount(form) {
     name: form.name || 'MT5 ' + form.login,
     metaapi_id: metaapiId,
     region: form.region || 'new-york',
-    status: 'connected',
+    status: 'deploying',
   });
   if (error) return { error: error.message };
 
@@ -68,6 +71,9 @@ export async function syncAccount(accountRowId) {
   if (!acc) return { error: 'Account not found.' };
   if (!acc.metaapi_id) return { error: 'This account is not linked to MetaApi.' };
 
+  // Make sure the account is deployed (idempotent) before asking for history.
+  await deployAccount(acc.metaapi_id);
+
   let result;
   try {
     result = await getHistoricalTrades(acc.metaapi_id, acc.region);
@@ -75,7 +81,9 @@ export async function syncAccount(accountRowId) {
     return { error: (e && e.message) || 'Sync failed.' };
   }
   if (result.pending) {
-    return { error: 'Your account is still synchronizing on MetaApi. Give it a couple of minutes after connecting, then sync again.' };
+    return {
+      error: 'Your MT5 account is still deploying and connecting to the broker. First connect takes ~2-5 minutes — I have (re)started deployment, so wait a few minutes and click Sync again.',
+    };
   }
 
   const rows = [];
@@ -104,8 +112,8 @@ export async function syncAccount(accountRowId) {
   }
 
   if (!rows.length) {
-    await supabase.from('accounts').update({ last_synced_at: new Date().toISOString() }).eq('id', acc.id);
-    return { ok: true, imported: 0, message: 'No closed trades found yet (newly connected accounts can take a few minutes).' };
+    await supabase.from('accounts').update({ last_synced_at: new Date().toISOString(), status: 'connected' }).eq('id', acc.id);
+    return { ok: true, imported: 0, message: 'Connected, but no closed trades found yet. Place/close a trade on the demo account, then sync again.' };
   }
 
   const { error } = await supabase
@@ -113,7 +121,7 @@ export async function syncAccount(accountRowId) {
     .upsert(rows, { onConflict: 'user_id,external_id', ignoreDuplicates: true });
   if (error) return { error: error.message };
 
-  await supabase.from('accounts').update({ last_synced_at: new Date().toISOString() }).eq('id', acc.id);
+  await supabase.from('accounts').update({ last_synced_at: new Date().toISOString(), status: 'connected' }).eq('id', acc.id);
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/trades');
