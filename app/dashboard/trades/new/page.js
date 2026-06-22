@@ -12,7 +12,7 @@ export default async function NewTradePage() {
 
   const { data: prefs } = await supabase
     .from('user_preferences')
-    .select('custom_emotions, default_confidence')
+    .select('custom_emotions, default_confidence, custom_setups')
     .eq('user_id', user.id)
     .maybeSingle();
 

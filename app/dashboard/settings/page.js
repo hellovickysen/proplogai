@@ -11,7 +11,7 @@ export default async function SettingsPage() {
 
   const { data: prefs } = await supabase
     .from('user_preferences')
-    .select('*')
+    .select('*, custom_setups')
     .eq('user_id', user.id)
     .maybeSingle();
 

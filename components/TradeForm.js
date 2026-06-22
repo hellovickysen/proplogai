@@ -175,7 +175,18 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                 ))}
               </select>
             </div>
-            <div><label className={labelCls}>Setup</label><input className={field} value={form.setup} onChange={(e) => set('setup', e.target.value)} placeholder="e.g. London breakout" /></div>
+            <div>
+              <label className={labelCls}>Setup</label>
+              <select className={field} value={form.setup} onChange={(e) => set('setup', e.target.value)}>
+                <option value="">Select setup…</option>
+                {(prefs && prefs.custom_setups && prefs.custom_setups.length > 0
+                  ? prefs.custom_setups
+                  : ['Fib Level', 'London Low Sweep', 'London High Sweep', 'ChoCh On Line']
+                ).map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className={labelCls}>Session</label>
               <div className="flex gap-2">

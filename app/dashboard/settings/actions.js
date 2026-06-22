@@ -38,6 +38,7 @@ export async function savePreferences(payload) {
   const row = {
     user_id: user.id,
     custom_emotions: Array.isArray(payload.custom_emotions) ? payload.custom_emotions : [],
+    custom_setups: Array.isArray(payload.custom_setups) ? payload.custom_setups : [],
     default_confidence: Number(payload.default_confidence) || 0,
     avatar_url: payload.avatar_url || null,
     updated_at: new Date().toISOString(),
