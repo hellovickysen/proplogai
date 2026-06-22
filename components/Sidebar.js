@@ -6,9 +6,10 @@ import { usePathname } from 'next/navigation';
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades', icon: '☰', href: '/dashboard/trades' },
+  { label: 'Calendar', icon: '📅', href: '/dashboard/calendar' },
   { label: 'AI Coach', icon: '✦', href: '/dashboard/coach' },
   { label: 'Accounts', icon: '⇄', href: '/dashboard/accounts' },
-  { label: 'Settings', icon: '⚙', href: '#' },
+  { label: 'Settings', icon: '⚙', href: '/dashboard/settings' },
 ];
 
 export default function Sidebar() {

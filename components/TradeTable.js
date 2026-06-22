@@ -16,7 +16,7 @@ export default function TradeTable({ rows }) {
   }
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[640px] border-collapse text-sm">
+      <table className="w-full min-w-[700px] border-collapse text-sm">
         <thead>
           <tr className="text-left font-mono text-[11px] uppercase tracking-wider text-white/40">
             <th className="px-3 pb-3">Pair</th>
@@ -26,6 +26,7 @@ export default function TradeTable({ rows }) {
             <th className="px-3 pb-3">Exit</th>
             <th className="px-3 pb-3">R</th>
             <th className="px-3 pb-3">P&amp;L</th>
+            <th className="px-3 pb-3"></th>
           </tr>
         </thead>
         <tbody>
@@ -46,6 +47,9 @@ export default function TradeTable({ rows }) {
                 <td className="px-3 py-3 font-mono text-white/60">{t.exit_price != null ? t.exit_price : '—'}</td>
                 <td className={'px-3 py-3 font-mono ' + (win ? 'text-emerald-400' : 'text-red-400')}>{fmtR(t.r_multiple)}</td>
                 <td className={'px-3 py-3 font-mono ' + (win ? 'text-emerald-400' : 'text-red-400')}>{fmtMoney(t.pnl)}</td>
+                <td className="px-3 py-3 text-right">
+                  <Link href={'/dashboard/trades/' + t.id} className="font-mono text-xs text-cyan-400 hover:underline">Details &rarr;</Link>
+                </td>
               </tr>
             );
           })}
