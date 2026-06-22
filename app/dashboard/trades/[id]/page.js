@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { fmtMoney, fmtR, num } from '@/lib/stats';
 import JournalSection from '@/components/JournalSection';
 import DeleteTradeButton from '@/components/DeleteTradeButton';
+import ShareButton from '@/components/ShareButton';
 import AiInsight from '@/components/AiInsight';
 import AnalyzeButton from '@/components/AnalyzeButton';
 
@@ -73,6 +74,7 @@ export default async function TradeDetailPage({ params }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ShareButton type="trade" data={{ pnl: trade.pnl, pair: trade.pair, direction: trade.direction, entry_price: trade.entry_price, exit_price: trade.exit_price, setup: trade.setup, session: trade.session, trade_date: trade.trade_date || trade.closed_at || trade.created_at }} />
           <Link href={'/dashboard/trades/' + id + '/edit'} className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/60 hover:text-white">Edit trade</Link>
           <DeleteTradeButton tradeId={id} />
         </div>

@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { computeStats, equitySeries, fmtMoney, fmtR } from '@/lib/stats';
+import { computeStats, equitySeries, fmtMoney, fmtR, num } from '@/lib/stats';
 import TradeTable from '@/components/TradeTable';
 import PnlCalendar from '@/components/PnlCalendar';
+import DashboardShareButton from '@/components/DashboardShareButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -97,13 +98,37 @@ export default async function DashboardPage() {
   }
 
   const recent = list.slice(0, 6);
+
+  // Compute today's stats for share card
+  const today = new Date().toISOString().slice(0, 10);
+  const todayTrades = list.filter((t) => {
+    const d = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
+    return d === today;
+  });
+  const todayPnl = todayTrades.reduce((a, t) => a + num(t.pnl), 0);
+  const todayWins = todayTrades.filter((t) => num(t.pnl) >= 0).length;
+  const todayWinRate = todayTrades.length > 0 ? Math.round((todayWins / todayTrades.length) * 100) : 0;
+  const todayBest = todayTrades.length > 0 ? Math.max(...todayTrades.map((t) => num(t.pnl))) : null;
+  const todayWorst = todayTrades.length > 0 ? Math.min(...todayTrades.map((t) => num(t.pnl))) : null;
+  const dailyShareData = {
+    pnl: todayPnl,
+    date: today,
+    trades: todayTrades.length,
+    winRate: todayWinRate,
+    bestTrade: todayBest,
+    worstTrade: todayWorst,
+  };
+
   return (
     <div className="px-4 py-8 sm:px-6">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
-        <Link href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-          + New Trade
-        </Link>
+        <div className="flex items-center gap-2">
+          {todayTrades.length > 0 && <DashboardShareButton data={dailyShareData} />}
+          <Link href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            + New Trade
+          </Link>
+        </div>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
