@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { analyzeTrade } from '@/app/dashboard/trades/actions';
+import { useToast } from '@/components/Toast';
 
 export default function AnalyzeButton({ tradeId, label }) {
+  const toast = useToast();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -15,8 +17,10 @@ export default function AnalyzeButton({ tradeId, label }) {
     const res = await analyzeTrade(tradeId);
     if (res && res.error) {
       setError(res.error);
+      if (toast) toast.error(res.error);
       setBusy(false);
     } else {
+      if (toast) toast.success('AI analysis complete!');
       if (typeof window !== 'undefined' && window.posthog) {
         window.posthog.capture('ai_analysis_run', { trade_id: tradeId });
       }

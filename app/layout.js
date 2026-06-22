@@ -1,5 +1,6 @@
 import './globals.css';
 import PostHogProvider from '@/components/PostHogProvider';
+import { ToastProvider } from '@/components/Toast';
 
 export const metadata = {
   title: 'PipMind — AI Forex Trading Journal',
@@ -18,7 +19,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <PostHogProvider>{children}</PostHogProvider>
+        <PostHogProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

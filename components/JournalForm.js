@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { saveJournal } from '@/app/dashboard/trades/actions';
 import Lightbox from '@/components/Lightbox';
 import { resolveEmotions } from '@/lib/emotions';
+import { useToast } from '@/components/Toast';
 
 /** Merge legacy screenshot_url + new screenshot_urls into one array. */
 function mergeUrls(initial) {
@@ -18,6 +19,7 @@ function mergeUrls(initial) {
 
 export default function JournalForm({ tradeId, userId, initial, prefs = null, onSaved = null }) {
   const EMOTIONS = resolveEmotions(prefs);
+  const toast = useToast();
   const router = useRouter();
   const [note, setNote] = useState((initial && initial.note) || '');
   const [emotions, setEmotions] = useState((initial && initial.emotions) || []);
@@ -75,8 +77,10 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
     });
     if (res && res.error) {
       setError(res.error);
+      if (toast) toast.error(res.error);
     } else {
       setMsg('Journal saved.');
+      if (toast) toast.success('Journal saved!');
       router.refresh();
       if (onSaved) setTimeout(() => onSaved(), 500);
     }

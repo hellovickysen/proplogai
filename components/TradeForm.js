@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { createTrade, updateTrade } from '@/app/dashboard/trades/actions';
 import { DEFAULT_EMOTIONS, resolveEmotions } from '@/lib/emotions';
+import { useToast } from '@/components/Toast';
 
 const PAIRS = ['XAU/USD', 'EUR/USD', 'GBP/USD', 'USD/JPY', 'GBP/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
 const TIMEFRAMES = ['M5', 'M15', 'H1', 'H4', 'D1'];
@@ -44,6 +45,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
+  const toast = useToast();
 
   function set(k, v) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -105,8 +107,10 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     const res = mode === 'edit' ? await updateTrade(tradeId, payload) : await createTrade(payload);
     if (res && res.error) {
       setError(res.error);
+      if (toast) toast.error(res.error);
       setSaving(false);
     } else {
+      if (toast) toast.success(mode === 'edit' ? 'Trade updated!' : 'Trade saved!');
       if (typeof window !== 'undefined' && window.posthog) {
         window.posthog.capture(mode === 'edit' ? 'trade_updated' : 'trade_created', {
           pair: form.pair,

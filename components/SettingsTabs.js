@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { changePassword, savePreferences } from '@/app/dashboard/settings/actions';
+import { useToast } from '@/components/Toast';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
 const DEFAULT_SETUPS = ['Fib Level', 'London Low Sweep', 'London High Sweep', 'ChoCh On Line'];
@@ -12,6 +13,7 @@ const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-w
 const card = 'rounded-2xl border border-white/10 bg-white/[0.03] p-6';
 
 function ProfileTab({ user, prefs }) {
+  const toast = useToast();
   const [pw, setPw] = useState('');
   const [pwConfirm, setPwConfirm] = useState('');
   const [pwSaving, setPwSaving] = useState(false);
@@ -30,8 +32,8 @@ function ProfileTab({ user, prefs }) {
     if (pw !== pwConfirm) { setPwErr('Passwords do not match.'); return; }
     setPwSaving(true);
     const res = await changePassword(pw);
-    if (res.error) setPwErr(res.error);
-    else { setPwMsg('Password updated!'); setPw(''); setPwConfirm(''); }
+    if (res.error) { setPwErr(res.error); if (toast) toast.error(res.error); }
+    else { setPwMsg('Password updated!'); setPw(''); setPwConfirm(''); if (toast) toast.success('Password updated!'); }
     setPwSaving(false);
   }
 
@@ -119,6 +121,7 @@ function ProfileTab({ user, prefs }) {
 }
 
 function JournalSettingsTab({ prefs, onSaved }) {
+  const toast = useToast();
   const existingEmotions = (prefs && prefs.custom_emotions && prefs.custom_emotions.length > 0)
     ? prefs.custom_emotions : DEFAULT_EMOTIONS;
   const existingSetups = (prefs && prefs.custom_setups && prefs.custom_setups.length > 0)
@@ -161,9 +164,10 @@ function JournalSettingsTab({ prefs, onSaved }) {
       default_confidence: defaultConfidence,
       avatar_url: (prefs && prefs.avatar_url) || null,
     });
-    if (res.error) setError(res.error);
+    if (res.error) { setError(res.error); if (toast) toast.error(res.error); }
     else {
       setMsg('Settings saved!');
+      if (toast) toast.success('Settings saved!');
       if (onSaved) onSaved({ custom_emotions: emotions, custom_setups: setups, default_confidence: defaultConfidence });
     }
     setSaving(false);
