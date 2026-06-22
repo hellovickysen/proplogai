@@ -35,7 +35,7 @@ export default function JournalSection({ tradeId, userId, journal, prefs }) {
       ) : hasJournal ? (
         <JournalView journal={journal} />
       ) : (
-        <p className="text-sm text-white/30">No journal entry yet. Click "Add journal" to record your emotions, notes, and screenshots.</p>
+        <p className="text-sm text-white/50">No journal entry yet. Click "Add journal" to record your emotions, notes, and screenshots.</p>
       )}
     </div>
   );

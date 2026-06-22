@@ -24,7 +24,7 @@ function fmtDateTime(d) {
 function Fact({ label, value }) {
   return (
     <div className="rounded-lg border border-white/10 bg-black/20 px-2.5 py-2">
-      <div className="font-mono text-[9px] uppercase tracking-wider text-white/35">{label}</div>
+      <div className="font-mono text-xs uppercase tracking-wider text-white/50">{label}</div>
       <div className="mt-0.5 font-mono text-sm">{value}</div>
     </div>
   );
@@ -63,13 +63,13 @@ export default async function TradeDetailPage({ params }) {
           <div>
             <h1 className="font-display text-xl font-bold">
               {trade.pair}{' '}
-              <span className={'ml-1 rounded px-2 py-0.5 align-middle font-mono text-[11px] ' + (trade.direction === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>
+              <span className={'ml-1 rounded px-2 py-0.5 align-middle font-mono text-xs ' + (trade.direction === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>
                 {(trade.direction || '').toUpperCase()}
               </span>
             </h1>
-            <div className="mt-0.5 font-mono text-[11px] text-white/35">
+            <div className="mt-0.5 font-mono text-xs text-white/50">
               {trade.trade_date || fmtDateTime(trade.closed_at || trade.created_at)}
-              {trade.session ? <span className="ml-2 text-white/25">· {trade.session}</span> : null}
+              {trade.session ? <span className="ml-2 text-white/45">· {trade.session}</span> : null}
             </div>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default async function TradeDetailPage({ params }) {
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <div className="flex items-end justify-between">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-wider text-white/35">Result</div>
+                <div className="font-mono text-xs uppercase tracking-wider text-white/50">Result</div>
                 <div className={'mt-0.5 font-display text-2xl font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>{fmtMoney(trade.pnl)}</div>
               </div>
               <div className={'font-mono text-base ' + (win ? 'text-emerald-400' : 'text-red-400')}>{fmtR(trade.r_multiple)}</div>
@@ -111,7 +111,7 @@ export default async function TradeDetailPage({ params }) {
           ) : (
             <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-5">
               <div className="font-display text-sm font-semibold" style={gradientText}>&#10022; AI Coach</div>
-              <p className="mb-3 mt-1.5 text-sm leading-relaxed text-white/50">
+              <p className="mb-3 mt-1.5 text-sm leading-relaxed text-white/55">
                 Get an instant AI breakdown of this trade — your mistakes, what went well, and the one fix that matters most.
               </p>
               <AnalyzeButton tradeId={id} />

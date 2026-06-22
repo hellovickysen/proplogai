@@ -8,7 +8,7 @@ const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'G
 const DEFAULT_SETUPS = ['Fib Level', 'London Low Sweep', 'London High Sweep', 'ChoCh On Line'];
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
-const labelCls = 'mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40';
+const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
 const card = 'rounded-2xl border border-white/10 bg-white/[0.03] p-6';
 
 function ProfileTab({ user, prefs }) {
@@ -74,7 +74,7 @@ function ProfileTab({ user, prefs }) {
             {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full items-center justify-center font-display text-2xl font-bold text-white/30">
+              <div className="flex h-full w-full items-center justify-center font-display text-2xl font-bold text-white/50">
                 {(user.email || '?')[0].toUpperCase()}
               </div>
             )}
@@ -92,7 +92,7 @@ function ProfileTab({ user, prefs }) {
         <div className="mb-4 font-display text-base font-semibold">Email</div>
         <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-3.5 py-2.5">
           <span className="text-sm text-white/70">{user.email}</span>
-          <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-[10px] text-emerald-300">verified</span>
+          <span className="ml-auto rounded-full bg-emerald-500/15 px-2 py-0.5 font-mono text-xs text-emerald-300">verified</span>
         </div>
       </div>
 
@@ -174,7 +174,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
       {/* Emotion tags */}
       <div className={card}>
         <div className="mb-1 font-display text-base font-semibold">Emotion tags</div>
-        <p className="mb-4 text-xs text-white/40">Customize the feelings you track in your journal.</p>
+        <p className="mb-4 text-xs text-white/55">Customize the feelings you track in your journal.</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {emotions.map((em, i) => (
             <span key={i} className="group flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200">
@@ -187,13 +187,13 @@ function JournalSettingsTab({ prefs, onSaved }) {
           <input className={field + ' max-w-xs'} value={newEmotion} onChange={(e) => setNewEmotion(e.target.value)} placeholder="e.g. Anxious, Excited…" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())} />
           <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
         </div>
-        <button type="button" onClick={resetEmotionDefaults} className="mt-3 text-xs text-white/30 underline hover:text-white/50">Reset to defaults</button>
+        <button type="button" onClick={resetEmotionDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
       </div>
 
       {/* Trade setups */}
       <div className={card}>
         <div className="mb-1 font-display text-base font-semibold">Trade setups</div>
-        <p className="mb-4 text-xs text-white/40">Your saved trading setups. These appear as a dropdown when logging trades.</p>
+        <p className="mb-4 text-xs text-white/55">Your saved trading setups. These appear as a dropdown when logging trades.</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {setups.map((s, i) => (
             <span key={i} className="group flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
@@ -206,19 +206,19 @@ function JournalSettingsTab({ prefs, onSaved }) {
           <input className={field + ' max-w-xs'} value={newSetup} onChange={(e) => setNewSetup(e.target.value)} placeholder="e.g. Order Block, Break & Retest…" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSetup())} />
           <button type="button" onClick={addSetup} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
         </div>
-        <button type="button" onClick={resetSetupDefaults} className="mt-3 text-xs text-white/30 underline hover:text-white/50">Reset to defaults</button>
+        <button type="button" onClick={resetSetupDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
       </div>
 
       {/* Default confidence */}
       <div className={card}>
         <div className="mb-1 font-display text-base font-semibold">Default confidence</div>
-        <p className="mb-4 text-xs text-white/40">Pre-fill confidence rating when logging a new trade.</p>
+        <p className="mb-4 text-xs text-white/55">Pre-fill confidence rating when logging a new trade.</p>
         <div className="flex gap-1 text-2xl">
           {[0, 1, 2, 3, 4, 5].map((i) =>
             i === 0 ? (
               <button key={i} type="button" onClick={() => setDefaultConfidence(0)} className={'rounded-lg border px-2 py-1 text-xs ' + (defaultConfidence === 0 ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 text-white/30')}>None</button>
             ) : (
-              <button key={i} type="button" onClick={() => setDefaultConfidence(i)} className={i <= defaultConfidence ? 'text-amber-400' : 'text-white/20'}>&#9733;</button>
+              <button key={i} type="button" onClick={() => setDefaultConfidence(i)} className={i <= defaultConfidence ? 'text-amber-400' : 'text-white/40'}>&#9733;</button>
             )
           )}
         </div>
@@ -247,7 +247,7 @@ export default function SettingsTabs({ user, prefs: initialPrefs }) {
     <div>
       <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={'flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ' + (tab === t.id ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/70')}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={'flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ' + (tab === t.id ? 'bg-white/10 text-white' : 'text-white/55 hover:text-white/70')}>
             {t.label}
           </button>
         ))}

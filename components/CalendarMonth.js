@@ -16,7 +16,6 @@ function fmtPnl(v) {
 }
 
 export default function CalendarMonth({ trades, year, month, selected, monthParam }) {
-  // Index trades by day
   const byDay = {};
   (trades || []).forEach((t) => {
     const raw = t.trade_date || t.closed_at || t.created_at;
@@ -30,8 +29,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
     byDay[day] = e;
   });
 
-  // Build week rows (Sunday-first)
-  const firstDow = new Date(Date.UTC(year, month, 1)).getUTCDay(); // 0=Sun
+  const firstDow = new Date(Date.UTC(year, month, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
   const weeks = [];
   let currentWeek = new Array(7).fill(null);
@@ -45,7 +43,6 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
   }
   weeks.push(currentWeek);
 
-  // Weekly summary
   function weekSummary(week) {
     let net = 0;
     let days = 0;
@@ -64,16 +61,11 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
         <thead>
           <tr>
             {DOW.map((d) => (
-              <th
-                key={d}
-                className="border-b border-white/[0.08] px-2 py-3 text-center font-mono text-[10px] font-normal uppercase tracking-widest text-white/30"
-              >
+              <th key={d} className="border-b border-white/[0.08] px-2 py-3 text-center font-mono text-xs font-medium uppercase tracking-widest text-white/50">
                 {d}
               </th>
             ))}
-            <th
-              className="w-28 border-b border-l border-white/[0.08] px-3 py-3 text-right font-mono text-[10px] font-normal uppercase tracking-widest text-white/30"
-            >
+            <th className="w-36 border-b border-l border-white/[0.08] px-4 py-3 text-right font-mono text-xs font-medium uppercase tracking-widest text-white/50">
               WEEKLY
             </th>
           </tr>
@@ -87,49 +79,55 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   const isLast = wi === weeks.length - 1;
                   const borderB = isLast ? '' : 'border-b';
                   const borderR = di < 6 ? 'border-r' : '';
+                  const e = byDay[d];
+
+                  // Color the cell border based on P&L
+                  let cellBorderColor = 'border-white/[0.06]';
+                  if (d !== null && e) {
+                    cellBorderColor = e.net >= 0
+                      ? 'border-emerald-400/30'
+                      : 'border-red-400/30';
+                  }
 
                   if (d === null) {
                     return (
                       <td key={di} className={borderB + ' ' + borderR + ' border-white/[0.06] p-0'}>
-                        <div className="h-24 bg-white/[0.01]" />
+                        <div className="h-28 bg-white/[0.01]" />
                       </td>
                     );
                   }
 
-                  const e = byDay[d];
                   const dateStr = year + '-' + pad2(month + 1) + '-' + pad2(d);
                   const isSel = selected === dateStr;
 
                   const cellContent = (
                     <div
                       className={
-                        'relative flex h-24 flex-col justify-between p-2 transition-colors ' +
+                        'relative flex h-28 flex-col justify-between p-2.5 transition-colors ' +
                         (e ? 'cursor-pointer hover:bg-white/[0.04]' : 'bg-white/[0.015]') +
                         (isSel ? ' bg-white/[0.06]' : '')
                       }
                     >
-                      {/* Day number */}
-                      <span className={'font-mono text-xs ' + (e ? 'text-white/50' : 'text-white/20')}>
+                      <span className={'text-sm font-medium ' + (e ? 'text-white/60' : 'text-white/25')}>
                         {d}
                       </span>
 
-                      {/* P&L block */}
                       {e && (
                         <div
-                          className="mt-auto rounded px-2 py-1.5"
+                          className="mt-auto rounded px-2.5 py-2"
                           style={{
                             background: e.net >= 0
                               ? 'rgba(52,211,153,0.12)'
                               : 'rgba(248,113,113,0.12)',
                             borderLeft: e.net >= 0
-                              ? '3px solid rgba(52,211,153,0.5)'
-                              : '3px solid rgba(248,113,113,0.5)',
+                              ? '3px solid rgba(52,211,153,0.6)'
+                              : '3px solid rgba(248,113,113,0.6)',
                           }}
                         >
-                          <div className={'font-mono text-xs font-semibold ' + (e.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                          <div className={'font-mono text-sm font-bold ' + (e.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                             {fmtPnl(e.net)}
                           </div>
-                          <div className="font-mono text-[9px] text-white/35">
+                          <div className="font-mono text-xs text-white/50">
                             {e.count} trade{e.count !== 1 ? 's' : ''}
                           </div>
                         </div>
@@ -138,7 +136,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   );
 
                   return (
-                    <td key={di} className={borderB + ' ' + borderR + ' border-white/[0.06] p-0'}>
+                    <td key={di} className={borderB + ' ' + borderR + ' ' + cellBorderColor + ' p-0'}>
                       {e ? (
                         <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr}>
                           {cellContent}
@@ -150,26 +148,21 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   );
                 })}
 
-                {/* Weekly summary */}
-                <td
-                  className={
-                    (wi === weeks.length - 1 ? '' : 'border-b') +
-                    ' border-l border-white/[0.06] p-0'
-                  }
-                >
-                  <div className="flex h-24 flex-col items-end justify-center px-3">
-                    <span className="font-mono text-[9px] text-white/25">
+                {/* Weekly summary — wider, larger text */}
+                <td className={(wi === weeks.length - 1 ? '' : 'border-b') + ' border-l border-white/[0.06] p-0'}>
+                  <div className="flex h-28 flex-col items-end justify-center px-4">
+                    <span className="font-mono text-xs font-medium text-white/50">
                       Week {wi + 1}
                     </span>
                     <span
                       className={
-                        'mt-1 font-mono text-sm font-semibold ' +
-                        (ws.days === 0 ? 'text-white/15' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')
+                        'mt-1.5 font-mono text-base font-bold ' +
+                        (ws.days === 0 ? 'text-white/20' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')
                       }
                     >
                       {ws.days > 0 ? fmtPnl(ws.net) : '$0.00'}
                     </span>
-                    <span className="font-mono text-[9px] text-white/25">
+                    <span className="mt-0.5 font-mono text-xs text-white/50">
                       {ws.days > 0 ? ws.days + ' day' + (ws.days !== 1 ? 's' : '') : '0 days'}
                     </span>
                   </div>

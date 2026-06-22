@@ -57,7 +57,7 @@ export default function TradeFilters({ trades, prefs }) {
       <div className="mb-4 flex flex-wrap items-end gap-3">
         {/* Result */}
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-white/30">Result</label>
+          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Result</label>
           <div className="flex gap-1">
             {[
               { v: 'all', l: 'All' },
@@ -67,7 +67,7 @@ export default function TradeFilters({ trades, prefs }) {
               <button
                 key={o.v}
                 onClick={() => setResult(o.v)}
-                className={'rounded-lg border px-3 py-2 text-xs font-semibold ' + (result === o.v ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-black/30 text-white/40')}
+                className={'rounded-lg border px-3 py-2 text-xs font-semibold ' + (result === o.v ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-black/30 text-white/55')}
               >
                 {o.l}
               </button>
@@ -77,7 +77,7 @@ export default function TradeFilters({ trades, prefs }) {
 
         {/* Setup */}
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-white/30">Setup</label>
+          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Setup</label>
           <select className={field} value={setupFilter} onChange={(e) => setSetupFilter(e.target.value)}>
             <option value="">All setups</option>
             {setupOptions.map((s) => (
@@ -88,7 +88,7 @@ export default function TradeFilters({ trades, prefs }) {
 
         {/* Emotion */}
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-white/30">Emotion</label>
+          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Emotion</label>
           <select className={field} value={emotionFilter} onChange={(e) => setEmotionFilter(e.target.value)}>
             <option value="">All emotions</option>
             {emotionOptions.map((em) => (
@@ -99,13 +99,13 @@ export default function TradeFilters({ trades, prefs }) {
 
         {/* Date from */}
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-white/30">From</label>
+          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">From</label>
           <input type="date" className={field} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
         </div>
 
         {/* Date to */}
         <div>
-          <label className="mb-1 block font-mono text-[10px] uppercase tracking-wider text-white/30">To</label>
+          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">To</label>
           <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
 
@@ -113,7 +113,7 @@ export default function TradeFilters({ trades, prefs }) {
         {hasFilters && (
           <button
             onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setDateFrom(''); setDateTo(''); }}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/40 hover:text-white"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/55 hover:text-white"
           >
             Clear filters
           </button>
@@ -122,7 +122,7 @@ export default function TradeFilters({ trades, prefs }) {
 
       {/* Count */}
       {hasFilters && (
-        <p className="mb-3 font-mono text-xs text-white/40">
+        <p className="mb-3 font-mono text-xs text-white/55">
           Showing {filtered.length} of {trades.length} trades
         </p>
       )}

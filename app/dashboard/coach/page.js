@@ -22,7 +22,7 @@ export default async function CoachPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">AI Coach</h1>
-          <p className="mt-1 text-sm text-white/50">Recurring patterns and trading psychology across your recent trades.</p>
+          <p className="mt-1 text-sm text-white/55">Recurring patterns and trading psychology across your recent trades.</p>
         </div>
         {tradeCount >= 2 ? <GenerateReportButton label={report ? '↻ Refresh report' : '✦ Generate report'} /> : null}
       </div>

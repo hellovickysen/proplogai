@@ -125,7 +125,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   const hasR = form.r_multiple !== '' && Number.isFinite(rNum);
 
   const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
-  const labelCls = 'mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40';
+  const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
@@ -214,9 +214,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                 className="flex w-full items-center justify-between text-left"
               >
                 <span className="font-display text-base font-semibold">
-                  Journal <span className="ml-1 text-xs font-normal text-white/40">(optional)</span>
+                  Journal <span className="ml-1 text-xs font-normal text-white/55">(optional)</span>
                 </span>
-                <span className="text-white/40 text-xl leading-none">{journalOpen ? '−' : '+'}</span>
+                <span className="text-white/55 text-xl leading-none">{journalOpen ? '−' : '+'}</span>
               </button>
 
               {journalOpen && (
@@ -246,7 +246,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     <label className={labelCls}>Confidence at entry</label>
                     <div className="flex gap-1 text-2xl">
                       {[1, 2, 3, 4, 5].map((i) => (
-                        <button key={i} type="button" onClick={() => setConfidence(i)} className={i <= confidence ? 'text-amber-400' : 'text-white/20'}>
+                        <button key={i} type="button" onClick={() => setConfidence(i)} className={i <= confidence ? 'text-amber-400' : 'text-white/40'}>
                           &#9733;
                         </button>
                       ))}
@@ -310,18 +310,18 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       </div>
 
       <div className="h-fit rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-        <div className="font-mono text-[11px] uppercase tracking-wider text-white/40">Preview</div>
+        <div className="font-mono text-xs uppercase tracking-wider text-white/55">Preview</div>
         <div className="mt-3 font-display text-lg font-bold">
           {form.pair}{' '}
           <span className={'ml-1 text-xs ' + (form.direction === 'long' ? 'text-emerald-400' : 'text-red-400')}>{form.direction.toUpperCase()}</span>
         </div>
-        <div className={'mt-4 font-display text-3xl font-bold ' + (hasPnl ? (pnlNum >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/30')}>
+        <div className={'mt-4 font-display text-3xl font-bold ' + (hasPnl ? (pnlNum >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/50')}>
           {hasPnl ? (pnlNum >= 0 ? '+' : '-') + '$' + Math.abs(pnlNum).toLocaleString() : '$0.00'}
         </div>
-        <div className={'mt-1 font-mono text-sm ' + (hasR ? (rNum >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/30')}>
+        <div className={'mt-1 font-mono text-sm ' + (hasR ? (rNum >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/50')}>
           {hasR ? (rNum >= 0 ? '+' : '-') + Math.abs(rNum).toFixed(2) + 'R' : '—R'}
         </div>
-        <div className="mt-4 font-mono text-xs text-white/40">{hasPnl ? (pnlNum >= 0 ? 'Win' : 'Loss') : 'Enter P&L to preview'}</div>
+        <div className="mt-4 font-mono text-xs text-white/55">{hasPnl ? (pnlNum >= 0 ? 'Win' : 'Loss') : 'Enter P&L to preview'}</div>
       </div>
     </div>
   );

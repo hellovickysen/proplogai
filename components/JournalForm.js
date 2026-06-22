@@ -86,7 +86,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
   return (
     <div>
 
-      <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">How did you feel?</label>
+      <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">How did you feel?</label>
       <div className="mb-5 flex flex-wrap gap-2">
         {EMOTIONS.map((e) => {
           const on = emotions.includes(e);
@@ -103,16 +103,16 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
         })}
       </div>
 
-      <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Confidence at entry</label>
+      <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Confidence at entry</label>
       <div className="mb-5 flex gap-1 text-2xl">
         {[1, 2, 3, 4, 5].map((i) => (
-          <button key={i} type="button" onClick={() => setConfidence(i)} className={i <= confidence ? 'text-amber-400' : 'text-white/20'}>
+          <button key={i} type="button" onClick={() => setConfidence(i)} className={i <= confidence ? 'text-amber-400' : 'text-white/40'}>
             &#9733;
           </button>
         ))}
       </div>
 
-      <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Notes — what happened &amp; why?</label>
+      <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Notes — what happened &amp; why?</label>
       <textarea
         value={note}
         onChange={(e) => setNote(e.target.value)}
@@ -121,7 +121,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
         placeholder="Your reasoning, what went well, what you'd change..."
       />
 
-      <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Chart screenshots</label>
+      <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Chart screenshots</label>
       {screenshotUrls.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {screenshotUrls.map((url, i) => (

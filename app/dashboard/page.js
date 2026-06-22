@@ -12,7 +12,7 @@ const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', We
 function EquityCurve({ series }) {
   if (!series || series.length < 2) {
     return (
-      <div className="flex h-[200px] items-center justify-center text-sm text-white/40">
+      <div className="flex h-[200px] items-center justify-center text-sm text-white/55">
         Log at least two trades to see your equity curve.
       </div>
     );
@@ -49,7 +49,7 @@ function Stat({ label, value, tone }) {
   const color = tone === 'pos' ? 'text-emerald-400' : tone === 'neg' ? 'text-red-400' : 'text-white';
   return (
     <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
-      <div className="font-mono text-[11px] uppercase tracking-wider text-white/40">{label}</div>
+      <div className="font-mono text-xs uppercase tracking-wider text-white/55">{label}</div>
       <div className={'mt-2 font-display text-2xl font-bold ' + color}>{value}</div>
     </div>
   );
@@ -158,7 +158,7 @@ export default async function DashboardPage() {
           <div className="mt-2">
             {coach.summary ? <p className="text-sm leading-relaxed text-white/80">{coach.summary}</p> : null}
             {topMistake ? (
-              <p className="mt-2 text-xs text-white/50">
+              <p className="mt-2 text-xs text-white/55">
                 Top recurring leak: <span className="text-white/80">{topMistake.pattern}</span>
                 {topMistake.frequency ? ' (' + topMistake.frequency + ')' : ''}
               </p>

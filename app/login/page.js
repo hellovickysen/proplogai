@@ -64,17 +64,17 @@ export default function LoginPage() {
         </Link>
 
         <h1 className="font-display text-2xl font-bold">{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h1>
-        <p className="mb-6 mt-1 text-sm text-white/50">
+        <p className="mb-6 mt-1 text-sm text-white/55">
           {mode === 'signin' ? 'Sign in to your trading journal.' : 'Start journaling smarter today.'}
         </p>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Email</label>
+            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Email</label>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60" placeholder="you@email.com" />
           </div>
           <div>
-            <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Password</label>
+            <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Password</label>
             <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60" placeholder="At least 6 characters" />
           </div>
 
@@ -86,7 +86,7 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-white/50">
+        <p className="mt-6 text-center text-sm text-white/55">
           {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
           <button onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null); setMsg(null); }} className="text-cyan-400 hover:underline">
             {mode === 'signin' ? 'Sign up' : 'Sign in'}

@@ -79,13 +79,13 @@ export default async function CalendarPage({ searchParams }) {
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">Calendar</h1>
-          <div className="mt-1 flex items-center gap-2 font-mono text-xs text-white/40">
+          <div className="mt-1 flex items-center gap-2 font-mono text-xs text-white/55">
             <Link href={'/dashboard/calendar?month=' + shift(-1)} className="hover:text-white/70">‹</Link>
             <span className="text-white/60">{MONTHS_FULL[month]} {year}</span>
             <Link href={'/dashboard/calendar?month=' + shift(1)} className="hover:text-white/70">›</Link>
             {!isCurrentMonth && (
               <>
-                <span className="text-white/20">·</span>
+                <span className="text-white/40">·</span>
                 <Link href="/dashboard/calendar" className="text-cyan-400 hover:text-cyan-300">Current Month</Link>
               </>
             )}
@@ -93,7 +93,7 @@ export default async function CalendarPage({ searchParams }) {
         </div>
         <div className="flex gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
           <span className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">Calendar</span>
-          <Link href="/dashboard/trades" className="rounded-md px-3 py-1.5 text-xs text-white/40 hover:text-white/70">Trades</Link>
+          <Link href="/dashboard/trades" className="rounded-md px-3 py-1.5 text-xs text-white/55 hover:text-white/70">Trades</Link>
         </div>
       </div>
 

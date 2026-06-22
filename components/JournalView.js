@@ -30,10 +30,10 @@ export default function JournalView({ journal }) {
       {/* Emotions */}
       {emotions.length > 0 && (
         <div>
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-white/30">Emotions</div>
+          <div className="mb-2 font-mono text-xs uppercase tracking-wider text-white/50">Emotions</div>
           <div className="flex flex-wrap gap-1.5">
             {emotions.map((em, i) => (
-              <span key={i} className="rounded-full border border-violet-400/25 bg-violet-500/10 px-2.5 py-1 text-[11px] text-violet-200">
+              <span key={i} className="rounded-full border border-violet-400/25 bg-violet-500/10 px-2.5 py-1 text-xs text-violet-200">
                 {em}
               </span>
             ))}
@@ -44,10 +44,10 @@ export default function JournalView({ journal }) {
       {/* Confidence */}
       {confidence > 0 && (
         <div>
-          <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-white/30">Confidence</div>
+          <div className="mb-1 font-mono text-xs uppercase tracking-wider text-white/50">Confidence</div>
           <div className="flex gap-0.5 text-lg">
             {[1, 2, 3, 4, 5].map((i) => (
-              <span key={i} className={i <= confidence ? 'text-amber-400' : 'text-white/15'}>★</span>
+              <span key={i} className={i <= confidence ? 'text-amber-400' : 'text-white/40'}>★</span>
             ))}
           </div>
         </div>
@@ -56,7 +56,7 @@ export default function JournalView({ journal }) {
       {/* Notes */}
       {note && (
         <div>
-          <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-white/30">Notes</div>
+          <div className="mb-1 font-mono text-xs uppercase tracking-wider text-white/50">Notes</div>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/70">{note}</p>
         </div>
       )}
@@ -64,7 +64,7 @@ export default function JournalView({ journal }) {
       {/* Screenshots — large, full-width */}
       {screenshots.length > 0 && (
         <div>
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-white/30">
+          <div className="mb-2 font-mono text-xs uppercase tracking-wider text-white/50">
             Screenshots ({screenshots.length})
           </div>
           <div className="space-y-2">
