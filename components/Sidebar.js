@@ -7,6 +7,7 @@ const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades', icon: '☰', href: '/dashboard/trades' },
   { label: 'AI Coach', icon: '✦', href: '/dashboard/coach' },
+  { label: 'Accounts', icon: '⇄', href: '/dashboard/accounts' },
   { label: 'Settings', icon: '⚙', href: '#' },
 ];
 
