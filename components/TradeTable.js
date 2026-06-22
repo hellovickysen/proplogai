@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { fmtMoney, fmtR, num } from '@/lib/stats';
 
 function fmtDate(d) {
@@ -31,15 +32,12 @@ export default function TradeTable({ rows }) {
           {rows.map((t) => {
             const win = num(t.pnl) >= 0;
             return (
-              <tr key={t.id} className="border-t border-white/5">
-                <td className="px-3 py-3 font-display font-semibold">{t.pair}</td>
+              <tr key={t.id} className="border-t border-white/5 hover:bg-white/[0.02]">
+                <td className="px-3 py-3 font-display font-semibold">
+                  <Link href={'/dashboard/trades/' + t.id} className="hover:text-cyan-400">{t.pair}</Link>
+                </td>
                 <td className="px-3 py-3">
-                  <span
-                    className={
-                      'rounded px-2 py-0.5 font-mono text-[11px] ' +
-                      (t.direction === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')
-                    }
-                  >
+                  <span className={'rounded px-2 py-0.5 font-mono text-[11px] ' + (t.direction === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>
                     {(t.direction || '').toUpperCase()}
                   </span>
                 </td>
