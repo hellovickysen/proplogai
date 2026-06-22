@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { num } from '@/lib/stats';
 
 const DOW = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const DOW_SHORT = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 function pad2(n) {
   return String(n).padStart(2, '0');
@@ -63,12 +64,13 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
       <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
         <thead>
           <tr>
-            {DOW.map((d) => (
-              <th key={d} className="border-b border-white/[0.08] px-2 py-3 text-center font-mono text-xs font-medium uppercase tracking-widest text-white/50">
-                {d}
+            {DOW.map((d, i) => (
+              <th key={d} className="border-b border-white/[0.08] px-1 py-2 text-center font-mono text-xs font-medium uppercase tracking-widest text-white/50 sm:px-2 sm:py-3">
+                <span className="hidden sm:inline">{d}</span>
+                <span className="sm:hidden">{DOW_SHORT[i]}</span>
               </th>
             ))}
-            <th className="w-36 border-b border-l border-white/[0.08] px-4 py-3 text-right font-mono text-xs font-medium uppercase tracking-widest text-white/50">
+            <th className="hidden w-36 border-b border-l border-white/[0.08] px-4 py-3 text-right font-mono text-xs font-medium uppercase tracking-widest text-white/50 sm:table-cell">
               WEEKLY
             </th>
           </tr>
@@ -97,7 +99,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   if (d === null) {
                     return (
                       <td key={di} className={borderB + ' ' + borderR + ' border-white/[0.06] p-0'}>
-                        <div className={'h-28 ' + (isWeekend ? 'bg-white/[0.02]' : 'bg-white/[0.01]')} />
+                        <div className={'h-20 sm:h-28 ' + (isWeekend ? 'bg-white/[0.02]' : 'bg-white/[0.01]')} />
                       </td>
                     );
                   }
@@ -109,7 +111,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   const cellContent = (
                     <div
                       className={
-                        'relative flex h-28 flex-col justify-between p-2.5 transition-colors ' +
+                        'relative flex h-20 sm:h-28 flex-col justify-between p-1.5 sm:p-2.5 transition-colors ' +
                         (e ? 'cursor-pointer hover:bg-white/[0.04]' : 'bg-white/[0.015]') +
                         (isSel ? ' bg-white/[0.06]' : '')
                       }
@@ -140,10 +142,10 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                               : '3px solid rgba(248,113,113,0.6)',
                           }}
                         >
-                          <div className={'font-mono text-sm font-bold ' + (e.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                          <div className={'font-mono text-[11px] font-bold sm:text-sm ' + (e.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                             {fmtPnl(e.net)}
                           </div>
-                          <div className="font-mono text-xs text-white/50">
+                          <div className="hidden font-mono text-xs text-white/50 sm:block">
                             {e.count} trade{e.count !== 1 ? 's' : ''}
                           </div>
                         </div>
@@ -164,8 +166,8 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   );
                 })}
 
-                {/* Weekly summary — wider, larger text */}
-                <td className={(wi === weeks.length - 1 ? '' : 'border-b') + ' border-l border-white/[0.06] p-0'}>
+                {/* Weekly summary — hidden on mobile */}
+                <td className={'hidden sm:table-cell ' + (wi === weeks.length - 1 ? '' : 'border-b') + ' border-l border-white/[0.06] p-0'}>
                   <div className="flex h-28 flex-col items-end justify-center px-4">
                     <span className="font-mono text-xs font-medium text-white/50">
                       Week {wi + 1}

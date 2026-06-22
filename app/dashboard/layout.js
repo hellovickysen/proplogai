@@ -43,14 +43,14 @@ export default async function DashboardLayout({ children }) {
             <span className="font-display text-base font-bold sm:hidden">PipMind</span>
             <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:block">PipMind</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5">
-              <span className="font-mono text-xs uppercase tracking-wider text-white/55">Today</span>
-              <span className={'font-mono text-sm font-semibold ' + tone}>{fmtMoney(todayPnl)}</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5">
+              <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:inline">Today</span>
+              <span className={'font-mono text-xs font-semibold sm:text-sm ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>
             <span className="hidden font-mono text-xs text-white/55 sm:block">{user.email}</span>
             <form action="/auth/signout" method="post">
-              <button className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-white/70 transition-colors hover:text-white">Sign out</button>
+              <button className="rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-white/70 transition-colors hover:text-white sm:px-3 sm:py-1.5 sm:text-sm">Sign out</button>
             </form>
           </div>
         </header>

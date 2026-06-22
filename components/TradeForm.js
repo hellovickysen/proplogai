@@ -172,13 +172,13 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               </div>
               <div>
                 <label className={labelCls}>Session</label>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-3 gap-1.5">
                   {SESSIONS.map((s) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => set('session', form.session === s ? '' : s)}
-                      className={'flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold ' + (form.session === s ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}
+                      className={'rounded-lg border px-2 py-2.5 text-xs font-semibold sm:text-sm ' + (form.session === s ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}
                     >
                       {s}
                     </button>

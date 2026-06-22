@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import TradeTable from '@/components/TradeTable';
 import { num } from '@/lib/stats';
 
-const field = 'rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-cyan-400/60';
+const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-cyan-400/60 sm:w-auto';
 
 export default function TradeFilters({ trades, prefs }) {
   const [result, setResult] = useState('all'); // all | win | loss
@@ -54,7 +54,7 @@ export default function TradeFilters({ trades, prefs }) {
   return (
     <div>
       {/* Filter bar */}
-      <div className="mb-4 flex flex-wrap items-end gap-3">
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
         {/* Result */}
         <div>
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Result</label>
