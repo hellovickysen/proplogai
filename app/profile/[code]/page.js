@@ -99,7 +99,8 @@ export default async function PublicProfilePage({ params }) {
   // Stats
   const totalPnl = trades.reduce((a, t) => a + (Number(t.pnl) || 0), 0);
   const totalPayout = payouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
-  const trophyCount = trophies.length;
+  const payoutCerts = trophies.filter((t) => t.category === 'payout');
+  const payoutCertCount = payoutCerts.length;
   const rollingLabel = prefs.calendar_mode === 'fixed'
     ? fmtDate(prefs.calendar_start) + ' — ' + fmtDate(prefs.calendar_end)
     : 'Last ' + (prefs.calendar_rolling_days || 30) + ' days';
@@ -144,13 +145,13 @@ export default async function PublicProfilePage({ params }) {
               <div className="mt-1 font-mono text-[11px] text-white/30">{payouts.length} payout{payouts.length !== 1 ? 's' : ''}</div>
             </div>
           )}
-          {show_trophies && (
+          {show_payouts && (
             <div className="rounded-2xl border border-violet-400/20 p-6 text-center" style={{ background: 'rgba(139,92,246,0.05)' }}>
-              <div className="font-mono text-xs uppercase tracking-wider text-white/45">Trophies Earned</div>
+              <div className="font-mono text-xs uppercase tracking-wider text-white/45">No. of Payouts</div>
               <div className="mt-2 font-display text-3xl font-bold" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
-                {trophyCount}
+                {payouts.length}
               </div>
-              <div className="mt-1 font-mono text-[11px] text-white/30">achievement{trophyCount !== 1 ? 's' : ''}</div>
+              <div className="mt-1 font-mono text-[11px] text-white/30">received</div>
             </div>
           )}
         </div>
@@ -190,23 +191,18 @@ export default async function PublicProfilePage({ params }) {
           </div>
         )}
 
-        {/* Trophy Gallery */}
-        {show_trophies && trophies.length > 0 && (
+        {/* Payout Certificates */}
+        {show_trophies && payoutCerts.length > 0 && (
           <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-6">
-            <h2 className="mb-4 font-display text-lg font-semibold">Achievements</h2>
+            <h2 className="mb-4 font-display text-lg font-semibold">Payout Certificates</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {trophies.map((t) => (
+              {payoutCerts.map((t) => (
                 <div key={t.id} className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
                   <div className="aspect-[4/3] overflow-hidden bg-black/40">
                     <img src={t.file_url} alt={t.title} className="h-full w-full object-cover" />
                   </div>
                   <div className="p-3">
                     <div className="text-sm font-semibold">{t.title}</div>
-                    <div className="mt-1 flex items-center gap-2">
-                      <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/50">
-                        {CATEGORY_LABELS[t.category] || 'Achievement'}
-                      </span>
-                    </div>
                   </div>
                 </div>
               ))}
