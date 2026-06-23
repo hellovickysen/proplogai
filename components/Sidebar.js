@@ -8,6 +8,7 @@ const NAV = [
   { label: 'Trades', icon: '☰', href: '/dashboard/trades' },
   { label: 'Playbook', icon: '\u{1F4CB}', href: '/dashboard/playbook' },
   { label: 'Expenses', icon: '\u{1F4B3}', href: '/dashboard/expenses' },
+  { label: 'Trophies', icon: '\u{1F3C6}', href: '/dashboard/trophies' },
   { label: 'Calendar', icon: '\u{1F4C5}', href: '/dashboard/calendar' },
   { label: 'AI Coach', icon: '✦', href: '/dashboard/coach' },
   { label: 'Settings', icon: '⚙', href: '/dashboard/settings' },

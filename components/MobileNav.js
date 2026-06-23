@@ -8,6 +8,7 @@ const LINKS = [
   { label: 'Trades', href: '/dashboard/trades' },
   { label: 'Playbook', href: '/dashboard/playbook' },
   { label: 'Expenses', href: '/dashboard/expenses' },
+  { label: 'Trophies', href: '/dashboard/trophies' },
   { label: 'Calendar', href: '/dashboard/calendar' },
   { label: 'AI Coach', href: '/dashboard/coach' },
   { label: 'Settings', href: '/dashboard/settings' },
