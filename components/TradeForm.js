@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -69,6 +69,44 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const toast = useToast();
+
+  // Auto-calculate R multiple from entry/exit/stop_loss
+  useEffect(() => {
+    const entry = Number(form.entry_price);
+    const exit = Number(form.exit_price);
+    const sl = Number(form.stop_loss);
+    if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(sl)) return;
+    let risk, reward;
+    if (form.direction === 'long') {
+      risk = entry - sl;
+      reward = exit - entry;
+    } else {
+      risk = sl - entry;
+      reward = entry - exit;
+    }
+    if (risk <= 0) return;
+    const r = (reward / risk).toFixed(2);
+    if (r !== String(form.r_multiple)) {
+      setForm((f) => ({ ...f, r_multiple: r }));
+    }
+  }, [form.entry_price, form.exit_price, form.stop_loss, form.direction]);
+
+  // Load saved defaults (pair, session, timeframe) for new trades
+  useEffect(() => {
+    if (mode !== 'create' || initial) return;
+    try {
+      const saved = localStorage.getItem('pj_trade_defaults');
+      if (saved) {
+        const d = JSON.parse(saved);
+        setForm((f) => ({
+          ...f,
+          pair: d.pair || f.pair,
+          session: d.session || f.session,
+          timeframe: d.timeframe || f.timeframe,
+        }));
+      }
+    } catch (e) {}
+  }, []);
 
   function set(k, v) {
     setForm((f) => ({ ...f, [k]: v }));
@@ -210,6 +248,12 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
           setup_followed: form.setup_followed,
         });
       }
+      // Save defaults for next trade
+      try {
+        localStorage.setItem('pj_trade_defaults', JSON.stringify({
+          pair: form.pair, session: form.session, timeframe: form.timeframe,
+        }));
+      } catch (e) {}
       router.push(mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades');
       router.refresh();
     }
@@ -432,7 +476,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label className={labelCls}>P&L ($) *</label><input className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
-              <div><label className={labelCls}>R multiple (optional)</label><input className={field} value={form.r_multiple} onChange={(e) => set('r_multiple', e.target.value)} inputMode="decimal" placeholder="e.g. 1.5 or -1" /></div>
+              <div><label className={labelCls}>R multiple <span className="text-white/30">(auto)</span></label><input className={field} value={form.r_multiple} onChange={(e) => set('r_multiple', e.target.value)} inputMode="decimal" placeholder="auto from prices" /></div>
             </div>
           </div>
 
