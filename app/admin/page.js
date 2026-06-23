@@ -44,11 +44,9 @@ export default async function AdminOverviewPage() {
     } catch { totalUsers = 0; }
 
     // Parallel queries
-    const [tradesRes, journalsRes, insightsRes] = await Promise.all([
-      sb.from('trades').select('id', { count: 'exact', head: true }).catch(() => ({ count: 0 })),
-      sb.from('journal_entries').select('id', { count: 'exact', head: true }).catch(() => ({ count: 0 })),
-      sb.from('ai_insights').select('id', { count: 'exact', head: true }).catch(() => ({ count: 0 })),
-    ]);
+    const tradesRes = await sb.from('trades').select('id', { count: 'exact', head: true });
+    const journalsRes = await sb.from('journal_entries').select('id', { count: 'exact', head: true });
+    const insightsRes = await sb.from('ai_insights').select('id', { count: 'exact', head: true });
 
     const totalTrades = tradesRes.count || 0;
     const totalJournals = journalsRes.count || 0;
