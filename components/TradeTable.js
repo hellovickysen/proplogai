@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { fmtMoney, num } from '@/lib/stats';
+import { fmtMoney, fmtMoneyCompact, num } from '@/lib/stats';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -43,7 +43,6 @@ export default function TradeTable({ rows, showFilters = false }) {
               ? 'border-l-[3px] border-l-emerald-400/40'
               : 'border-l-[3px] border-l-red-400/40';
 
-            // Multi-setup: split comma-joined setup names into pills
             const setupNames = t.setup ? t.setup.split(', ').filter(Boolean) : [];
 
             return (
@@ -79,7 +78,7 @@ export default function TradeTable({ rows, showFilters = false }) {
                     {win ? 'WIN' : 'LOSS'}
                   </span>
                 </td>
-                <td className={'px-3 py-3.5 font-mono text-base font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>{fmtMoney(t.pnl)}</td>
+                <td className={'px-3 py-3.5 font-mono text-base font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>{fmtMoneyCompact(t.pnl)}</td>
                 <td className="px-3 py-3.5 font-mono text-white/60">{t.entry_price != null ? t.entry_price : '—'}</td>
                 <td className="px-3 py-3.5 font-mono text-white/60">{t.exit_price != null ? t.exit_price : '—'}</td>
                 <td className="px-3 py-3.5">
