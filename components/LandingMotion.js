@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 const prefersReducedMotion = () => {
   if (typeof window === 'undefined') return true;
@@ -18,9 +18,8 @@ export function HeroParticles() {
     let animationFrame;
     let width = 0;
     let height = 0;
-    let particles = [];
-
-    const colors = ['rgba(167,139,250,', 'rgba(34,211,238,', 'rgba(251,191,36,'];
+    let nodes = [];
+    let time = 0;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -31,55 +30,70 @@ export function HeroParticles() {
       canvas.height = Math.floor(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      particles = Array.from({ length: 50 }, (_, index) => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.24,
-        vy: (Math.random() - 0.5) * 0.24,
-        radius: 1.1 + Math.random() * 2.4,
-        pulse: Math.random() * Math.PI * 2,
-        color: colors[index % colors.length],
-      }));
+      const cx = width / 2;
+      const cy = height * 0.5;
+      const radius = Math.min(width, height) * 0.28;
+
+      nodes = Array.from({ length: 42 }, (_, index) => {
+        const ring = index % 3;
+        const angle = (Math.PI * 2 * index) / 42 + ring * 0.38;
+        const spread = radius * (0.42 + ring * 0.26 + Math.random() * 0.18);
+        return {
+          baseX: cx + Math.cos(angle) * spread * (1.05 + Math.random() * 0.16),
+          baseY: cy + Math.sin(angle) * spread * 0.72,
+          angle,
+          drift: 0.18 + Math.random() * 0.26,
+          phase: Math.random() * Math.PI * 2,
+          radius: 1.3 + Math.random() * 2.3,
+          color: index % 4 === 0 ? '34, 211, 238' : '167, 139, 250',
+        };
+      });
     };
 
     const draw = () => {
+      time += 0.006;
       ctx.clearRect(0, 0, width, height);
 
-      particles.forEach((particle, index) => {
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-        particle.pulse += 0.012;
+      const points = nodes.map((node) => ({
+        ...node,
+        x: node.baseX + Math.cos(time * node.drift + node.phase) * 12,
+        y: node.baseY + Math.sin(time * node.drift + node.phase) * 10,
+      }));
 
-        if (particle.x < -20) particle.x = width + 20;
-        if (particle.x > width + 20) particle.x = -20;
-        if (particle.y < -20) particle.y = height + 20;
-        if (particle.y > height + 20) particle.y = -20;
-
-        const alpha = 0.28 + Math.sin(particle.pulse) * 0.14;
-        const glow = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.radius * 7);
-        glow.addColorStop(0, `${particle.color}${alpha})`);
-        glow.addColorStop(1, `${particle.color}0)`);
-
-        ctx.beginPath();
-        ctx.fillStyle = glow;
-        ctx.arc(particle.x, particle.y, particle.radius * 7, 0, Math.PI * 2);
-        ctx.fill();
-
-        for (let j = index + 1; j < particles.length; j += 1) {
-          const other = particles[j];
-          const dx = particle.x - other.x;
-          const dy = particle.y - other.y;
+      points.forEach((point, index) => {
+        for (let j = index + 1; j < points.length; j += 1) {
+          const other = points[j];
+          const dx = point.x - other.x;
+          const dy = point.y - other.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < 115) {
+          if (distance < 150) {
+            const alpha = 0.18 * (1 - distance / 150);
             ctx.beginPath();
-            ctx.strokeStyle = `rgba(167,139,250,${0.055 * (1 - distance / 115)})`;
-            ctx.lineWidth = 1;
-            ctx.moveTo(particle.x, particle.y);
+            ctx.strokeStyle = `rgba(34, 211, 238, ${alpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.moveTo(point.x, point.y);
             ctx.lineTo(other.x, other.y);
             ctx.stroke();
           }
         }
+      });
+
+      points.forEach((point) => {
+        const pulse = 0.44 + Math.sin(time * 2 + point.phase) * 0.18;
+        const glow = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, point.radius * 12);
+        glow.addColorStop(0, `rgba(${point.color}, ${pulse})`);
+        glow.addColorStop(1, `rgba(${point.color}, 0)`);
+
+        ctx.beginPath();
+        ctx.fillStyle = glow;
+        ctx.arc(point.x, point.y, point.radius * 12, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(255, 255, 255, ${0.55 + pulse * 0.2})`;
+        ctx.arc(point.x, point.y, point.radius * 0.72, 0, Math.PI * 2);
+        ctx.fill();
       });
 
       animationFrame = window.requestAnimationFrame(draw);

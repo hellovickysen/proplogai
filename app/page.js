@@ -34,50 +34,77 @@ export default function Home() {
     <main className="min-h-screen overflow-hidden">
       <LandingMotion />
 
-      {/* Nav */}
-      <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-10">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg text-sm" style={{ ...gradientBtn, boxShadow: '0 0 18px rgba(139,92,246,0.5)' }}>&#9670;</span>
-          <span className="font-display text-lg font-bold tracking-tight">PropJournal</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-white/60 hover:text-white">Log in</Link>
-          <Link href="/login?mode=signup" className="cta-glow rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
-            Join the beta
-          </Link>
-        </div>
-      </nav>
-
       {/* Hero */}
-      <section className="relative overflow-hidden px-6 pb-20 pt-16 text-center sm:px-10 sm:pt-24">
-        <HeroParticles />
-        <div className="pointer-events-none absolute -left-32 -top-32 h-[60vw] w-[60vw] rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.2), transparent 60%)', filter: 'blur(60px)' }} />
-        <div className="pointer-events-none absolute -bottom-32 -right-32 h-[50vw] w-[50vw] rounded-full" style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.15), transparent 60%)', filter: 'blur(50px)' }} />
+      <section className="hero-stage relative min-h-[92vh] overflow-hidden px-5 pb-16 text-center sm:px-8">
+        <div className="relative z-30 mx-auto flex max-w-7xl items-center justify-center py-3 text-[11px] font-semibold tracking-wide text-cyan-100/80">
+          <span className="rounded-full border border-cyan-300/15 bg-cyan-300/10 px-4 py-1 shadow-[0_0_32px_rgba(34,211,238,0.12)]">
+            AI coach reports, payout proof pages, and prop firm tracking are live
+          </span>
+        </div>
 
-        <div className="relative z-10 mx-auto max-w-3xl" data-reveal>
-          <div className="mb-6 inline-block rounded-full border border-violet-400/30 bg-violet-500/10 px-4 py-1.5 text-xs font-semibold text-violet-200 shadow-[0_0_28px_rgba(167,139,250,0.18)]">
-            Free beta — all live features unlocked
+        <nav className="hero-nav relative z-30 mx-auto mt-3 flex max-w-7xl items-center justify-between rounded-full border border-white/10 bg-black/35 px-4 py-3 shadow-2xl shadow-black/30 backdrop-blur-xl sm:px-6">
+          <div className="flex items-center gap-2.5">
+            <span className="grid h-9 w-9 place-items-center rounded-xl text-sm text-[#08080f]" style={{ ...gradientBtn, boxShadow: '0 0 22px rgba(34,211,238,0.35)' }}>&#9670;</span>
+            <span className="font-display text-lg font-bold tracking-tight sm:text-xl">PropJournal</span>
+          </div>
+          <div className="hidden items-center gap-6 rounded-full border border-white/10 bg-white/[0.04] px-5 py-2 font-mono text-xs text-white/55 md:flex">
+            <span><span className="text-cyan-300">0.1</span> / Journal</span>
+            <span><span className="text-cyan-300">0.2</span> / Coach</span>
+            <span><span className="text-cyan-300">0.3</span> / Proof</span>
+            <span><span className="text-cyan-300">0.4</span> / Payouts</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Link href="/login" className="hidden text-sm text-white/65 transition hover:text-white sm:inline">Login</Link>
+            <Link href="/login?mode=signup" className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/15 sm:px-5">
+              Get Started →
+            </Link>
+          </div>
+        </nav>
+
+        <HeroParticles />
+        <div className="hero-orb" aria-hidden="true" />
+        <div className="hero-scanline" aria-hidden="true" />
+        <div className="pointer-events-none absolute left-1/2 top-[18%] z-10 h-[46rem] w-[46rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute right-[-12rem] top-20 z-10 h-[30rem] w-[30rem] rounded-full bg-violet-500/10 blur-3xl" />
+
+        <div className="relative z-20 mx-auto flex min-h-[calc(92vh-8rem)] max-w-5xl flex-col items-center justify-center pt-16" data-reveal>
+          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-1.5 text-xs font-semibold text-cyan-100 shadow-[0_0_34px_rgba(34,211,238,0.16)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.9)]" />
+            Free beta — built for prop firm traders
           </div>
 
-          <h1 className="font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
-            The journal that tells you{' '}
-            <span className="gradient-shimmer">why you lose challenges.</span>
+          <h1 className="max-w-5xl font-display text-5xl font-extrabold leading-[0.98] tracking-tight text-white sm:text-6xl lg:text-7xl">
+            The AI journal that finds the pattern{' '}
+            <span className="gradient-shimmer">costing you funded accounts.</span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg">
-            PropJournal is an AI-powered trading journal built for prop firm traders. Log trades, track your psychology, manage challenge expenses, showcase payouts, and get coaching that finds the one pattern costing you funded accounts.
+          <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/72 sm:text-xl">
+            Log trades, track psychology, manage prop firm expenses, and turn your trading data into specific coaching before the next challenge fee hits.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <Link href="/login?mode=signup" className="cta-glow rounded-xl px-8 py-3.5 text-base font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5" style={gradientBtn}>
-              Start journaling free →
+            <Link href="/login?mode=signup" className="cta-glow rounded-xl px-9 py-3.5 text-base font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5" style={gradientBtn}>
+              Start journaling free
             </Link>
-            <Link href="/login" className="rounded-xl border border-white/15 bg-white/5 px-8 py-3.5 text-base font-semibold text-white/70 transition hover:border-white/25 hover:bg-white/10 hover:text-white">
-              Log in
+            <Link href="/login" className="rounded-xl border border-white/20 bg-white px-9 py-3.5 text-base font-semibold text-[#08080f] transition hover:bg-cyan-50">
+              Login
             </Link>
           </div>
 
-          <p className="mt-4 text-xs text-white/35">No credit card required. Free during beta.</p>
+          <div className="mt-9 grid w-full max-w-3xl gap-3 sm:grid-cols-3">
+            {[
+              { label: 'AI coaching', value: 'Live' },
+              { label: 'Prop expenses', value: 'Live' },
+              { label: 'Payout proof', value: 'Live' },
+            ].map((item, i) => (
+              <div key={item.label} className="rounded-2xl border border-white/10 bg-black/35 px-5 py-4 backdrop-blur-md" style={{ '--reveal-delay': `${i * 90}ms` }} data-reveal>
+                <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">{item.label}</div>
+                <div className="mt-1 font-display text-lg font-bold text-cyan-100">{item.value}</div>
+              </div>
+            ))}
+          </div>
+
+          <p className="mt-5 text-xs text-white/40">No credit card. No commitment. Free during beta.</p>
         </div>
       </section>
 
