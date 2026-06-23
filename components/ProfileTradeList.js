@@ -27,6 +27,8 @@ export default function ProfileTradeList({ trades }) {
             <tr className="text-left font-mono text-[10px] uppercase tracking-wider text-white/40">
               <th className="px-3 pb-3">Pair</th>
               <th className="px-3 pb-3">Direction</th>
+              <th className="px-3 pb-3">Entry</th>
+              <th className="px-3 pb-3">Exit</th>
               <th className="px-3 pb-3">P&L</th>
               <th className="px-3 pb-3">Date</th>
               <th className="px-3 pb-3">Session</th>
@@ -43,6 +45,8 @@ export default function ProfileTradeList({ trades }) {
                       {(t.direction || '').toUpperCase()}
                     </span>
                   </td>
+                  <td className="px-3 py-2.5 font-mono text-white/50">{t.entry_price != null ? t.entry_price : '—'}</td>
+                  <td className="px-3 py-2.5 font-mono text-white/50">{t.exit_price != null ? t.exit_price : '—'}</td>
                   <td className={'px-3 py-2.5 font-mono font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>
                     {fmtMoney(t.pnl)}
                   </td>

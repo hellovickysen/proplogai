@@ -66,7 +66,7 @@ export default async function PublicProfilePage({ params }) {
   if (show_calendar || show_trades) {
     let query = supabase
       .from('trades')
-      .select('id, pair, direction, pnl, r_multiple, trade_date, session, created_at')
+      .select('id, pair, direction, pnl, r_multiple, entry_price, exit_price, trade_date, session, created_at')
       .eq('user_id', userId)
       .order('trade_date', { ascending: false });
 
