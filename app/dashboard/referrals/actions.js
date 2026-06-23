@@ -86,8 +86,8 @@ export async function captureReferral(refCode) {
  * Check if the current user has earned a referral reward (called after creating a trade).
  * Triggers when: user has 3+ trades, was referred, and reward not yet given.
  */
-export async function checkAndRewardReferral(userId) {
-  const supabase = createClient();
+export async function checkAndRewardReferral(supabaseClient, userId) {
+  const supabase = supabaseClient;
 
   // Get user prefs
   const { data: prefs } = await supabase

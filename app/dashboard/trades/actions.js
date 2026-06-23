@@ -118,8 +118,8 @@ export async function createTrade(payload) {
     await supabase.from('journal_entries').insert(entry);
   }
 
-  // Check referral reward (triggers on 3rd trade)
-  checkAndRewardReferral(user.id).catch(() => {});
+  // Check referral reward (triggers on 3rd trade) — must await, Vercel kills bg promises
+  try { await checkAndRewardReferral(supabase, user.id); } catch (e) { /* non-blocking */ }
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/trades');
