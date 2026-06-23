@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createAdminClient, isAdminConfigured } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +10,7 @@ function fmtDate(d) {
 }
 
 export default async function AdminUsersPage({ searchParams }) {
+  if (!isAdminConfigured()) return <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-8 text-center"><p className="text-white/55">Add SUPABASE_SERVICE_ROLE_KEY to Vercel env vars first. See /admin for setup instructions.</p></div>;
   const sb = createAdminClient();
   const search = (searchParams && searchParams.q) || '';
 

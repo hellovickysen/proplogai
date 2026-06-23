@@ -1,6 +1,25 @@
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createAdminClient, isAdminConfigured } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
+
+function SetupMessage() {
+  return (
+    <div className="rounded-2xl border border-amber-400/20 bg-amber-500/5 p-8 text-center">
+      <div className="mx-auto mb-4 text-4xl">🔑</div>
+      <h2 className="font-display text-xl font-bold text-amber-300">Service Role Key Required</h2>
+      <p className="mx-auto mt-3 max-w-md text-sm text-white/55">
+        The admin panel needs the Supabase service role key to query across all users. Add it to Vercel:
+      </p>
+      <ol className="mx-auto mt-4 max-w-md space-y-2 text-left text-sm text-white/55">
+        <li>1. Go to <strong>Supabase Dashboard</strong> → your project → <strong>Settings → API</strong></li>
+        <li>2. Copy the <strong>service_role</strong> key (under Project API keys)</li>
+        <li>3. Go to <strong>Vercel Dashboard</strong> → Project → <strong>Settings → Environment Variables</strong></li>
+        <li>4. Add: <code className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-xs">SUPABASE_SERVICE_ROLE_KEY</code> = paste the key</li>
+        <li>5. Click Save → Vercel will auto-redeploy</li>
+      </ol>
+    </div>
+  );
+}
 
 function Stat({ label, value, sub }) {
   return (
@@ -13,6 +32,7 @@ function Stat({ label, value, sub }) {
 }
 
 export default async function AdminOverviewPage() {
+  if (!isAdminConfigured()) return <SetupMessage />;
   const sb = createAdminClient();
 
   // Parallel queries for speed

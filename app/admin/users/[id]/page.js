@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createAdminClient, isAdminConfigured } from '@/lib/supabase/admin';
 import { fmtMoney, num } from '@/lib/stats';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +12,7 @@ function fmtDate(d) {
 }
 
 export default async function AdminUserDetailPage({ params }) {
+  if (!isAdminConfigured()) return <div className="p-8 text-white/55">Add SUPABASE_SERVICE_ROLE_KEY first.</div>;
   const userId = params.id;
   const sb = createAdminClient();
 

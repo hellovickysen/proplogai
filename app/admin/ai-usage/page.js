@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin';
+import { createAdminClient, isAdminConfigured } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +9,7 @@ function fmtDate(d) {
 }
 
 export default async function AdminAiUsagePage() {
+  if (!isAdminConfigured()) return <div className="p-8 text-white/55">Add SUPABASE_SERVICE_ROLE_KEY first.</div>;
   const sb = createAdminClient();
 
   // All AI insights
