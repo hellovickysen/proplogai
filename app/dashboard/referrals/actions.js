@@ -115,28 +115,14 @@ export async function checkAndRewardReferral(userId) {
 
   if ((count || 0) < 3) return; // Not enough trades yet
 
-  // Award $1 to both users
+  // Award $1 to both users using atomic SQL increment (prevents race conditions)
   const REWARD = 1;
 
-  // Credit the referred user
-  await supabase
-    .from('user_preferences')
-    .update({ referral_balance: (prefs.referral_balance || 0) + REWARD })
-    .eq('user_id', userId);
+  // Credit the referred user (atomic)
+  await supabase.rpc('increment_referral_balance', { target_user_id: userId, amount: REWARD });
 
-  // Credit the referrer
-  const { data: referrerPrefs } = await supabase
-    .from('user_preferences')
-    .select('referral_balance')
-    .eq('user_id', referral.referrer_id)
-    .maybeSingle();
-
-  if (referrerPrefs) {
-    await supabase
-      .from('user_preferences')
-      .update({ referral_balance: (referrerPrefs.referral_balance || 0) + REWARD })
-      .eq('user_id', referral.referrer_id);
-  }
+  // Credit the referrer (atomic)
+  await supabase.rpc('increment_referral_balance', { target_user_id: referral.referrer_id, amount: REWARD });
 
   // Mark referral as completed
   await supabase

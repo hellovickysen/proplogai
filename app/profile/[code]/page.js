@@ -182,7 +182,7 @@ export default async function PublicProfilePage({ params }) {
                   <div>
                     <div className="text-sm font-semibold">{p.firm_name}</div>
                     <div className="font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
-                    {p.notes && <p className="mt-0.5 text-xs text-white/40">{p.notes}</p>}
+                    {/* Notes intentionally hidden from public profile */}
                   </div>
                   <div className="font-mono text-base font-bold text-emerald-400">+${Math.abs(Number(p.amount)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
                 </div>
