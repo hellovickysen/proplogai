@@ -570,7 +570,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
           <div className="mt-6 flex gap-3">
             <Link href={mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades'} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</Link>
-            <button type="submit" disabled={saving || uploading} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            <button type="submit" disabled={saving || uploading} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
               {saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Save trade'}
             </button>
           </div>

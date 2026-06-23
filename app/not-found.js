@@ -11,7 +11,7 @@ export default function NotFound() {
           className="text-8xl font-bold mb-4"
           style={{
             fontFamily: "Poppins, sans-serif",
-            background: "linear-gradient(120deg,#a78bfa,#22d3ee)",
+            background: "linear-gradient(135deg,#ffc42d,#ff9f1c)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
@@ -40,7 +40,7 @@ export default function NotFound() {
             className="inline-block px-6 py-2.5 rounded-xl font-medium text-white text-sm transition-opacity hover:opacity-90"
             style={{
               fontFamily: "Poppins, sans-serif",
-              background: "linear-gradient(120deg,#a78bfa,#22d3ee)",
+              background: "linear-gradient(135deg,#ffc42d,#ff9f1c)",
             }}
           >
             Go to Dashboard

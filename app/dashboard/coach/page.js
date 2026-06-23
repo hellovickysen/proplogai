@@ -43,7 +43,7 @@ export default async function CoachPage() {
         <CoachReport report={report} updatedAt={insight.created_at} />
       ) : (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
-          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl" style={{ background: 'linear-gradient(120deg, rgba(255,196,45,0.10), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}>
             &#10022;
           </div>
           <h2 className="font-display text-xl font-bold">{hasEnough ? 'No report yet' : 'Need more trades'}</h2>
@@ -58,9 +58,9 @@ export default async function CoachPage() {
             <div className="mt-6 flex flex-col items-center gap-3">
               <div className="w-48">
                 <div className="mb-1 flex justify-between font-mono text-xs text-white/45"><span>{tradeCount} / {MIN_TRADES}</span><span>{Math.round((tradeCount / MIN_TRADES) * 100)}%</span></div>
-                <div className="h-2 rounded-full bg-white/10"><div className="h-full rounded-full transition-all" style={{ width: Math.min(100, (tradeCount / MIN_TRADES) * 100) + '%', background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} /></div>
+                <div className="h-2 rounded-full bg-white/10"><div className="h-full rounded-full transition-all" style={{ width: Math.min(100, (tradeCount / MIN_TRADES) * 100) + '%', background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }} /></div>
               </div>
-              <Link href="/dashboard/trades/new" className="mt-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>+ Log a trade</Link>
+              <Link href="/dashboard/trades/new" className="mt-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>+ Log a trade</Link>
             </div>
           )}
         </div>

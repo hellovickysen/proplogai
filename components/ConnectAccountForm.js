@@ -59,7 +59,7 @@ export default function ConnectAccountForm() {
       {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
       {ok ? <p className="mt-3 text-sm text-emerald-400">Account connected. Give MetaApi a couple of minutes, then hit Sync.</p> : null}
 
-      <button type="submit" disabled={busy} className="mt-5 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+      <button type="submit" disabled={busy} className="mt-5 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
         {busy ? 'Connecting…' : 'Connect account'}
       </button>
     </form>

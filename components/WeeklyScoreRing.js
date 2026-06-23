@@ -19,8 +19,8 @@ export default function WeeklyScoreRing({ score, breakdown }) {
         <svg width={size} height={size} className="-rotate-90">
           <defs>
             <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a78bfa" />
-              <stop offset="100%" stopColor="#22d3ee" />
+              <stop offset="0%" stopColor="#ffc42d" />
+              <stop offset="100%" stopColor="#ff9f1c" />
             </linearGradient>
           </defs>
           {/* Background track */}
@@ -77,7 +77,7 @@ function BreakdownRow({ label, pts, max }) {
           className="h-full rounded-full"
           style={{
             width: pct + '%',
-            background: 'linear-gradient(90deg, #a78bfa, #22d3ee)',
+            background: 'linear-gradient(90deg, #ffc42d, #ff9f1c)',
             transition: 'width 0.6s ease-out',
           }}
         />

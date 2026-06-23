@@ -7,7 +7,7 @@ import { useToast } from '@/components/Toast';
 import { ReferralEmptyIcon } from '@/components/EmptyStates';
 
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none';
 
 function trimEmail(email) {
@@ -82,7 +82,7 @@ export default function ReferralDashboard({ code, referrals, balance }) {
         {refCode ? (
           <div className="flex gap-2">
             <input className={field + ' flex-1 bg-white/[0.02] text-white/70'} value={referralUrl} readOnly />
-            <button onClick={handleCopy} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            <button onClick={handleCopy} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
               Copy
             </button>
           </div>
@@ -91,7 +91,7 @@ export default function ReferralDashboard({ code, referrals, balance }) {
             onClick={handleGenerate}
             disabled={generating}
             className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60"
-            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+            style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
           >
             {generating ? 'Generating...' : 'Generate referral link'}
           </button>

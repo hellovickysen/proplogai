@@ -67,7 +67,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         {/* Top: Logo + date */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', display: 'grid', placeItems: 'center', fontSize: 14, boxShadow: '0 0 16px rgba(139,92,246,0.5)' }}>◆</div>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', display: 'grid', placeItems: 'center', fontSize: 14, boxShadow: '0 0 16px rgba(255,196,45,0.35)' }}>◆</div>
             <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.02em' }}>PropJournal</span>
           </div>
           <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', fontFamily: "'JetBrains Mono', monospace" }}>
@@ -86,7 +86,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
           <div style={{
             fontSize: isStory ? 56 : 48,
             fontWeight: 700,
-            background: isWin ? 'linear-gradient(120deg,#34d399,#22d3ee)' : 'linear-gradient(120deg,#f87171,#fbbf24)',
+            background: isWin ? 'linear-gradient(120deg,#34d399,#ff9f1c)' : 'linear-gradient(120deg,#f87171,#fbbf24)',
             WebkitBackgroundClip: 'text',
             backgroundClip: 'text',
             color: 'transparent',

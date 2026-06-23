@@ -97,7 +97,7 @@ export default async function AdminOverviewPage() {
 
         {/* Today's stats */}
         <div className="mb-8 rounded-2xl border border-violet-400/15 bg-violet-500/[0.03] p-5">
-          <div className="mb-3 font-display text-sm font-semibold" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Today's Activity</div>
+          <div className="mb-3 font-display text-sm font-semibold" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Today's Activity</div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div>
               <div className="font-mono text-xs text-white/45">Signups</div>

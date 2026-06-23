@@ -28,15 +28,15 @@ export function PlaybookEmptyIcon() {
     <>
       <InjectStyles />
       <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto' }}>
-        <div style={{ width: 60, height: 70, background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.15))', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px 12px 12px 4px', position: 'absolute', left: 10, top: 5, animation: 'emFloat 3s ease-in-out infinite' }}>
+        <div style={{ width: 60, height: 70, background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(47,216,255,0.10))', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '4px 12px 12px 4px', position: 'absolute', left: 10, top: 5, animation: 'emFloat 3s ease-in-out infinite' }}>
           {[22, 30, 38, 46].map((t, i) => (
             <div key={i} style={{ position: 'absolute', width: [35, 25, 32, 20][i], height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.15)', left: 12, top: t }} />
           ))}
         </div>
-        <div style={{ position: 'absolute', left: 10, top: 5, width: 6, height: 70, background: 'linear-gradient(180deg, #a78bfa, #22d3ee)', borderRadius: '4px 0 0 4px' }} />
+        <div style={{ position: 'absolute', left: 10, top: 5, width: 6, height: 70, background: 'linear-gradient(180deg, #ffc42d, #ff9f1c)', borderRadius: '4px 0 0 4px' }} />
         <div style={{ position: 'absolute', right: 2, top: 0, width: 16, height: 16, animation: 'emSparkle 2s ease-in-out infinite' }}>
-          <div style={{ position: 'absolute', width: 2, height: 12, left: 7, top: 2, background: '#a78bfa', borderRadius: 1 }} />
-          <div style={{ position: 'absolute', width: 12, height: 2, left: 2, top: 7, background: '#a78bfa', borderRadius: 1 }} />
+          <div style={{ position: 'absolute', width: 2, height: 12, left: 7, top: 2, background: '#ffc42d', borderRadius: 1 }} />
+          <div style={{ position: 'absolute', width: 12, height: 2, left: 2, top: 7, background: '#ffc42d', borderRadius: 1 }} />
         </div>
       </div>
     </>
@@ -82,11 +82,11 @@ export function ReferralEmptyIcon() {
       <InjectStyles />
       <div style={{ position: 'relative', width: 80, height: 80, margin: '0 auto' }}>
         {[[16, 22, 20, -20], [52, 28, 18, 20], [28, 52, 16, 60]].map(([l, t, w, r], i) => (
-          <div key={i} style={{ position: 'absolute', left: l, top: t, width: w, height: 1, background: 'linear-gradient(90deg, rgba(139,92,246,0.3), rgba(34,211,238,0.15))', transformOrigin: 'left center', transform: `rotate(${r}deg)`, animation: `emLinePulse 4s ease-in-out ${i * 0.5}s infinite` }} />
+          <div key={i} style={{ position: 'absolute', left: l, top: t, width: w, height: 1, background: 'linear-gradient(90deg, rgba(139,92,246,0.3), rgba(47,216,255,0.10))', transformOrigin: 'left center', transform: `rotate(${r}deg)`, animation: `emLinePulse 4s ease-in-out ${i * 0.5}s infinite` }} />
         ))}
-        <div style={{ position: 'absolute', width: 32, height: 32, left: 24, top: 24, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(34,211,238,0.2))', border: '2px solid rgba(139,92,246,0.5)', display: 'grid', placeItems: 'center', fontSize: 10, fontWeight: 700, animation: 'emNodePulse 3s ease-in-out infinite', zIndex: 1 }}>You</div>
+        <div style={{ position: 'absolute', width: 32, height: 32, left: 24, top: 24, borderRadius: '50%', background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(34,211,238,0.2))', border: '2px solid rgba(255,196,45,0.35)', display: 'grid', placeItems: 'center', fontSize: 10, fontWeight: 700, animation: 'emNodePulse 3s ease-in-out infinite', zIndex: 1 }}>You</div>
         {[['rgba(52,211,153,0.15)', 'rgba(52,211,153,0.3)', 22, 0, 8, 'emOrbit1', 0],
-          ['rgba(34,211,238,0.15)', 'rgba(34,211,238,0.3)', 22, null, 8, 'emOrbit2', 0.5],
+          ['rgba(47,216,255,0.10)', 'rgba(34,211,238,0.3)', 22, null, 8, 'emOrbit2', 0.5],
           ['rgba(251,191,36,0.15)', 'rgba(251,191,36,0.3)', 18, 10, null, 'emOrbit3', 1]].map(([bg, bc, s, l, t, anim, d], i) => (
           <div key={i} style={{ position: 'absolute', width: s, height: s, borderRadius: '50%', background: bg, border: `2px solid ${bc}`, ...(l !== null ? { left: l } : { right: 0 }), ...(t !== null ? { top: t } : { bottom: 4 }), animation: `${anim} 4s ease-in-out ${d}s infinite` }} />
         ))}

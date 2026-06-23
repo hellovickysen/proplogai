@@ -1,0 +1,165 @@
+/* Lyrafin-inspired cockpit theme layer for PropJournal.
+   Keep subjective look-and-feel here so it can be tuned or reverted independently. */
+:root {
+  --pj-bg: #030610;
+  --pj-bg-2: #070b17;
+  --pj-panel: rgba(10, 15, 29, 0.74);
+  --pj-panel-strong: rgba(12, 18, 34, 0.92);
+  --pj-border: rgba(255, 255, 255, 0.11);
+  --pj-border-warm: rgba(245, 181, 48, 0.24);
+  --pj-text: #f5f7fb;
+  --pj-muted: rgba(245, 247, 251, 0.62);
+  --pj-faint: rgba(245, 247, 251, 0.36);
+  --pj-amber: #ffc42d;
+  --pj-amber-2: #ff9f1c;
+  --pj-cyan: #2fd8ff;
+  --pj-violet: #b58cff;
+  --pj-green: #34d399;
+  --pj-red: #f87171;
+  --pj-radius-lg: 28px;
+  --pj-radius-md: 18px;
+  --pj-shadow: 0 26px 80px rgba(0, 0, 0, 0.36);
+}
+
+html, body {
+  background:
+    radial-gradient(circle at 18% 0%, rgba(47, 216, 255, 0.08), transparent 28%),
+    radial-gradient(circle at 86% 14%, rgba(255, 196, 45, 0.07), transparent 24%),
+    linear-gradient(180deg, var(--pj-bg), #050711 44%, var(--pj-bg));
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 92%);
+}
+
+.pj-shell {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(47, 216, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 84% 18%, rgba(255, 196, 45, 0.11), transparent 26%),
+    linear-gradient(180deg, #030610 0%, #070914 100%);
+}
+
+.pj-nav-shell {
+  border: 1px solid var(--pj-border);
+  background: linear-gradient(180deg, rgba(12, 18, 34, 0.88), rgba(7, 11, 23, 0.72));
+  box-shadow: var(--pj-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+}
+
+.pj-card {
+  border: 1px solid var(--pj-border);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.022)),
+    var(--pj-panel);
+  box-shadow: var(--pj-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(18px);
+}
+
+.pj-card-warm {
+  border-color: var(--pj-border-warm);
+  background:
+    radial-gradient(circle at 86% 10%, rgba(255, 196, 45, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025)),
+    var(--pj-panel);
+}
+
+.pj-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--pj-border-warm);
+  border-radius: 999px;
+  background: rgba(255, 196, 45, 0.08);
+  padding: 0.55rem 0.9rem;
+  color: #ffe28b;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.pj-btn-primary {
+  border: 1px solid rgba(255, 196, 45, 0.45);
+  background: linear-gradient(135deg, var(--pj-amber), var(--pj-amber-2));
+  color: #090b12;
+  box-shadow: 0 14px 40px rgba(255, 174, 28, 0.22);
+}
+
+.pj-btn-secondary {
+  border: 1px solid var(--pj-border);
+  background: rgba(255, 255, 255, 0.045);
+  color: rgba(245, 247, 251, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.pj-btn-secondary:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.075);
+  color: var(--pj-text);
+}
+
+.pj-chip {
+  border: 1px solid var(--pj-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(245, 247, 251, 0.58);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.pj-hero-word {
+  color: var(--pj-amber);
+  text-shadow: 0 0 36px rgba(255, 196, 45, 0.18);
+}
+
+.pj-input {
+  border: 1px solid var(--pj-border);
+  background: rgba(2, 5, 13, 0.58);
+  color: var(--pj-text);
+}
+
+.pj-input:focus {
+  border-color: rgba(255, 196, 45, 0.58);
+  box-shadow: 0 0 0 3px rgba(255, 196, 45, 0.09);
+}
+
+.pj-radar {
+  background:
+    radial-gradient(circle at center, rgba(255, 196, 45, 0.18), transparent 8%),
+    repeating-radial-gradient(circle at center, rgba(255,255,255,0.09) 0 1px, transparent 1px 46px),
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+    rgba(5, 9, 20, 0.86);
+  background-size: auto, auto, 42px 42px, 42px 42px, auto;
+}
+
+.pj-radar-orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid rgba(255, 196, 45, 0.32);
+  border-radius: 999px;
+  transform: translate(-50%, -50%) rotate(var(--orbit-rotate, 0deg));
+}
+
+.pj-radar-dot {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--pj-amber);
+  box-shadow: 0 0 18px rgba(255, 196, 45, 0.9);
+}

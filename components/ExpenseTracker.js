@@ -16,7 +16,7 @@ function Spinner() {
   );
 }
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 const TABS = ['Dashboard', 'Accounts', 'Payouts'];
 const ACCOUNT_SIZES = ['$5K', '$10K', '$25K', '$50K', '$100K', '$150K', '$200K', '$250K', '$300K', '$400K', '$500K'];
 const PURCHASE_LABELS = { new: 'New Purchase', renewal: 'Renewal', activation: 'Activation' };
@@ -231,7 +231,7 @@ function AddExpenseForm({ onSave, onCancel, existingFirms }) {
 
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
-        <button type="submit" disabled={saving || !f.account_cost} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <button type="submit" disabled={saving || !f.account_cost} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
           {saving ? <><Spinner /> Saving...</> : 'Add Expense'}
         </button>
       </div>
@@ -276,7 +276,7 @@ function AddPayoutForm({ onSave, onCancel, existingFirms }) {
       </div>
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
-        <button type="submit" disabled={saving} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
+        <button type="submit" disabled={saving} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#34d399,#ff9f1c)' }}>
           {saving ? <><Spinner /> Saving...</> : 'Add Payout'}
         </button>
       </div>
@@ -351,7 +351,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
           <h1 className="font-display text-2xl font-bold">Expenses</h1>
           <p className="mt-1 text-sm text-white/55">Track your prop firm costs and payouts</p>
         </div>
-        <button onClick={() => setShowExpenseForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <button onClick={() => setShowExpenseForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
           + Add Expense
         </button>
       </div>
@@ -438,7 +438,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
                   <button onClick={() => setExpandedFirm(expandedFirm === firm.name ? null : firm.name)}
                     className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-white/20 hover:bg-white/[0.05]">
                     <div className="flex items-center gap-3">
-                      <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl font-display text-base font-bold" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(34,211,238,0.15))' }}>
+                      <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl font-display text-base font-bold" style={{ background: 'linear-gradient(135deg, rgba(255,196,45,0.10), rgba(47,216,255,0.10))' }}>
                         {firmInitial(firm.name)}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -488,7 +488,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
               <div className="font-mono text-xs uppercase tracking-wider text-white/45">Total Payouts</div>
               <div className="mt-1 font-display text-3xl font-bold text-emerald-400">{fmtCurrency(totalPayout)}</div>
             </div>
-            <button onClick={() => setShowPayoutForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
+            <button onClick={() => setShowPayoutForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#34d399,#ff9f1c)' }}>
               + Add Payout
             </button>
           </div>

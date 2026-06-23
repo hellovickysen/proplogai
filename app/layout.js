@@ -1,4 +1,5 @@
 import './globals.css';
+import './theme.css';
 import PostHogProvider from '@/components/PostHogProvider';
 import { ToastProvider } from '@/components/Toast';
 

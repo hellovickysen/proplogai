@@ -37,7 +37,7 @@ export default function Error({ error, reset }) {
             className="inline-block px-6 py-2.5 rounded-xl font-medium text-white text-sm transition-opacity hover:opacity-90 cursor-pointer"
             style={{
               fontFamily: "Poppins, sans-serif",
-              background: "linear-gradient(120deg,#a78bfa,#22d3ee)",
+              background: "linear-gradient(135deg,#ffc42d,#ff9f1c)",
             }}
           >
             Try again

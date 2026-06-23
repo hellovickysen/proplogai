@@ -10,7 +10,7 @@ import AnalyzeButton from '@/components/AnalyzeButton';
 
 export const dynamic = 'force-dynamic';
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 function fmtDateTime(d) {
   if (!d) return '—';

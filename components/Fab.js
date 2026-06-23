@@ -6,7 +6,7 @@ export default function Fab() {
       href="/dashboard/trades/new"
       aria-label="Log new trade"
       className="fixed bottom-6 right-6 z-30 grid h-14 w-14 place-items-center rounded-full text-3xl font-light text-[#08080f]"
-      style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', boxShadow: '0 8px 30px rgba(139,92,246,0.5)' }}
+      style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', boxShadow: '0 8px 30px rgba(255,196,45,0.35)' }}
     >
       +
     </Link>

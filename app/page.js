@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { HeroParticles, LandingMotion } from '@/components/LandingMotion';
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
-const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientBtn = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' };
 
 const FEATURES = [
   { icon: '☰', title: 'One-tap trade logging', desc: 'Pair, direction, session, P&L — logged in 30 seconds. Custom setups dropdown so you never type the same thing twice.', live: true },
@@ -35,128 +35,136 @@ export default function Home() {
       <LandingMotion />
 
       {/* Nav */}
-      <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-10">
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-8 w-8 place-items-center rounded-lg text-sm" style={{ ...gradientBtn, boxShadow: '0 0 18px rgba(139,92,246,0.5)' }}>&#9670;</span>
-          <span className="font-display text-lg font-bold tracking-tight">PropJournal</span>
-        </div>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="text-sm text-white/60 hover:text-white">Log in</Link>
-          <Link href="/login?mode=signup" className="cta-glow rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
-            Join the beta
+      <div className="relative z-30 px-4 pt-4 sm:px-10">
+        <nav className="pj-nav-shell mx-auto flex max-w-7xl items-center justify-between rounded-[1.7rem] px-4 py-3 sm:px-5">
+          <Link href="/" className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] text-sm shadow-inner">&#8734;</span>
+            <span>
+              <span className="block font-display text-sm font-bold leading-none">PropJournal</span>
+              <span className="mt-1 block font-mono text-[10px] uppercase tracking-[0.28em] text-white/45">Trader Intelligence</span>
+            </span>
           </Link>
-        </div>
-      </nav>
+
+          <div className="hidden items-center gap-2 md:flex">
+            {['Tools', 'Playbook', 'Proof', 'Pricing'].map((item) => (
+              <span key={item} className="rounded-full border border-white/10 bg-white/[0.035] px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-white/68">
+                {item}
+              </span>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="hidden rounded-full border border-amber-300/20 bg-amber-300/8 px-4 py-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-100/80 lg:inline-flex">Free beta</span>
+            <Link href="/login" className="hidden rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/75 transition hover:text-white sm:inline-flex">Sign In</Link>
+            <Link href="/login?mode=signup" className="pj-btn-primary rounded-full px-5 py-2.5 text-sm font-bold transition-transform hover:-translate-y-0.5">
+              Start Free
+            </Link>
+          </div>
+        </nav>
+      </div>
 
       {/* Hero */}
-      <section className="hero-product-stage relative overflow-hidden px-6 pb-24 pt-16 sm:px-10 sm:pt-20">
+      <section className="pj-shell relative overflow-hidden px-6 pb-24 pt-16 sm:px-10 sm:pt-20">
         <HeroParticles />
-        <div className="pointer-events-none absolute -left-40 top-10 h-[36rem] w-[36rem] rounded-full bg-violet-500/15 blur-3xl" />
-        <div className="pointer-events-none absolute -right-40 top-20 h-[34rem] w-[34rem] rounded-full bg-cyan-400/12 blur-3xl" />
+        <div className="pointer-events-none absolute -left-40 top-8 h-[34rem] w-[34rem] rounded-full bg-cyan-400/8 blur-3xl" />
+        <div className="pointer-events-none absolute -right-32 top-24 h-[32rem] w-[32rem] rounded-full bg-amber-300/10 blur-3xl" />
 
-        <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="text-center lg:text-left" data-reveal>
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-1.5 text-xs font-semibold text-cyan-100 shadow-[0_0_28px_rgba(34,211,238,0.12)]">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.85)]" />
-              Free beta — built for prop firm traders
-            </div>
+        <div className="relative z-10 mx-auto grid max-w-7xl items-start gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="pt-6 text-center lg:text-left" data-reveal>
+            <div className="pj-label mb-7">AI trading journal and prop firm intelligence</div>
 
-            <h1 className="font-display text-4xl font-extrabold leading-[1.02] tracking-tight sm:text-5xl lg:text-6xl">
-              Find the pattern costing you{' '}
-              <span className="gradient-shimmer">funded accounts.</span>
+            <h1 className="font-display text-5xl font-bold leading-[0.96] tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl">
+              Find the pattern costing you <span className="pj-hero-word">funded accounts.</span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/62 sm:text-lg lg:mx-0">
+            <p className="mx-auto mt-7 max-w-2xl text-base leading-8 text-white/62 sm:text-lg lg:mx-0">
               PropJournal is an AI-powered trading journal built for prop firm traders. Log trades, track your psychology, manage challenge expenses, showcase payouts, and get coaching that finds the one pattern costing you funded accounts.
             </p>
 
             <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-              <Link href="/login?mode=signup" className="cta-glow rounded-xl px-8 py-3.5 text-base font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5" style={gradientBtn}>
-                Start journaling free →
+              <Link href="/login?mode=signup" className="pj-btn-primary rounded-full px-8 py-3.5 text-base font-bold transition-transform hover:-translate-y-0.5">
+                Start journaling free
               </Link>
-              <Link href="#how-it-works" className="rounded-xl border border-white/15 bg-white/5 px-8 py-3.5 text-base font-semibold text-white/72 transition hover:border-white/25 hover:bg-white/10 hover:text-white">
-                See how it works
+              <Link href="#how-it-works" className="pj-btn-secondary rounded-full px-8 py-3.5 text-base font-semibold transition">
+                Watch workflow
               </Link>
             </div>
 
-            <div className="mt-7 flex flex-wrap justify-center gap-2 text-xs text-white/55 lg:justify-start">
-              {['No credit card', 'AI coach reports', 'Expense tracking', 'Payout proof'].map((chip) => (
-                <span key={chip} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5">
-                  {chip}
-                </span>
+            <div className="mt-7 flex flex-wrap justify-center gap-2 lg:justify-start">
+              {['Prop firm tracking', 'AI coach reports', 'Payout proof', 'No card needed'].map((chip) => (
+                <span key={chip} className="pj-chip px-3 py-2">{chip}</span>
               ))}
+            </div>
+
+            <div className="pj-card pj-card-warm mt-8 hidden max-w-xl rounded-[1.6rem] p-5 sm:block">
+              <div className="grid grid-cols-[7rem_1fr] items-center gap-5">
+                <div className="pj-radar relative h-28 rounded-2xl border border-white/10">
+                  <span className="pj-radar-orbit h-20 w-28" style={{ '--orbit-rotate': '-18deg' }} />
+                  <span className="pj-radar-orbit h-16 w-24" style={{ '--orbit-rotate': '28deg' }} />
+                  <span className="pj-radar-dot left-[62%] top-[35%]" />
+                  <span className="pj-radar-dot left-[34%] top-[61%]" />
+                </div>
+                <div className="space-y-3 font-mono text-sm font-semibold uppercase tracking-[0.16em] text-white/72">
+                  <div>Discipline</div>
+                  <div>Setup quality</div>
+                  <div>Risk control</div>
+                  <div>Trust + psychology</div>
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="relative" data-reveal style={{ '--reveal-delay': '120ms' }}>
-            <div className="product-mockup relative mx-auto max-w-xl rounded-[2rem] border border-white/12 bg-[#0b0b14]/85 p-4 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl">
-              <div className="mb-4 flex items-center justify-between border-b border-white/8 pb-4">
+            <div className="pj-card pj-card-warm relative overflow-hidden rounded-[2rem] p-4 lg:p-5">
+              <div className="pj-radar relative min-h-[340px] overflow-hidden rounded-[1.5rem] border border-white/10 p-5">
+                <div className="flex items-center justify-between">
+                  <span className="pj-label !px-3 !py-2 !text-[10px]">Live coaching engine</span>
+                  <span className="rounded-full border border-white/10 bg-black/30 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.2em] text-cyan-100/80">Signal locked</span>
+                </div>
+
+                <div className="absolute left-1/2 top-1/2 h-40 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full border border-cyan-300/18" />
+                <div className="absolute left-1/2 top-1/2 h-28 w-72 -translate-x-1/2 -translate-y-1/2 rotate-[-16deg] rounded-full border border-amber-300/28" />
+                <div className="absolute left-[55%] top-[45%] h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-300/35 blur-xl" />
+
+                <div className="absolute right-5 top-24 rounded-2xl border border-white/10 bg-[#070b17]/85 p-4 shadow-xl backdrop-blur-xl">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">Risk</div>
+                  <div className="mt-2 font-display text-3xl font-bold text-white">On</div>
+                  <div className="text-xs font-semibold text-amber-200">Confirmed</div>
+                </div>
+
+                <div className="absolute bottom-5 left-5 rounded-2xl border border-white/10 bg-[#070b17]/85 p-4 shadow-xl backdrop-blur-xl">
+                  <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">Discipline</div>
+                  <div className="mt-2 font-display text-3xl font-bold text-white">82</div>
+                  <div className="text-xs font-semibold text-emerald-300">Rising</div>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {[
+                  { label: 'Pattern', value: 'Revenge' },
+                  { label: 'Leak', value: '-$200' },
+                  { label: 'Fix', value: '20m pause' },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-2xl border border-white/10 bg-black/22 p-4">
+                    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">{item.label}</div>
+                    <div className="mt-2 font-display text-xl font-bold text-white">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="pj-card mt-4 rounded-[1.5rem] p-5">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/35">Today’s coaching</div>
-                  <div className="mt-1 font-display text-lg font-bold text-white">Pattern detected</div>
+                  <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-amber-200">Coach velocity</div>
+                  <p className="mt-2 text-sm leading-6 text-white/64">Turn scattered trades, emotions, screenshots, and prop firm costs into one clear action plan.</p>
                 </div>
-                <div className="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-xs font-semibold text-amber-200">Medium risk</div>
-              </div>
-
-              <div className="grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
-                <div className="space-y-4">
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-cyan-200/55">AI insight</div>
-                        <p className="mt-2 text-sm leading-relaxed text-white/78">You give back profits after two losses, mostly during London close.</p>
-                      </div>
-                      <span className="rounded-xl bg-red-400/12 px-2.5 py-1 text-xs font-bold text-red-300">-2.4R</span>
-                    </div>
-                    <div className="mt-4 rounded-xl border border-cyan-300/15 bg-cyan-300/8 p-3 text-xs leading-relaxed text-cyan-50/75">
-                      Fix: stop trading for 20 minutes after back-to-back losses. Only take A+ setup screenshots.
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { label: 'Win rate', value: '57%' },
-                      { label: 'Discipline', value: '82' },
-                      { label: 'Payouts', value: '$1.2k' },
-                    ].map((stat) => (
-                      <div key={stat.label} className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                        <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/32">{stat.label}</div>
-                        <div className="mt-1 font-display text-lg font-bold text-white">{stat.value}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                      <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">P&L calendar</span>
-                      <span className="text-xs text-emerald-300">+$420</span>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1.5">
-                      {['', '', 'g', 'r', 'g', '', 'g', 'r', 'g', 'g', '', 'r', 'g', ''].map((day, i) => (
-                        <span key={i} className={`h-6 rounded-md ${day === 'g' ? 'bg-emerald-400/35' : day === 'r' ? 'bg-red-400/35' : 'bg-white/[0.07]'}`} />
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                    <div className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">Trade tags</div>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {['FOMO', 'No setup', 'London', 'Revenge'].map((tag) => (
-                        <span key={tag} className="rounded-full border border-violet-300/20 bg-violet-300/10 px-2.5 py-1 text-[11px] text-violet-100">{tag}</span>
-                      ))}
-                    </div>
-                  </div>
+                <div className="hidden items-center gap-2 font-mono text-sm font-bold sm:flex">
+                  <span className="rounded-xl bg-white/[0.06] px-3 py-2 text-white">Guessing</span>
+                  <span className="text-amber-300">→</span>
+                  <span className="rounded-xl border border-amber-300/25 bg-amber-300/10 px-3 py-2 text-amber-100">Knowing</span>
                 </div>
               </div>
-            </div>
-
-            <div className="floating-card floating-card-one hidden rounded-2xl border border-emerald-300/20 bg-emerald-300/10 px-4 py-3 text-sm text-emerald-100 shadow-2xl shadow-emerald-950/20 backdrop-blur-xl sm:block">
-              Setup followed: 8-day streak
-            </div>
-            <div className="floating-card floating-card-two hidden rounded-2xl border border-cyan-300/20 bg-cyan-300/10 px-4 py-3 text-sm text-cyan-100 shadow-2xl shadow-cyan-950/20 backdrop-blur-xl sm:block">
-              Challenge leak found: -$200
             </div>
           </div>
         </div>
@@ -167,8 +175,8 @@ export default function Home() {
         <div className="mx-auto max-w-4xl">
           <div className="grid gap-6 sm:grid-cols-3">
             {STATS.map((s, i) => (
-              <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center" style={{ '--reveal-delay': `${i * 90}ms` }} data-reveal>
-                <div className="font-display text-3xl font-extrabold" style={gradientText}>
+              <div key={i} className="landing-card pj-card rounded-[1.5rem] p-6 text-center" style={{ '--reveal-delay': `${i * 90}ms` }} data-reveal>
+                <div className="font-display text-3xl font-extrabold text-amber-300">
                   {s.prefix}<span data-count-to={s.value} data-count-suffix={s.suffix}>0{s.suffix}</span>
                 </div>
                 <div className="mt-2 text-sm font-semibold text-white/80">{s.label}</div>
@@ -191,8 +199,8 @@ export default function Home() {
               { step: '2', icon: '✦', title: 'Get AI coaching', desc: 'Instant grading. The AI flags exactly what went wrong, what went right, and the one thing to fix.' },
               { step: '3', icon: '📈', title: 'See your patterns', desc: 'Calendar, filters, and weekly reports reveal which setups, sessions, and emotions make or lose you money.' },
             ].map((s, i) => (
-              <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-6" style={{ '--reveal-delay': `${i * 110}ms` }} data-reveal>
-                <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl text-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.15))', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div key={i} className="landing-card pj-card rounded-[1.5rem] p-6" style={{ '--reveal-delay': `${i * 110}ms` }} data-reveal>
+                <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl text-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(47,216,255,0.10))', border: '1px solid rgba(255,255,255,0.1)' }}>
                   {s.icon}
                 </div>
                 <div className="font-mono text-xs text-white/40">Step {s.step}</div>
@@ -214,7 +222,7 @@ export default function Home() {
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((f, i) => (
-              <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-5" style={{ '--reveal-delay': `${(i % 8) * 70}ms` }} data-reveal>
+              <div key={i} className="landing-card pj-card rounded-[1.4rem] p-5" style={{ '--reveal-delay': `${(i % 8) * 70}ms` }} data-reveal>
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <span className="text-xl">{f.icon}</span>
                   {f.coming ? (
@@ -241,7 +249,7 @@ export default function Home() {
               { emoji: '📊', who: 'Funded traders', desc: 'Protect your funded account by understanding exactly which setups and sessions keep you profitable.' },
               { emoji: '🧠', who: 'Serious scalpers', desc: 'Trading XAU/USD on the 5-minute chart? Your edge is discipline. PropJournal makes it measurable.' },
             ].map((p, i) => (
-              <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-left" style={{ '--reveal-delay': `${i * 100}ms` }} data-reveal>
+              <div key={i} className="landing-card pj-card rounded-[1.5rem] p-6 text-left" style={{ '--reveal-delay': `${i * 100}ms` }} data-reveal>
                 <div className="mb-3 text-2xl">{p.emoji}</div>
                 <h3 className="font-display text-sm font-semibold">{p.who}</h3>
                 <p className="mt-2 text-xs text-white/50">{p.desc}</p>
@@ -253,14 +261,14 @@ export default function Home() {
 
       {/* CTA */}
       <section className="px-6 py-20 sm:px-10" data-reveal>
-        <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 p-10 text-center shadow-[0_0_80px_rgba(34,211,238,0.08)]" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.05))' }}>
+        <div className="pj-card pj-card-warm mx-auto max-w-2xl rounded-[1.8rem] p-10 text-center" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.05))' }}>
           <h2 className="font-display text-2xl font-bold sm:text-3xl">
             Stop guessing. <span className="gradient-shimmer">Start knowing.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-md text-sm text-white/55">
             Join the PropJournal beta — every live feature is free while we build. Be one of the first traders to get AI coaching that actually helps you pass challenges.
           </p>
-          <Link href="/login?mode=signup" className="cta-glow mt-8 inline-block rounded-xl px-8 py-3.5 text-base font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5" style={gradientBtn}>
+          <Link href="/login?mode=signup" className="pj-btn-primary mt-8 inline-block rounded-full px-8 py-3.5 text-base font-bold transition-transform hover:-translate-y-0.5">
             Join the beta — it's free →
           </Link>
           <p className="mt-3 text-xs text-white/30">No credit card. No commitment. Just better trading.</p>

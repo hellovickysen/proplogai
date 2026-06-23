@@ -29,13 +29,13 @@ export default function Sidebar({ email, credits, avatarUrl }) {
   const initial = email ? email.charAt(0).toUpperCase() : '?';
 
   return (
-    <aside className="hidden w-[200px] flex-shrink-0 border-r border-white/10 bg-[#0b0b14] sm:block">
+    <aside className="hidden w-[210px] flex-shrink-0 border-r border-white/10 bg-[#060a14]/90 backdrop-blur-xl sm:block">
       <div className="sticky top-0 flex h-screen flex-col px-3 py-5">
         {/* Logo */}
         <Link href="/dashboard" className="mb-6 flex items-center gap-2.5 px-2">
           <div
             className="grid h-8 w-8 place-items-center rounded-xl text-sm font-bold text-[#08080f]"
-            style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
+            style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
           >
             &#9670;
           </div>
@@ -45,8 +45,8 @@ export default function Sidebar({ email, credits, avatarUrl }) {
         {/* New Trade button */}
         <Link
           href="/dashboard/trades/new"
-          className="mb-5 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-[#08080f]"
-          style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+          className="pj-btn-primary mb-5 block rounded-full px-4 py-2.5 text-center text-sm font-bold"
+          style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
         >
           + New Trade
         </Link>
@@ -62,7 +62,7 @@ export default function Sidebar({ email, credits, avatarUrl }) {
                 className={
                   'flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-all ' +
                   (active
-                    ? 'bg-white/[0.08] font-semibold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]'
+                    ? 'bg-amber-300/10 font-semibold text-amber-100 shadow-[inset_0_0_0_1px_rgba(255,196,45,0.18)]'
                     : 'text-white/55 hover:bg-white/[0.04] hover:text-white/80')
                 }
               >
@@ -71,7 +71,7 @@ export default function Sidebar({ email, credits, avatarUrl }) {
                 {active && (
                   <span
                     className="ml-auto h-1.5 w-1.5 rounded-full"
-                    style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
+                    style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
                   />
                 )}
               </Link>
@@ -90,7 +90,7 @@ export default function Sidebar({ email, credits, avatarUrl }) {
             ) : (
               <div
                 className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-sm font-bold text-[#08080f]"
-                style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
+                style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
               >
                 {initial}
               </div>

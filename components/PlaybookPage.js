@@ -9,7 +9,7 @@ import { PlaybookEmptyIcon } from '@/components/EmptyStates';
 
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 function SetupCard({ setup, onEdit, onToggle, onDelete }) {
   const isNoSetup = setup.is_default;
@@ -97,7 +97,7 @@ function SetupForm({ initial, onSave, onCancel }) {
       </div>
       <div className="mt-5 flex gap-3">
         <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
-        <button type="submit" disabled={saving} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <button type="submit" disabled={saving} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
           {saving ? 'Saving...' : initial ? 'Save changes' : 'Create setup'}
         </button>
       </div>
@@ -188,7 +188,7 @@ export default function PlaybookPage({ setups }) {
               onClick={handleSeed}
               disabled={seeding}
               className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60"
-              style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+              style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
             >
               {seeding ? 'Creating...' : 'Start with defaults'}
             </button>
@@ -222,7 +222,7 @@ export default function PlaybookPage({ setups }) {
         <button
           onClick={() => setEditing('new')}
           className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]"
-          style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+          style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
         >
           + New setup
         </button>

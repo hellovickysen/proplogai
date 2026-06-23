@@ -112,7 +112,7 @@ function ProfileTab({ user, prefs }) {
         </div>
         {pwErr && <p className="mt-3 text-sm text-red-400">{pwErr}</p>}
         {pwMsg && <p className="mt-3 text-sm text-emerald-400">{pwMsg}</p>}
-        <button onClick={onPasswordSave} disabled={pwSaving} className="mt-4 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <button onClick={onPasswordSave} disabled={pwSaving} className="mt-4 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
           {pwSaving ? 'Saving…' : 'Update password'}
         </button>
       </div>
@@ -231,7 +231,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
       {error && <p className="text-sm text-red-400">{error}</p>}
       {msg && <p className="text-sm text-emerald-400">{msg}</p>}
 
-      <button onClick={onSave} disabled={saving} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+      <button onClick={onSave} disabled={saving} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
         {saving ? 'Saving…' : 'Save settings'}
       </button>
     </div>

@@ -92,7 +92,7 @@ export default async function OGImage({ params }) {
               width: 56,
               height: 56,
               borderRadius: 16,
-              background: 'linear-gradient(135deg, #a78bfa, #22d3ee)',
+              background: 'linear-gradient(135deg, #ffc42d, #ff9f1c)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

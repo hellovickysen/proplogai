@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { generateShareCode, updateProfileSettings } from '@/app/dashboard/settings/profile-actions';
 import { useToast } from '@/components/Toast';
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
 const dateStyle = { colorScheme: 'dark' };
@@ -105,7 +105,7 @@ export default function PublicProfileSettings({ prefs }) {
             onClick={handleGenerate}
             disabled={generating}
             className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60"
-            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+            style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
           >
             {generating ? 'Generating...' : 'Generate public link'}
           </button>

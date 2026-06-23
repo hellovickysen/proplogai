@@ -39,7 +39,7 @@ export default function SyncAccountButton({ accountId }) {
   return (
     <div className="flex flex-col items-end gap-1">
       <div className="flex gap-2">
-        <button onClick={onSync} disabled={busy} className="rounded-lg px-4 py-1.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <button onClick={onSync} disabled={busy} className="rounded-lg px-4 py-1.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
           {busy ? 'Syncing…' : 'Sync'}
         </button>
         <button onClick={onRemove} disabled={busy} className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-sm text-white/60 hover:text-white">Remove</button>

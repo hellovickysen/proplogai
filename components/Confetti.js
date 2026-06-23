@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
  * Usage: <Confetti active={showConfetti} onDone={() => setShowConfetti(false)} />
  */
 
-const COLORS = ['#a78bfa', '#22d3ee', '#34d399', '#fbbf24', '#f87171', '#818cf8', '#fb923c'];
+const COLORS = ['#ffc42d', '#ff9f1c', '#34d399', '#fbbf24', '#f87171', '#818cf8', '#fb923c'];
 
 function randomBetween(a, b) {
   return Math.random() * (b - a) + a;
@@ -105,7 +105,7 @@ export function SuccessCheck({ active, onDone }) {
       `}} />
       <div style={{
         width: 72, height: 72, borderRadius: '50%',
-        background: 'linear-gradient(135deg, rgba(52,211,153,0.2), rgba(34,211,238,0.15))',
+        background: 'linear-gradient(135deg, rgba(52,211,153,0.2), rgba(47,216,255,0.10))',
         border: '2px solid rgba(52,211,153,0.5)',
         display: 'grid', placeItems: 'center',
         animation: 'checkPop 0.4s ease-out, checkFade 2s ease-out forwards',

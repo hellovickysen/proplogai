@@ -3,7 +3,7 @@
 import WeeklyScoreRing from '@/components/WeeklyScoreRing';
 import AchievementBadges from '@/components/AchievementBadges';
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 function DisciplineStat({ label, value, sub, tone }) {
   const borderColor = tone === 'good' ? 'border-emerald-400/20' : tone === 'warn' ? 'border-amber-400/20' : 'border-white/10';

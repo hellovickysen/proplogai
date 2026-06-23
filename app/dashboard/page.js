@@ -9,7 +9,7 @@ import ReferralCapture from '@/components/ReferralCapture';
 
 export const dynamic = 'force-dynamic';
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 function EquityCurve({ series }) {
   if (!series || series.length < 2) {
@@ -33,12 +33,12 @@ function EquityCurve({ series }) {
     <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-[200px] w-full">
       <defs>
         <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#8b5cf6" stopOpacity="0.4" />
-          <stop offset="1" stopColor="#22d3ee" stopOpacity="0.02" />
+          <stop offset="0" stopColor="#ffc42d" stopOpacity="0.4" />
+          <stop offset="1" stopColor="#ff9f1c" stopOpacity="0.02" />
         </linearGradient>
         <linearGradient id="eql" x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#8b5cf6" />
-          <stop offset="1" stopColor="#22d3ee" />
+          <stop offset="0" stopColor="#ffc42d" />
+          <stop offset="1" stopColor="#ff9f1c" />
         </linearGradient>
       </defs>
       <path d={area} fill="url(#eq)" />
@@ -144,7 +144,7 @@ export default async function DashboardPage() {
             </div>
           ))}
         </div>
-        <Link href="/dashboard/trades/new" className="mt-7 inline-block rounded-xl px-5 py-2.5 font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <Link href="/dashboard/trades/new" className="mt-7 inline-block rounded-xl px-5 py-2.5 font-semibold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
           + Log your first trade
         </Link>
       </div>
@@ -172,7 +172,7 @@ export default async function DashboardPage() {
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
           {todayTrades.length > 0 && <DashboardShareButton data={dailyShareData} />}
-          <Link href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+          <Link href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
             + New Trade
           </Link>
         </div>

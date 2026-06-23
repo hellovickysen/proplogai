@@ -81,17 +81,17 @@ export default async function DashboardLayout({ children }) {
   const tone = todayPnl >= 0 ? 'text-emerald-400' : 'text-red-400';
 
   return (
-    <div className="flex min-h-screen">
+    <div className="pj-shell flex min-h-screen">
       <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
+        <header className="relative flex items-center justify-between border-b border-white/10 bg-black/10 px-4 py-4 backdrop-blur-xl sm:px-6">
           <div className="flex items-center gap-3">
             <MobileNav />
             <span className="font-display text-base font-bold sm:hidden">PropJournal</span>
             <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:block">PropJournal</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5">
+            <div className="pj-card flex items-center gap-1.5 rounded-full px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5">
               <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:inline">Today</span>
               <span className={'font-mono text-xs font-semibold sm:text-sm ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>

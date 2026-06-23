@@ -97,14 +97,14 @@ export default async function CalendarPage({ searchParams }) {
       <div className="px-4 py-8 sm:px-6">
         <h1 className="font-display text-2xl font-bold">Calendar</h1>
         <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
-          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}>
+          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl" style={{ background: 'linear-gradient(120deg, rgba(255,196,45,0.10), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}>
             &#128197;
           </div>
           <h2 className="font-display text-xl font-bold">No trades to show</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">
             Your calendar will light up with daily P&L once you start logging trades. Green days, red days — see your patterns at a glance.
           </p>
-          <Link href="/dashboard/trades/new" className="mt-6 inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+          <Link href="/dashboard/trades/new" className="mt-6 inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}>
             + Log your first trade
           </Link>
         </div>

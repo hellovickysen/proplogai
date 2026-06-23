@@ -6,8 +6,8 @@ import { completeOnboarding } from '@/app/onboarding/actions';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
-const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientBtn = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' };
 
 export default function OnboardingFlow({ userEmail }) {
   const router = useRouter();
@@ -51,7 +51,7 @@ export default function OnboardingFlow({ userEmail }) {
             <span>{Math.round(pct)}%</span>
           </div>
           <div className="h-1.5 rounded-full bg-white/10">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: pct + '%', background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} />
+            <div className="h-full rounded-full transition-all duration-500" style={{ width: pct + '%', background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }} />
           </div>
         </div>
 
@@ -59,7 +59,7 @@ export default function OnboardingFlow({ userEmail }) {
           {/* Step 0: Welcome */}
           {step === 0 && (
             <div className="text-center">
-              <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl text-3xl" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.25), rgba(34,211,238,0.15))', border: '1px solid rgba(255,255,255,0.12)' }}>
+              <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl text-3xl" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.25), rgba(47,216,255,0.10))', border: '1px solid rgba(255,255,255,0.12)' }}>
                 &#9670;
               </div>
               <h1 className="font-display text-2xl font-bold">Welcome to PropJournal</h1>
@@ -86,7 +86,7 @@ export default function OnboardingFlow({ userEmail }) {
                   { icon: '✦', title: 'Get AI coaching', desc: 'Instant per-trade analysis flags mistakes. The weekly coach report finds your recurring leaks.' },
                 ].map((item, i) => (
                   <div key={i} className="flex gap-4 rounded-xl border border-white/10 bg-black/20 p-4">
-                    <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg text-lg" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg text-lg" style={{ background: 'linear-gradient(120deg, rgba(255,196,45,0.10), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.08)' }}>
                       {item.icon}
                     </div>
                     <div>

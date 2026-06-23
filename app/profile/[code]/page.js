@@ -166,7 +166,7 @@ export default async function PublicProfilePage({ params }) {
         <div className="mb-10 text-center">
           <div
             className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl text-2xl"
-            style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)', boxShadow: '0 0 40px rgba(139,92,246,0.3), 0 0 15px rgba(34,211,238,0.2)' }}
+            style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', boxShadow: '0 0 40px rgba(139,92,246,0.3), 0 0 15px rgba(34,211,238,0.2)' }}
           >
             &#9670;
           </div>
@@ -201,7 +201,7 @@ export default async function PublicProfilePage({ params }) {
           {show_payouts && (
             <div className="rounded-2xl border border-violet-400/20 p-6 text-center" style={{ background: 'rgba(139,92,246,0.05)' }}>
               <div className="font-mono text-xs uppercase tracking-wider text-white/45">No. of Payouts</div>
-              <div className="mt-2 font-display text-3xl font-bold" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
+              <div className="mt-2 font-display text-3xl font-bold" style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
                 {payouts.length}
               </div>
               <div className="mt-1 font-mono text-[11px] text-white/30">received</div>

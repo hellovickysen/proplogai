@@ -28,7 +28,7 @@ export default function GenerateReportButton({ label }) {
         onClick={go}
         disabled={busy}
         className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60"
-        style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+        style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
       >
         {busy ? 'Generating…' : label || '✦ Generate report'}
       </button>

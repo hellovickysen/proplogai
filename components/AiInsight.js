@@ -9,7 +9,7 @@ const SEV = {
 
 const GRADE_COLOR = { A: 'text-emerald-400', B: 'text-emerald-400', C: 'text-amber-400', D: 'text-red-400', F: 'text-red-400' };
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
+const gradientText = { background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 export default function AiInsight({ insight, tradeId }) {
   const a = insight && insight.mistakes ? insight.mistakes : null;

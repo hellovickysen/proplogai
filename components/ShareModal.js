@@ -98,7 +98,7 @@ export default function ShareModal({ type, data, onClose }) {
           onClick={download}
           disabled={downloading}
           className="rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60"
-          style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+          style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
         >
           {downloading ? 'Generating…' : '⬇ Download PNG'}
         </button>

@@ -71,7 +71,7 @@ export default function QuickLog() {
       <button
         onClick={handleOpen}
         className="fixed bottom-6 right-6 z-30 grid h-14 w-14 place-items-center rounded-2xl shadow-xl text-xl text-[#08080f] font-bold transition-transform hover:scale-110 active:scale-95"
-        style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)', boxShadow: '0 4px 20px rgba(139,92,246,0.4)' }}
+        style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)', boxShadow: '0 4px 20px rgba(139,92,246,0.4)' }}
         title="Quick Log"
       >
         +
@@ -127,7 +127,7 @@ export default function QuickLog() {
                 type="submit"
                 disabled={saving}
                 className="w-full rounded-xl py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60"
-                style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+                style={{ background: 'linear-gradient(135deg,#ffc42d,#ff9f1c)' }}
               >
                 {saving ? 'Saving...' : 'Log Trade'}
               </button>
