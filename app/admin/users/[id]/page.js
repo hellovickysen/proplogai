@@ -79,7 +79,9 @@ export default async function AdminUserDetailPage({ params }) {
         <div className="mb-6 rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <div className="mb-2 font-display text-sm font-semibold">Preferences</div>
           <div className="flex flex-wrap gap-3 text-xs text-white/55">
-            <span>Onboarded: {prefs.onboarding_complete ? '✅' : '❌'}</span>
+            <span>Onboarded: {prefs.onboarding_complete
+              ? <span className="text-emerald-400 font-semibold">✓ Yes</span>
+              : <span className="text-red-400 font-semibold">✕ No</span>}</span>
             <span>Emotions: {prefs.custom_emotions?.length || 0} custom</span>
             <span>Setups: {prefs.custom_setups?.length || 0} custom</span>
             <span>Default confidence: {prefs.default_confidence || 0}</span>

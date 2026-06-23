@@ -48,6 +48,13 @@ export default async function AdminUsersPage({ searchParams }) {
       (insights || []).forEach((i) => { insightMap[i.user_id] = (insightMap[i.user_id] || 0) + 1; });
     } catch {}
 
+    // Onboarding status
+    let onboardMap = {};
+    try {
+      const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete');
+      (prefs || []).forEach((p) => { onboardMap[p.user_id] = !!p.onboarding_complete; });
+    } catch {}
+
     let users = authUsers.map((u) => ({
       id: u.id,
       email: u.email || '(no email)',
@@ -57,6 +64,7 @@ export default async function AdminUsersPage({ searchParams }) {
       trades: tradeMap[u.id] || 0,
       journals: journalMap[u.id] || 0,
       insights: insightMap[u.id] || 0,
+      onboarded: onboardMap[u.id] || false,
     }));
 
     if (search) {
@@ -93,6 +101,7 @@ export default async function AdminUsersPage({ searchParams }) {
                 <th className="px-4 py-3">Provider</th>
                 <th className="px-4 py-3">Signed up</th>
                 <th className="px-4 py-3">Last active</th>
+                <th className="px-4 py-3">Onboarded</th>
                 <th className="px-4 py-3">Trades</th>
                 <th className="px-4 py-3">Journals</th>
                 <th className="px-4 py-3">AI</th>
@@ -110,6 +119,11 @@ export default async function AdminUsersPage({ searchParams }) {
                   </td>
                   <td className="px-4 py-3 font-mono text-white/55">{fmtDate(u.created_at)}</td>
                   <td className="px-4 py-3 font-mono text-white/55">{fmtDate(u.last_sign_in)}</td>
+                  <td className="px-4 py-3 text-center">
+                    {u.onboarded
+                      ? <span className="text-emerald-400" title="Onboarded">✓</span>
+                      : <span className="text-red-400" title="Not onboarded">✕</span>}
+                  </td>
                   <td className="px-4 py-3 font-mono">{u.trades}</td>
                   <td className="px-4 py-3 font-mono">{u.journals}</td>
                   <td className="px-4 py-3 font-mono">{u.insights}</td>
@@ -119,7 +133,7 @@ export default async function AdminUsersPage({ searchParams }) {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-white/40">No users found.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-white/40">No users found.</td></tr>
               )}
             </tbody>
           </table>
