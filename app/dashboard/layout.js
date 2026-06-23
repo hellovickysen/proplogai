@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/Sidebar';
 import MobileNav from '@/components/MobileNav';
@@ -17,11 +18,48 @@ export default async function DashboardLayout({ children }) {
 
   const { data: prefs } = await supabase
     .from('user_preferences')
-    .select('onboarding_complete')
+    .select('onboarding_complete, referred_by')
     .eq('user_id', user.id)
     .maybeSingle();
   if (!prefs || !prefs.onboarding_complete) {
     redirect('/onboarding');
+  }
+
+  // ─── Server-side referral capture ────────────────────────────
+  // Reads ref_code cookie set by /r/[code] page. Processes once,
+  // then skips on subsequent loads (referred_by already set).
+  try {
+    const cookieStore = cookies();
+    const refCookie = cookieStore.get('ref_code');
+    if (refCookie && refCookie.value && !prefs.referred_by) {
+      const refCode = refCookie.value;
+
+      // Look up the referral code
+      const { data: refRow } = await supabase
+        .from('referral_codes')
+        .select('user_id, code')
+        .eq('code', refCode)
+        .maybeSingle();
+
+      if (refRow && refRow.user_id !== user.id) {
+        // Mark this user as referred
+        await supabase
+          .from('user_preferences')
+          .update({ referred_by: refCode })
+          .eq('user_id', user.id);
+
+        // Create the referral record
+        await supabase.from('referrals').insert({
+          referrer_id: refRow.user_id,
+          referred_user_id: user.id,
+          referred_email: user.email || null,
+          status: 'pending',
+          reward_given: false,
+        });
+      }
+    }
+  } catch (e) {
+    // Never let referral processing break the dashboard
   }
 
   const today = new Date().toISOString().slice(0, 10);
