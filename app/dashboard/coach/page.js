@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
 import CoachReport from '@/components/CoachReport';
 import GenerateReportButton from '@/components/GenerateReportButton';
+import EmailReportButton from '@/components/EmailReportButton';
 import Link from 'next/link';
+import { isEmailConfigured } from '@/lib/email';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +22,7 @@ export default async function CoachPage() {
   const report = insight && insight.mistakes ? insight.mistakes : null;
   const tradeCount = count || 0;
   const hasEnough = tradeCount >= MIN_TRADES;
+  const emailEnabled = isEmailConfigured();
 
   return (
     <div className="px-6 py-8">
@@ -28,7 +31,10 @@ export default async function CoachPage() {
           <h1 className="font-display text-2xl font-bold">AI Coach</h1>
           <p className="mt-1 text-sm text-white/55">Recurring patterns and trading psychology across your recent trades.</p>
         </div>
-        {hasEnough ? <GenerateReportButton label={report ? '↻ Refresh report' : '✦ Generate report'} /> : null}
+        <div className="flex items-center gap-2">
+          {report && emailEnabled ? <EmailReportButton /> : null}
+          {hasEnough ? <GenerateReportButton label={report ? '↻ Refresh report' : '✦ Generate report'} /> : null}
+        </div>
       </div>
 
       {report ? (

@@ -3,6 +3,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { analyzeCoachReport } from '@/lib/ai';
+import { sendEmail, buildCoachReportEmail, isEmailConfigured } from '@/lib/email';
+import { computeStats } from '@/lib/stats';
 
 /** Rate limiter: max 5 coach reports per hour per user */
 const coachRateLimit = new Map();
@@ -79,5 +81,55 @@ export async function generateCoachReport() {
 
   revalidatePath('/dashboard/coach');
   revalidatePath('/dashboard');
+  return { ok: true };
+}
+
+/** Send the latest coach report to the user's email */
+export async function sendCoachReportEmail() {
+  if (!isEmailConfigured()) {
+    return { error: 'Email is not configured yet.' };
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'You must be signed in.' };
+
+  // Fetch the latest coach report
+  const { data: insight } = await supabase
+    .from('ai_insights')
+    .select('*')
+    .eq('type', 'coach_report')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!insight || !insight.mistakes) {
+    return { error: 'No coach report found. Generate one first.' };
+  }
+
+  // Fetch trade stats for the email
+  const { data: trades } = await supabase
+    .from('trades')
+    .select('pnl, r_multiple')
+    .limit(50);
+  const list = trades || [];
+  const s = computeStats(list);
+
+  const report = insight.mistakes;
+  const html = buildCoachReportEmail(report, {
+    trades: s.n,
+    winRate: s.winRate.toFixed(0),
+    net: s.net,
+  });
+
+  const result = await sendEmail({
+    to: user.email,
+    subject: '✦ Your PropJournal Coach Report',
+    html,
+  });
+
+  if (!result.ok) return { error: result.error };
   return { ok: true };
 }
