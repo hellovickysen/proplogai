@@ -5,6 +5,22 @@ import { ToastProvider } from '@/components/Toast';
 export const metadata = {
   title: 'PropJournal — AI Trading Journal for Prop Firm Traders',
   description: 'The AI-powered trading journal built for prop firm traders. Log trades, track your psychology, manage challenge expenses, and get AI coaching that finds the patterns costing you money.',
+  openGraph: {
+    title: 'PropJournal — AI Trading Journal for Prop Firm Traders',
+    description: 'Log trades, track your psychology, and get AI coaching that finds the patterns costing you money.',
+    siteName: 'PropJournal',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PropJournal — AI Trading Journal',
+    description: 'AI-powered trading journal for prop firm traders.',
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+  },
 };
 
 export default function RootLayout({ children }) {

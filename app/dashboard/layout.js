@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/Sidebar';
 import MobileNav from '@/components/MobileNav';
 import Fab from '@/components/Fab';
+import RiskFooter from '@/components/RiskFooter';
 import { num, fmtMoney } from '@/lib/stats';
 
 export const dynamic = 'force-dynamic';
@@ -55,6 +56,7 @@ export default async function DashboardLayout({ children }) {
           </div>
         </header>
         <main className="flex-1">{children}</main>
+        <RiskFooter />
       </div>
       <Fab />
     </div>
