@@ -42,20 +42,29 @@ export default async function DashboardLayout({ children }) {
         .maybeSingle();
 
       if (refRow && refRow.user_id !== user.id) {
-        // Mark this user as referred
-        await supabase
-          .from('user_preferences')
-          .update({ referred_by: refCode })
-          .eq('user_id', user.id);
+        // Check if referral already exists (prevent duplicates)
+        const { data: existingRef } = await supabase
+          .from('referrals')
+          .select('id')
+          .eq('referred_user_id', user.id)
+          .maybeSingle();
 
-        // Create the referral record
-        await supabase.from('referrals').insert({
-          referrer_id: refRow.user_id,
-          referred_user_id: user.id,
-          referred_email: user.email || null,
-          status: 'pending',
-          reward_given: false,
-        });
+        if (!existingRef) {
+          // Mark this user as referred
+          await supabase
+            .from('user_preferences')
+            .update({ referred_by: refCode })
+            .eq('user_id', user.id);
+
+          // Create the referral record
+          await supabase.from('referrals').insert({
+            referrer_id: refRow.user_id,
+            referred_user_id: user.id,
+            referred_email: user.email || null,
+            status: 'pending',
+            reward_given: false,
+          });
+        }
       }
     }
   } catch (e) {
