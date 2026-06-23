@@ -198,11 +198,15 @@ export default async function PublicProfilePage({ params }) {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {payoutCerts.map((t) => (
                 <div key={t.id} className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
-                  <div className="aspect-[4/3] overflow-hidden bg-black/40">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
                     <img src={t.file_url} alt={t.title} className="h-full w-full object-cover" />
+                    <div className="absolute left-2 top-2">
+                      <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300 backdrop-blur-sm">Payout Certificate</span>
+                    </div>
                   </div>
                   <div className="p-3">
                     <div className="text-sm font-semibold">{t.title}</div>
+                    {t.description && <p className="mt-0.5 text-xs text-white/40">{t.description}</p>}
                   </div>
                 </div>
               ))}
