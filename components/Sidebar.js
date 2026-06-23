@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades', icon: '☰', href: '/dashboard/trades' },
-  { label: 'Calendar', icon: '📅', href: '/dashboard/calendar' },
+  { label: 'Playbook', icon: '\u{1F4CB}', href: '/dashboard/playbook' },
+  { label: 'Calendar', icon: '\u{1F4C5}', href: '/dashboard/calendar' },
   { label: 'AI Coach', icon: '✦', href: '/dashboard/coach' },
   { label: 'Settings', icon: '⚙', href: '/dashboard/settings' },
 ];

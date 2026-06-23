@@ -30,6 +30,16 @@ function Fact({ label, value }) {
   );
 }
 
+const NO_SETUP_LABELS = {
+  revenge: 'Revenge trade',
+  fomo: 'FOMO',
+  boredom: 'Boredom',
+  recover_loss: 'Recovering loss',
+  overconfidence: 'Overconfidence',
+  chasing: 'Chasing price',
+  other: 'Other',
+};
+
 export default async function TradeDetailPage({ params }) {
   const id = params.id;
   const supabase = createClient();
@@ -52,6 +62,17 @@ export default async function TradeDetailPage({ params }) {
     .eq('user_id', user.id)
     .maybeSingle();
 
+  // Resolve setup name from setups table if we have setup_id
+  let setupName = trade.setup || null;
+  if (trade.setup_id) {
+    const { data: setupRow } = await supabase
+      .from('setups')
+      .select('name, direction')
+      .eq('id', trade.setup_id)
+      .maybeSingle();
+    if (setupRow) setupName = setupRow.name;
+  }
+
   const win = num(trade.pnl) >= 0;
 
   return (
@@ -69,7 +90,7 @@ export default async function TradeDetailPage({ params }) {
             </h1>
             <div className="mt-0.5 font-mono text-xs text-white/50">
               {trade.trade_date || fmtDateTime(trade.closed_at || trade.created_at)}
-              {trade.session ? <span className="ml-2 text-white/45">· {trade.session}</span> : null}
+              {trade.session ? <span className="ml-2 text-white/45">&middot; {trade.session}</span> : null}
             </div>
           </div>
         </div>
@@ -99,11 +120,30 @@ export default async function TradeDetailPage({ params }) {
               <Fact label="Target" value={trade.take_profit != null ? trade.take_profit : '—'} />
               <Fact label="Lot" value={trade.lot_size != null ? trade.lot_size : '—'} />
               <Fact label="Timeframe" value={trade.timeframe || '—'} />
-              <Fact label="Setup" value={trade.setup || '—'} />
+              <Fact label="Setup" value={setupName || '—'} />
               <Fact label="Session" value={trade.session || '—'} />
               <Fact label="Date" value={trade.trade_date || fmtDateTime(trade.closed_at || trade.created_at)} />
             </div>
           </div>
+
+          {/* Playbook Discipline — only if setup discipline data exists */}
+          {(trade.setup_followed || trade.no_setup_reason) && (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="mb-3 font-display text-sm font-semibold" style={gradientText}>Playbook discipline</div>
+              <div className="flex flex-wrap gap-2">
+                {trade.setup_followed && (
+                  <span className={'rounded-full px-3 py-1 text-xs font-semibold ' + (trade.setup_followed === 'yes' ? 'bg-emerald-500/15 text-emerald-300' : trade.setup_followed === 'partial' ? 'bg-amber-500/15 text-amber-300' : 'bg-red-500/15 text-red-300')}>
+                    {trade.setup_followed === 'yes' ? '✓ Followed setup' : trade.setup_followed === 'partial' ? '~ Partially followed' : '✗ Did not follow'}
+                  </span>
+                )}
+                {trade.no_setup_reason && (
+                  <span className="rounded-full bg-red-500/15 px-3 py-1 text-xs font-semibold text-red-300">
+                    {NO_SETUP_LABELS[trade.no_setup_reason] || trade.no_setup_reason}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* AI Coach */}
           {insight ? (

@@ -1,9 +1,10 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { computeStats, equitySeries, fmtMoney, fmtR, num } from '@/lib/stats';
+import { computeStats, equitySeries, fmtMoney, fmtR, num, computeDisciplineStats } from '@/lib/stats';
 import TradeTable from '@/components/TradeTable';
 import PnlCalendar from '@/components/PnlCalendar';
 import DashboardShareButton from '@/components/DashboardShareButton';
+import DisciplineCards from '@/components/DisciplineCards';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,7 +72,7 @@ export default async function DashboardPage() {
   const supabase = createClient();
   const { data: trades } = await supabase
     .from('trades')
-    .select('id, pair, direction, pnl, r_multiple, setup, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
+    .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
     .order('trade_date', { ascending: false, nullsFirst: false });
   const list = trades || [];
   const s = computeStats(list);
@@ -86,6 +87,18 @@ export default async function DashboardPage() {
   const report = coach && coach.mistakes ? coach.mistakes : null;
   const topMistake = report && Array.isArray(report.recurring_mistakes) ? report.recurring_mistakes[0] : null;
 
+  // Fetch journal entries for discipline stats
+  const tradeIds = list.map((t) => t.id);
+  let journals = [];
+  if (tradeIds.length > 0) {
+    const { data: jdata } = await supabase
+      .from('journal_entries')
+      .select('trade_id')
+      .in('trade_id', tradeIds);
+    journals = jdata || [];
+  }
+  const disciplineStats = computeDisciplineStats(list, journals);
+
   if (list.length === 0) {
     const steps = [
       { n: '1', t: 'Log your first trade', d: 'Pair, direction, and your P&L — that is all it takes.' },
@@ -94,7 +107,7 @@ export default async function DashboardPage() {
     ];
     return (
       <div className="px-4 py-8 sm:px-6 sm:py-10">
-        <h1 className="font-display text-2xl font-bold">Welcome to PropJournal 👋</h1>
+        <h1 className="font-display text-2xl font-bold">Welcome to PropJournal &#x1F44B;</h1>
         <p className="mt-1 text-sm text-white/55">Let's get your journal started.</p>
         <div className="mt-6 grid gap-4 sm:grid-cols-3">
           {steps.map((st) => (
@@ -153,6 +166,13 @@ export default async function DashboardPage() {
         <Stat label="Avg R" value={fmtR(s.avgR)} tone={s.avgR === null ? '' : s.avgR >= 0 ? 'pos' : 'neg'} />
         <Stat label="Trades" value={String(s.n)} />
       </div>
+
+      {/* Playbook Discipline */}
+      {disciplineStats.totalTrades > 0 && (
+        <div className="mb-6">
+          <DisciplineCards stats={disciplineStats} />
+        </div>
+      )}
 
       <div className="mb-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">

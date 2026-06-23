@@ -13,7 +13,7 @@ export default async function TradesPage() {
 
   const { data: trades } = await supabase
     .from('trades')
-    .select('id, pair, direction, pnl, r_multiple, setup, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, source')
+    .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, source')
     .order('trade_date', { ascending: false, nullsFirst: false });
   const list = trades || [];
 
@@ -71,7 +71,7 @@ export default async function TradesPage() {
             className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl"
             style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}
           >
-            ☰
+            &#9776;
           </div>
           <h2 className="font-display text-xl font-bold">No trades yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">

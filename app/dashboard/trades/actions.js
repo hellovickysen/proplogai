@@ -48,6 +48,8 @@ async function getCtx() {
   return { supabase, user };
 }
 
+const VALID_SETUP_FOLLOWED = ['yes', 'partial', 'no'];
+
 function buildRow(user, payload) {
   const pair = sanitizeText(payload.pair, MAX_PAIR_LENGTH) || '';
   const pnl = toNum(payload.pnl);
@@ -66,6 +68,9 @@ function buildRow(user, payload) {
     pnl: toNum(payload.pnl),
     r_multiple: toNum(payload.r_multiple),
     setup: sanitizeText(payload.setup, MAX_SETUP_LENGTH),
+    setup_id: payload.setup_id || null,
+    setup_followed: VALID_SETUP_FOLLOWED.includes(payload.setup_followed) ? payload.setup_followed : null,
+    no_setup_reason: sanitizeText(payload.no_setup_reason, 50) || null,
     timeframe: payload.timeframe || null,
     session: payload.session || null,
     trade_date: payload.trade_date || null,

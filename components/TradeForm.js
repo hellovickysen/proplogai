@@ -11,12 +11,21 @@ import { useToast } from '@/components/Toast';
 const PAIRS = ['XAU/USD', 'EUR/USD', 'GBP/USD', 'USD/JPY', 'GBP/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
 const TIMEFRAMES = ['M5', 'M15', 'H1', 'H4', 'D1'];
 const SESSIONS = ['Asian', 'London', 'New York'];
+const NO_SETUP_REASONS = [
+  { value: 'revenge', label: 'Revenge trade' },
+  { value: 'fomo', label: 'FOMO' },
+  { value: 'boredom', label: 'Boredom' },
+  { value: 'recover_loss', label: 'Trying to recover loss' },
+  { value: 'overconfidence', label: 'Overconfidence' },
+  { value: 'chasing', label: 'Chasing price' },
+  { value: 'other', label: 'Other' },
+];
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null }) {
+export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null }) {
   const router = useRouter();
   const [form, setForm] = useState({
     pair: (initial && initial.pair) || 'XAU/USD',
@@ -29,6 +38,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     pnl: initial && initial.pnl != null ? initial.pnl : '',
     r_multiple: initial && initial.r_multiple != null ? initial.r_multiple : '',
     setup: (initial && initial.setup) || '',
+    setup_id: (initial && initial.setup_id) || '',
+    setup_followed: (initial && initial.setup_followed) || '',
+    no_setup_reason: (initial && initial.no_setup_reason) || '',
     timeframe: (initial && initial.timeframe) || 'M5',
     session: (initial && initial.session) || '',
     trade_date: (initial && initial.trade_date) || todayStr(),
@@ -49,6 +61,35 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   function set(k, v) {
     setForm((f) => ({ ...f, [k]: v }));
+  }
+
+  // Resolve active setups — from DB setups prop, or fall back to prefs
+  const activeSetups = (setups && setups.length > 0)
+    ? setups.filter((s) => s.is_active)
+    : null;
+
+  // Find selected setup object
+  const selectedSetup = activeSetups
+    ? activeSetups.find((s) => s.id === form.setup_id)
+    : null;
+
+  const isNoSetup = selectedSetup && selectedSetup.is_default;
+
+  function handleSetupChange(setupId) {
+    if (!activeSetups) {
+      // Legacy mode — plain text
+      set('setup', setupId);
+      return;
+    }
+    const chosen = activeSetups.find((s) => s.id === setupId);
+    setForm((f) => ({
+      ...f,
+      setup_id: setupId,
+      setup: chosen ? chosen.name : '',
+      // Reset discipline fields when changing setup
+      setup_followed: '',
+      no_setup_reason: '',
+    }));
   }
 
   function toggleEmotion(e) {
@@ -95,7 +136,6 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
     setScreenshotUrls((cur) => [...cur, ...newUrls]);
     setUploading(false);
-    // Reset the file input
     e.target.value = '';
   }
 
@@ -128,6 +168,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
           pair: form.pair,
           direction: form.direction,
           has_journal: !!(payload.journal),
+          setup: form.setup,
+          setup_followed: form.setup_followed,
         });
       }
       router.push(mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades');
@@ -206,19 +248,93 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   ))}
                 </select>
               </div>
+
+              {/* Setup — Playbook-aware or legacy */}
               <div>
                 <label className={labelCls}>Setup</label>
-                <select className={field} value={form.setup} onChange={(e) => set('setup', e.target.value)}>
-                  <option value="">Select setup…</option>
-                  {(prefs && prefs.custom_setups && prefs.custom_setups.length > 0
-                    ? prefs.custom_setups
-                    : ['Fib Level', 'London Low Sweep', 'London High Sweep', 'ChoCh On Line']
-                  ).map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
+                {activeSetups ? (
+                  <select className={field} value={form.setup_id} onChange={(e) => handleSetupChange(e.target.value)}>
+                    <option value="">Select setup...</option>
+                    {activeSetups.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <select className={field} value={form.setup} onChange={(e) => set('setup', e.target.value)}>
+                    <option value="">Select setup...</option>
+                    {(prefs && prefs.custom_setups && prefs.custom_setups.length > 0
+                      ? prefs.custom_setups
+                      : ['Fib Level', 'London Low Sweep', 'London High Sweep', 'ChoCh On Line']
+                    ).map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
+
+            {/* Setup direction hint + discipline fields */}
+            {selectedSetup && (
+              <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                {selectedSetup.direction && (
+                  <div className="mb-3">
+                    <div className="font-mono text-[10px] uppercase tracking-wider text-white/40">Rule direction</div>
+                    <p className="mt-1 text-sm leading-relaxed text-white/60">{selectedSetup.direction}</p>
+                  </div>
+                )}
+
+                {/* Did you follow this setup? */}
+                {!isNoSetup && (
+                  <div>
+                    <label className={labelCls}>Did you follow this setup?</label>
+                    <div className="flex gap-2">
+                      {[
+                        { v: 'yes', l: 'Yes', color: 'emerald' },
+                        { v: 'partial', l: 'Partially', color: 'amber' },
+                        { v: 'no', l: 'No', color: 'red' },
+                      ].map((opt) => {
+                        const active = form.setup_followed === opt.v;
+                        const cls = active
+                          ? `border-${opt.color}-400/50 bg-${opt.color}-500/15 text-${opt.color}-300`
+                          : 'border-white/10 bg-black/30 text-white/50';
+                        return (
+                          <button
+                            key={opt.v}
+                            type="button"
+                            onClick={() => set('setup_followed', form.setup_followed === opt.v ? '' : opt.v)}
+                            className={'flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ' + cls}
+                          >
+                            {opt.l}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* No Setup reason */}
+                {isNoSetup && (
+                  <div>
+                    <label className={labelCls}>What caused this trade?</label>
+                    <div className="flex flex-wrap gap-2">
+                      {NO_SETUP_REASONS.map((r) => {
+                        const active = form.no_setup_reason === r.value;
+                        return (
+                          <button
+                            key={r.value}
+                            type="button"
+                            onClick={() => set('no_setup_reason', active ? '' : r.value)}
+                            className={'rounded-full border px-3 py-1.5 text-xs ' + (active ? 'border-red-400/50 bg-red-500/15 text-red-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
+                          >
+                            {r.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Section 2: Price Data */}
@@ -243,7 +359,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               Result
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><label className={labelCls}>P&amp;L ($) *</label><input className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
+              <div><label className={labelCls}>P&L ($) *</label><input className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
               <div><label className={labelCls}>R multiple (optional)</label><input className={field} value={form.r_multiple} onChange={(e) => set('r_multiple', e.target.value)} inputMode="decimal" placeholder="e.g. 1.5 or -1" /></div>
             </div>
           </div>
@@ -298,7 +414,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
                   {/* Notes */}
                   <div>
-                    <label className={labelCls}>Notes — what happened &amp; why?</label>
+                    <label className={labelCls}>Notes — what happened & why?</label>
                     <textarea
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
@@ -334,7 +450,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                       onChange={onFiles}
                       className="block w-full text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:text-white"
                     />
-                    {uploading && <p className="mt-1 text-xs text-cyan-400">Uploading…</p>}
+                    {uploading && <p className="mt-1 text-xs text-cyan-400">Uploading...</p>}
                   </div>
                 </div>
               )}
@@ -346,7 +462,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
           <div className="mt-6 flex gap-3">
             <Link href={mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades'} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</Link>
             <button type="submit" disabled={saving || uploading} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-              {saving ? 'Saving…' : mode === 'edit' ? 'Save changes' : 'Save trade'}
+              {saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Save trade'}
             </button>
           </div>
         </form>
@@ -358,6 +474,16 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
           {form.pair}{' '}
           <span className={'ml-1 text-xs ' + (form.direction === 'long' ? 'text-emerald-400' : 'text-red-400')}>{form.direction.toUpperCase()}</span>
         </div>
+        {form.setup && (
+          <div className="mt-2">
+            <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-300">{form.setup}</span>
+            {form.setup_followed && (
+              <span className={'ml-2 rounded-full px-2 py-0.5 text-xs ' + (form.setup_followed === 'yes' ? 'bg-emerald-500/15 text-emerald-300' : form.setup_followed === 'partial' ? 'bg-amber-500/15 text-amber-300' : 'bg-red-500/15 text-red-300')}>
+                {form.setup_followed === 'yes' ? 'Followed' : form.setup_followed === 'partial' ? 'Partial' : 'Not followed'}
+              </span>
+            )}
+          </div>
+        )}
         <div className={'mt-4 font-display text-3xl font-bold ' + (hasPnl ? (pnlNum >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/50')}>
           {hasPnl ? (pnlNum >= 0 ? '+' : '-') + '$' + Math.abs(pnlNum).toLocaleString() : '$0.00'}
         </div>
