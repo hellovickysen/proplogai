@@ -16,7 +16,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function Sidebar({ email, credits }) {
+export default function Sidebar({ email, credits, avatarUrl }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -85,12 +85,16 @@ export default function Sidebar({ email, credits }) {
             onClick={() => setMenuOpen((o) => !o)}
             className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-white/[0.04]"
           >
-            <div
-              className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-sm font-bold text-[#08080f]"
-              style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
-            >
-              {initial}
-            </div>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="h-8 w-8 flex-shrink-0 rounded-full object-cover border border-white/10" />
+            ) : (
+              <div
+                className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-sm font-bold text-[#08080f]"
+                style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
+              >
+                {initial}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
               <div className="truncate text-xs text-white/70">{email || 'Account'}</div>
             </div>

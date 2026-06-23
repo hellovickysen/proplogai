@@ -18,7 +18,7 @@ export default async function DashboardLayout({ children }) {
 
   const { data: prefs } = await supabase
     .from('user_preferences')
-    .select('onboarding_complete, referred_by, referral_balance')
+    .select('onboarding_complete, referred_by, referral_balance, avatar_url')
     .eq('user_id', user.id)
     .maybeSingle();
   if (!prefs || !prefs.onboarding_complete) {
@@ -82,7 +82,7 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} credits={prefs.referral_balance} />
+      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
