@@ -56,9 +56,24 @@ export default async function AdminOverviewPage() {
     // Today's stats
     const today = new Date().toISOString().slice(0, 10);
     let todayTrades = 0;
+    let todayJournals = 0;
+    let todayInsights = 0;
+    let todaySignups = 0;
     try {
       const { count } = await sb.from('trades').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
       todayTrades = count || 0;
+    } catch {}
+    try {
+      const { count } = await sb.from('journal_entries').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
+      todayJournals = count || 0;
+    } catch {}
+    try {
+      const { count } = await sb.from('ai_insights').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
+      todayInsights = count || 0;
+    } catch {}
+    try {
+      const { count } = await sb.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
+      todaySignups = count || 0;
     } catch {}
 
     // Subscriptions
@@ -73,11 +88,34 @@ export default async function AdminOverviewPage() {
         <h1 className="mb-1 font-display text-2xl font-bold">Platform Overview</h1>
         <p className="mb-6 text-sm text-white/50">Real-time stats across all PropJournal users.</p>
 
-        <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <Stat label="Total Users" value={totalUsers} />
-          <Stat label="Total Trades" value={totalTrades} sub={todayTrades ? `+${todayTrades} today` : null} />
+          <Stat label="Total Trades" value={totalTrades} />
           <Stat label="Journal Entries" value={totalJournals} />
           <Stat label="AI Analyses" value={totalInsights} sub={`Est. cost: $${estAiCost}`} />
+        </div>
+
+        {/* Today's stats */}
+        <div className="mb-8 rounded-2xl border border-violet-400/15 bg-violet-500/[0.03] p-5">
+          <div className="mb-3 font-display text-sm font-semibold" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Today's Activity</div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div>
+              <div className="font-mono text-xs text-white/45">Signups</div>
+              <div className="mt-1 font-display text-xl font-bold">{todaySignups}</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs text-white/45">Trades</div>
+              <div className="mt-1 font-display text-xl font-bold">{todayTrades}</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs text-white/45">Journals</div>
+              <div className="mt-1 font-display text-xl font-bold">{todayJournals}</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs text-white/45">AI Calls</div>
+              <div className="mt-1 font-display text-xl font-bold">{todayInsights}</div>
+            </div>
+          </div>
         </div>
 
         <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-3">

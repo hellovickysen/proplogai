@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { createAdminClient, isAdminConfigured } from '@/lib/supabase/admin';
+import { createAdminClient, isAdminConfigured, ADMIN_EMAIL } from '@/lib/supabase/admin';
+import AdminBanButton from '@/components/AdminBanButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -65,6 +66,8 @@ export default async function AdminUsersPage({ searchParams }) {
       journals: journalMap[u.id] || 0,
       insights: insightMap[u.id] || 0,
       onboarded: onboardMap[u.id] || false,
+      banned: !!u.banned_until,
+      isAdmin: u.email === ADMIN_EMAIL,
     }));
 
     if (search) {
@@ -105,6 +108,7 @@ export default async function AdminUsersPage({ searchParams }) {
                 <th className="px-4 py-3">Trades</th>
                 <th className="px-4 py-3">Journals</th>
                 <th className="px-4 py-3">AI</th>
+                <th className="px-4 py-3">Status</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -128,12 +132,22 @@ export default async function AdminUsersPage({ searchParams }) {
                   <td className="px-4 py-3 font-mono">{u.journals}</td>
                   <td className="px-4 py-3 font-mono">{u.insights}</td>
                   <td className="px-4 py-3">
-                    <Link href={'/admin/users/' + u.id} className="font-mono text-xs text-cyan-400 hover:underline">View →</Link>
+                    {u.banned ? (
+                      <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-[10px] font-semibold text-red-300">Banned</span>
+                    ) : (
+                      <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">Active</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Link href={'/admin/users/' + u.id} className="font-mono text-xs text-cyan-400 hover:underline">View</Link>
+                      {!u.isAdmin && <AdminBanButton userId={u.id} isBanned={u.banned} email={u.email} />}
+                    </div>
                   </td>
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={9} className="px-4 py-8 text-center text-white/40">No users found.</td></tr>
+                <tr><td colSpan={10} className="px-4 py-8 text-center text-white/40">No users found.</td></tr>
               )}
             </tbody>
           </table>
