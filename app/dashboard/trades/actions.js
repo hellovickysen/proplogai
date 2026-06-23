@@ -4,6 +4,36 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { analyzeTradeWithAI } from '@/lib/ai';
 
+/** Input validation limits */
+const MAX_PAIR_LENGTH = 20;
+const MAX_NOTE_LENGTH = 5000;
+const MAX_EMOTIONS = 20;
+const MAX_SETUP_LENGTH = 100;
+const PNL_RANGE = [-1000000, 1000000];
+const MAX_SCREENSHOTS = 10;
+
+/** Simple in-memory rate limiter for AI calls (per user, resets on deploy) */
+const aiRateLimit = new Map();
+const AI_RATE_LIMIT = 20; // max AI calls per hour
+const AI_RATE_WINDOW = 60 * 60 * 1000; // 1 hour
+
+function checkAiRateLimit(userId) {
+  const now = Date.now();
+  const entry = aiRateLimit.get(userId);
+  if (!entry || now - entry.start > AI_RATE_WINDOW) {
+    aiRateLimit.set(userId, { start: now, count: 1 });
+    return true;
+  }
+  if (entry.count >= AI_RATE_LIMIT) return false;
+  entry.count++;
+  return true;
+}
+
+function sanitizeText(str, maxLen) {
+  if (!str) return null;
+  return String(str).slice(0, maxLen).replace(/<[^>]*>/g, '');
+}
+
 function toNum(v) {
   if (v === '' || v === null || v === undefined) return null;
   const n = Number(v);
@@ -19,9 +49,14 @@ async function getCtx() {
 }
 
 function buildRow(user, payload) {
+  const pair = sanitizeText(payload.pair, MAX_PAIR_LENGTH) || '';
+  const pnl = toNum(payload.pnl);
+  if (pnl !== null && (pnl < PNL_RANGE[0] || pnl > PNL_RANGE[1])) {
+    throw new Error('P&L value out of range.');
+  }
   return {
     user_id: user.id,
-    pair: String(payload.pair || '').toUpperCase(),
+    pair: pair.toUpperCase(),
     direction: payload.direction === 'short' ? 'short' : 'long',
     entry_price: toNum(payload.entry_price),
     exit_price: toNum(payload.exit_price),
@@ -30,7 +65,7 @@ function buildRow(user, payload) {
     lot_size: toNum(payload.lot_size),
     pnl: toNum(payload.pnl),
     r_multiple: toNum(payload.r_multiple),
-    setup: payload.setup || null,
+    setup: sanitizeText(payload.setup, MAX_SETUP_LENGTH),
     timeframe: payload.timeframe || null,
     session: payload.session || null,
     trade_date: payload.trade_date || null,
@@ -101,12 +136,13 @@ export async function deleteTrade(id) {
 export async function saveJournal(tradeId, payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
-  const urls = normalizeScreenshots(payload.screenshot_urls, payload.screenshot_url);
+  const urls = normalizeScreenshots(payload.screenshot_urls, payload.screenshot_url).slice(0, MAX_SCREENSHOTS);
+  const emotions = Array.isArray(payload.emotions) ? payload.emotions.slice(0, MAX_EMOTIONS).map((e) => sanitizeText(e, 50)) : [];
   const entry = {
     user_id: user.id,
     trade_id: tradeId,
-    note: payload.note || null,
-    emotions: Array.isArray(payload.emotions) ? payload.emotions : [],
+    note: sanitizeText(payload.note, MAX_NOTE_LENGTH),
+    emotions,
     confidence: toNum(payload.confidence),
     screenshot_url: urls[0] || null,
     screenshot_urls: urls,
@@ -132,6 +168,7 @@ export async function saveJournal(tradeId, payload) {
 export async function analyzeTrade(tradeId) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!checkAiRateLimit(user.id)) return { error: 'Rate limit reached. Try again in an hour.' };
 
   const { data: trade } = await supabase.from('trades').select('*').eq('id', tradeId).maybeSingle();
   if (!trade) return { error: 'Trade not found.' };

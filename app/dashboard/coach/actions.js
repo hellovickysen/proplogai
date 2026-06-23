@@ -4,12 +4,27 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { analyzeCoachReport } from '@/lib/ai';
 
+/** Rate limiter: max 5 coach reports per hour per user */
+const coachRateLimit = new Map();
+function checkCoachRate(userId) {
+  const now = Date.now();
+  const entry = coachRateLimit.get(userId);
+  if (!entry || now - entry.start > 60 * 60 * 1000) {
+    coachRateLimit.set(userId, { start: now, count: 1 });
+    return true;
+  }
+  if (entry.count >= 5) return false;
+  entry.count++;
+  return true;
+}
+
 export async function generateCoachReport() {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: 'You must be signed in.' };
+  if (!checkCoachRate(user.id)) return { error: 'Rate limit reached. You can generate up to 5 reports per hour.' };
 
   const { data: trades } = await supabase
     .from('trades')
@@ -17,8 +32,8 @@ export async function generateCoachReport() {
     .order('created_at', { ascending: false })
     .limit(50);
   const list = trades || [];
-  if (list.length < 2) {
-    return { error: 'Log at least 2 trades first so the coach has patterns to analyze.' };
+  if (list.length < 5) {
+    return { error: 'Log at least 5 trades first so the coach has enough patterns to analyze.' };
   }
 
   const ids = list.map((t) => t.id);

@@ -62,6 +62,18 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   async function onFiles(e) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
+    const MAX_FILES = 10;
+    if (screenshotUrls.length + files.length > MAX_FILES) {
+      setError('Maximum ' + MAX_FILES + ' screenshots per trade.');
+      return;
+    }
+    for (const file of files) {
+      if (file.size > MAX_FILE_SIZE) {
+        setError('File "' + file.name + '" exceeds 5MB limit.');
+        return;
+      }
+    }
     setUploading(true);
     setError(null);
     const supabase = createClient();
