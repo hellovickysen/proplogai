@@ -10,7 +10,7 @@ function pad2(n) {
   return String(n).padStart(2, '0');
 }
 
-const MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export default async function CalendarPage({ searchParams }) {
   const now = new Date();
@@ -43,7 +43,16 @@ export default async function CalendarPage({ searchParams }) {
     return y + '-' + pad2(m + 1);
   }
 
-  const dayTrades = selected ? list.filter((t) => String(t.closed_at || t.created_at || '').slice(0, 10) === selected) : [];
+  // Monthly P&L
+  const monthTrades = list.filter((t) => {
+    const raw = t.trade_date || t.closed_at || t.created_at;
+    if (!raw) return false;
+    const d = new Date(raw);
+    return d.getUTCFullYear() === year && d.getUTCMonth() === month;
+  });
+  const monthlyPnl = monthTrades.reduce((a, t) => a + num(t.pnl), 0);
+
+  const dayTrades = selected ? list.filter((t) => String(t.trade_date || t.closed_at || t.created_at || '').slice(0, 10) === selected) : [];
   const dayNet = dayTrades.reduce((a, t) => a + num(t.pnl), 0);
 
   if (list.length === 0) {
@@ -74,37 +83,51 @@ export default async function CalendarPage({ searchParams }) {
   }
 
   return (
-    <div className="px-4 py-8 sm:px-6">
-      {/* Header */}
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Calendar</h1>
-          <div className="mt-1 flex items-center gap-2 font-mono text-xs text-white/55">
-            <Link href={'/dashboard/calendar?month=' + shift(-1)} className="hover:text-white/70">‹</Link>
-            <span className="text-white/60">{MONTHS_FULL[month]} {year}</span>
-            <Link href={'/dashboard/calendar?month=' + shift(1)} className="hover:text-white/70">›</Link>
+    <div className="px-4 py-6 sm:px-6">
+      {/* Calendar card */}
+      <div className="rounded-2xl border border-white/10 bg-[#12121a] overflow-hidden">
+        {/* Month navigation bar */}
+        <div className="flex items-center justify-between px-4 py-3 sm:px-5">
+          <div className="flex items-center gap-2">
+            <Link
+              href={'/dashboard/calendar?month=' + shift(-1)}
+              className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-sm text-white/50 hover:text-white"
+            >
+              ‹
+            </Link>
+            <span className="font-display text-sm font-semibold">
+              {MONTHS_SHORT[month]} {year}
+            </span>
+            <Link
+              href={'/dashboard/calendar?month=' + shift(1)}
+              className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-sm text-white/50 hover:text-white"
+            >
+              ›
+            </Link>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="hidden gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 sm:flex">
+              <span className="rounded-md bg-white/10 px-3 py-1 text-xs font-semibold text-white">Calendar</span>
+              <Link href="/dashboard/trades" className="rounded-md px-3 py-1 text-xs text-white/50 hover:text-white/70">Trades</Link>
+            </div>
             {!isCurrentMonth && (
-              <>
-                <span className="text-white/40">·</span>
-                <Link href="/dashboard/calendar" className="text-cyan-400 hover:text-cyan-300">Current Month</Link>
-              </>
+              <Link
+                href="/dashboard/calendar"
+                className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white"
+              >
+                Today
+              </Link>
             )}
           </div>
         </div>
-        <div className="flex gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-          <span className="rounded-md bg-white/10 px-3 py-1.5 text-xs font-semibold text-white">Calendar</span>
-          <Link href="/dashboard/trades" className="rounded-md px-3 py-1.5 text-xs text-white/55 hover:text-white/70">Trades</Link>
-        </div>
-      </div>
 
-      {/* Calendar grid */}
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
-        <CalendarMonth trades={list} year={year} month={month} selected={selected} monthParam={monthParam} />
+        {/* Calendar grid */}
+        <CalendarMonth trades={list} year={year} month={month} selected={selected} monthParam={monthParam} monthlyPnl={monthlyPnl} />
       </div>
 
       {/* Selected day trades */}
       {selected && dayTrades.length > 0 && (
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <div className="font-display text-base font-semibold">Trades on {selected}</div>
             <div className={'font-mono text-sm ' + (dayNet >= 0 ? 'text-emerald-400' : 'text-red-400')}>
