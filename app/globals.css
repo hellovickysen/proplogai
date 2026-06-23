@@ -42,3 +42,86 @@ main > * {
 .animate-pulse {
   animation: skeleton-pulse 1.8s ease-in-out infinite;
 }
+
+/* Landing page polish */
+.hero-particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 1;
+  mask-image: radial-gradient(circle at center, black 0%, black 52%, transparent 86%);
+}
+
+.gradient-shimmer {
+  background: linear-gradient(110deg, #a78bfa 0%, #22d3ee 32%, #f8fafc 48%, #22d3ee 62%, #a78bfa 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-shimmer 5.5s ease-in-out infinite;
+}
+
+@keyframes gradient-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.cta-glow {
+  position: relative;
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.22), 0 0 54px rgba(167, 139, 250, 0.16);
+  animation: cta-breathe 3.4s ease-in-out infinite;
+}
+
+@keyframes cta-breathe {
+  0%, 100% { box-shadow: 0 0 22px rgba(34, 211, 238, 0.2), 0 0 48px rgba(167, 139, 250, 0.14); }
+  50% { box-shadow: 0 0 34px rgba(34, 211, 238, 0.34), 0 0 76px rgba(167, 139, 250, 0.26); }
+}
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity 650ms ease, transform 650ms cubic-bezier(0.16, 1, 0.3, 1), border-color 200ms ease, background 200ms ease;
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.landing-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.landing-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.11), rgba(34, 211, 238, 0.06));
+  opacity: 0;
+  transition: opacity 220ms ease;
+  pointer-events: none;
+}
+
+.landing-card:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.landing-card:hover::before {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-particle-canvas { display: none; }
+  .gradient-shimmer, .cta-glow { animation: none; }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
