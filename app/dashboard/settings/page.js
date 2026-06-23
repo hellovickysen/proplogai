@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import SettingsTabs from '@/components/SettingsTabs';
+import PublicProfileSettings from '@/components/PublicProfileSettings';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,9 @@ export default async function SettingsPage() {
       <p className="mt-1 text-sm text-white/55">Profile, security, and journal preferences.</p>
       <div className="mt-6">
         <SettingsTabs user={user} prefs={prefs} />
+      </div>
+      <div className="mt-8">
+        <PublicProfileSettings prefs={prefs} />
       </div>
     </div>
   );
