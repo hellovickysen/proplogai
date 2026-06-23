@@ -65,6 +65,44 @@ function SecStat({ label, value }) {
   );
 }
 
+/* ─── Autocomplete Input ─────────────────────────────────────── */
+
+function FirmNameInput({ value, onChange, existingFirms, placeholder }) {
+  const [focused, setFocused] = useState(false);
+  const suggestions = value.length >= 1
+    ? existingFirms.filter((fn) => fn.toLowerCase().startsWith(value.toLowerCase()) && fn.toLowerCase() !== value.toLowerCase())
+    : [];
+  const showDropdown = focused && suggestions.length > 0;
+
+  return (
+    <div className="relative">
+      <input
+        className={field}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setTimeout(() => setFocused(false), 150)}
+        placeholder={placeholder || 'e.g. FTMO, Topstep, Apex...'}
+        required
+      />
+      {showDropdown && (
+        <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-white/10 bg-[#12121a] shadow-xl">
+          {suggestions.map((fn) => (
+            <button
+              key={fn}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); onChange(fn); setFocused(false); }}
+              className="block w-full px-3.5 py-2 text-left text-sm text-white/70 hover:bg-white/[0.06] hover:text-white"
+            >
+              {fn}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Modal Overlay ──────────────────────────────────────────── */
 
 function Modal({ open, onClose, title, children }) {
@@ -120,10 +158,7 @@ function AddExpenseForm({ onSave, onCancel, existingFirms }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className={labelCls}>Prop firm name *</label>
-        <input className={field} value={f.firm_name} onChange={(e) => set('firm_name', e.target.value)} placeholder="e.g. FTMO, Topstep, Apex..." list="firms" required />
-        {existingFirms.length > 0 && (
-          <datalist id="firms">{existingFirms.map((fn) => <option key={fn} value={fn} />)}</datalist>
-        )}
+        <FirmNameInput value={f.firm_name} onChange={(v) => set('firm_name', v)} existingFirms={existingFirms} placeholder="e.g. FTMO, Topstep, Apex..." />
       </div>
 
       <div>
@@ -212,10 +247,7 @@ function AddPayoutForm({ onSave, onCancel, existingFirms }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className={labelCls}>Prop firm name *</label>
-        <input className={field} value={f.firm_name} onChange={(e) => set('firm_name', e.target.value)} placeholder="e.g. FTMO, Topstep..." list="pfirms" required />
-        {existingFirms.length > 0 && (
-          <datalist id="pfirms">{existingFirms.map((fn) => <option key={fn} value={fn} />)}</datalist>
-        )}
+        <FirmNameInput value={f.firm_name} onChange={(v) => set('firm_name', v)} existingFirms={existingFirms} placeholder="e.g. FTMO, Topstep..." />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
