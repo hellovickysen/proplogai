@@ -14,6 +14,7 @@ export default async function TradesPage() {
   const { data: trades } = await supabase
     .from('trades')
     .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, source')
+    .eq('user_id', user.id)
     .order('trade_date', { ascending: false, nullsFirst: false });
   const list = trades || [];
 

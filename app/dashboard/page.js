@@ -76,9 +76,11 @@ function fmtCurrency(v) {
 
 export default async function DashboardPage() {
   const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const { data: trades } = await supabase
     .from('trades')
     .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
+    .eq('user_id', user.id)
     .order('trade_date', { ascending: false, nullsFirst: false });
   const list = trades || [];
   const s = computeStats(list);
@@ -86,6 +88,7 @@ export default async function DashboardPage() {
   const { data: coach } = await supabase
     .from('ai_insights')
     .select('*')
+    .eq('user_id', user.id)
     .eq('type', 'coach_report')
     .order('created_at', { ascending: false })
     .limit(1)
@@ -115,8 +118,8 @@ export default async function DashboardPage() {
   });
 
   // Expense summary — lightweight queries
-  const { data: expenseRows } = await supabase.from('expenses').select('total_cost');
-  const { data: payoutRows } = await supabase.from('payouts').select('amount');
+  const { data: expenseRows } = await supabase.from('expenses').select('total_cost').eq('user_id', user.id);
+  const { data: payoutRows } = await supabase.from('payouts').select('amount').eq('user_id', user.id);
   const totalExpense = (expenseRows || []).reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
   const totalPayout = (payoutRows || []).reduce((a, p) => a + (Number(p.amount) || 0), 0);
   const expenseNet = totalPayout - totalExpense;
