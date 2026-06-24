@@ -131,8 +131,8 @@ export default function ShareModal({ type, data, onClose }) {
           </button>
         </div>
 
-        {/* Card preview */}
-        <div className="rounded-xl border border-white/10 overflow-hidden shadow-2xl" style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
+        {/* Card preview — uses zoom instead of transform to avoid layout differences with html2canvas */}
+        <div className="rounded-xl border border-white/10 overflow-hidden shadow-2xl" style={{ zoom: 0.85 }}>
           <ShareCard ref={cardRef} type={type} ratio={ratio} data={data} quote={quote} />
         </div>
 

@@ -6,7 +6,7 @@ function fmtMoney(v) {
   const n = Number(v) || 0;
   const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
-  return sign + '$ ' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return sign + '$' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 /** Smart P&L format for card - keeps it on one line */
@@ -15,23 +15,21 @@ function fmtPnlCard(v, isStory) {
   const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
   if (isStory) {
-    // Story mode (360px) - shorten to fit one line
-    if (abs >= 100000) return sign + '$ ' + (abs / 1000).toFixed(0) + 'K';
-    if (abs >= 10000) return sign + '$ ' + (abs / 1000).toFixed(1) + 'K';
-    if (abs >= 1000) return sign + '$ ' + abs.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return sign + '$ ' + abs.toFixed(2);
+    if (abs >= 100000) return sign + '$' + (abs / 1000).toFixed(0) + 'K';
+    if (abs >= 10000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
+    if (abs >= 1000) return sign + '$' + abs.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return sign + '$' + abs.toFixed(2);
   }
-  // Landscape (640px) - more room, still shorten huge numbers
-  if (abs >= 100000) return sign + '$ ' + (abs / 1000).toFixed(1) + 'K';
-  return sign + '$ ' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  if (abs >= 100000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
+  return sign + '$' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 function fmtMoneyShort(v) {
   const n = Number(v) || 0;
   const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
-  if (abs >= 1000) return sign + '$ ' + (abs / 1000).toFixed(1) + 'K';
-  return sign + '$ ' + abs.toFixed(0);
+  if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
+  return sign + '$' + abs.toFixed(0);
 }
 
 function fmtDate(d) {
@@ -45,11 +43,6 @@ function fmtDate(d) {
  * ShareCard renders the branded P&L card.
  * type: "daily" | "trade"
  * ratio: "9:16" | "16:9"
- *
- * Design: Dark card with dramatic glow, large P&L, stats row, motivational quote.
- * IMPORTANT: Only uses CSS properties that html2canvas supports.
- * - No background-clip: text (renders invisible)
- * - No emojis in rendered text (garbled by html2canvas)
  */
 const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, ref) {
   const pnl = Number(data.pnl) || 0;
@@ -70,12 +63,12 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
   // Strip emoji from quote for html2canvas compatibility
   const cleanQuote = quote ? quote.replace(/[\u{1F600}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}\u{1F1E0}-\u{1F1FF}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2702}-\u{27B0}\u{FE0E}]/gu, '').trim() : '';
 
-  // Smart P&L formatting - always fits one line
+  // Smart P&L formatting
   const pnlText = fmtPnlCard(data.pnl, isStory);
-  // Auto-size font: shrink if text is long
+  // Auto-size: shrink for long strings
   const pnlLen = pnlText.length;
   const baseFontSize = isStory ? 52 : 52;
-  const pnlFontSize = pnlLen > 12 ? baseFontSize - 12 : pnlLen > 9 ? baseFontSize - 6 : baseFontSize;
+  const pnlFontSize = pnlLen > 12 ? baseFontSize - 14 : pnlLen > 9 ? baseFontSize - 6 : baseFontSize;
 
   return (
     <div
@@ -108,7 +101,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: isStory ? '28px 32px 24px' : '20px 32px 18px',
+        padding: isStory ? '28px 28px 24px' : '20px 32px 18px',
       }}>
         {/* Header: Logo + date */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -138,19 +131,20 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         }}>
           {/* Type label */}
           <div style={{
-            fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.2em',
+            fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em',
             color: 'rgba(255,255,255,0.7)', fontFamily: "'JetBrains Mono', monospace",
           }}>
             {type === 'daily' ? "Today's P&L" : (data.pair || 'Trade') + ' ' + ((data.direction || '').toUpperCase())}
           </div>
 
-          {/* P&L amount - solid color, one line, auto-sized */}
+          {/* P&L amount - JetBrains Mono for clear digits */}
           <div style={{
             fontSize: pnlFontSize,
-            fontWeight: 800,
+            fontWeight: 700,
+            fontFamily: "'JetBrains Mono', monospace",
             color: accentColor,
-            lineHeight: 1,
-            letterSpacing: '-0.02em',
+            lineHeight: 1.15,
+            letterSpacing: '0.01em',
             textShadow: `0 0 40px ${accentGlow}`,
             whiteSpace: 'nowrap',
           }}>
@@ -160,11 +154,11 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
           {/* Quote */}
           {cleanQuote && (
             <div style={{
-              fontSize: isStory ? 16 : 14,
+              fontSize: isStory ? 15 : 13,
               color: 'rgba(255,255,255,0.65)',
               fontWeight: 500,
               fontStyle: 'italic',
-              marginTop: isStory ? 14 : 8,
+              marginTop: isStory ? 10 : 6,
               padding: '0 16px',
               lineHeight: 1.5,
               letterSpacing: '0.03em',
@@ -179,7 +173,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         <div>
           <div style={{
             display: 'flex', justifyContent: 'center', alignItems: 'stretch',
-            gap: isStory ? 10 : 10, flexWrap: 'nowrap',
+            gap: isStory ? 8 : 10, flexWrap: 'nowrap',
             marginBottom: isStory ? 16 : 10,
           }}>
             {type === 'daily' ? (
@@ -218,13 +212,13 @@ function StatChip({ label, value, accent, isStory }) {
   return (
     <div style={{
       background: 'rgba(255,255,255,0.06)',
-      border: '1px solid rgba(255,255,255,0.1)',
+      border: '1px solid rgba(255,255,255,0.12)',
       borderRadius: 10,
-      padding: isStory ? '10px 14px' : '8px 16px',
+      padding: isStory ? '10px 12px' : '8px 16px',
       textAlign: 'center',
-      minWidth: isStory ? 68 : 70,
+      minWidth: isStory ? 80 : 80,
       flex: '1 1 0',
-      maxWidth: isStory ? 100 : 130,
+      maxWidth: isStory ? 110 : 140,
     }}>
       <div style={{
         fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.14em',
