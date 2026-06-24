@@ -33,7 +33,9 @@ export default function Logo({
   return (
     <span className={'flex items-center gap-2.5 ' + className}>
       <LogoMark size={size} rounded={rounded} glow={glow} />
-      {showWordmark && <span className={wordmarkClassName}>PropLogAI</span>}
+      {showWordmark && (
+        <span className={wordmarkClassName}>PropLog<span style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>AI</span></span>
+      )}
     </span>
   );
 }
