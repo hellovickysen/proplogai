@@ -1,5 +1,5 @@
 /**
- * Animated empty state illustrations for PropJournal pages.
+ * Animated empty state illustrations for PropLogAI pages.
  * Pure CSS animations — zero dependencies, GPU-accelerated.
  */
 

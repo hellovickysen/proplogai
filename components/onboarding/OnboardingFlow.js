@@ -44,7 +44,6 @@ export default function OnboardingFlow({ userEmail }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#07070b] px-4 py-10">
       <div className="w-full max-w-lg">
-        {/* Progress bar */}
         <div className="mb-8">
           <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-white/40">
             <span>Step {step + 1} of {total}</span>
@@ -56,13 +55,12 @@ export default function OnboardingFlow({ userEmail }) {
         </div>
 
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
-          {/* Step 0: Welcome */}
           {step === 0 && (
             <div className="text-center">
               <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl text-3xl" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.25), rgba(34,211,238,0.15))', border: '1px solid rgba(255,255,255,0.12)' }}>
                 &#9670;
               </div>
-              <h1 className="font-display text-2xl font-bold">Welcome to PropJournal</h1>
+              <h1 className="font-display text-2xl font-bold">Welcome to PropLogAI</h1>
               <p className="mt-3 text-sm leading-relaxed text-white/55">
                 Your AI-powered forex trading journal. Log trades, track your emotions, and get coaching that helps you find — and fix — the patterns costing you money.
               </p>
@@ -73,10 +71,9 @@ export default function OnboardingFlow({ userEmail }) {
             </div>
           )}
 
-          {/* Step 1: How it works */}
           {step === 1 && (
             <div>
-              <h2 className="font-display text-xl font-bold">How PropJournal works</h2>
+              <h2 className="font-display text-xl font-bold">How PropLogAI works</h2>
               <p className="mt-2 mb-6 text-sm text-white/50">Three steps to better trading.</p>
 
               <div className="space-y-4">
@@ -106,7 +103,6 @@ export default function OnboardingFlow({ userEmail }) {
             </div>
           )}
 
-          {/* Step 2: Journal preferences */}
           {step === 2 && (
             <div>
               <h2 className="font-display text-xl font-bold">Set up your journal</h2>
@@ -157,7 +153,6 @@ export default function OnboardingFlow({ userEmail }) {
             </div>
           )}
 
-          {/* Step 3: Ready to go */}
           {step === 3 && (
             <div className="text-center">
               <div className="mx-auto mb-5 text-5xl">🚀</div>

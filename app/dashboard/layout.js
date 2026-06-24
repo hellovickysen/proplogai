@@ -25,38 +25,27 @@ export default async function DashboardLayout({ children }) {
     redirect('/onboarding');
   }
 
-  // ─── Server-side referral capture ────────────────────────────
-  // Reads ref_code cookie set by /r/[code] page. Processes once,
-  // then skips on subsequent loads (referred_by already set).
   try {
     const cookieStore = cookies();
     const refCookie = cookieStore.get('ref_code');
     if (refCookie && refCookie.value && !prefs.referred_by) {
       const refCode = refCookie.value;
-
-      // Look up the referral code
       const { data: refRow } = await supabase
         .from('referral_codes')
         .select('user_id, code')
         .eq('code', refCode)
         .maybeSingle();
-
       if (refRow && refRow.user_id !== user.id) {
-        // Check if referral already exists (prevent duplicates)
         const { data: existingRef } = await supabase
           .from('referrals')
           .select('id')
           .eq('referred_user_id', user.id)
           .maybeSingle();
-
         if (!existingRef) {
-          // Mark this user as referred
           await supabase
             .from('user_preferences')
             .update({ referred_by: refCode })
             .eq('user_id', user.id);
-
-          // Create the referral record
           await supabase.from('referrals').insert({
             referrer_id: refRow.user_id,
             referred_user_id: user.id,
@@ -67,9 +56,7 @@ export default async function DashboardLayout({ children }) {
         }
       }
     }
-  } catch (e) {
-    // Never let referral processing break the dashboard
-  }
+  } catch (e) {}
 
   const today = new Date().toISOString().slice(0, 10);
   const { data: trades } = await supabase.from('trades').select('pnl, trade_date, closed_at, created_at').eq('user_id', user.id);
@@ -87,8 +74,8 @@ export default async function DashboardLayout({ children }) {
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <MobileNav />
-            <span className="font-display text-base font-bold sm:hidden">PropJournal</span>
-            <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:block">PropJournal</span>
+            <span className="font-display text-base font-bold sm:hidden">PropLogAI</span>
+            <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:block">PropLogAI</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5">

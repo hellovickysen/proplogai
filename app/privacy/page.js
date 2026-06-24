@@ -42,7 +42,6 @@ export default function PrivacyPage() {
       style={{ background: '#07070b', fontFamily: 'Poppins, sans-serif' }}
     >
       <div className="mx-auto max-w-3xl">
-        {/* Back link */}
         <Link
           href="/"
           className="mb-10 inline-flex items-center gap-2 text-sm text-cyan-400 transition-opacity hover:opacity-80"
@@ -60,40 +59,37 @@ export default function PrivacyPage() {
           >
             <path d="M19 12H5M12 5l-7 7 7 7" />
           </svg>
-          Back to PropJournal
+          Back to PropLogAI
         </Link>
 
-        {/* Header */}
         <div className="mb-12">
           <h1 className="mb-3 text-3xl font-bold" style={gradientText}>
             Privacy Policy
           </h1>
           <p className="text-sm text-white/55">Last updated: June 23, 2026</p>
           <p className="mt-4 text-sm leading-relaxed text-white/70">
-            PropJournal (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your
+            PropLogAI (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your
             personal information. This Privacy Policy explains what data we collect, how we use it,
             and your rights regarding that data when you use our AI-powered trading journal
             platform at{' '}
             <a
-              href="https://pipmind-sigma.vercel.app"
+              href="https://proplogai.com"
               className="text-cyan-400 hover:opacity-80"
               target="_blank"
               rel="noopener noreferrer"
             >
-              pipmind-sigma.vercel.app
+              proplogai.com
             </a>{' '}
             (the &quot;Service&quot;).
           </p>
           <p className="mt-3 text-sm leading-relaxed text-white/70">
-            By using PropJournal you agree to the collection and use of information as described in
+            By using PropLogAI you agree to the collection and use of information as described in
             this policy. If you do not agree, please discontinue use of the Service.
           </p>
         </div>
 
-        {/* Divider */}
         <div className="mb-10 h-px bg-white/10" />
 
-        {/* 1. Data We Collect */}
         <Section title="1. Data We Collect">
           <p>
             We collect information that is necessary to provide the Service and improve your
@@ -126,7 +122,7 @@ export default function PrivacyPage() {
 
           <SubSection title="Journal Entries">
             <p>
-              The core of PropJournal is your trading journal. We store everything you write in
+              The core of PropLogAI is your trading journal. We store everything you write in
               your journal entries, including:
             </p>
             <Ul
@@ -166,7 +162,6 @@ export default function PrivacyPage() {
           </SubSection>
         </Section>
 
-        {/* 2. How We Use Your Data */}
         <Section title="2. How We Use Your Data">
           <p>We use the information we collect for the following purposes:</p>
           <Ul
@@ -188,7 +183,6 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        {/* 3. Data Storage and Security */}
         <Section title="3. Data Storage and Security">
           <p>
             All user data — including account details, trade records, journal entries, and AI
@@ -211,10 +205,9 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        {/* 4. Third-Party Services */}
         <Section title="4. Third-Party Services">
           <p>
-            PropJournal relies on the following third-party services to operate. Each service has
+            PropLogAI relies on the following third-party services to operate. Each service has
             its own privacy policy which we encourage you to review:
           </p>
 
@@ -271,7 +264,7 @@ export default function PrivacyPage() {
 
           <SubSection title="Vercel">
             <p>
-              PropJournal is hosted on Vercel&apos;s edge network. Vercel processes HTTP requests
+              PropLogAI is hosted on Vercel&apos;s edge network. Vercel processes HTTP requests
               and may log IP addresses and request metadata for security and infrastructure
               purposes.{' '}
               <a
@@ -302,9 +295,8 @@ export default function PrivacyPage() {
           </SubSection>
         </Section>
 
-        {/* 5. Cookies */}
         <Section title="5. Cookies and Tracking Technologies">
-          <p>PropJournal uses the following types of cookies and similar technologies:</p>
+          <p>PropLogAI uses the following types of cookies and similar technologies:</p>
 
           <SubSection title="Session Cookies (Essential)">
             <p>
@@ -320,8 +312,8 @@ export default function PrivacyPage() {
               usage events. This cookie is pseudonymous and does not contain personally
               identifiable information. You may opt out of PostHog analytics by enabling &quot;Do
               Not Track&quot; in your browser or by contacting us at{' '}
-              <a href="mailto:support@propjournal.app" className="text-cyan-400 hover:opacity-80">
-                support@propjournal.app
+              <a href="mailto:support@proplogai.com" className="text-cyan-400 hover:opacity-80">
+                support@proplogai.com
               </a>
               .
             </p>
@@ -333,7 +325,6 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        {/* 6. Data Retention and Deletion */}
         <Section title="6. Data Retention and Deletion">
           <p>
             We retain your data for as long as your account is active or as needed to provide the
@@ -349,8 +340,8 @@ export default function PrivacyPage() {
           <p>
             If you would like to request deletion of specific data without closing your account,
             please contact us at{' '}
-            <a href="mailto:support@propjournal.app" className="text-cyan-400 hover:opacity-80">
-              support@propjournal.app
+            <a href="mailto:support@proplogai.com" className="text-cyan-400 hover:opacity-80">
+              support@proplogai.com
             </a>{' '}
             and we will respond within 30 days.
           </p>
@@ -360,27 +351,25 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        {/* 7. Children */}
         <Section title="7. Children's Privacy">
           <p>
-            PropJournal is intended for adults aged 18 and over. We do not knowingly collect
+            PropLogAI is intended for adults aged 18 and over. We do not knowingly collect
             personal information from anyone under the age of 18. If you believe a minor has
             created an account, please contact us immediately at{' '}
-            <a href="mailto:support@propjournal.app" className="text-cyan-400 hover:opacity-80">
-              support@propjournal.app
+            <a href="mailto:support@proplogai.com" className="text-cyan-400 hover:opacity-80">
+              support@proplogai.com
             </a>{' '}
             and we will delete the account and associated data promptly.
           </p>
         </Section>
 
-        {/* 8. Your Rights */}
         <Section title="8. Your Rights">
           <p>
             Depending on your jurisdiction, you may have certain rights regarding your personal
             data, including the right to access, correct, export, or delete information we hold
             about you. To exercise any of these rights, please contact us at{' '}
-            <a href="mailto:support@propjournal.app" className="text-cyan-400 hover:opacity-80">
-              support@propjournal.app
+            <a href="mailto:support@proplogai.com" className="text-cyan-400 hover:opacity-80">
+              support@proplogai.com
             </a>
             . We will respond to verifiable requests within 30 days.
           </p>
@@ -391,7 +380,6 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        {/* 9. Changes */}
         <Section title="9. Changes to This Policy">
           <p>
             We may update this Privacy Policy from time to time. When we do, we will revise the
@@ -402,30 +390,28 @@ export default function PrivacyPage() {
           </p>
         </Section>
 
-        {/* 10. Contact */}
         <Section title="10. Contact Us">
           <p>
             If you have questions, concerns, or requests regarding this Privacy Policy or our data
             practices, please reach out to us at:
           </p>
           <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <p className="font-semibold text-white">PropJournal</p>
+            <p className="font-semibold text-white">PropLogAI</p>
             <p className="mt-1">
               Email:{' '}
               <a
-                href="mailto:support@propjournal.app"
+                href="mailto:support@proplogai.com"
                 className="text-cyan-400 hover:opacity-80"
               >
-                support@propjournal.app
+                support@proplogai.com
               </a>
             </p>
           </div>
         </Section>
 
-        {/* Footer */}
         <div className="mt-12 border-t border-white/10 pt-8 text-center text-xs text-white/40">
           <p>
-            &copy; {new Date().getFullYear()} PropJournal. All rights reserved.{' '}
+            &copy; {new Date().getFullYear()} PropLogAI. All rights reserved.{' '}
             <Link href="/terms" className="text-cyan-400 hover:opacity-80">
               Terms of Service
             </Link>

@@ -3,13 +3,13 @@ import PostHogProvider from '@/components/layout/PostHogProvider';
 import { ToastProvider } from '@/components/ui/Toast';
 
 export const metadata = {
-  metadataBase: new URL('https://pipmind-sigma.vercel.app'),
-  title: 'PropJournal — AI Trading Journal for Prop Firm Traders',
-  description: 'Still losing funded accounts to the same mistakes? PropJournal is an AI-powered trading journal that finds the one pattern costing you money. Free beta — join 500 traders.',
+  metadataBase: new URL('https://proplogai.com'),
+  title: 'PropLogAI — AI Trading Journal for Prop Firm Traders',
+  description: 'Still losing funded accounts to the same mistakes? PropLogAI is an AI-powered trading journal that finds the one pattern costing you money. Free beta — join 500 traders.',
   openGraph: {
     title: 'Still losing funded accounts to the same mistakes?',
     description: 'AI-powered trading journal that finds the pattern costing you funded accounts. Log trades, track psychology, get AI coaching. Free beta.',
-    siteName: 'PropJournal',
+    siteName: 'PropLogAI',
     type: 'website',
     locale: 'en_US',
   },

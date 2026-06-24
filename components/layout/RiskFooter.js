@@ -8,7 +8,7 @@ export default function RiskFooter() {
           className="text-xs text-white/40 mb-2"
           style={{ fontFamily: "Poppins, sans-serif" }}
         >
-          PropJournal is an educational tool and does not provide financial
+          PropLogAI is an educational tool and does not provide financial
           advice. Trading involves substantial risk of loss. Past performance is
           not indicative of future results.
         </p>

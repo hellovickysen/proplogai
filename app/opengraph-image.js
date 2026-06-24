@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'PropJournal — AI Trading Journal for Prop Firm Traders';
+export const alt = 'PropLogAI — AI Trading Journal for Prop Firm Traders';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -22,46 +22,6 @@ export default async function Image() {
           fontFamily: 'system-ui, sans-serif',
         }}
       >
-        {/* Background gradient orbs */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '-120px',
-            left: '-80px',
-            width: '500px',
-            height: '500px',
-            borderRadius: '9999px',
-            background: 'radial-gradient(circle, rgba(139,92,246,0.25), transparent 65%)',
-            filter: 'blur(80px)',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '-100px',
-            right: '-60px',
-            width: '450px',
-            height: '450px',
-            borderRadius: '9999px',
-            background: 'radial-gradient(circle, rgba(34,211,238,0.18), transparent 60%)',
-            filter: 'blur(80px)',
-          }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            top: '40%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '600px',
-            height: '300px',
-            borderRadius: '9999px',
-            background: 'radial-gradient(circle, rgba(139,92,246,0.08), transparent 70%)',
-            filter: 'blur(60px)',
-          }}
-        />
-
-        {/* Logo */}
         <div
           style={{
             display: 'flex',
@@ -94,11 +54,9 @@ export default async function Image() {
               letterSpacing: '-0.02em',
             }}
           >
-            PropJournal
+            PropLogAI
           </span>
         </div>
-
-        {/* Headline */}
         <div
           style={{
             display: 'flex',
@@ -132,8 +90,6 @@ export default async function Image() {
             to the same mistakes?
           </div>
         </div>
-
-        {/* Subheadline */}
         <div
           style={{
             fontSize: '20px',
@@ -146,8 +102,6 @@ export default async function Image() {
         >
           AI-powered trading journal that finds the pattern costing you funded accounts. Free beta — join now.
         </div>
-
-        {/* Stats bar */}
         <div
           style={{
             display: 'flex',
@@ -185,8 +139,6 @@ export default async function Image() {
             </div>
           ))}
         </div>
-
-        {/* Bottom border accent */}
         <div
           style={{
             position: 'absolute',

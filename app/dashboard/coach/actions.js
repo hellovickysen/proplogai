@@ -129,7 +129,7 @@ export async function sendCoachReportEmail() {
 
   const result = await sendEmail({
     to: user.email,
-    subject: '✦ Your PropJournal Coach Report',
+    subject: '✦ Your PropLogAI Coach Report',
     html,
   });
 

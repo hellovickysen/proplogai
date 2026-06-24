@@ -33,19 +33,15 @@ export default async function AdminOverviewPage() {
   if (!sb) return <SetupMessage />;
 
   try {
-    // Get user count from auth (more reliable than profiles table)
     let totalUsers = 0;
     try {
       const { data: authData } = await sb.auth.admin.listUsers({ perPage: 1 });
-      // listUsers doesn't return total count easily, so count from trades user_ids
       const { data: userIds } = await sb.from('trades').select('user_id');
       const uniqueUsers = new Set((userIds || []).map(t => t.user_id));
-      // Also try profiles
       const { count: profileCount } = await sb.from('profiles').select('id', { count: 'exact', head: true });
       totalUsers = Math.max(profileCount || 0, uniqueUsers.size, authData?.users?.length || 0);
     } catch { totalUsers = 0; }
 
-    // Parallel queries
     const tradesRes = await sb.from('trades').select('id', { count: 'exact', head: true });
     const journalsRes = await sb.from('journal_entries').select('id', { count: 'exact', head: true });
     const insightsRes = await sb.from('ai_insights').select('id', { count: 'exact', head: true });
@@ -55,12 +51,8 @@ export default async function AdminOverviewPage() {
     const totalInsights = insightsRes.count || 0;
     const estAiCost = (totalInsights * 0.025).toFixed(2);
 
-    // Today's stats
     const today = new Date().toISOString().slice(0, 10);
-    let todayTrades = 0;
-    let todayJournals = 0;
-    let todayInsights = 0;
-    let todaySignups = 0;
+    let todayTrades = 0, todayJournals = 0, todayInsights = 0, todaySignups = 0;
     try {
       const { count } = await sb.from('trades').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
       todayTrades = count || 0;
@@ -78,7 +70,6 @@ export default async function AdminOverviewPage() {
       todaySignups = count || 0;
     } catch {}
 
-    // Subscriptions
     let plans = { free: 0, pro: 0, elite: 0 };
     try {
       const { data: subs } = await sb.from('subscriptions').select('plan');
@@ -88,7 +79,7 @@ export default async function AdminOverviewPage() {
     return (
       <div>
         <h1 className="mb-1 font-display text-2xl font-bold">Platform Overview</h1>
-        <p className="mb-6 text-sm text-white/50">Real-time stats across all PropJournal users.</p>
+        <p className="mb-6 text-sm text-white/50">Real-time stats across all PropLogAI users.</p>
 
         <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           <Stat label="Total Users" value={totalUsers} />
@@ -97,30 +88,16 @@ export default async function AdminOverviewPage() {
           <Stat label="AI Analyses" value={totalInsights} sub={`Est. cost: $${estAiCost}`} />
         </div>
 
-        {/* Today's stats */}
         <div className="mb-8 rounded-2xl border border-violet-400/15 bg-violet-500/[0.03] p-5">
           <div className="mb-3 font-display text-sm font-semibold" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Today's Activity</div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div>
-              <div className="font-mono text-xs text-white/45">Signups</div>
-              <div className="mt-1 font-display text-xl font-bold">{todaySignups}</div>
-            </div>
-            <div>
-              <div className="font-mono text-xs text-white/45">Trades</div>
-              <div className="mt-1 font-display text-xl font-bold">{todayTrades}</div>
-            </div>
-            <div>
-              <div className="font-mono text-xs text-white/45">Journals</div>
-              <div className="mt-1 font-display text-xl font-bold">{todayJournals}</div>
-            </div>
-            <div>
-              <div className="font-mono text-xs text-white/45">AI Calls</div>
-              <div className="mt-1 font-display text-xl font-bold">{todayInsights}</div>
-            </div>
+            <div><div className="font-mono text-xs text-white/45">Signups</div><div className="mt-1 font-display text-xl font-bold">{todaySignups}</div></div>
+            <div><div className="font-mono text-xs text-white/45">Trades</div><div className="mt-1 font-display text-xl font-bold">{todayTrades}</div></div>
+            <div><div className="font-mono text-xs text-white/45">Journals</div><div className="mt-1 font-display text-xl font-bold">{todayJournals}</div></div>
+            <div><div className="font-mono text-xs text-white/45">AI Calls</div><div className="mt-1 font-display text-xl font-bold">{todayInsights}</div></div>
           </div>
         </div>
 
-        {/* Beta Counter Control */}
         <BetaCountControl />
 
         <div className="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-3">

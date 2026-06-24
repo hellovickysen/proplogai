@@ -77,7 +77,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.03] p-8">
         <Link href="/" className="mb-6 flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg text-sm" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', boxShadow: '0 0 18px rgba(139,92,246,0.5)' }}>&#9670;</span>
-          <span className="font-display text-lg font-bold tracking-tight">PropJournal</span>
+          <span className="font-display text-lg font-bold tracking-tight">PropLogAI</span>
         </Link>
 
         <h1 className="font-display text-2xl font-bold">{mode === 'signin' ? 'Welcome back' : 'Create your account'}</h1>
@@ -85,7 +85,6 @@ export default function LoginPage() {
           {mode === 'signin' ? 'Sign in to your trading journal.' : 'Start journaling smarter today.'}
         </p>
 
-        {/* Google OAuth button */}
         <button
           onClick={handleGoogle}
           disabled={googleLoading}
@@ -100,7 +99,6 @@ export default function LoginPage() {
           {googleLoading ? 'Redirecting...' : 'Continue with Google'}
         </button>
 
-        {/* Divider */}
         <div className="mb-4 flex items-center gap-3">
           <div className="h-px flex-1 bg-white/10" />
           <span className="text-xs text-white/30">or</span>

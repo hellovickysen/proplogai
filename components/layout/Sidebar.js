@@ -25,13 +25,11 @@ export default function Sidebar({ email, credits, avatarUrl }) {
     return pathname === href || pathname.startsWith(href + '/');
   }
 
-  // Get initials from email
   const initial = email ? email.charAt(0).toUpperCase() : '?';
 
   return (
     <aside className="hidden w-[200px] flex-shrink-0 border-r border-white/10 bg-[#0b0b14] sm:block">
       <div className="sticky top-0 flex h-screen flex-col px-3 py-5">
-        {/* Logo */}
         <Link href="/dashboard" className="mb-6 flex items-center gap-2.5 px-2">
           <div
             className="grid h-8 w-8 place-items-center rounded-xl text-sm font-bold text-[#08080f]"
@@ -39,10 +37,9 @@ export default function Sidebar({ email, credits, avatarUrl }) {
           >
             &#9670;
           </div>
-          <span className="font-display text-base font-bold">PropJournal</span>
+          <span className="font-display text-base font-bold">PropLogAI</span>
         </Link>
 
-        {/* New Trade button */}
         <Link
           href="/dashboard/trades/new"
           className="mb-5 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-[#08080f]"
@@ -51,7 +48,6 @@ export default function Sidebar({ email, credits, avatarUrl }) {
           + New Trade
         </Link>
 
-        {/* Nav items */}
         <nav className="flex flex-1 flex-col gap-0.5">
           {NAV.map((item) => {
             const active = isActive(item.href);
@@ -79,7 +75,6 @@ export default function Sidebar({ email, credits, avatarUrl }) {
           })}
         </nav>
 
-        {/* Avatar menu — pinned to bottom */}
         <div className="relative mt-4 border-t border-white/[0.06] pt-3">
           <button
             onClick={() => setMenuOpen((o) => !o)}
@@ -101,13 +96,10 @@ export default function Sidebar({ email, credits, avatarUrl }) {
             <span className={'text-[10px] text-white/30 transition-transform ' + (menuOpen ? 'rotate-180' : '')}>&#9650;</span>
           </button>
 
-          {/* Popup menu */}
           {menuOpen && (
             <div className="absolute bottom-full left-2 right-2 mb-2 rounded-xl border border-white/10 bg-[#12121a] p-3 shadow-xl">
-              {/* Email */}
               <div className="mb-2 truncate px-1 font-mono text-[11px] text-white/50">{email}</div>
 
-              {/* Credits */}
               {credits != null && (
                 <div className="mb-2 flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">Credits</span>
@@ -115,7 +107,6 @@ export default function Sidebar({ email, credits, avatarUrl }) {
                 </div>
               )}
 
-              {/* Sign out */}
               <form action="/auth/signout" method="post">
                 <button className="w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left text-xs text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white">
                   Sign out

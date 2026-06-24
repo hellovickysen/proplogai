@@ -4,13 +4,6 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import ShareCard from '@/components/share/ShareCard';
 import { getQuote } from '@/lib/quotes';
 
-/**
- * ShareModal — fullscreen overlay with:
- * - Aspect ratio toggle (Story 9:16 / Landscape 16:9)
- * - Preview shows the ACTUAL rendered canvas (preview === download)
- * - Download PNG button (html2canvas from CDN)
- * - Mobile share button (Web Share API)
- */
 export default function ShareModal({ type, data, onClose }) {
   const [ratio, setRatio] = useState('9:16');
   const [downloading, setDownloading] = useState(false);
@@ -22,7 +15,6 @@ export default function ShareModal({ type, data, onClose }) {
   const cardRef = useRef(null);
   const canvasRef = useRef(null);
 
-  // Load html2canvas from CDN + detect Web Share API
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if (!window.html2canvas) {
@@ -36,7 +28,6 @@ export default function ShareModal({ type, data, onClose }) {
     }
   }, []);
 
-  // Re-render preview when ratio changes or html2canvas loads
   const renderPreview = useCallback(async () => {
     if (!cardRef.current || !window.html2canvas) return;
     setRendering(true);
@@ -54,14 +45,11 @@ export default function ShareModal({ type, data, onClose }) {
     setRendering(false);
   }, []);
 
-  // Re-render when ratio changes
   useEffect(() => {
-    // Small delay to let the card DOM update with new ratio
     const timer = setTimeout(() => renderPreview(), 100);
     return () => clearTimeout(timer);
   }, [ratio, renderPreview]);
 
-  // ESC to close
   useEffect(() => {
     function onKey(e) { if (e.key === 'Escape') onClose(); }
     window.addEventListener('keydown', onKey);
@@ -70,14 +58,12 @@ export default function ShareModal({ type, data, onClose }) {
 
   const getFilename = useCallback(() => {
     const dateStr = (data.date || data.trade_date || 'trade').replace(/\//g, '-');
-    return 'propjournal-' + type + '-' + dateStr + '-' + ratio.replace(':', 'x') + '.png';
+    return 'proplogai-' + type + '-' + dateStr + '-' + ratio.replace(':', 'x') + '.png';
   }, [ratio, type, data]);
 
-  // Download PNG — uses the same canvas as the preview
   const download = useCallback(async () => {
     setDownloading(true);
     try {
-      // Re-render to get a fresh canvas (in case of any state changes)
       if (!cardRef.current || !window.html2canvas) return;
       const canvas = await window.html2canvas(cardRef.current, {
         scale: 3,
@@ -94,7 +80,6 @@ export default function ShareModal({ type, data, onClose }) {
     setDownloading(false);
   }, [getFilename]);
 
-  // Share via Web Share API (mobile)
   const share = useCallback(async () => {
     setSharing(true);
     try {
@@ -110,13 +95,12 @@ export default function ShareModal({ type, data, onClose }) {
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
-          title: 'My PropJournal P&L',
+          title: 'My PropLogAI P&L',
           text: type === 'daily'
             ? 'Today\'s P&L: ' + (data.pnl >= 0 ? '+' : '-') + '$' + Math.abs(data.pnl || 0).toFixed(2)
             : (data.pair || 'Trade') + ' P&L: ' + (data.pnl >= 0 ? '+' : '-') + '$' + Math.abs(data.pnl || 0).toFixed(2),
         });
       } else {
-        // Fallback: download
         const link = document.createElement('a');
         link.download = getFilename();
         link.href = canvas.toDataURL('image/png');
@@ -133,16 +117,13 @@ export default function ShareModal({ type, data, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm" onClick={onClose}>
       <div className="relative flex max-h-[95vh] max-w-3xl flex-col items-center gap-5 overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
-        {/* Close */}
         <button onClick={onClose} className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-black/60 text-white/70 hover:text-white">&#10005;</button>
 
-        {/* Title */}
         <div className="text-center">
           <h2 className="font-display text-lg font-bold">Share your results</h2>
           <p className="mt-1 text-xs text-white/40">Download or share to social media</p>
         </div>
 
-        {/* Ratio toggle */}
         <div className="flex gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
           <button
             onClick={() => setRatio('9:16')}
@@ -158,12 +139,10 @@ export default function ShareModal({ type, data, onClose }) {
           </button>
         </div>
 
-        {/* Hidden card — rendered off-screen for html2canvas to capture */}
         <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
           <ShareCard ref={cardRef} type={type} ratio={ratio} data={data} quote={quote} />
         </div>
 
-        {/* Preview — shows the actual canvas render (identical to download) */}
         <div className="rounded-xl border border-white/10 overflow-hidden shadow-2xl">
           {previewUrl ? (
             <img
@@ -185,9 +164,7 @@ export default function ShareModal({ type, data, onClose }) {
           )}
         </div>
 
-        {/* Action buttons */}
         <div className="flex items-center gap-3">
-          {/* Share button (mobile) */}
           {canShare && (
             <button
               onClick={share}
@@ -199,7 +176,6 @@ export default function ShareModal({ type, data, onClose }) {
             </button>
           )}
 
-          {/* Download button */}
           <button
             onClick={download}
             disabled={downloading}

@@ -16,24 +16,21 @@ export default async function AdminLayout({ children }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Security: redirect non-admin users
   if (!user) redirect('/login');
   if (user.email !== ADMIN_EMAIL) redirect('/dashboard');
 
   return (
     <div className="flex min-h-screen">
-      {/* Admin sidebar */}
       <aside className="hidden w-56 flex-shrink-0 flex-col border-r border-white/10 bg-[#0a0a12] sm:flex">
         <div className="px-4 pb-4 pt-5">
           <Link href="/admin" className="flex items-center gap-2">
             <span className="grid h-8 w-8 place-items-center rounded-lg text-sm" style={{ background: 'linear-gradient(135deg,#f87171,#fbbf24)' }}>⚙</span>
             <div>
               <span className="font-display text-sm font-bold">Admin Panel</span>
-              <p className="font-mono text-[9px] text-white/40">PropJournal</p>
+              <p className="font-mono text-[9px] text-white/40">PropLogAI</p>
             </div>
           </Link>
         </div>
-
         <nav className="flex flex-1 flex-col gap-0.5 px-3">
           {NAV.map((item) => (
             <Link
@@ -46,13 +43,10 @@ export default async function AdminLayout({ children }) {
             </Link>
           ))}
         </nav>
-
         <div className="border-t border-white/[0.06] px-4 py-3">
           <Link href="/dashboard" className="text-xs text-cyan-400 hover:underline">← Back to app</Link>
         </div>
       </aside>
-
-      {/* Content */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <span className="font-mono text-xs uppercase tracking-wider text-white/55">Admin</span>

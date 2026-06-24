@@ -9,7 +9,6 @@ function fmtMoney(v) {
   return sign + '$' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-/** P&L format for card — returns { prefix, whole, decimal } for financial-style split render */
 function fmtPnlCard(v, isStory) {
   const n = Number(v) || 0;
   const sign = n >= 0 ? '+' : '-';
@@ -36,11 +35,6 @@ function fmtDate(d) {
   } catch { return d; }
 }
 
-/**
- * ShareCard renders the branded P&L card.
- * type: "daily" | "trade"
- * ratio: "9:16" | "16:9"
- */
 const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, ref) {
   const pnl = Number(data.pnl) || 0;
   const isWin = pnl >= 0;
@@ -49,7 +43,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
   const w = isStory ? 360 : 640;
   const h = isStory ? 640 : 360;
 
-  // Colors
   const accentColor = isWin ? '#34d399' : '#f87171';
   const accentGlow = isWin ? 'rgba(52,211,153,0.4)' : 'rgba(248,113,113,0.35)';
   const secondaryGlow = isWin ? 'rgba(34,211,238,0.25)' : 'rgba(251,191,36,0.2)';
@@ -57,10 +50,8 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
     ? 'linear-gradient(120deg, #34d399, #22d3ee)'
     : 'linear-gradient(120deg, #f87171, #fbbf24)';
 
-  // Strip emoji from quote for html2canvas compatibility
   const cleanQuote = quote ? quote.replace(/[\u{1F600}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}\u{1F1E0}-\u{1F1FF}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2702}-\u{27B0}\u{FE0E}]/gu, '').trim() : '';
 
-  // P&L formatting — split into prefix ($), whole, decimal for financial-style render
   const pnlParts = fmtPnlCard(data.pnl, isStory);
   const pnlLen = (pnlParts.prefix + pnlParts.whole + pnlParts.decimal).length;
   const baseFontSize = isStory ? 48 : 52;
@@ -81,15 +72,12 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         flexDirection: 'column',
       }}
     >
-      {/* Background glows */}
       <div style={{ position: 'absolute', top: '-25%', left: '-15%', width: '65%', height: '65%', borderRadius: '50%', background: `radial-gradient(circle, ${accentGlow} 0%, transparent 70%)`, filter: 'blur(60px)' }} />
       <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '55%', height: '55%', borderRadius: '50%', background: `radial-gradient(circle, ${secondaryGlow} 0%, transparent 70%)`, filter: 'blur(50px)' }} />
       <div style={{ position: 'absolute', top: '35%', left: '40%', width: '30%', height: '30%', borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }} />
 
-      {/* Top accent bar */}
       <div style={{ height: 3, width: '100%', background: accentGradient, flexShrink: 0 }} />
 
-      {/* Content */}
       <div style={{
         position: 'relative',
         zIndex: 10,
@@ -99,7 +87,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         justifyContent: 'space-between',
         padding: isStory ? '28px 28px 24px' : '20px 32px 18px',
       }}>
-        {/* Header: Logo + date */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{
@@ -109,14 +96,13 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
               fontSize: 12, color: '#08080f', fontWeight: 800,
               boxShadow: '0 0 14px rgba(139,92,246,0.5)',
             }}>&#9670;</div>
-            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em' }}>PropJournal</span>
+            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em' }}>PropLogAI</span>
           </div>
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em' }}>
             {fmtDate(data.date || data.trade_date)}
           </span>
         </div>
 
-        {/* Center: P&L hero */}
         <div style={{
           textAlign: 'center',
           flex: 1,
@@ -125,7 +111,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
           justifyContent: 'center',
           gap: isStory ? 12 : 6,
         }}>
-          {/* Type label */}
           <div style={{
             fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em',
             color: 'rgba(255,255,255,0.7)', fontFamily: "'JetBrains Mono', monospace",
@@ -133,7 +118,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
             {type === 'daily' ? "Today's P&L" : (data.pair || 'Trade') + ' ' + ((data.direction || '').toUpperCase())}
           </div>
 
-          {/* P&L amount - financial style: +$ 401.80 with smaller decimals */}
           <div style={{
             fontWeight: 800,
             fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
@@ -153,7 +137,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
             )}
           </div>
 
-          {/* Quote */}
           {cleanQuote && (
             <div style={{
               fontSize: isStory ? 15 : 13,
@@ -171,7 +154,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
           )}
         </div>
 
-        {/* Stats row */}
         <div>
           <div style={{
             display: 'flex', justifyContent: 'center', alignItems: 'stretch',
@@ -195,13 +177,12 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
             )}
           </div>
 
-          {/* Watermark */}
           <div style={{ textAlign: 'center' }}>
             <span style={{
               fontSize: 10, color: 'rgba(255,255,255,0.65)',
               fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.08em',
             }}>
-              propjournal.app &mdash; AI Trading Journal
+              proplogai.com &mdash; AI Trading Journal
             </span>
           </div>
         </div>

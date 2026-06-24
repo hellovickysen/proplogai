@@ -1,4 +1,4 @@
-# PipMind
+# PropLogAI
 
 The AI-powered forex trading journal. Log trades, get AI coaching on your mistakes and psychology.
 

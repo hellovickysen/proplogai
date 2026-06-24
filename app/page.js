@@ -100,7 +100,7 @@ export default async function Home() {
       <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-10">
         <div className="flex items-center gap-2.5">
           <span className="grid h-8 w-8 place-items-center rounded-lg text-sm" style={{ ...gradientBtn, boxShadow: '0 0 18px rgba(139,92,246,0.5)' }}>&#9670;</span>
-          <span className="font-display text-lg font-bold tracking-tight">PropJournal</span>
+          <span className="font-display text-lg font-bold tracking-tight">PropLogAI</span>
         </div>
         <div className="flex items-center gap-3">
           <Link href="#pricing" className="text-sm text-white/60 hover:text-white">Pricing</Link>
@@ -128,7 +128,7 @@ export default async function Home() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/60 sm:text-lg">
-            You don&apos;t have a strategy problem. You have a <strong className="text-white/90">psychology problem</strong> — and it&apos;s invisible until you track it. PropJournal&apos;s AI finds the one pattern costing you funded accounts.
+            You don&apos;t have a strategy problem. You have a <strong className="text-white/90">psychology problem</strong> — and it&apos;s invisible until you track it. PropLogAI&apos;s AI finds the one pattern costing you funded accounts.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -197,7 +197,7 @@ export default async function Home() {
           </div>
 
           <h2 className="font-display text-2xl font-bold sm:text-3xl lg:text-4xl">
-            PropJournal doesn&apos;t judge.{' '}
+            PropLogAI doesn&apos;t judge.{' '}
             <span className="gradient-shimmer">It shows you.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm text-white/55 sm:text-base">
@@ -475,7 +475,7 @@ export default async function Home() {
             Built for <span style={gradientText}>prop firm traders</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm text-white/55">
-            PropJournal tracks your entire prop firm journey — the expenses, the payouts, and the achievements.
+            PropLogAI tracks your entire prop firm journey — the expenses, the payouts, and the achievements.
           </p>
         </div>
       </section>
@@ -543,7 +543,7 @@ export default async function Home() {
               Exclusive Feature
             </div>
             <h2 className="font-display text-2xl font-bold sm:text-3xl">Know your real ROI<br />across all prop firms</h2>
-            <p className="mt-4 text-sm leading-relaxed text-white/55">Most traders have no idea how much they've actually spent on challenges. PropJournal tracks every fee, renewal, activation, and payout — so you always know if prop trading is profitable for you.</p>
+            <p className="mt-4 text-sm leading-relaxed text-white/55">Most traders have no idea how much they've actually spent on challenges. PropLogAI tracks every fee, renewal, activation, and payout — so you always know if prop trading is profitable for you.</p>
             <ul className="mt-6 space-y-3 text-sm text-white/60">
               {['Track challenge fees, activations & renewals per firm', 'Log payouts with dates and notes', 'See per-firm ROI — know which firms actually pay', 'No other trading journal does this'].map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5">
@@ -561,7 +561,7 @@ export default async function Home() {
         <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/8 px-3 py-1 text-[11px] font-semibold text-cyan-200">
-              Unique to PropJournal
+              Unique to PropLogAI
             </div>
             <h2 className="font-display text-2xl font-bold sm:text-3xl">Your verified<br />trading story</h2>
             <p className="mt-4 text-sm leading-relaxed text-white/55">Share a public profile that proves your trading results with real data — not screenshots that could be faked. P&L calendar, trade history, payouts, and certificates. All verifiable.</p>
@@ -583,7 +583,7 @@ export default async function Home() {
                   <span className="text-sm font-semibold text-white">TraderMike</span>
                   <span className="rounded bg-emerald-400/15 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-300">Verified</span>
                 </div>
-                <span className="font-mono text-[10px] text-white/30">propjournal.com/profile/tmike</span>
+                <span className="font-mono text-[10px] text-white/30">proplogai.com/profile/tmike</span>
               </div>
             </div>
             {/* Profile stats */}
@@ -686,7 +686,7 @@ export default async function Home() {
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {[
               { emoji: '💸', who: 'Failing challenges?', desc: 'FTMO, TFT, MyFundedFx — doesn\'t matter which. If you keep breaching, the problem isn\'t the firm. It\'s the pattern you can\'t see.' },
-              { emoji: '📉', who: 'Funded but leaking?', desc: 'You passed the challenge. Now you\'re slowly giving it back. PropJournal finds where your discipline drifts before your account does.' },
+              { emoji: '📉', who: 'Funded but leaking?', desc: 'You passed the challenge. Now you\'re slowly giving it back. PropLogAI finds where your discipline drifts before your account does.' },
               { emoji: '⚡', who: 'Scalping blind?', desc: 'XAU/USD on the 5M chart? Your edge is speed, but your weakness is tilt. Track it or lose to it.' },
             ].map((p, i) => (
               <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-left" style={{ '--reveal-delay': `${i * 100}ms` }} data-reveal>
@@ -710,7 +710,7 @@ export default async function Home() {
               Why we don&apos;t connect to your broker
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-sm text-white/55">
-              Every other journal wants to auto-import your trades. We deliberately don&apos;t. Here&apos;s why that makes PropJournal more effective.
+              Every other journal wants to auto-import your trades. We deliberately don&apos;t. Here&apos;s why that makes PropLogAI more effective.
             </p>
           </div>
 
@@ -835,7 +835,7 @@ export default async function Home() {
               { q: 'Why no broker auto-import?', a: 'Deliberate choice. Manual logging forces you to reflect on every trade — the emotion, the setup, the decision. That reflection is where discipline is built. Auto-import skips it.' },
               { q: 'Is my trading data secure?', a: 'All data is encrypted at rest (AES-256) and in transit (TLS 1.2+). We never ask for broker credentials and never sell your data.' },
               { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no commitments. Downgrade to Free anytime and keep all your trade data.' },
-              { q: 'How is the AI coaching different from ChatGPT?', a: 'PropJournal\'s AI analyzes YOUR trades specifically — your patterns, your emotions, your setups. It\'s not generic advice. It finds the one mistake that keeps costing you money.' },
+              { q: 'How is the AI coaching different from ChatGPT?', a: 'PropLogAI\'s AI analyzes YOUR trades specifically — your patterns, your emotions, your setups. It\'s not generic advice. It finds the one mistake that keeps costing you money.' },
             ].map((faq, i) => (
               <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
                 <h3 className="font-display text-sm font-semibold">{faq.q}</h3>
@@ -869,7 +869,7 @@ export default async function Home() {
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
           <div className="flex items-center gap-2">
             <span className="grid h-6 w-6 place-items-center rounded text-[10px]" style={gradientBtn}>&#9670;</span>
-            <span className="font-display text-sm font-semibold">PropJournal</span>
+            <span className="font-display text-sm font-semibold">PropLogAI</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-white/30">
             <Link href="/privacy" className="hover:text-white/50">Privacy</Link>
