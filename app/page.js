@@ -74,11 +74,8 @@ export default function Home() {
       {/* ═══════════════ HERO — NEGATIVE HOOK ═══════════════ */}
       <section className="hero-product-stage relative overflow-hidden px-6 pb-20 pt-16 sm:px-10 sm:pt-20">
         <HeroParticles />
-        {/* Nebula gas cloud layers */}
-        <div className="pointer-events-none absolute -left-20 -top-10 h-[42rem] w-[42rem] rounded-full blur-[140px]" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.20), transparent 65%)' }} />
-        <div className="pointer-events-none absolute -right-16 top-0 h-[36rem] w-[36rem] rounded-full blur-[120px]" style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.16), transparent 60%)' }} />
-        <div className="pointer-events-none absolute bottom-0 left-1/3 h-[30rem] w-[40rem] rounded-full blur-[130px]" style={{ background: 'radial-gradient(circle, rgba(168,85,247,0.12), transparent 55%)' }} />
-        <div className="pointer-events-none absolute -bottom-20 right-1/4 h-[24rem] w-[32rem] rounded-full blur-[100px]" style={{ background: 'radial-gradient(circle, rgba(236,72,153,0.08), transparent 60%)' }} />
+        {/* Cinematic spotlight — single overhead cone */}
+        <div className="pointer-events-none absolute left-1/2 top-0 h-[50rem] w-[50rem] -translate-x-1/2 rounded-full blur-[160px]" style={{ background: 'radial-gradient(circle, rgba(200,180,255,0.10) 0%, rgba(139,92,246,0.05) 35%, transparent 60%)' }} />
 
         <div className="relative z-10 mx-auto max-w-4xl text-center" data-reveal>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-300/20 bg-red-300/8 px-4 py-1.5 text-xs font-semibold text-red-200/90">
