@@ -105,9 +105,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ PAIN AMPLIFICATION ═══════════════ */}
-      <section id="the-pattern" className="px-6 py-20 sm:px-10">
+      <section id="the-pattern" className="px-6 py-28 sm:px-10">
         <div className="mx-auto max-w-4xl text-center" data-reveal>
-          <h2 className="font-display text-2xl font-bold sm:text-3xl">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">
             The cycle that&apos;s <span className="text-red-400">bleeding your account</span>
           </h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-white/50">
@@ -131,7 +131,7 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ COST STATS ═══════════════ */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-6 py-24 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl">
           <div className="grid gap-6 sm:grid-cols-3">
             {STATS.map((s, i) => (
@@ -148,14 +148,14 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ SOLUTION REVEAL ═══════════════ */}
-      <section className="px-6 py-20 sm:px-10">
+      <section className="px-6 py-28 sm:px-10">
         <div className="mx-auto max-w-4xl text-center" data-reveal>
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/8 px-4 py-1.5 text-xs font-semibold text-emerald-200">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.85)]" />
             The fix is visibility
           </div>
 
-          <h2 className="font-display text-2xl font-bold sm:text-3xl lg:text-4xl">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl lg:text-4xl">
             PropJournal doesn&apos;t judge.{' '}
             <span className="gradient-shimmer">It shows you.</span>
           </h2>
@@ -239,9 +239,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ HOW IT WORKS ═══════════════ */}
-      <section id="how-it-works" className="px-6 py-16 sm:px-10" data-reveal>
+      <section id="how-it-works" className="px-6 py-24 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="font-display text-2xl font-bold sm:text-3xl">Three steps to stop the cycle</h2>
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">Three steps to stop the cycle</h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-white/50">60 seconds to log a trade. The AI does the rest.</p>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
@@ -266,13 +266,13 @@ export default function Home() {
       {/* ═══════════════ PRODUCT SHOWCASE ═══════════════ */}
 
       {/* Showcase 1: Dashboard — text left, mockup right */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
-        <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
+      <section className="px-6 py-28 sm:px-10" data-reveal>
+        <div className="mx-auto grid max-w-5xl items-center gap-12 lg:gap-16 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-300/8 px-3 py-1 text-[11px] font-semibold text-violet-200">
               Dashboard
             </div>
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">Your trading story,<br />told in numbers</h2>
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">Your trading story,<br />told in numbers</h2>
             <p className="mt-4 text-sm leading-relaxed text-white/55">Win rate, profit factor, average R, equity curve — all computed automatically from your trades. No spreadsheets. No guessing.</p>
             <ul className="mt-6 space-y-3 text-sm text-white/60">
               {['Real-time equity curve tracks your growth', 'Weekly discipline score keeps you honest', 'Achievement badges reward consistency'].map((item, i) => (
@@ -321,8 +321,8 @@ export default function Home() {
       </section>
 
       {/* Showcase 2: AI Coach — mockup left, text right */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
-        <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
+      <section className="px-6 py-28 sm:px-10" data-reveal>
+        <div className="mx-auto grid max-w-5xl items-center gap-12 lg:gap-16 lg:grid-cols-2">
           <div className="order-2 lg:order-1 rounded-2xl border border-white/10 bg-white/[0.03] p-5" data-reveal style={{ '--reveal-delay': '120ms' }}>
             {/* Fake AI coach report */}
             <div className="mb-4 flex items-center justify-between">
@@ -356,7 +356,7 @@ export default function Home() {
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/8 px-3 py-1 text-[11px] font-semibold text-cyan-200">
               AI Coach
             </div>
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">The AI finds what<br />you can&apos;t see</h2>
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">The AI finds what<br />you can&apos;t see</h2>
             <p className="mt-4 text-sm leading-relaxed text-white/55">Every week, the AI analyzes your trades, finds recurring mistakes, ranks them by R lost, and tells you exactly how to fix them. No generic advice — just your data.</p>
             <ul className="mt-6 space-y-3 text-sm text-white/60">
               {['Per-trade grading with execution score', 'Weekly recurring mistake detection', 'Psychology insights with concrete guardrails'].map((item, i) => (
@@ -371,13 +371,13 @@ export default function Home() {
       </section>
 
       {/* Showcase 3: P&L Calendar — text left, mockup right */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
-        <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
+      <section className="px-6 py-28 sm:px-10" data-reveal>
+        <div className="mx-auto grid max-w-5xl items-center gap-12 lg:gap-16 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/8 px-3 py-1 text-[11px] font-semibold text-emerald-200">
               P&L Calendar
             </div>
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">See your patterns<br />at a glance</h2>
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">See your patterns<br />at a glance</h2>
             <p className="mt-4 text-sm leading-relaxed text-white/55">A visual monthly grid with daily P&L, weekly totals, and session tracking. Spot losing streaks, revenge days, and your best sessions instantly.</p>
             <ul className="mt-6 space-y-3 text-sm text-white/60">
               {['Color-coded daily P&L — green wins, red losses', 'Weekly summary totals on every row', 'Click any day to see all trades and journal entries'].map((item, i) => (
@@ -424,14 +424,14 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ FEATURES ═══════════════ */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-6 py-24 sm:px-10" data-reveal>
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">Everything you need to stop failing challenges</h2>
+            <h2 className="font-display text-3xl font-bold sm:text-4xl">Everything you need to stop failing challenges</h2>
             <p className="mx-auto mt-3 max-w-lg text-sm text-white/50">12 live features. Zero fluff. Built by a trader who was tired of paying for the same mistakes.</p>
           </div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((f, i) => (
               <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-5" style={{ '--reveal-delay': `${(i % 8) * 70}ms` }} data-reveal>
                 <div className="mb-3 flex items-center justify-between gap-3">
@@ -451,10 +451,10 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ WHO IT'S FOR ═══════════════ */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-6 py-24 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl text-center">
-          <h2 className="font-display text-2xl font-bold sm:text-3xl">Sound familiar?</h2>
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">Sound familiar?</h2>
+          <div className="mt-8 grid gap-5 sm:grid-cols-3">
             {[
               { emoji: '💸', who: 'Failing challenges?', desc: 'FTMO, TFT, MyFundedFx — doesn\'t matter which. If you keep breaching, the problem isn\'t the firm. It\'s the pattern you can\'t see.' },
               { emoji: '📉', who: 'Funded but leaking?', desc: 'You passed the challenge. Now you\'re slowly giving it back. PropJournal finds where your discipline drifts before your account does.' },
@@ -471,9 +471,9 @@ export default function Home() {
       </section>
 
       {/* ═══════════════ CTA ═══════════════ */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
+      <section className="px-6 py-28 sm:px-10" data-reveal>
         <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 p-10 text-center shadow-[0_0_80px_rgba(34,211,238,0.08)]" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.05))' }}>
-          <h2 className="font-display text-2xl font-bold sm:text-3xl">
+          <h2 className="font-display text-3xl font-bold sm:text-4xl">
             Every failed challenge has a pattern.{' '}
             <span className="gradient-shimmer">Find yours.</span>
           </h2>
