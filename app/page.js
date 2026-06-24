@@ -472,10 +472,10 @@ export default async function Home() {
             Features no other journal has
           </div>
           <h2 className="font-display text-2xl font-bold sm:text-3xl lg:text-4xl">
-            Built for <span style={gradientText}>prop firm traders</span> — not day traders
+            Built for <span style={gradientText}>prop firm traders</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm text-white/55">
-            Generic journals track P&L. PropJournal tracks your entire prop firm journey — the costs, the wins, and the proof.
+            PropJournal tracks your entire prop firm journey — the expenses, the payouts, and the achievements.
           </p>
         </div>
       </section>
