@@ -134,10 +134,10 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
             {type === 'daily' ? "Today's P&L" : (data.pair || 'Trade') + ' ' + ((data.direction || '').toUpperCase())}
           </div>
 
-          {/* P&L amount - main big, cents smaller */}
+          {/* P&L amount - Inter font (clean zeros), main big, cents smaller */}
           <div style={{
-            fontWeight: 700,
-            fontFamily: "'JetBrains Mono', monospace",
+            fontWeight: 800,
+            fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
             color: accentColor,
             lineHeight: 1.15,
             textShadow: `0 0 40px ${accentGlow}`,
@@ -146,9 +146,9 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
             alignItems: 'baseline',
             justifyContent: 'center',
           }}>
-            <span style={{ fontSize: pnlFontSize, letterSpacing: '0.01em' }}>{pnlParts.main}</span>
+            <span style={{ fontSize: pnlFontSize, letterSpacing: '-0.02em' }}>{pnlParts.main}</span>
             {pnlParts.cents && (
-              <span style={{ fontSize: Math.round(pnlFontSize * 0.55), opacity: 0.7, letterSpacing: '0.01em' }}>{pnlParts.cents}</span>
+              <span style={{ fontSize: Math.round(pnlFontSize * 0.55), opacity: 0.7, letterSpacing: '-0.01em' }}>{pnlParts.cents}</span>
             )}
           </div>
 
