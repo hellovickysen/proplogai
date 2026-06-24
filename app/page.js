@@ -74,11 +74,8 @@ export default function Home() {
       {/* ═══════════════ HERO — NEGATIVE HOOK ═══════════════ */}
       <section className="hero-product-stage relative overflow-hidden px-6 pb-20 pt-16 sm:px-10 sm:pt-20">
         <HeroParticles />
-        {/* Dramatic ambient glow — violet left, cyan right, crimson center-bottom */}
-        <div className="pointer-events-none absolute -left-32 top-0 h-[40rem] w-[40rem] rounded-full bg-violet-600/[0.14] blur-[120px]" />
-        <div className="pointer-events-none absolute -right-32 top-8 h-[38rem] w-[38rem] rounded-full bg-cyan-500/[0.10] blur-[120px]" />
-        <div className="pointer-events-none absolute bottom-0 left-1/2 h-[28rem] w-[52rem] -translate-x-1/2 rounded-full bg-red-600/[0.07] blur-[100px]" />
-        <div className="pointer-events-none absolute left-1/2 top-[20%] h-[20rem] w-[20rem] -translate-x-1/2 rounded-full bg-red-500/[0.04] blur-[60px]" />
+        <div className="pointer-events-none absolute -left-40 top-10 h-[36rem] w-[36rem] rounded-full bg-red-500/8 blur-3xl" />
+        <div className="pointer-events-none absolute -right-40 top-20 h-[34rem] w-[34rem] rounded-full bg-violet-500/10 blur-3xl" />
 
         <div className="relative z-10 mx-auto max-w-4xl text-center" data-reveal>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-300/20 bg-red-300/8 px-4 py-1.5 text-xs font-semibold text-red-200/90">
