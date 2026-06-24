@@ -31,6 +31,7 @@ export async function generateCoachReport() {
   const { data: trades } = await supabase
     .from('trades')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50);
   const list = trades || [];
@@ -100,6 +101,7 @@ export async function sendCoachReportEmail() {
   const { data: insight } = await supabase
     .from('ai_insights')
     .select('*')
+    .eq('user_id', user.id)
     .eq('type', 'coach_report')
     .order('created_at', { ascending: false })
     .limit(1)
@@ -113,6 +115,7 @@ export async function sendCoachReportEmail() {
   const { data: trades } = await supabase
     .from('trades')
     .select('pnl, r_multiple')
+    .eq('user_id', user.id)
     .limit(50);
   const list = trades || [];
   const s = computeStats(list);

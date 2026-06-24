@@ -23,6 +23,9 @@ function Pill({ children, color = 'violet' }) {
 export default async function AdminUserDetailPage({ params }) {
   if (!isAdminConfigured()) return <div className="p-8 text-white/55">Add SUPABASE_SERVICE_ROLE_KEY first.</div>;
   const userId = params.id;
+  // Validate UUID format
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!UUID_RE.test(userId)) notFound();
   const sb = createAdminClient();
   if (!sb) return <div className="p-8 text-white/55">Admin client unavailable.</div>;
 

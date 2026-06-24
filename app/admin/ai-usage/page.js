@@ -11,6 +11,7 @@ function fmtDate(d) {
 export default async function AdminAiUsagePage() {
   if (!isAdminConfigured()) return <div className="p-8 text-white/55">Add SUPABASE_SERVICE_ROLE_KEY first.</div>;
   const sb = createAdminClient();
+  if (!sb) return <div className="p-8 text-white/55">Admin client unavailable.</div>;
 
   // All AI insights
   const { data: insights } = await sb.from('ai_insights').select('id, user_id, type, created_at').order('created_at', { ascending: false });

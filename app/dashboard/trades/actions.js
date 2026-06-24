@@ -150,6 +150,9 @@ export async function deleteTrade(id) {
 export async function saveJournal(tradeId, payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  // Verify trade belongs to the current user (prevents IDOR)
+  const { data: tradeOwner } = await supabase.from('trades').select('id').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
+  if (!tradeOwner) return { error: 'Trade not found.' };
   const urls = normalizeScreenshots(payload.screenshot_urls, payload.screenshot_url).slice(0, MAX_SCREENSHOTS);
   const emotions = Array.isArray(payload.emotions) ? payload.emotions.slice(0, MAX_EMOTIONS).map((e) => sanitizeText(e, 50)) : [];
   const entry = {
