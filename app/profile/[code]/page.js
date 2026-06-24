@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import PnlCalendar from '@/components/calendar/PnlCalendar';
 import ProfileTradeList from '@/components/profile/ProfileTradeList';
+import { LogoMark } from '@/components/Logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -164,12 +165,7 @@ export default async function PublicProfilePage({ params }) {
 
         {/* Hero Header */}
         <div className="mb-10 text-center">
-          <div
-            className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl text-2xl"
-            style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)', boxShadow: '0 0 40px rgba(139,92,246,0.3), 0 0 15px rgba(34,211,238,0.2)' }}
-          >
-            &#9670;
-          </div>
+          <LogoMark size={64} rounded="rounded-2xl" className="mx-auto mb-4" style={{ boxShadow: '0 0 40px rgba(139,92,246,0.3), 0 0 15px rgba(34,211,238,0.2)' }} />
           <h1 className="font-display text-3xl font-bold">Trader Profile</h1>
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">
             <span className="h-2 w-2 rounded-full bg-emerald-400"></span>

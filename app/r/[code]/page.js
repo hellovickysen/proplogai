@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from 'react';
+import { LogoMark } from '@/components/Logo';
 
 /**
  * Referral redirect page.
@@ -21,9 +22,7 @@ export default function ReferralRedirect({ params }) {
   return (
     <div className="flex min-h-screen items-center justify-center" style={{ background: '#07070b' }}>
       <div className="text-center">
-        <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl text-xl" style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}>
-          &#9670;
-        </div>
+        <LogoMark size={48} rounded="rounded-2xl" className="mx-auto mb-4" />
         <p className="text-sm text-white/60">Redirecting to PropLogAI...</p>
       </div>
     </div>

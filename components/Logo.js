@@ -1,7 +1,7 @@
 // PropLogAI logo — the "Open Journal" mark in a gradient tile, with an optional wordmark.
 // Pure presentational component (safe in both server and client components).
 
-export function LogoMark({ size = 32, rounded = 'rounded-xl', glow = false, glyph = '#08080f', className = '' }) {
+export function LogoMark({ size = 32, rounded = 'rounded-xl', glow = false, glyph = '#08080f', className = '', style = null }) {
   return (
     <span
       className={'grid flex-shrink-0 place-items-center ' + rounded + ' ' + className}
@@ -10,6 +10,7 @@ export function LogoMark({ size = 32, rounded = 'rounded-xl', glow = false, glyp
         height: size,
         background: 'linear-gradient(135deg,#a78bfa,#22d3ee)',
         ...(glow ? { boxShadow: '0 0 18px rgba(139,92,246,0.5)' } : null),
+        ...(style || null),
       }}
     >
       <svg width={size} height={size} viewBox="0 0 100 100" aria-hidden="true">

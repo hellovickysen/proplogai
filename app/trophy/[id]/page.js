@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
+import { LogoMark } from '@/components/Logo';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +32,7 @@ export default async function PublicTrophyPage({ params }) {
       <div className="mx-auto max-w-3xl px-4 py-12">
         {/* Header */}
         <div className="mb-8 text-center">
+          <LogoMark size={56} rounded="rounded-2xl" glow className="mx-auto mb-5" />
           <div className="mb-3 inline-block rounded-full border border-white/15 bg-white/[0.06] px-3 py-1 font-mono text-xs uppercase tracking-wider text-white/50">
             {catLabel}
           </div>
