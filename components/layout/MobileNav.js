@@ -6,7 +6,7 @@ import Link from 'next/link';
 const LINKS = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Trades', href: '/dashboard/trades' },
-  { label: 'Playbook', href: '/dashboard/playbook' },
+  { label: 'Rulebook', href: '/dashboard/rulebook' },
   { label: 'Expenses', href: '/dashboard/expenses' },
   { label: 'Trophies', href: '/dashboard/trophies' },
   { label: 'Referrals', href: '/dashboard/referrals' },

@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades',    icon: '☰', href: '/dashboard/trades' },
-  { label: 'Playbook',  icon: '📋', href: '/dashboard/playbook' },
+  { label: 'Rulebook',  icon: '📋', href: '/dashboard/rulebook' },
   { label: 'Expenses',  icon: '💳', href: '/dashboard/expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
   { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },

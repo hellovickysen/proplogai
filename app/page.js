@@ -70,7 +70,7 @@ const FEATURES = [
   { icon: '📊', title: 'AI Coach reports', desc: 'Weekly deep-dive finds your recurring leaks, ranks them by R lost, and gives you concrete guardrails.', live: true },
   { icon: '📅', title: 'P&L calendar', desc: 'Visual monthly grid with daily P&L. Spot losing streaks, revenge days, and session patterns at a glance.', live: true },
   { icon: '☰', title: 'One-tap trade logging', desc: 'Pair, direction, session, setup, P&L — logged in 30 seconds. No excuses to skip it.', live: true },
-  { icon: '📏', title: 'Playbook discipline', desc: 'Define your setups. Track if you followed them. The AI scores your discipline weekly and catches drift.', live: true },
+  { icon: '📏', title: 'Rulebook discipline', desc: 'Define your setups. Track if you followed them. The AI scores your discipline weekly and catches drift.', live: true },
   { icon: '🔍', title: 'Smart filters', desc: 'Filter by result, setup, emotion, session. Find exactly which patterns make or lose you money.', live: true },
   { icon: '💰', title: 'Expense tracker', desc: 'Track challenge fees, activation costs, renewals, and payouts. Know your real ROI across all prop firms.', live: true },
   { icon: '🏆', title: 'Trophy wall & proof', desc: 'Upload payout certificates and funded-account wins. Share verified proof pages with anyone.', live: true },
@@ -774,7 +774,7 @@ export default async function Home() {
                 Start free →
               </Link>
               <ul className="mt-8 space-y-3">
-                {['Unlimited trade logging', 'Journal entries with emotions & 1 screenshot/trade', 'P&L calendar (full)', 'Dashboard with basic stats', 'Playbook — up to 3 custom setups', 'Prop firm expense tracker', 'Public trader profile', 'Referral rewards', '3 AI trade analyses / month', '1 AI coach report / month'].map((f, i) => (
+                {['Unlimited trade logging', 'Journal entries with emotions & 1 screenshot/trade', 'P&L calendar (full)', 'Dashboard with basic stats', 'Rulebook — up to 3 custom setups', 'Prop firm expense tracker', 'Public trader profile', 'Referral rewards', '3 AI trade analyses / month', '1 AI coach report / month'].map((f, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-white/60">
                     <span className="mt-0.5 text-white/30">✓</span>{f}
                   </li>

@@ -23,7 +23,7 @@ function InjectStyles() {
   return <style dangerouslySetInnerHTML={{ __html: styles }} />;
 }
 
-export function PlaybookEmptyIcon() {
+export function RulebookEmptyIcon() {
   return (
     <>
       <InjectStyles />

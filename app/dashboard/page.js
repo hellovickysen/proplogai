@@ -188,7 +188,7 @@ export default async function DashboardPage() {
         <Stat label="Trades" value={String(s.n)} />
       </div>
 
-      {/* Playbook Discipline — full width */}
+      {/* Rulebook Discipline — full width */}
       {disciplineStats.totalTrades > 0 && (
         <div className="mb-6">
           <DisciplineCards stats={disciplineStats} weeklyScore={weeklyScore} achievements={achievements} />

@@ -33,7 +33,7 @@ export default function DisciplineCards({ stats, weeklyScore, achievements }) {
       {/* Header */}
       <div className="mb-5 flex items-center gap-2">
         <span className="text-base">&#128170;</span>
-        <div className="font-display text-base font-semibold" style={gradientText}>Playbook discipline</div>
+        <div className="font-display text-base font-semibold" style={gradientText}>Rulebook discipline</div>
       </div>
 
       {/* Top row: Weekly score ring + streak stats */}
