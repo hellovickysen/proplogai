@@ -4,17 +4,34 @@ import { forwardRef } from 'react';
 
 function fmtMoney(v) {
   const n = Number(v) || 0;
-  const sign = n >= 0 ? '+' : '−';
+  const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
-  return sign + '$ ' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return sign + '$ ' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+/** Smart P&L format for card - keeps it on one line */
+function fmtPnlCard(v, isStory) {
+  const n = Number(v) || 0;
+  const sign = n >= 0 ? '+' : '-';
+  const abs = Math.abs(n);
+  if (isStory) {
+    // Story mode (360px) - shorten to fit one line
+    if (abs >= 100000) return sign + '$ ' + (abs / 1000).toFixed(0) + 'K';
+    if (abs >= 10000) return sign + '$ ' + (abs / 1000).toFixed(1) + 'K';
+    if (abs >= 1000) return sign + '$ ' + abs.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return sign + '$ ' + abs.toFixed(2);
+  }
+  // Landscape (640px) - more room, still shorten huge numbers
+  if (abs >= 100000) return sign + '$ ' + (abs / 1000).toFixed(1) + 'K';
+  return sign + '$ ' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 function fmtMoneyShort(v) {
   const n = Number(v) || 0;
   const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
-  if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
-  return sign + '$' + abs.toFixed(0);
+  if (abs >= 1000) return sign + '$ ' + (abs / 1000).toFixed(1) + 'K';
+  return sign + '$ ' + abs.toFixed(0);
 }
 
 function fmtDate(d) {
@@ -44,7 +61,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
 
   // Colors
   const accentColor = isWin ? '#34d399' : '#f87171';
-  const accentColorDim = isWin ? 'rgba(52,211,153,0.15)' : 'rgba(248,113,113,0.15)';
   const accentGlow = isWin ? 'rgba(52,211,153,0.4)' : 'rgba(248,113,113,0.35)';
   const secondaryGlow = isWin ? 'rgba(34,211,238,0.25)' : 'rgba(251,191,36,0.2)';
   const accentGradient = isWin
@@ -53,6 +69,13 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
 
   // Strip emoji from quote for html2canvas compatibility
   const cleanQuote = quote ? quote.replace(/[\u{1F600}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}\u{1F1E0}-\u{1F1FF}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2702}-\u{27B0}\u{FE0E}]/gu, '').trim() : '';
+
+  // Smart P&L formatting - always fits one line
+  const pnlText = fmtPnlCard(data.pnl, isStory);
+  // Auto-size font: shrink if text is long
+  const pnlLen = pnlText.length;
+  const baseFontSize = isStory ? 52 : 52;
+  const pnlFontSize = pnlLen > 12 ? baseFontSize - 12 : pnlLen > 9 ? baseFontSize - 6 : baseFontSize;
 
   return (
     <div
@@ -96,7 +119,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 12, color: '#08080f', fontWeight: 800,
               boxShadow: '0 0 14px rgba(139,92,246,0.5)',
-            }}>◆</div>
+            }}>&#9670;</div>
             <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em' }}>PropJournal</span>
           </div>
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em' }}>
@@ -121,16 +144,17 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
             {type === 'daily' ? "Today's P&L" : (data.pair || 'Trade') + ' ' + ((data.direction || '').toUpperCase())}
           </div>
 
-          {/* P&L amount — solid color, NOT background-clip:text */}
+          {/* P&L amount - solid color, one line, auto-sized */}
           <div style={{
-            fontSize: isStory ? 64 : 52,
+            fontSize: pnlFontSize,
             fontWeight: 800,
             color: accentColor,
             lineHeight: 1,
-            letterSpacing: '-0.03em',
+            letterSpacing: '-0.02em',
             textShadow: `0 0 40px ${accentGlow}`,
+            whiteSpace: 'nowrap',
           }}>
-            {fmtMoney(data.pnl)}
+            {pnlText}
           </div>
 
           {/* Quote */}
@@ -181,7 +205,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
               fontSize: 10, color: 'rgba(255,255,255,0.65)',
               fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.08em',
             }}>
-              propjournal.app — AI Trading Journal
+              propjournal.app &mdash; AI Trading Journal
             </span>
           </div>
         </div>
@@ -196,9 +220,9 @@ function StatChip({ label, value, accent, isStory }) {
       background: 'rgba(255,255,255,0.06)',
       border: '1px solid rgba(255,255,255,0.1)',
       borderRadius: 10,
-      padding: isStory ? '10px 16px' : '8px 16px',
+      padding: isStory ? '10px 14px' : '8px 16px',
       textAlign: 'center',
-      minWidth: isStory ? 72 : 70,
+      minWidth: isStory ? 68 : 70,
       flex: '1 1 0',
       maxWidth: isStory ? 100 : 130,
     }}>
@@ -206,11 +230,13 @@ function StatChip({ label, value, accent, isStory }) {
         fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.14em',
         color: 'rgba(255,255,255,0.65)', fontFamily: "'JetBrains Mono', monospace",
         marginBottom: 4,
+        whiteSpace: 'nowrap',
       }}>{label}</div>
       <div style={{
-        fontSize: isStory ? 15 : 14, fontWeight: 700,
+        fontSize: isStory ? 14 : 14, fontWeight: 700,
         fontFamily: "'JetBrains Mono', monospace",
         color: accent ? '#34d399' : '#ffffff',
+        whiteSpace: 'nowrap',
       }}>{value}</div>
     </div>
   );
