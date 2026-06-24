@@ -5,6 +5,9 @@ export const alt = 'PropLogAI — AI Trading Journal for Prop Firm Traders';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
+const MARK = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="22,42 50,49 50,75 22,69" fill="#08080f"/><polygon points="78,42 50,49 50,75 78,69" fill="#08080f"/><polyline points="50,49 63,39 74,27" fill="none" stroke="#08080f" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="74" cy="27" r="4.5" fill="#08080f"/></svg>';
+const MARK_URI = 'data:image/svg+xml;base64,' + btoa(MARK);
+
 export default async function Image() {
   return new ImageResponse(
     (
@@ -44,7 +47,7 @@ export default async function Image() {
               fontWeight: 900,
             }}
           >
-            ◆
+            <img width="30" height="30" src={MARK_URI} />
           </div>
           <span
             style={{

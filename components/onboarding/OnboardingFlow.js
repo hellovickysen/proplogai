@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { completeOnboarding } from '@/app/onboarding/actions';
+import { LogoMark } from '@/components/Logo';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
 
@@ -57,9 +58,7 @@ export default function OnboardingFlow({ userEmail }) {
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
           {step === 0 && (
             <div className="text-center">
-              <div className="mx-auto mb-5 grid h-16 w-16 place-items-center rounded-2xl text-3xl" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.25), rgba(34,211,238,0.15))', border: '1px solid rgba(255,255,255,0.12)' }}>
-                &#9670;
-              </div>
+              <LogoMark size={64} rounded="rounded-2xl" className="mx-auto mb-5" />
               <h1 className="font-display text-2xl font-bold">Welcome to PropLogAI</h1>
               <p className="mt-3 text-sm leading-relaxed text-white/55">
                 Your AI-powered forex trading journal. Log trades, track your emotions, and get coaching that helps you find — and fix — the patterns costing you money.
