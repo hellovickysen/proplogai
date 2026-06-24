@@ -74,8 +74,11 @@ export default function Home() {
       {/* ═══════════════ HERO — NEGATIVE HOOK ═══════════════ */}
       <section className="hero-product-stage relative overflow-hidden px-6 pb-20 pt-16 sm:px-10 sm:pt-20">
         <HeroParticles />
-        <div className="pointer-events-none absolute -left-40 top-10 h-[36rem] w-[36rem] rounded-full bg-red-500/8 blur-3xl" />
-        <div className="pointer-events-none absolute -right-40 top-20 h-[34rem] w-[34rem] rounded-full bg-violet-500/10 blur-3xl" />
+        {/* Animated gradient mesh */}
+        <div className="hero-blob hero-blob-1" />
+        <div className="hero-blob hero-blob-2" />
+        <div className="hero-blob hero-blob-3" />
+        <div className="hero-blob hero-blob-4" />
 
         <div className="relative z-10 mx-auto max-w-4xl text-center" data-reveal>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-300/20 bg-red-300/8 px-4 py-1.5 text-xs font-semibold text-red-200/90">
