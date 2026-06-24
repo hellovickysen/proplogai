@@ -133,7 +133,7 @@ export default async function PublicProfilePage({ params }) {
   if (show_payouts) {
     const { data } = await supabase
       .from('payouts')
-      .select('*')
+      .select('id, amount, firm_name, payout_date')
       .eq('user_id', userId)
       .order('payout_date', { ascending: false });
     payouts = data || [];
@@ -142,7 +142,7 @@ export default async function PublicProfilePage({ params }) {
   if (show_trophies) {
     const { data } = await supabase
       .from('trophies')
-      .select('*')
+      .select('id, category, file_url, title, description')
       .eq('user_id', userId)
       .eq('is_public', true)
       .order('created_at', { ascending: false });

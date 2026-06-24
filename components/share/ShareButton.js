@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from 'react';
-import ShareModal from '@/components/share/ShareModal';
+import dynamic from 'next/dynamic';
+
+const ShareModal = dynamic(() => import('@/components/share/ShareModal'), {
+  ssr: false,
+  loading: () => null,
+});
 
 /**
  * ShareButton — renders a share icon button that opens the ShareModal.

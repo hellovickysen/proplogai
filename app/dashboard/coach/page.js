@@ -15,7 +15,7 @@ export default async function CoachPage() {
   const { count } = await supabase.from('trades').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
   const { data: insight } = await supabase
     .from('ai_insights')
-    .select('*')
+    .select('mistakes, created_at')
     .eq('user_id', user.id)
     .eq('type', 'coach_report')
     .order('created_at', { ascending: false })

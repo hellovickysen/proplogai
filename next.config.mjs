@@ -1,5 +1,20 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    optimizePackageImports: ['@supabase/supabase-js', '@supabase/ssr'],
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.in',
+      },
+    ],
+  },
   async headers() {
     return [
       {

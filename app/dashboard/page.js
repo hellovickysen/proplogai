@@ -89,7 +89,7 @@ export default async function DashboardPage() {
   const series = equitySeries(list);
   const { data: coach } = await supabase
     .from('ai_insights')
-    .select('*')
+    .select('summary, mistakes, created_at')
     .eq('user_id', user.id)
     .eq('type', 'coach_report')
     .order('created_at', { ascending: false })
