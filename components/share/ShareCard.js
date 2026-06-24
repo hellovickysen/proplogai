@@ -9,15 +9,16 @@ function fmtMoney(v) {
   return sign + '$' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-/** Smart P&L format for card - whole dollars, keeps it on one line */
-function fmtPnlCard(v, isStory) {
+/** Smart P&L format — returns { main, cents } for split rendering */
+function fmtPnlCard(v) {
   const n = Number(v) || 0;
   const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
-  // Always round to whole dollars for clean card display
-  if (abs >= 100000) return sign + '$' + (abs / 1000).toFixed(0) + 'K';
-  if (abs >= 10000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
-  return sign + '$' + Math.round(abs).toLocaleString('en-US');
+  if (abs >= 100000) return { main: sign + '$' + (abs / 1000).toFixed(0) + 'K', cents: '' };
+  if (abs >= 10000) return { main: sign + '$' + (abs / 1000).toFixed(1) + 'K', cents: '' };
+  const whole = Math.floor(abs);
+  const dec = Math.round((abs - whole) * 100).toString().padStart(2, '0');
+  return { main: sign + '$' + whole.toLocaleString('en-US'), cents: '.' + dec };
 }
 
 function fmtMoneyShort(v) {
@@ -59,10 +60,10 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
   // Strip emoji from quote for html2canvas compatibility
   const cleanQuote = quote ? quote.replace(/[\u{1F600}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{FE00}-\u{FE0F}\u{200D}\u{20E3}\u{E0020}-\u{E007F}\u{1F1E0}-\u{1F1FF}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{2702}-\u{27B0}\u{FE0E}]/gu, '').trim() : '';
 
-  // Smart P&L formatting
-  const pnlText = fmtPnlCard(data.pnl, isStory);
+  // Smart P&L formatting — split into main + cents
+  const pnlParts = fmtPnlCard(data.pnl);
   // Auto-size: shrink for long strings
-  const pnlLen = pnlText.length;
+  const pnlLen = (pnlParts.main + pnlParts.cents).length;
   const baseFontSize = isStory ? 52 : 52;
   const pnlFontSize = pnlLen > 12 ? baseFontSize - 14 : pnlLen > 9 ? baseFontSize - 6 : baseFontSize;
 
@@ -133,18 +134,22 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
             {type === 'daily' ? "Today's P&L" : (data.pair || 'Trade') + ' ' + ((data.direction || '').toUpperCase())}
           </div>
 
-          {/* P&L amount - JetBrains Mono for clear digits */}
+          {/* P&L amount - main big, cents smaller */}
           <div style={{
-            fontSize: pnlFontSize,
             fontWeight: 700,
             fontFamily: "'JetBrains Mono', monospace",
             color: accentColor,
             lineHeight: 1.15,
-            letterSpacing: '0.01em',
             textShadow: `0 0 40px ${accentGlow}`,
             whiteSpace: 'nowrap',
+            display: 'flex',
+            alignItems: 'baseline',
+            justifyContent: 'center',
           }}>
-            {pnlText}
+            <span style={{ fontSize: pnlFontSize, letterSpacing: '0.01em' }}>{pnlParts.main}</span>
+            {pnlParts.cents && (
+              <span style={{ fontSize: Math.round(pnlFontSize * 0.55), opacity: 0.7, letterSpacing: '0.01em' }}>{pnlParts.cents}</span>
+            )}
           </div>
 
           {/* Quote */}
