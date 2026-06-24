@@ -21,6 +21,17 @@ export default async function CoachPage() {
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+  // Count coach reports used this month (for usage badge)
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const { count: coachUsedThisMonth } = await supabase
+    .from('ai_insights')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('type', 'coach_report')
+    .gte('created_at', monthStart.toISOString());
+
   const report = insight && insight.mistakes ? insight.mistakes : null;
   const tradeCount = count || 0;
   const hasEnough = tradeCount >= MIN_TRADES;
@@ -35,7 +46,7 @@ export default async function CoachPage() {
         </div>
         <div className="flex items-center gap-2">
           {report && emailEnabled ? <EmailReportButton /> : null}
-          {hasEnough ? <GenerateReportButton label={report ? '↻ Refresh report' : '✦ Generate report'} /> : null}
+          {hasEnough ? <GenerateReportButton label={report ? '↻ Refresh report' : '✦ Generate report'} usedThisMonth={coachUsedThisMonth || 0} /> : null}
         </div>
       </div>
 
@@ -53,7 +64,7 @@ export default async function CoachPage() {
               : `Log at least ${MIN_TRADES} trades so the AI Coach has enough data to detect patterns. You have ${tradeCount} trade${tradeCount !== 1 ? 's' : ''} so far.`}
           </p>
           {hasEnough ? (
-            <div className="mt-6 flex justify-center"><GenerateReportButton /></div>
+            <div className="mt-6 flex justify-center"><GenerateReportButton usedThisMonth={coachUsedThisMonth || 0} /></div>
           ) : (
             <div className="mt-6 flex flex-col items-center gap-3">
               <div className="w-48">

@@ -56,6 +56,17 @@ export default async function TradeDetailPage({ params }) {
     .eq('type', 'trade_analysis')
     .maybeSingle();
 
+  // Count AI analyses used this month (for usage badge)
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const { count: aiUsedThisMonth } = await supabase
+    .from('ai_insights')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('type', 'trade_analysis')
+    .gte('created_at', monthStart.toISOString());
+
   const { data: prefs } = await supabase
     .from('user_preferences')
     .select('custom_emotions, default_confidence, custom_setups')
@@ -179,7 +190,7 @@ export default async function TradeDetailPage({ params }) {
               <p className="mb-3 mt-1.5 text-sm leading-relaxed text-white/55">
                 Get an instant AI breakdown of this trade — your mistakes, what went well, and the one fix that matters most.
               </p>
-              <AnalyzeButton tradeId={id} />
+              <AnalyzeButton tradeId={id} usedThisMonth={aiUsedThisMonth || 0} />
             </div>
           )}
         </div>

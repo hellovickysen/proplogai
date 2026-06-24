@@ -64,6 +64,7 @@ export default function Home() {
           <span className="font-display text-lg font-bold tracking-tight">PropJournal</span>
         </div>
         <div className="flex items-center gap-3">
+          <Link href="/pricing" className="text-sm text-white/60 hover:text-white">Pricing</Link>
           <Link href="/login" className="text-sm text-white/60 hover:text-white">Log in</Link>
           <Link href="/login?mode=signup" className="cta-glow rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
             Start free →

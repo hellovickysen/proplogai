@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { analyzeTrade } from '@/app/dashboard/trades/actions';
 import { useToast } from '@/components/ui/Toast';
 
-export default function AnalyzeButton({ tradeId, label }) {
+const FREE_LIMIT = 5;
+
+export default function AnalyzeButton({ tradeId, label, usedThisMonth = 0 }) {
   const toast = useToast();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -39,6 +41,25 @@ export default function AnalyzeButton({ tradeId, label }) {
       >
         {busy ? 'Analyzing…' : label || '✦ Analyze this trade'}
       </button>
+      <div className="mt-2 flex items-center gap-2">
+        <div className="h-1.5 flex-1 rounded-full bg-white/10">
+          <div
+            className="h-full rounded-full transition-all"
+            style={{
+              width: Math.min(100, (usedThisMonth / FREE_LIMIT) * 100) + '%',
+              background: usedThisMonth >= FREE_LIMIT
+                ? 'linear-gradient(120deg, #f87171, #ef4444)'
+                : 'linear-gradient(120deg, #a78bfa, #22d3ee)',
+            }}
+          />
+        </div>
+        <span className="font-mono text-[10px] text-white/40">{usedThisMonth}/{FREE_LIMIT} this month</span>
+      </div>
+      {usedThisMonth >= FREE_LIMIT && (
+        <p className="mt-1.5 text-[11px] text-amber-300/70">
+          ✦ Free limit reached — unlimited with Pro (coming soon)
+        </p>
+      )}
       {error ? <p className="mt-3 text-sm text-red-400">{error}</p> : null}
     </div>
   );
