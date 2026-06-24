@@ -18,7 +18,7 @@ function fmtPnlCard(v) {
   if (abs >= 10000) return { main: sign + '$' + (abs / 1000).toFixed(1) + 'K', cents: '' };
   const whole = Math.floor(abs);
   const dec = Math.round((abs - whole) * 100).toString().padStart(2, '0');
-  return { main: sign + '$' + whole.toLocaleString('en-US'), cents: '.' + dec };
+  return { main: sign + '$' + whole.toLocaleString('en-US'), cents: dec };
 }
 
 function fmtMoneyShort(v) {
