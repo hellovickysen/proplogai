@@ -9,19 +9,15 @@ function fmtMoney(v) {
   return sign + '$' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
-/** Smart P&L format for card - keeps it on one line */
+/** Smart P&L format for card - whole dollars, keeps it on one line */
 function fmtPnlCard(v, isStory) {
   const n = Number(v) || 0;
   const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
-  if (isStory) {
-    if (abs >= 100000) return sign + '$' + (abs / 1000).toFixed(0) + 'K';
-    if (abs >= 10000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
-    if (abs >= 1000) return sign + '$' + abs.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return sign + '$' + abs.toFixed(2);
-  }
-  if (abs >= 100000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
-  return sign + '$' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  // Always round to whole dollars for clean card display
+  if (abs >= 100000) return sign + '$' + (abs / 1000).toFixed(0) + 'K';
+  if (abs >= 10000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
+  return sign + '$' + Math.round(abs).toLocaleString('en-US');
 }
 
 function fmtMoneyShort(v) {
