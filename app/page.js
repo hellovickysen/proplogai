@@ -1,7 +1,5 @@
 import Link from 'next/link';
 import { HeroParticles, LandingMotion } from '@/components/landing/LandingMotion';
-import CursorGlow from '@/components/landing/CursorGlow';
-import CardGlow from '@/components/landing/CardGlow';
 
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
@@ -58,14 +56,6 @@ export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden">
       <LandingMotion />
-      <CursorGlow />
-      <div className="landing-noise" />
-      {/* Fixed background orbs with pulse animations */}
-      <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute -top-[15%] left-[15%] h-[600px] w-[600px] rounded-full bg-violet-500/[0.07] blur-[100px] landing-orb-pulse" />
-        <div className="absolute right-[10%] top-[40%] h-[500px] w-[500px] rounded-full bg-purple-500/[0.06] blur-[100px] landing-orb-pulse-delayed" />
-        <div className="absolute -bottom-[10%] left-[35%] h-[550px] w-[550px] rounded-full bg-cyan-500/[0.05] blur-[120px] landing-orb-pulse-slow" />
-      </div>
 
       {/* Nav */}
       <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-10">
@@ -286,8 +276,7 @@ export default function Home() {
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {FEATURES.map((f, i) => (
-              <CardGlow key={i} className="rounded-2xl" style={{ '--reveal-delay': `${(i % 8) * 70}ms` }} data-reveal>
-              <div className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-5" style={{ '--reveal-delay': `${(i % 8) * 70}ms` }} data-reveal>
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <span className="text-xl">{f.icon}</span>
                   {f.coming ? (
@@ -299,7 +288,6 @@ export default function Home() {
                 <h3 className="font-display text-sm font-semibold">{f.title}</h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-white/50">{f.desc}</p>
               </div>
-              </CardGlow>
             ))}
           </div>
         </div>
