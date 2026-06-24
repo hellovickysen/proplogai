@@ -16,7 +16,7 @@ export async function exportTradesCSV() {
   // Fetch all trades ordered by trade_date
   const { data: trades, error: tErr } = await supabase
     .from('trades')
-    .select('id, pair, direction, entry_price, exit_price, stop_loss, take_profit, lot_size, pnl, r_multiple, setup, timeframe, session, trade_date, opened_at, closed_at, source, created_at')
+    .select('id, pair, direction, entry_price, exit_price, stop_loss, take_profit, lot_size, pnl, r_multiple, setup, timeframe, session, trade_date, opened_at, closed_at, created_at')
     .order('trade_date', { ascending: false, nullsFirst: false });
 
   if (tErr) return { error: tErr.message };
@@ -51,7 +51,6 @@ export async function exportTradesCSV() {
     'Setup',
     'Timeframe',
     'Session',
-    'Source',
     'Confidence',
     'Emotions',
     'Journal Note',
@@ -79,7 +78,6 @@ export async function exportTradesCSV() {
       t.setup || '',
       t.timeframe || '',
       t.session || '',
-      t.source || 'manual',
       confidence,
       emotions,
       note,
