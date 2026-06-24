@@ -24,7 +24,7 @@ export default function ReferralRedirect({ params }) {
         <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl text-xl" style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}>
           &#9670;
         </div>
-        <p className="text-sm text-white/60">Redirecting to PropJournal...</p>
+        <p className="text-sm text-white/60">Redirecting to PropLogAI...</p>
       </div>
     </div>
   );

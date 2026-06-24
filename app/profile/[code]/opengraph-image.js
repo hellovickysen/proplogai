@@ -2,7 +2,7 @@ import { ImageResponse } from 'next/og';
 import { createClient } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
-export const alt = 'PropJournal Trader Profile';
+export const alt = 'PropLogAI Trader Profile';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -32,7 +32,7 @@ export default async function OGImage({ params }) {
       (
         <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center', background: '#07070b', color: 'white', fontFamily: 'sans-serif' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontSize: 48, fontWeight: 700 }}>PropJournal</div>
+            <div style={{ fontSize: 48, fontWeight: 700 }}>PropLogAI</div>
             <div style={{ fontSize: 20, color: 'rgba(255,255,255,0.5)', marginTop: 8 }}>Trader Profile</div>
           </div>
         </div>
@@ -101,12 +101,12 @@ export default async function OGImage({ params }) {
               color: '#08080f',
             }}
           >
-            PJ
+            PL
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <div style={{ fontSize: 28, fontWeight: 700 }}>Trader Profile</div>
             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
-              PropJournal Verified • Last {days} days
+              PropLogAI Verified • Last {days} days
             </div>
           </div>
         </div>
@@ -208,7 +208,7 @@ export default async function OGImage({ params }) {
               }}
             />
             <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>
-              pipmind-sigma.vercel.app/profile/{code}
+              proplogai.com/profile/{code}
             </div>
           </div>
           <div
@@ -221,7 +221,7 @@ export default async function OGImage({ params }) {
               border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
-            PropJournal — AI Trading Journal
+            PropLogAI — AI Trading Journal
           </div>
         </div>
       </div>

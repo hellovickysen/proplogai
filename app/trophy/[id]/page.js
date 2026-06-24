@@ -50,9 +50,9 @@ export default async function PublicTrophyPage({ params }) {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="font-mono text-xs text-white/30">Shared via PropJournal</p>
+          <p className="font-mono text-xs text-white/30">Shared via PropLogAI</p>
           <Link href="/" className="mt-2 inline-block font-mono text-xs text-cyan-400 hover:underline">
-            propjournal.com
+            proplogai.com
           </Link>
         </div>
       </div>

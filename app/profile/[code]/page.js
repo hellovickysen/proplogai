@@ -42,17 +42,17 @@ export async function generateMetadata({ params }) {
   const desc = `${pnlStr} P&L | ${wr}% Win Rate | ${list.length} Trades` + (totalPayout > 0 ? ` | $${totalPayout.toLocaleString()} Payouts` : '') + ` — Last ${days} days`;
 
   return {
-    title: 'Trader Profile — PropJournal',
+    title: 'Trader Profile — PropLogAI',
     description: desc,
     openGraph: {
-      title: 'Trader Profile — PropJournal',
+      title: 'Trader Profile — PropLogAI',
       description: desc,
-      siteName: 'PropJournal',
+      siteName: 'PropLogAI',
       type: 'profile',
     },
     twitter: {
       card: 'summary_large_image',
-      title: 'Trader Profile — PropJournal',
+      title: 'Trader Profile — PropLogAI',
       description: desc,
     },
   };
@@ -173,7 +173,7 @@ export default async function PublicProfilePage({ params }) {
           <h1 className="font-display text-3xl font-bold">Trader Profile</h1>
           <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">
             <span className="h-2 w-2 rounded-full bg-emerald-400"></span>
-            <span className="font-mono text-xs text-white/50">PropJournal Verified</span>
+            <span className="font-mono text-xs text-white/50">PropLogAI Verified</span>
           </div>
           <p className="mt-2 font-mono text-xs text-white/30">{rollingLabel}</p>
         </div>
@@ -269,7 +269,7 @@ export default async function PublicProfilePage({ params }) {
 
         {/* Footer */}
         <div className="pt-4 text-center">
-          <p className="font-mono text-[11px] text-white/20">Shared via PropJournal — AI Trading Journal for Prop Firm Traders</p>
+          <p className="font-mono text-[11px] text-white/20">Shared via PropLogAI — AI Trading Journal for Prop Firm Traders</p>
         </div>
       </div>
     </div>

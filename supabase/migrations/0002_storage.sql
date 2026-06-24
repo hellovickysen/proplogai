@@ -1,4 +1,4 @@
--- PipMind storage for trade screenshots (Sprint 3)
+-- PropLogAI storage for trade screenshots (Sprint 3)
 insert into storage.buckets (id, name, public)
 values ('screenshots', 'screenshots', true)
 on conflict (id) do nothing;

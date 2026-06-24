@@ -1,4 +1,4 @@
--- PipMind initial schema (Sprint 1)
+-- PropLogAI initial schema (Sprint 1)
 create extension if not exists pgcrypto;
 
 create table if not exists public.profiles (
