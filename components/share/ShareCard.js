@@ -146,7 +146,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
             justifyContent: 'center',
           }}>
             <span style={{ fontSize: pnlFontSize, letterSpacing: '-0.02em' }}>{pnlParts.prefix}</span>
-            <span style={{ width: isStory ? 4 : 5, flexShrink: 0 }} />
+            <span style={{ width: isStory ? 2 : 3, flexShrink: 0 }} />
             <span style={{ fontSize: pnlFontSize, letterSpacing: '-0.02em' }}>{pnlParts.whole}</span>
             {pnlParts.decimal && (
               <span style={{ fontSize: Math.round(pnlFontSize * 0.7), letterSpacing: '-0.01em', opacity: 0.85 }}>{pnlParts.decimal}</span>
