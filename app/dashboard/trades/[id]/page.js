@@ -162,10 +162,10 @@ export default async function TradeDetailPage({ params }) {
             )}
           </div>
 
-          {/* Playbook Discipline badges */}
+          {/* Rulebook Discipline badges */}
           {(trade.setup_followed || trade.no_setup_reason) && (
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <div className="mb-3 font-display text-sm font-semibold" style={gradientText}>Playbook discipline</div>
+              <div className="mb-3 font-display text-sm font-semibold" style={gradientText}>Rulebook discipline</div>
               <div className="flex flex-wrap gap-2">
                 {trade.setup_followed && (
                   <span className={'rounded-full px-3 py-1 text-xs font-semibold ' + (trade.setup_followed === 'yes' ? 'bg-emerald-500/15 text-emerald-300' : trade.setup_followed === 'partial' ? 'bg-amber-500/15 text-amber-300' : 'bg-red-500/15 text-red-300')}>

@@ -13,7 +13,7 @@ export default function CoachReport({ report, updatedAt }) {
   const psy = report.psychology || {};
   const insights = Array.isArray(psy.insights) ? psy.insights : [];
   const guards = Array.isArray(psy.guardrails) ? psy.guardrails : [];
-  const discipline = report.playbook_discipline || null;
+  const discipline = report.rulebook_discipline || report.playbook_discipline || null;
 
   return (
     <div className="space-y-6">
@@ -24,12 +24,12 @@ export default function CoachReport({ report, updatedAt }) {
         </div>
       ) : null}
 
-      {/* Playbook Discipline Section */}
+      {/* Rulebook Discipline Section */}
       {discipline && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
           <div className="mb-3 flex items-center gap-2">
             <span className="text-base">&#128170;</span>
-            <div className="font-display text-base font-semibold" style={gradientText}>Playbook discipline</div>
+            <div className="font-display text-base font-semibold" style={gradientText}>Rulebook discipline</div>
           </div>
           {discipline.summary && (
             <p className="mb-4 text-sm leading-relaxed text-white/80">{discipline.summary}</p>

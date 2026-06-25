@@ -20,7 +20,7 @@ export default async function EditTradePage({ params }) {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  // Fetch playbook setups for the trade form
+  // Fetch rulebook setups for the trade form
   const { data: setups } = await supabase
     .from('setups')
     .select('id, name, direction, is_default, is_active')
