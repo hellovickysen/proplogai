@@ -749,7 +749,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
           firmName={selectedFirm}
           expenses={expenses.filter((e) => e.firm_name === selectedFirm)}
           payouts={payouts.filter((p) => p.firm_name === selectedFirm)}
-          onBack={() => setSelectedFirm(null)}
+          onBack={() => { setSelectedFirm(null); router.refresh(); }}
           onDeleteExpense={handleDeleteExpense}
           onDeletePayout={handleDeletePayout}
           onEditExpense={setEditingExpense}
@@ -807,8 +807,8 @@ export default function ExpenseTracker({ expenses, payouts }) {
                     ]
                       .sort((a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at))
                       .slice(0, 8)
-                      .map((item, i) => (
-                        <div key={i} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
+                      .map((item) => (
+                        <div key={item.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
                           <div className={'grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg font-display text-sm font-bold ' + (item.type === 'payout' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60')}>
                             {firmInitial(item.firm_name)}
                           </div>

@@ -11,13 +11,15 @@ export default async function ExpensesPage() {
     .from('expenses')
     .select('*')
     .eq('user_id', user.id)
-    .order('expense_date', { ascending: false, nullsFirst: false });
+    .order('expense_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
 
   const { data: payouts } = await supabase
     .from('payouts')
     .select('*')
     .eq('user_id', user.id)
-    .order('payout_date', { ascending: false, nullsFirst: false });
+    .order('payout_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
 
   return <ExpenseTracker expenses={expenses || []} payouts={payouts || []} />;
 }
