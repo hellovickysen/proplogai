@@ -99,7 +99,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
               fontSize: 12, color: '#08080f', fontWeight: 800,
               boxShadow: '0 0 14px rgba(139,92,246,0.5)',
             }}><img src={LOGO_MARK} width={16} height={16} alt="" /></div>
-            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', position: 'relative', top: -3 }}>PropLogAI</span>
+            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', paddingBottom: 5 }}>PropLogAI</span>
           </div>
           <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em' }}>
             {fmtDate(data.date || data.trade_date)}
