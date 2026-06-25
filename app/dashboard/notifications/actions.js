@@ -9,15 +9,21 @@ async function getCtx() {
   return { supabase, user };
 }
 
-/* ── Fetch paginated notifications ───────────────────────── */
-export async function getNotifications(limit = 20, offset = 0) {
+/* ── Fetch paginated notifications (optional type filter) ── */
+export async function getNotifications(limit = 20, offset = 0, typeFilter = null) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
 
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('notifications')
     .select('id, type, title, message, is_read, metadata, created_at', { count: 'exact' })
-    .eq('user_id', user.id)
+    .eq('user_id', user.id);
+
+  if (typeFilter && typeFilter.length > 0) {
+    query = query.in('type', typeFilter);
+  }
+
+  const { data, error, count } = await query
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -25,31 +31,43 @@ export async function getNotifications(limit = 20, offset = 0) {
   return { data, total: count };
 }
 
-/* ── Unread count (lightweight) ──────────────────────────── */
-export async function getUnreadCount() {
+/* ── Unread count (optional type filter) ─────────────────── */
+export async function getUnreadCount(typeFilter = null) {
   const { supabase, user } = await getCtx();
   if (!user) return { count: 0 };
 
-  const { count, error } = await supabase
+  let query = supabase
     .from('notifications')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .eq('is_read', false);
 
+  if (typeFilter && typeFilter.length > 0) {
+    query = query.in('type', typeFilter);
+  }
+
+  const { count, error } = await query;
+
   if (error) return { count: 0 };
   return { count: count || 0 };
 }
 
-/* ── Mark ALL as read ────────────────────────────────────── */
-export async function markAllAsRead() {
+/* ── Mark ALL as read (optional type filter) ─────────────── */
+export async function markAllAsRead(typeFilter = null) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
 
-  const { error } = await supabase
+  let query = supabase
     .from('notifications')
     .update({ is_read: true })
     .eq('user_id', user.id)
     .eq('is_read', false);
+
+  if (typeFilter && typeFilter.length > 0) {
+    query = query.in('type', typeFilter);
+  }
+
+  const { error } = await query;
 
   if (error) return { error: error.message };
   revalidatePath('/dashboard');
