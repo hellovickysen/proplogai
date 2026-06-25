@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { notify, TYPES } from '@/lib/notifications';
 
 function sanitize(str, maxLen) {
   if (!str) return null;
@@ -39,6 +40,10 @@ export async function createTrophy(payload) {
   });
 
   if (error) return { error: error.message };
+
+  // ── Notification ──
+  await notify(supabase, user.id, TYPES.TROPHY_UPLOADED, 'Trophy Added', title, { link: '/dashboard/trophies' });
+
   revalidatePath('/dashboard/trophies');
   return { ok: true };
 }

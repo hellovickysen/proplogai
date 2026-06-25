@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { notifyAdmin, TYPES } from '@/lib/notifications';
 
 function sanitize(str, maxLen) {
   if (!str) return null;
@@ -40,6 +41,10 @@ export async function createTicket(payload) {
   });
 
   if (error) return { error: error.message };
+
+  // ── Notify admin about new ticket ──
+  await notifyAdmin(TYPES.NEW_TICKET, 'New Support Ticket', `${category}: ${subject}`, { email: user.email });
+
   revalidatePath('/dashboard/support');
   return { ok: true };
 }

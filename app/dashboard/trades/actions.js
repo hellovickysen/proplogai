@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { analyzeTradeWithAI } from '@/lib/ai';
+import { notify, TYPES } from '@/lib/notifications';
 
 /** Input validation limits */
 const MAX_PAIR_LENGTH = 20;
@@ -94,6 +95,14 @@ function normalizeScreenshots(urls, legacyUrl) {
   return arr;
 }
 
+/** Format P&L for notification message */
+function fmtPnl(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return '';
+  const sign = n >= 0 ? '+' : '-';
+  return `${sign}$${Math.abs(n).toFixed(2)}`;
+}
+
 export async function createTrade(payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
@@ -117,6 +126,10 @@ export async function createTrade(payload) {
     await supabase.from('journal_entries').insert(entry);
   }
 
+  // ── Notification ──
+  const pair = (sanitizeText(payload.pair, MAX_PAIR_LENGTH) || '').toUpperCase();
+  const dir = payload.direction === 'short' ? 'short' : 'long';
+  await notify(supabase, user.id, TYPES.TRADE_LOGGED, 'Trade Logged', `${pair} ${dir} ${fmtPnl(payload.pnl)}`, { link: '/dashboard/trades/' + data.id });
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/trades');
@@ -178,6 +191,10 @@ export async function saveJournal(tradeId, payload) {
     error = res.error;
   }
   if (error) return { error: error.message };
+
+  // ── Notification ──
+  await notify(supabase, user.id, TYPES.JOURNAL_ADDED, 'Journal Updated', 'Your journal entry has been saved', { link: '/dashboard/trades/' + tradeId });
+
   revalidatePath('/dashboard/trades/' + tradeId);
   return { ok: true };
 }
@@ -223,6 +240,11 @@ export async function analyzeTrade(tradeId) {
     error = res.error;
   }
   if (error) return { error: error.message };
+
+  // ── Notification ──
+  const grade = analysis.grade || '';
+  await notify(supabase, user.id, TYPES.AI_ANALYSIS, 'AI Analysis Complete', `${trade.pair} — Grade: ${grade}`, { link: '/dashboard/trades/' + tradeId });
+
   revalidatePath('/dashboard/trades/' + tradeId);
   return { ok: true };
 }

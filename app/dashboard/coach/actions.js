@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { analyzeCoachReport } from '@/lib/ai';
 import { sendEmail, buildCoachReportEmail, isEmailConfigured } from '@/lib/email';
 import { computeStats } from '@/lib/stats';
+import { notify, TYPES } from '@/lib/notifications';
 
 /** Rate limiter: max 5 coach reports per hour per user */
 const coachRateLimit = new Map();
@@ -79,6 +80,9 @@ export async function generateCoachReport() {
     error = res.error;
   }
   if (error) return { error: error.message };
+
+  // ── Notification ──
+  await notify(supabase, user.id, TYPES.AI_COACH_REPORT, 'Coach Report Ready', report.headline || 'Your AI coaching report is ready to review', { link: '/dashboard/coach' });
 
   revalidatePath('/dashboard/coach');
   revalidatePath('/dashboard');
