@@ -48,22 +48,24 @@ export default async function AdminOverviewPage() {
     const totalInsights = insightsRes.count || 0;
     const estAiCost = (totalInsights * 0.025).toFixed(2);
 
-    const today = new Date().toISOString().slice(0, 10);
+    const todayIST = new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10); // IST date
+    const today = todayIST;
+    const todayStartUTC = new Date(todayIST + 'T00:00:00+05:30').toISOString(); // midnight IST in UTC
     let todayTrades = 0, todayJournals = 0, todayInsights = 0, todaySignups = 0;
     try {
-      const { count } = await sb.from('trades').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
+      const { count } = await sb.from('trades').select('id', { count: 'exact', head: true }).gte('created_at', todayStartUTC);
       todayTrades = count || 0;
     } catch {}
     try {
-      const { count } = await sb.from('journal_entries').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
+      const { count } = await sb.from('journal_entries').select('id', { count: 'exact', head: true }).gte('created_at', todayStartUTC);
       todayJournals = count || 0;
     } catch {}
     try {
-      const { count } = await sb.from('ai_insights').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
+      const { count } = await sb.from('ai_insights').select('id', { count: 'exact', head: true }).gte('created_at', todayStartUTC);
       todayInsights = count || 0;
     } catch {}
     try {
-      const { count } = await sb.from('user_preferences').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
+      const { count } = await sb.from('user_preferences').select('id', { count: 'exact', head: true }).gte('created_at', todayStartUTC);
       todaySignups = count || 0;
     } catch {}
 

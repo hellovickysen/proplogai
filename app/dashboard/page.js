@@ -184,7 +184,7 @@ export default async function DashboardPage() {
 
   const recent = list.slice(0, 6);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10); // IST date
   const todayTrades = list.filter((t) => {
     const d = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
     return d === today;
