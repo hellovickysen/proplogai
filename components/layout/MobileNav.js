@@ -13,6 +13,7 @@ const LINKS = [
   { label: 'Referrals', href: '/dashboard/referrals' },
   { label: 'Calendar', href: '/dashboard/calendar' },
   { label: 'AI Coach', href: '/dashboard/coach' },
+  { label: 'Notifications', href: '/dashboard/notifications' },
   { label: 'Support', href: '/dashboard/support' },
   { label: 'Settings', href: '/dashboard/settings' },
   { label: '+ New Trade', href: '/dashboard/trades/new' },

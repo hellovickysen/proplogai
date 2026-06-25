@@ -141,9 +141,12 @@ export default function NotificationBell({ initialCount = 0 }) {
         )}
       </button>
 
+      {/* ── Backdrop (mobile) ── */}
+      {open && <div className="fixed inset-0 z-[55] bg-black/60 sm:hidden" onClick={() => setOpen(false)} />}
+
       {/* ── Dropdown panel ── */}
       {open && (
-        <div className="absolute right-0 top-full z-[60] mt-2 w-[340px] sm:w-[380px] overflow-hidden rounded-2xl border border-white/10 bg-[#0e0e18] shadow-2xl">
+        <div className="fixed left-3 right-3 top-[4.5rem] z-[60] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px] overflow-hidden rounded-2xl border border-white/10 bg-[#0e0e18] shadow-2xl">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
             <div className="flex items-center gap-2">
