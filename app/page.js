@@ -101,7 +101,6 @@ export default async function Home() {
       <nav className="relative z-20 flex items-center justify-between px-4 py-5 sm:px-10">
         <Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />
         <div className="flex items-center gap-3">
-          <Link href="#pricing" className="hidden text-sm text-white/60 hover:text-white sm:inline">Pricing</Link>
           <Link href="/login" className="hidden text-sm text-white/60 hover:text-white sm:inline">Log in</Link>
           <Link href="/login?mode=signup" className="cta-glow rounded-xl px-4 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
             Start free →
