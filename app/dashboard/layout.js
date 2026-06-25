@@ -73,6 +73,7 @@ export default async function DashboardLayout({ children }) {
 
   /* ── Notification unread count ── */
   let notifCount = 0;
+  let adminNotifCount = 0;
   try {
     const { count } = await supabase
       .from('notifications')
@@ -83,10 +84,21 @@ export default async function DashboardLayout({ children }) {
   } catch (e) {
     // notifications table may not exist yet (pre-migration)
   }
+  if (user.email === ADMIN_EMAIL) {
+    try {
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+        .in('type', ['new_support_ticket', 'new_user_signup']);
+      adminNotifCount = count || 0;
+    } catch (e) {}
+  }
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={user.email === ADMIN_EMAIL} />
+      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={user.email === ADMIN_EMAIL} adminNotifCount={adminNotifCount} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">

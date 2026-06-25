@@ -18,7 +18,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function Sidebar({ email, credits, avatarUrl, isAdmin }) {
+export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotifCount = 0 }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -116,6 +116,14 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin }) {
                 >
                   <span>&#9881;</span>
                   <span className="text-amber-300">Admin Panel</span>
+                  {adminNotifCount > 0 && (
+                    <span
+                      className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-[#08080f]"
+                      style={{ background: 'linear-gradient(135deg,#f87171,#fbbf24)' }}
+                    >
+                      {adminNotifCount > 99 ? '99+' : adminNotifCount}
+                    </span>
+                  )}
                 </Link>
               )}
 
