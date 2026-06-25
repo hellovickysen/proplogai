@@ -9,12 +9,12 @@ const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades',    icon: '☰', href: '/dashboard/trades' },
   { label: 'Rulebook',  icon: '📋', href: '/dashboard/rulebook' },
+  { label: 'Calendar',  icon: '📅', href: '/dashboard/calendar' },
   { label: 'Expenses',  icon: '💳', href: '/dashboard/expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
-  { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },
-  { label: 'Calendar',  icon: '📅', href: '/dashboard/calendar' },
   { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach' },
-  { label: 'Support',   icon: '🎧', href: '/dashboard/support' },
+  { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },
+  { label: 'Feedback',  icon: '💬', href: '/dashboard/support' },
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
