@@ -90,21 +90,21 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         justifyContent: 'space-between',
         padding: isStory ? '28px 28px 24px' : '20px 32px 18px',
       }}>
-        {/* ── Logo row ── */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* ── Logo row (explicit heights — html2canvas doesn't reliably handle flex centering) ── */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 30 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 30 }}>
             <div style={{
               width: 28, height: 28, borderRadius: 8,
               background: 'linear-gradient(120deg,#a78bfa,#22d3ee)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'relative',
               flexShrink: 0,
               boxShadow: '0 0 14px rgba(139,92,246,0.5)',
             }}>
-              <img src={LOGO_MARK} width={16} height={16} alt="" style={{ display: 'block' }} />
+              <img src={LOGO_MARK} width={16} height={16} alt="" style={{ display: 'block', position: 'absolute', top: 6, left: 6 }} />
             </div>
-            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1 }}>PropLogAI</span>
+            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: '30px', height: 30 }}>PropLogAI</span>
           </div>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em', lineHeight: 1 }}>
+          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em', lineHeight: '30px', height: 30 }}>
             {fmtDate(data.date || data.trade_date)}
           </span>
         </div>
