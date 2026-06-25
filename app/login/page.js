@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { isDisposableEmail, validatePassword } from '@/lib/security';
 import Logo from '@/components/Logo';
 
 function EyeIcon() {
@@ -24,6 +25,46 @@ function EyeOffIcon() {
   );
 }
 
+function PasswordStrength({ password }) {
+  if (!password) return null;
+  const { score, label, checks } = validatePassword(password);
+
+  const barColor = score <= 1 ? 'bg-red-400' : score === 2 ? 'bg-amber-400' : score === 3 ? 'bg-emerald-400' : 'bg-cyan-400';
+  const labelColor = score <= 1 ? 'text-red-400' : score === 2 ? 'text-amber-400' : score === 3 ? 'text-emerald-400' : 'text-cyan-400';
+
+  const reqs = [
+    { key: 'minLength', label: '8+ characters' },
+    { key: 'hasUpper', label: 'Uppercase letter' },
+    { key: 'hasLower', label: 'Lowercase letter' },
+    { key: 'hasNumber', label: 'Number' },
+    { key: 'hasSpecial', label: 'Special character' },
+  ];
+
+  return (
+    <div className="mt-2">
+      {/* Strength bar */}
+      <div className="mb-1.5 flex items-center gap-2">
+        <div className="flex flex-1 gap-1">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className={'h-1 flex-1 rounded-full transition-all ' + (i <= score ? barColor : 'bg-white/10')} />
+          ))}
+        </div>
+        <span className={'font-mono text-[10px] font-semibold ' + labelColor}>{label}</span>
+      </div>
+
+      {/* Requirements checklist */}
+      <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+        {reqs.map((r) => (
+          <div key={r.key} className={'flex items-center gap-1 text-[10px] ' + (checks[r.key] ? 'text-emerald-400' : 'text-white/30')}>
+            <span>{checks[r.key] ? '✓' : '○'}</span>
+            <span>{r.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState('signin');
@@ -34,6 +75,8 @@ export default function LoginPage() {
   const [msg, setMsg] = useState(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showVerify, setShowVerify] = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     try {
@@ -42,35 +85,71 @@ export default function LoginPage() {
     } catch (e) {}
   }, []);
 
+  function friendlyError(msg) {
+    if (!msg) return 'Something went wrong.';
+    if (msg.includes('rate') || msg.includes('too many')) return 'Too many attempts. Please wait a moment and try again.';
+    if (msg.includes('Email not confirmed')) return 'Please verify your email before signing in. Check your inbox.';
+    if (msg.includes('Invalid login')) return 'Invalid email or password.';
+    return msg;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setLoading(true);
     setError(null);
     setMsg(null);
     const supabase = createClient();
-    if (mode === 'signin') {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (mode === 'signup') {
+      // Disposable email check
+      if (isDisposableEmail(email)) {
+        setError('Please use a permanent email address. Temporary/disposable emails are not allowed.');
+        setLoading(false);
+        return;
+      }
+
+      // Password strength check
+      const { isValid } = validatePassword(password);
+      if (!isValid) {
+        setError('Password must be at least 8 characters with uppercase, lowercase, number, and special character.');
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
-        setError(error.message);
-      } else {
+        setError(friendlyError(error.message));
+      } else if (data.user && !data.session) {
+        // Email verification required
+        setShowVerify(true);
+      } else if (data.session) {
         router.push('/dashboard');
         router.refresh();
         return;
       }
     } else {
-      const { data, error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        setError(error.message);
-      } else if (data.session) {
+        setError(friendlyError(error.message));
+      } else {
         router.push('/dashboard');
         router.refresh();
         return;
-      } else {
-        setMsg('Account created. Check your email to confirm, then sign in.');
-        setMode('signin');
       }
     }
     setLoading(false);
+  }
+
+  async function handleResendVerification() {
+    setResending(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    if (error) {
+      setError(friendlyError(error.message));
+    } else {
+      setMsg('Verification email resent! Check your inbox.');
+    }
+    setResending(false);
   }
 
   async function handleGoogle() {
@@ -84,9 +163,47 @@ export default function LoginPage() {
       },
     });
     if (error) {
-      setError(error.message);
+      setError(friendlyError(error.message));
       setGoogleLoading(false);
     }
+  }
+
+  // Email verification screen
+  if (showVerify) {
+    return (
+      <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 sm:px-6">
+        <div className="pointer-events-none absolute -left-24 -top-40 h-[55vw] w-[55vw] rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.18), transparent 62%)', filter: 'blur(40px)' }} />
+        <div className="pointer-events-none absolute -bottom-40 -right-24 h-[55vw] w-[55vw] rounded-full" style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.14), transparent 62%)', filter: 'blur(40px)' }} />
+
+        <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+          <div className="mx-auto mb-4 text-5xl">📧</div>
+          <h1 className="font-display text-2xl font-bold">Check your email</h1>
+          <p className="mt-3 text-sm text-white/55">
+            We sent a verification link to <strong className="text-white/80">{email}</strong>. Click the link to verify your account, then come back and sign in.
+          </p>
+
+          {msg && <p className="mt-4 text-sm text-emerald-400">{msg}</p>}
+          {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
+
+          <button
+            onClick={handleResendVerification}
+            disabled={resending}
+            className="mt-6 text-sm text-cyan-400 hover:underline disabled:opacity-50"
+          >
+            {resending ? 'Resending...' : "Didn't get it? Resend email"}
+          </button>
+
+          <div className="mt-4">
+            <button
+              onClick={() => { setShowVerify(false); setMode('signin'); setError(null); setMsg(null); }}
+              className="text-sm text-white/50 hover:text-white/70"
+            >
+              Back to sign in
+            </button>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -135,11 +252,11 @@ export default function LoginPage() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
-                minLength={6}
+                minLength={mode === 'signup' ? 8 : 6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 pr-10 text-sm outline-none focus:border-cyan-400/60"
-                placeholder="At least 6 characters"
+                placeholder={mode === 'signup' ? 'Min 8 chars, mixed case + number + special' : 'Your password'}
               />
               <button
                 type="button"
@@ -150,6 +267,7 @@ export default function LoginPage() {
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
               </button>
             </div>
+            {mode === 'signup' && <PasswordStrength password={password} />}
           </div>
 
           {error ? <p className="text-sm text-red-400">{error}</p> : null}

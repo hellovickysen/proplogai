@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { changePassword, savePreferences } from '@/app/dashboard/settings/actions';
 import { useToast } from '@/components/ui/Toast';
+import { validatePassword } from '@/lib/security';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
 const DEFAULT_SETUPS = ['Fib Level', 'London Low Sweep', 'London High Sweep', 'ChoCh On Line'];
@@ -66,10 +67,12 @@ function ProfileTab({ user, prefs }) {
   const [avatarMsg, setAvatarMsg] = useState(null);
   const [avatarErr, setAvatarErr] = useState(null);
 
+  const pwStrength = validatePassword(pw);
+
   async function onPasswordSave() {
     setPwErr(null);
     setPwMsg(null);
-    if (pw.length < 6) { setPwErr('Password must be at least 6 characters.'); return; }
+    if (!pwStrength.isValid) { setPwErr('Password must be at least 8 characters with uppercase, lowercase, number, and special character.'); return; }
     if (pw !== pwConfirm) { setPwErr('Passwords do not match.'); return; }
     setPwSaving(true);
     const res = await changePassword(pw);
@@ -144,13 +147,33 @@ function ProfileTab({ user, prefs }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className={labelCls}>New password</label>
-            <PasswordInput value={pw} onChange={(e) => setPw(e.target.value)} placeholder="At least 6 characters" />
+            <PasswordInput value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Min 8 chars, mixed case + number + special" />
           </div>
           <div>
             <label className={labelCls}>Confirm password</label>
             <PasswordInput value={pwConfirm} onChange={(e) => setPwConfirm(e.target.value)} placeholder="Retype password" />
           </div>
         </div>
+        {pw && (
+          <div className="mt-3">
+            <div className="mb-1.5 flex items-center gap-2">
+              <div className="flex flex-1 gap-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className={'h-1 flex-1 rounded-full transition-all ' + (i <= pwStrength.score ? (pwStrength.score <= 1 ? 'bg-red-400' : pwStrength.score === 2 ? 'bg-amber-400' : pwStrength.score === 3 ? 'bg-emerald-400' : 'bg-cyan-400') : 'bg-white/10')} />
+                ))}
+              </div>
+              <span className={'font-mono text-[10px] font-semibold ' + (pwStrength.score <= 1 ? 'text-red-400' : pwStrength.score === 2 ? 'text-amber-400' : pwStrength.score === 3 ? 'text-emerald-400' : 'text-cyan-400')}>{pwStrength.label}</span>
+            </div>
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+              {[{ key: 'minLength', label: '8+ characters' }, { key: 'hasUpper', label: 'Uppercase' }, { key: 'hasLower', label: 'Lowercase' }, { key: 'hasNumber', label: 'Number' }, { key: 'hasSpecial', label: 'Special char' }].map((r) => (
+                <div key={r.key} className={'flex items-center gap-1 text-[10px] ' + (pwStrength.checks[r.key] ? 'text-emerald-400' : 'text-white/30')}>
+                  <span>{pwStrength.checks[r.key] ? '✓' : '○'}</span>
+                  <span>{r.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         {pwErr && <p className="mt-3 text-sm text-red-400">{pwErr}</p>}
         {pwMsg && <p className="mt-3 text-sm text-emerald-400">{pwMsg}</p>}
         <button onClick={onPasswordSave} disabled={pwSaving} className="mt-4 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
