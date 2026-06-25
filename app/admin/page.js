@@ -35,11 +35,8 @@ export default async function AdminOverviewPage() {
   try {
     let totalUsers = 0;
     try {
-      const { data: authData } = await sb.auth.admin.listUsers({ perPage: 1 });
-      const { data: userIds } = await sb.from('trades').select('user_id');
-      const uniqueUsers = new Set((userIds || []).map(t => t.user_id));
-      const { count: profileCount } = await sb.from('profiles').select('id', { count: 'exact', head: true });
-      totalUsers = Math.max(profileCount || 0, uniqueUsers.size, authData?.users?.length || 0);
+      const { data: authData } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
+      totalUsers = authData?.users?.length || 0;
     } catch { totalUsers = 0; }
 
     const tradesRes = await sb.from('trades').select('id', { count: 'exact', head: true });
@@ -66,7 +63,7 @@ export default async function AdminOverviewPage() {
       todayInsights = count || 0;
     } catch {}
     try {
-      const { count } = await sb.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
+      const { count } = await sb.from('user_preferences').select('id', { count: 'exact', head: true }).gte('created_at', today + 'T00:00:00Z');
       todaySignups = count || 0;
     } catch {}
 
