@@ -18,7 +18,7 @@ export default function CoachReport({ report, updatedAt }) {
   return (
     <div className="space-y-6">
       {report.headline ? (
-        <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-6">
+        <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-4 sm:p-6">
           <div className="font-mono text-[11px] uppercase tracking-wider text-white/40">Overall takeaway</div>
           <p className="mt-2 font-display text-xl font-semibold leading-snug">{report.headline}</p>
         </div>
@@ -26,7 +26,7 @@ export default function CoachReport({ report, updatedAt }) {
 
       {/* Playbook Discipline Section */}
       {discipline && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
           <div className="mb-3 flex items-center gap-2">
             <span className="text-base">&#128170;</span>
             <div className="font-display text-base font-semibold" style={gradientText}>Playbook discipline</div>
@@ -65,7 +65,7 @@ export default function CoachReport({ report, updatedAt }) {
         </div>
       )}
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
         <div className="mb-4 font-display text-base font-semibold">Top recurring mistakes</div>
         {rm.length ? (
           <div className="space-y-3">
@@ -86,7 +86,7 @@ export default function CoachReport({ report, updatedAt }) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
         <div className="mb-3 font-display text-base font-semibold">&#129504; Trading psychology</div>
         {psy.summary ? <p className="mb-4 text-sm leading-relaxed text-white/80">{psy.summary}</p> : null}
         {insights.length ? (

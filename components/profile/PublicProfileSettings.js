@@ -81,7 +81,7 @@ export default function PublicProfileSettings({ prefs }) {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
       <div className="mb-5 flex items-center gap-2">
         <span className="text-lg">&#127760;</span>
         <h2 className="font-display text-lg font-bold" style={gradientText}>Public Profile</h2>
@@ -96,7 +96,7 @@ export default function PublicProfileSettings({ prefs }) {
         {shareCode ? (
           <div className="flex gap-2">
             <input className={field + ' flex-1 bg-white/[0.02] text-white/70'} value={profileUrl} readOnly />
-            <button onClick={handleCopy} className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20">
+            <button onClick={handleCopy} className="rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-4 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20">
               Copy
             </button>
           </div>
@@ -170,7 +170,7 @@ export default function PublicProfileSettings({ prefs }) {
                     key={d}
                     type="button"
                     onClick={() => setRollingDays(d)}
-                    className={'flex-1 rounded-lg border px-3 py-2 text-sm font-semibold ' + (rollingDays === d ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}
+                    className={'flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold ' + (rollingDays === d ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}
                   >
                     {d} days
                   </button>
@@ -193,7 +193,7 @@ export default function PublicProfileSettings({ prefs }) {
           <button
             onClick={handleSaveCalendarSettings}
             disabled={saving}
-            className="mt-3 rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-white/70 hover:text-white disabled:opacity-60"
+            className="mt-3 rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-xs font-semibold text-white/70 hover:text-white disabled:opacity-60"
           >
             {saving ? 'Saving...' : 'Save date settings'}
           </button>

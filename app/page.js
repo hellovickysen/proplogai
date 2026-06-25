@@ -19,7 +19,7 @@ function BetaBar({ count }) {
   const textColor = count >= 480 ? 'text-red-300' : count >= 400 ? 'text-amber-300' : 'text-emerald-300';
 
   return (
-    <div className="mx-auto mt-8 max-w-md rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-5">
+    <div className="mx-auto mt-8 max-w-md rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-5 sm:px-6">
       <div className="flex items-center justify-between mb-2">
         <span className="flex items-center gap-2 text-sm font-semibold text-white/70">
           <span className={`h-2 w-2 rounded-full ${dotColor} shadow-[0_0_10px_rgba(52,211,153,0.7)]`} />
@@ -98,19 +98,19 @@ export default async function Home() {
       <LandingMotion />
 
       {/* Nav */}
-      <nav className="relative z-20 flex items-center justify-between px-6 py-5 sm:px-10">
+      <nav className="relative z-20 flex items-center justify-between px-4 py-5 sm:px-10">
         <Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />
         <div className="flex items-center gap-3">
-          <Link href="#pricing" className="text-sm text-white/60 hover:text-white">Pricing</Link>
-          <Link href="/login" className="text-sm text-white/60 hover:text-white">Log in</Link>
-          <Link href="/login?mode=signup" className="cta-glow rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
+          <Link href="#pricing" className="hidden text-sm text-white/60 hover:text-white sm:inline">Pricing</Link>
+          <Link href="/login" className="hidden text-sm text-white/60 hover:text-white sm:inline">Log in</Link>
+          <Link href="/login?mode=signup" className="cta-glow rounded-xl px-4 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
             Start free →
           </Link>
         </div>
       </nav>
 
       {/* ═══════════════ HERO — NEGATIVE HOOK ═══════════════ */}
-      <section className="hero-product-stage relative overflow-hidden px-6 pb-20 pt-16 sm:px-10 sm:pt-20">
+      <section className="hero-product-stage relative overflow-hidden px-4 pb-20 pt-16 sm:px-10 sm:pt-20">
 
         <div className="relative z-10 mx-auto max-w-4xl text-center" data-reveal>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-300/20 bg-red-300/8 px-4 py-1.5 text-xs font-semibold text-red-200/90">
@@ -118,7 +118,7 @@ export default async function Home() {
             85% of prop challenges fail for the same reason
           </div>
 
-          <h1 className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.6rem]">
+          <h1 className="font-display text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.6rem]">
             Still losing funded accounts{' '}
             <br className="hidden sm:block" />
             to the{' '}
@@ -144,7 +144,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ PAIN AMPLIFICATION ═══════════════ */}
-      <section id="the-pattern" className="px-6 py-20 sm:px-10">
+      <section id="the-pattern" className="px-4 py-20 sm:px-10">
         <div className="mx-auto max-w-4xl text-center" data-reveal>
           <h2 className="font-display text-2xl font-bold sm:text-3xl">
             The cycle that&apos;s <span className="text-red-400">bleeding your account</span>
@@ -170,7 +170,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ COST STATS ═══════════════ */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-4 py-16 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl">
           <div className="grid gap-6 sm:grid-cols-3">
             {STATS.map((s, i) => (
@@ -187,7 +187,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ SOLUTION REVEAL ═══════════════ */}
-      <section className="px-6 py-20 sm:px-10">
+      <section className="px-4 py-20 sm:px-10">
         <div className="mx-auto max-w-4xl text-center" data-reveal>
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/8 px-4 py-1.5 text-xs font-semibold text-emerald-200">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.85)]" />
@@ -278,7 +278,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ HOW IT WORKS ═══════════════ */}
-      <section id="how-it-works" className="px-6 py-16 sm:px-10" data-reveal>
+      <section id="how-it-works" className="px-4 py-16 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="font-display text-2xl font-bold sm:text-3xl">Three steps to stop the cycle</h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-white/50">60 seconds to log a trade. The AI does the rest.</p>
@@ -305,7 +305,7 @@ export default async function Home() {
       {/* ═══════════════ PRODUCT SHOWCASE ═══════════════ */}
 
       {/* Showcase 1: Dashboard — text left, mockup right */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
+      <section className="px-4 py-20 sm:px-10" data-reveal>
         <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-300/8 px-3 py-1 text-[11px] font-semibold text-violet-200">
@@ -328,7 +328,7 @@ export default async function Home() {
               <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">Dashboard overview</span>
               <span className="text-xs text-emerald-300">June 2026</span>
             </div>
-            <div className="grid grid-cols-4 gap-3 mb-5">
+            <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-4">
               {[
                 { label: 'Win rate', val: '62%', color: 'text-emerald-400' },
                 { label: 'Profit factor', val: '1.84', color: 'text-emerald-400' },
@@ -360,7 +360,7 @@ export default async function Home() {
       </section>
 
       {/* Showcase 2: AI Coach — mockup left, text right */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
+      <section className="px-4 py-20 sm:px-10" data-reveal>
         <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
           <div className="order-2 lg:order-1 rounded-2xl border border-white/10 bg-white/[0.03] p-5" data-reveal style={{ '--reveal-delay': '120ms' }}>
             {/* Fake AI coach report */}
@@ -410,7 +410,7 @@ export default async function Home() {
       </section>
 
       {/* Showcase 3: P&L Calendar — text left, mockup right */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
+      <section className="px-4 py-20 sm:px-10" data-reveal>
         <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/8 px-3 py-1 text-[11px] font-semibold text-emerald-200">
@@ -463,7 +463,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ USP: WHAT MAKES US DIFFERENT ═══════════════ */}
-      <section className="px-6 pt-20 pb-6 sm:px-10" data-reveal>
+      <section className="px-4 pt-20 pb-6 sm:px-10" data-reveal>
         <div className="mx-auto max-w-5xl text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-300/8 px-4 py-1.5 text-xs font-semibold text-amber-200">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-300 shadow-[0_0_12px_rgba(251,191,36,0.85)]" />
@@ -479,7 +479,7 @@ export default async function Home() {
       </section>
 
       {/* Showcase 4: Expense Tracker — mockup left, text right */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-4 py-16 sm:px-10" data-reveal>
         <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
           <div className="order-2 lg:order-1 rounded-2xl border border-white/10 bg-white/[0.03] p-5" data-reveal style={{ '--reveal-delay': '120ms' }}>
             {/* Fake expense tracker mockup */}
@@ -555,7 +555,7 @@ export default async function Home() {
       </section>
 
       {/* Showcase 5: Verified Trading Story — text left, mockup right */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-4 py-16 sm:px-10" data-reveal>
         <div className="mx-auto grid max-w-5xl items-center gap-10 lg:grid-cols-2">
           <div>
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/8 px-3 py-1 text-[11px] font-semibold text-cyan-200">
@@ -585,7 +585,7 @@ export default async function Home() {
               </div>
             </div>
             {/* Profile stats */}
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            <div className="grid grid-cols-2 gap-2 mb-4 sm:grid-cols-4">
               {[
                 { label: 'Win rate', val: '64%' },
                 { label: 'Total P&L', val: '+$12.4K' },
@@ -651,7 +651,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ FEATURES ═══════════════ */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-4 py-16 sm:px-10" data-reveal>
         <div className="mx-auto max-w-5xl">
           <div className="text-center">
             <h2 className="font-display text-2xl font-bold sm:text-3xl">Everything you need to stop failing challenges</h2>
@@ -678,7 +678,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ WHO IT'S FOR ═══════════════ */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-4 py-16 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="font-display text-2xl font-bold sm:text-3xl">Sound familiar?</h2>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
@@ -698,7 +698,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ WHY MANUAL ENTRY ═══════════════ */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
+      <section className="px-4 py-20 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-10">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-white/70">
@@ -747,7 +747,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ PRICING ═══════════════ */}
-      <section id="pricing" className="px-6 py-20 sm:px-10" data-reveal>
+      <section id="pricing" className="px-4 py-20 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl">
           <div className="text-center mb-10">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/8 px-4 py-1.5 text-xs font-semibold text-emerald-200">
@@ -823,7 +823,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ FAQ ═══════════════ */}
-      <section className="px-6 py-16 sm:px-10" data-reveal>
+      <section className="px-4 py-16 sm:px-10" data-reveal>
         <div className="mx-auto max-w-3xl">
           <h2 className="mb-8 text-center font-display text-2xl font-bold sm:text-3xl">Common questions</h2>
           <div className="space-y-4">
@@ -845,7 +845,7 @@ export default async function Home() {
       </section>
 
       {/* ═══════════════ CTA ═══════════════ */}
-      <section className="px-6 py-20 sm:px-10" data-reveal>
+      <section className="px-4 py-20 sm:px-10" data-reveal>
         <div className="mx-auto max-w-2xl rounded-2xl border border-white/10 p-10 text-center shadow-[0_0_80px_rgba(34,211,238,0.08)]" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.08), rgba(34,211,238,0.05))' }}>
           <h2 className="font-display text-2xl font-bold sm:text-3xl">
             Every failed challenge has a pattern.{' '}
@@ -863,7 +863,7 @@ export default async function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-6 py-8 sm:px-10">
+      <footer className="border-t border-white/[0.06] px-4 py-8 sm:px-10">
         <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
           <Logo size={24} rounded="rounded-md" wordmarkClassName="font-display text-sm font-semibold" />
           <div className="flex items-center gap-4 text-xs text-white/30">

@@ -74,7 +74,7 @@ export default function PnlCalendar({ trades }) {
             <div
               key={i}
               className={
-                'flex aspect-square flex-col justify-between rounded-lg border p-1.5 ' +
+                'flex aspect-square flex-col justify-between overflow-hidden rounded-lg border p-1.5 ' +
                 (isOverflow
                   ? 'border-white/[0.04] bg-white/[0.01]'
                   : isToday
@@ -97,7 +97,7 @@ export default function PnlCalendar({ trades }) {
                 </span>
               </div>
               {has ? (
-                <div className={'font-mono text-[10px] font-semibold ' + (win ? 'text-emerald-300' : 'text-red-300')}>
+                <div className={'truncate font-mono text-[10px] font-semibold ' + (win ? 'text-emerald-300' : 'text-red-300')}>
                   {(pnl >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(pnl))}
                 </div>
               ) : null}

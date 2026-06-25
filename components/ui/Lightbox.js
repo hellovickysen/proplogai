@@ -26,7 +26,7 @@ export default function Lightbox({ images, startIndex = 0, onClose }) {
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-black/60 text-white/80 hover:text-white"
+          className="absolute right-4 top-4 z-10 grid h-11 w-11 place-items-center rounded-full border border-white/20 bg-black/60 text-white/80 hover:text-white"
         >
           ✕
         </button>
@@ -42,7 +42,7 @@ export default function Lightbox({ images, startIndex = 0, onClose }) {
         {images.length > 1 && (
           <button
             onClick={prev}
-            className="absolute left-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/60 text-xl text-white/80 hover:text-white"
+            className="absolute left-2 sm:left-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/60 text-xl text-white/80 hover:text-white"
           >
             ‹
           </button>
@@ -59,7 +59,7 @@ export default function Lightbox({ images, startIndex = 0, onClose }) {
         {images.length > 1 && (
           <button
             onClick={next}
-            className="absolute right-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/60 text-xl text-white/80 hover:text-white"
+            className="absolute right-2 sm:right-4 top-1/2 z-10 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-black/60 text-xl text-white/80 hover:text-white"
           >
             ›
           </button>
@@ -67,7 +67,7 @@ export default function Lightbox({ images, startIndex = 0, onClose }) {
 
         {/* Thumbnail strip */}
         {images.length > 1 && (
-          <div className="mt-4 flex gap-2 overflow-x-auto">
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
             {images.map((url, i) => (
               <button
                 key={i}

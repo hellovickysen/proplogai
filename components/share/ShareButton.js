@@ -20,7 +20,7 @@ export default function ShareButton({ type, data, className = '' }) {
     <>
       <button
         onClick={() => setOpen(true)}
-        className={'rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/60 hover:text-white ' + className}
+        className={'rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white ' + className}
         title="Share as image"
       >
         📤 Share

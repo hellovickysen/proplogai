@@ -71,7 +71,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-6">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 sm:px-6">
       <div className="pointer-events-none absolute -left-24 -top-40 h-[55vw] w-[55vw] rounded-full" style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.18), transparent 62%)', filter: 'blur(40px)' }} />
       <div className="pointer-events-none absolute -bottom-40 -right-24 h-[55vw] w-[55vw] rounded-full" style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.14), transparent 62%)', filter: 'blur(40px)' }} />
 
@@ -88,7 +88,7 @@ export default function LoginPage() {
         <button
           onClick={handleGoogle}
           disabled={googleLoading}
-          className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/[0.08] disabled:opacity-60"
+          className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-white/80 transition-colors hover:bg-white/[0.08] disabled:opacity-60"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
@@ -118,7 +118,7 @@ export default function LoginPage() {
           {error ? <p className="text-sm text-red-400">{error}</p> : null}
           {msg ? <p className="text-sm text-emerald-400">{msg}</p> : null}
 
-          <button type="submit" disabled={loading} className="mt-1 rounded-xl px-4 py-2.5 font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5 disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+          <button type="submit" disabled={loading} className="mt-1 rounded-xl px-4 py-3 font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5 disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
             {loading ? 'Please wait...' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </button>
         </form>

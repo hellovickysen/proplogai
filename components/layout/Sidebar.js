@@ -30,7 +30,7 @@ export default function Sidebar({ email, credits, avatarUrl }) {
 
   return (
     <aside className="hidden w-[200px] flex-shrink-0 border-r border-white/10 bg-[#0b0b14] sm:block">
-      <div className="sticky top-0 flex h-screen flex-col px-3 py-5">
+      <div className="sticky top-0 flex h-dvh flex-col px-3 py-5">
         <Link href="/dashboard" className="mb-6 flex items-center gap-2.5 px-2">
           <Logo size={32} wordmarkClassName="font-display text-base font-bold" />
         </Link>

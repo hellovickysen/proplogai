@@ -120,10 +120,10 @@ function Modal({ open, onClose, title, children }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="mx-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#0e0e18] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="mx-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#0e0e18] p-4 sm:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">{title}</h2>
-          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
+          <button onClick={onClose} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
         </div>
         {children}
       </div>
@@ -199,7 +199,7 @@ function AddExpenseForm({ onSave, onCancel, existingFirms }) {
 
       <div>
         <label className={labelCls}>Purchase type</label>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {['new', 'renewal', 'activation'].map((t) => (
             <button key={t} type="button" onClick={() => set('purchase_type', t)}
               className={'flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ' + (f.purchase_type === t ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}>
@@ -210,7 +210,7 @@ function AddExpenseForm({ onSave, onCancel, existingFirms }) {
       </div>
 
       {/* Cost row — aligned 3 columns */}
-      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-4">
+      <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
         <div>
           <label className={labelCls}>Cost per acct ($) *</label>
           <input className={field} value={f.account_cost} onChange={(e) => setCostField('account_cost', e.target.value)} inputMode="decimal" placeholder="0.00" required />
@@ -344,7 +344,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
   }
 
   return (
-    <div className="px-6 py-8">
+    <div className="px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -375,7 +375,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
             <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon="&#9651;" />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <SecStat label="Total Firms" value={firms.length} />
             <SecStat label="Total Accounts" value={totalAccounts} />
             <SecStat label="Payouts" value={payouts.length} />
@@ -468,7 +468,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
                             <div className="mt-0.5 font-mono text-[11px] text-white/35">{fmtDate(e.expense_date)}</div>
                           </div>
                           <div className="font-mono text-sm font-bold text-red-400">{fmtCurrency(e.total_cost)}</div>
-                          <button onClick={() => handleDeleteExpense(e.id)} className="grid h-6 w-6 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400">&#10005;</button>
+                          <button onClick={() => handleDeleteExpense(e.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400">&#10005;</button>
                         </div>
                       ))}
                     </div>
@@ -513,7 +513,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
                   <div className="text-right">
                     <div className="font-mono text-lg font-bold text-emerald-400">+{fmtCurrency(p.amount)}</div>
                   </div>
-                  <button onClick={() => handleDeletePayout(p.id)} className="grid h-6 w-6 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400">&#10005;</button>
+                  <button onClick={() => handleDeletePayout(p.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400">&#10005;</button>
                 </div>
               ))}
             </div>

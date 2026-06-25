@@ -103,7 +103,7 @@ export default async function TradeDetailPage({ params }) {
       {/* Header */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <Link href="/dashboard/trades" className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/5 text-sm text-white/60">&larr;</Link>
+          <Link href="/dashboard/trades" className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-sm text-white/60">&larr;</Link>
           <div>
             <h1 className="font-display text-xl font-bold">
               {trade.pair}{' '}
@@ -119,7 +119,7 @@ export default async function TradeDetailPage({ params }) {
         </div>
         <div className="flex items-center gap-2">
           <ShareButton type="trade" data={{ pnl: trade.pnl, pair: trade.pair, direction: trade.direction, entry_price: trade.entry_price, exit_price: trade.exit_price, setup: trade.setup, session: trade.session, trade_date: trade.trade_date || trade.closed_at || trade.created_at }} />
-          <Link href={'/dashboard/trades/' + id + '/edit'} className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/60 hover:text-white">Edit trade</Link>
+          <Link href={'/dashboard/trades/' + id + '/edit'} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white">Edit trade</Link>
           <DeleteTradeButton tradeId={id} />
         </div>
       </div>
@@ -136,7 +136,7 @@ export default async function TradeDetailPage({ params }) {
               </div>
               <div className={'font-mono text-base ' + (win ? 'text-emerald-400' : 'text-red-400')}>{fmtR(trade.r_multiple)}</div>
             </div>
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
               <Fact label="Entry" value={trade.entry_price != null ? trade.entry_price : '—'} />
               <Fact label="Exit" value={trade.exit_price != null ? trade.exit_price : '—'} />
               <Fact label="Stop" value={trade.stop_loss != null ? trade.stop_loss : '—'} />

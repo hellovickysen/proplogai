@@ -38,7 +38,7 @@ function Modal({ open, onClose, title, children }) {
       <div className="mx-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#0e0e18] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">{title}</h2>
-          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
+          <button onClick={onClose} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
         </div>
         {children}
       </div>
@@ -62,7 +62,7 @@ function Lightbox({ trophy, onClose }) {
               <span className="font-mono text-[11px] text-white/40">{fmtDate(trophy.created_at)}</span>
             </div>
           </div>
-          <button onClick={onClose} className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
+          <button onClick={onClose} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
         </div>
         {trophy.description && <p className="mb-3 text-sm text-white/60">{trophy.description}</p>}
         <img src={trophy.file_url} alt={trophy.title} className="w-full rounded-xl" />
@@ -121,7 +121,7 @@ function UploadTrophyForm({ onSave, onCancel }) {
         <label className={labelCls}>Upload certificate / proof *</label>
         {preview ? (
           <div className="mb-3">
-            <img src={preview} alt="Preview" className="h-32 rounded-xl border border-white/10 object-cover" />
+            <img src={preview} alt="Preview" className="h-32 w-full rounded-xl border border-white/10 object-cover" />
           </div>
         ) : null}
         <input
@@ -191,21 +191,21 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
         <div className="mt-3 flex items-center gap-2 border-t border-white/5 pt-3">
           <button
             onClick={() => onTogglePublic(trophy.id, !trophy.is_public)}
-            className={'rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold ' + (trophy.is_public ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300' : 'border-white/10 bg-white/5 text-white/50')}
+            className={'rounded-lg border px-2.5 py-2 text-[11px] font-semibold ' + (trophy.is_public ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300' : 'border-white/10 bg-white/5 text-white/50')}
           >
             {trophy.is_public ? '&#127760; Public' : '&#128274; Private'}
           </button>
           {trophy.is_public && trophy.share_id && (
             <button
               onClick={() => onCopyLink(trophy.share_id)}
-              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-[11px] text-white/50 hover:text-cyan-300"
+              className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-[11px] text-white/50 hover:text-cyan-300"
             >
               Copy link
             </button>
           )}
           <button
             onClick={() => onDelete(trophy.id)}
-            className="ml-auto rounded-lg border border-red-400/20 bg-red-500/10 px-2.5 py-1.5 text-[11px] text-red-300 hover:bg-red-500/20"
+            className="ml-auto rounded-lg border border-red-400/20 bg-red-500/10 px-2.5 py-2 text-[11px] text-red-300 hover:bg-red-500/20"
           >
             Delete
           </button>
@@ -258,7 +258,7 @@ export default function TrophyWall({ trophies }) {
   // Empty state
   if (trophies.length === 0 && !showUpload) {
     return (
-      <div className="px-6 py-8">
+      <div className="px-4 sm:px-6 py-8">
         <h1 className="font-display text-2xl font-bold">Trophy Wall</h1>
         <p className="mt-1 text-sm text-white/55">Showcase your trading achievements</p>
 
@@ -286,7 +286,7 @@ export default function TrophyWall({ trophies }) {
   }
 
   return (
-    <div className="px-6 py-8">
+    <div className="px-4 sm:px-6 py-8">
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>

@@ -15,7 +15,55 @@ export default function TradeTable({ rows, showFilters = false }) {
     return <div className="py-6 text-center text-sm text-white/40">No trades to show yet.</div>;
   }
   return (
-    <div className="overflow-x-auto">
+    <>
+      {/* Mobile card list — visible only below sm breakpoint */}
+      <div className="space-y-2 sm:hidden">
+        {rows.map((t) => {
+          const win = num(t.pnl) >= 0;
+          const hasNote = t._journal && t._journal.hasNote;
+          const hasImages = t._journal && t._journal.hasImages;
+          const hasJournal = hasNote || hasImages;
+          const leftBorderColor = win ? 'border-l-emerald-400/50' : 'border-l-red-400/50';
+          return (
+            <Link
+              key={t.id}
+              href={'/dashboard/trades/' + t.id}
+              className={'flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 border-l-[3px] ' + leftBorderColor}
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                {/* Direction arrow */}
+                <span className={'shrink-0 font-mono text-base ' + (t.direction === 'long' ? 'text-emerald-400' : 'text-red-400')}>
+                  {t.direction === 'long' ? '▲' : '▼'}
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-display font-semibold">{t.pair}</span>
+                    {hasJournal && (
+                      <span className="inline-flex gap-0.5">
+                        {hasNote && <span className="text-xs text-amber-400/70">&#128221;</span>}
+                        {hasImages && <span className="text-xs text-cyan-400/70">&#128444;</span>}
+                      </span>
+                    )}
+                  </div>
+                  <div className="font-mono text-xs text-white/50">
+                    {fmtDate(t.trade_date || t.closed_at || t.created_at)}
+                    {t.session ? <span className="ml-1.5">{t.session}</span> : null}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0 ml-3">
+                <span className={'font-mono text-base font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>
+                  {fmtMoneyCompact(t.pnl)}
+                </span>
+                <span className="font-mono text-xs text-white/40">&rsaquo;</span>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Desktop table — hidden below sm breakpoint */}
+      <div className="hidden sm:block overflow-x-auto">
       <table className="w-full min-w-[800px] border-collapse text-sm">
         <thead>
           <tr className="text-left font-mono text-xs uppercase tracking-wider text-white/55">
@@ -113,6 +161,7 @@ export default function TradeTable({ rows, showFilters = false }) {
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

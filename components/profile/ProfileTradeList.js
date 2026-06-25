@@ -21,7 +21,31 @@ export default function ProfileTradeList({ trades }) {
 
   return (
     <div>
-      <div className="overflow-x-auto">
+      {/* Mobile card list — visible only below sm breakpoint */}
+      <div className="space-y-2 sm:hidden">
+        {visible.map((t) => {
+          const win = (Number(t.pnl) || 0) >= 0;
+          return (
+            <div key={t.id} className="rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-sm font-semibold">{t.pair}</span>
+                  <span className={'rounded px-2 py-0.5 font-mono text-xs ' + (t.direction === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>
+                    {(t.direction || '').toUpperCase()}
+                  </span>
+                </div>
+                <span className={'font-mono text-sm font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>
+                  {fmtMoney(t.pnl)}
+                </span>
+              </div>
+              <div className="mt-1 font-mono text-xs text-white/40">{fmtDate(t.trade_date)}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop table — hidden below sm breakpoint */}
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[500px] border-collapse text-sm">
           <thead>
             <tr className="text-left font-mono text-[10px] uppercase tracking-wider text-white/40">
@@ -63,7 +87,7 @@ export default function ProfileTradeList({ trades }) {
         <div className="mt-4 text-center">
           <button
             onClick={() => setShowAll(true)}
-            className="rounded-lg border border-white/10 bg-white/5 px-5 py-2 text-xs font-semibold text-white/60 hover:text-white"
+            className="rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white/60 hover:text-white"
           >
             View all {trades.length} trades
           </button>
@@ -74,7 +98,7 @@ export default function ProfileTradeList({ trades }) {
         <div className="mt-4 text-center">
           <button
             onClick={() => setShowAll(false)}
-            className="rounded-lg border border-white/10 bg-white/5 px-5 py-2 text-xs font-semibold text-white/60 hover:text-white"
+            className="rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-xs font-semibold text-white/60 hover:text-white"
           >
             Show less
           </button>

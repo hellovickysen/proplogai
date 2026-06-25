@@ -15,7 +15,7 @@ export default function JournalSection({ tradeId, userId, journal, prefs }) {
         {!editing && (
           <button
             onClick={() => setEditing(true)}
-            className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:text-white"
+            className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/50 hover:text-white"
           >
             {hasJournal ? 'Edit journal' : '+ Add journal'}
           </button>
@@ -23,7 +23,7 @@ export default function JournalSection({ tradeId, userId, journal, prefs }) {
         {editing && (
           <button
             onClick={() => setEditing(false)}
-            className="rounded-lg border border-white/15 bg-white/5 px-3 py-1.5 text-xs text-white/50 hover:text-white"
+            className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/50 hover:text-white"
           >
             Cancel
           </button>

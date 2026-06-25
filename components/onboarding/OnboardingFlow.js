@@ -64,7 +64,7 @@ export default function OnboardingFlow({ userEmail }) {
                 Your AI-powered forex trading journal. Log trades, track your emotions, and get coaching that helps you find — and fix — the patterns costing you money.
               </p>
               <p className="mt-4 font-mono text-xs text-white/40">Signed in as {userEmail}</p>
-              <button onClick={() => setStep(1)} className="mt-7 rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
+              <button onClick={() => setStep(1)} className="mt-7 rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
                 Let's go →
               </button>
             </div>
@@ -94,8 +94,8 @@ export default function OnboardingFlow({ userEmail }) {
               </div>
 
               <div className="mt-6 flex justify-between">
-                <button onClick={() => setStep(0)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70">Back</button>
-                <button onClick={() => setStep(2)} className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
+                <button onClick={() => setStep(0)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm text-white/70">Back</button>
+                <button onClick={() => setStep(2)} className="rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
                   Next →
                 </button>
               </div>
@@ -129,7 +129,7 @@ export default function OnboardingFlow({ userEmail }) {
                   placeholder="Add a feeling (e.g. Anxious, Excited)…"
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())}
                 />
-                <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
+                <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm text-white/70 hover:text-white">Add</button>
               </div>
 
               <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Default confidence</label>
@@ -144,8 +144,8 @@ export default function OnboardingFlow({ userEmail }) {
               </div>
 
               <div className="mt-6 flex justify-between">
-                <button onClick={() => setStep(1)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70">Back</button>
-                <button onClick={() => setStep(3)} className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
+                <button onClick={() => setStep(1)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm text-white/70">Back</button>
+                <button onClick={() => setStep(3)} className="rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
                   Next →
                 </button>
               </div>
@@ -174,8 +174,8 @@ export default function OnboardingFlow({ userEmail }) {
               </div>
 
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <button onClick={() => setStep(2)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70">Back</button>
-                <button onClick={finish} disabled={saving} className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={gradientBtn}>
+                <button onClick={() => setStep(2)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm text-white/70">Back</button>
+                <button onClick={finish} disabled={saving} className="rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={gradientBtn}>
                   {saving ? 'Saving…' : 'Start trading →'}
                 </button>
               </div>

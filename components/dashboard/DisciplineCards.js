@@ -10,7 +10,7 @@ function DisciplineStat({ label, value, sub, tone }) {
   const glowColor = tone === 'good' ? 'rgba(52,211,153,0.06)' : tone === 'warn' ? 'rgba(251,191,36,0.06)' : 'transparent';
   const textColor = tone === 'good' ? 'text-emerald-400' : tone === 'warn' ? 'text-amber-400' : 'text-white';
   return (
-    <div className={'rounded-xl border p-4 ' + borderColor} style={{ background: glowColor }}>
+    <div className={'rounded-xl border p-3 sm:p-4 ' + borderColor} style={{ background: glowColor }}>
       <div className="font-mono text-xs uppercase tracking-wider text-white/55">{label}</div>
       <div className={'mt-2 font-display text-2xl font-bold ' + textColor}>{value}</div>
       {sub && <p className="mt-1 font-mono text-[11px] text-white/40">{sub}</p>}
@@ -29,7 +29,7 @@ export default function DisciplineCards({ stats, weeklyScore, achievements }) {
   const noSetupTone = noSetupCount === 0 ? 'good' : noSetupCount <= 2 ? '' : 'warn';
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       {/* Header */}
       <div className="mb-5 flex items-center gap-2">
         <span className="text-base">&#128170;</span>

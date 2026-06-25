@@ -61,7 +61,7 @@ export default function TradeFilters({ trades, prefs }) {
   return (
     <div>
       {/* Filter bar */}
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end">
+      <div className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end sm:gap-3">
         {/* Result */}
         <div>
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Result</label>
@@ -74,7 +74,7 @@ export default function TradeFilters({ trades, prefs }) {
               <button
                 key={o.v}
                 onClick={() => setResult(o.v)}
-                className={'rounded-lg border px-3 py-2 text-xs font-semibold ' + (result === o.v ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-black/30 text-white/55')}
+                className={'rounded-lg border px-3 py-2.5 text-xs font-semibold ' + (result === o.v ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-black/30 text-white/55')}
               >
                 {o.l}
               </button>
@@ -120,7 +120,7 @@ export default function TradeFilters({ trades, prefs }) {
         {hasFilters && (
           <button
             onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setDateFrom(''); setDateTo(''); }}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/55 hover:text-white"
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white"
           >
             Clear filters
           </button>

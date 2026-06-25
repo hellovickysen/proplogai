@@ -28,9 +28,9 @@ export default async function EditTradePage({ params }) {
     .order('sort_order', { ascending: true });
 
   return (
-    <div className="px-6 py-8">
+    <div className="px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-6 flex items-center gap-3">
-        <Link href={'/dashboard/trades/' + id} className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60">&larr;</Link>
+        <Link href={'/dashboard/trades/' + id} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60">&larr;</Link>
         <h1 className="font-display text-2xl font-bold">Edit trade</h1>
       </div>
       <TradeForm mode="edit" tradeId={id} initial={trade} prefs={prefs} setups={setups || []} />

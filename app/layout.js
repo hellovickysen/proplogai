@@ -31,7 +31,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body>
+      <body className="overflow-x-hidden min-h-screen antialiased">
         <PostHogProvider>
           <ToastProvider>{children}</ToastProvider>
         </PostHogProvider>

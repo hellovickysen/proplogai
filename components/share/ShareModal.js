@@ -116,8 +116,8 @@ export default function ShareModal({ type, data, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative flex max-h-[95vh] max-w-3xl flex-col items-center gap-5 overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-full border border-white/20 bg-black/60 text-white/70 hover:text-white">&#10005;</button>
+      <div className="relative flex max-h-[95vh] w-full max-w-3xl flex-col items-center gap-5 overflow-y-auto p-4 sm:p-6" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute right-2 top-2 grid h-10 w-10 place-items-center rounded-full border border-white/20 bg-black/60 text-white/70 hover:text-white">&#10005;</button>
 
         <div className="text-center">
           <h2 className="font-display text-lg font-bold">Share your results</h2>
@@ -143,11 +143,12 @@ export default function ShareModal({ type, data, onClose }) {
           <ShareCard ref={cardRef} type={type} ratio={ratio} data={data} quote={quote} />
         </div>
 
-        <div className="rounded-xl border border-white/10 overflow-hidden shadow-2xl">
+        <div className="w-full max-w-full overflow-hidden rounded-xl border border-white/10 shadow-2xl">
           {previewUrl ? (
             <img
               src={previewUrl}
               alt="P&L Card Preview"
+              className="max-w-full"
               style={{
                 width: isStory ? 306 : 544,
                 height: isStory ? 544 : 306,
@@ -156,7 +157,7 @@ export default function ShareModal({ type, data, onClose }) {
             />
           ) : (
             <div
-              className="flex items-center justify-center bg-white/[0.03]"
+              className="flex max-w-full items-center justify-center bg-white/[0.03]"
               style={{ width: isStory ? 306 : 544, height: isStory ? 544 : 306 }}
             >
               <span className="text-sm text-white/40">{rendering ? 'Rendering...' : 'Loading...'}</span>

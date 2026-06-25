@@ -25,7 +25,7 @@ export default function DeleteTradeButton({ tradeId }) {
     <button
       onClick={onDelete}
       disabled={busy}
-      className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-60"
+      className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-60"
     >
       {busy ? 'Deleting…' : 'Delete'}
     </button>

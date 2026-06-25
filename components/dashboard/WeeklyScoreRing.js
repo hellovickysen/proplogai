@@ -13,10 +13,10 @@ export default function WeeklyScoreRing({ score, breakdown }) {
   const tone = score >= 80 ? 'text-emerald-400' : score >= 50 ? 'text-amber-400' : score > 0 ? 'text-red-400' : 'text-white/50';
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-6">
       {/* SVG Ring */}
       <div className="relative flex-shrink-0">
-        <svg width={size} height={size} className="-rotate-90">
+        <svg viewBox="0 0 140 140" className="w-full max-w-[140px] -rotate-90">
           <defs>
             <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#a78bfa" />
@@ -49,7 +49,7 @@ export default function WeeklyScoreRing({ score, breakdown }) {
         {/* Score label in center */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className={'font-display text-3xl font-bold ' + tone}>{score}</span>
-          <span className="font-mono text-[9px] uppercase tracking-wider text-white/35">weekly</span>
+          <span className="font-mono text-[10px] uppercase tracking-wider text-white/35">weekly</span>
         </div>
       </div>
 
@@ -71,8 +71,8 @@ function BreakdownRow({ label, pts, max }) {
   const pct = max > 0 ? (pts / max) * 100 : 0;
   return (
     <div className="flex items-center gap-2">
-      <span className="w-16 font-mono text-[10px] text-white/45">{label}</span>
-      <div className="h-1.5 w-20 rounded-full bg-white/8">
+      <span className="w-14 sm:w-16 font-mono text-[10px] text-white/45">{label}</span>
+      <div className="h-1.5 w-16 sm:w-20 rounded-full bg-white/8">
         <div
           className="h-full rounded-full"
           style={{

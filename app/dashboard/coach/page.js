@@ -38,7 +38,7 @@ export default async function CoachPage() {
   const emailEnabled = isEmailConfigured();
 
   return (
-    <div className="px-6 py-8">
+    <div className="px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">AI Coach</h1>
@@ -53,7 +53,7 @@ export default async function CoachPage() {
       {report ? (
         <CoachReport report={report} updatedAt={insight.created_at} />
       ) : (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center sm:p-10">
           <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}>
             &#10022;
           </div>
@@ -67,7 +67,7 @@ export default async function CoachPage() {
             <div className="mt-6 flex justify-center"><GenerateReportButton usedThisMonth={coachUsedThisMonth || 0} /></div>
           ) : (
             <div className="mt-6 flex flex-col items-center gap-3">
-              <div className="w-48">
+              <div className="w-full max-w-[192px]">
                 <div className="mb-1 flex justify-between font-mono text-xs text-white/45"><span>{tradeCount} / {MIN_TRADES}</span><span>{Math.round((tradeCount / MIN_TRADES) * 100)}%</span></div>
                 <div className="h-2 rounded-full bg-white/10"><div className="h-full rounded-full transition-all" style={{ width: Math.min(100, (tradeCount / MIN_TRADES) * 100) + '%', background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} /></div>
               </div>

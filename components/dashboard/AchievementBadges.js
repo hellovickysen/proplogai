@@ -50,7 +50,7 @@ export default function AchievementBadges({ achievements }) {
       {celebration && (
         <div className="mb-4 flex items-center gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] px-4 py-3 animate-pulse">
           <span className="text-xl">{celebration.icon}</span>
-          <div>
+          <div className="min-w-0">
             <div className="text-xs font-semibold text-emerald-300">Achievement unlocked!</div>
             <div className="font-display text-sm font-bold">{celebration.name}</div>
           </div>
@@ -67,7 +67,7 @@ export default function AchievementBadges({ achievements }) {
             {earned.map((a) => (
               <div
                 key={a.key}
-                className="group relative flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5"
+                className="group relative flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-2"
                 title={a.desc}
               >
                 <span className="text-sm">{a.icon}</span>
@@ -88,12 +88,12 @@ export default function AchievementBadges({ achievements }) {
             {inProgress.map((a) => (
               <div
                 key={a.key}
-                className="group relative flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-3 py-1.5"
+                className="group relative flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-3 py-2"
                 title={a.desc + ' (' + Math.round(a.progress * 100) + '%)'}
               >
                 <span className="text-sm opacity-50">{a.icon}</span>
                 <span className="text-xs text-white/40">{a.name}</span>
-                <span className="font-mono text-[10px] text-white/25">{Math.round(a.progress * 100)}%</span>
+                <span className="font-mono text-[11px] text-white/40">{Math.round(a.progress * 100)}%</span>
               </div>
             ))}
           </div>

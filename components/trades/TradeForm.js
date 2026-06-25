@@ -270,7 +270,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div className="space-y-6">
-        <form onSubmit={onSubmit} id="trade-form" className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+        <form onSubmit={onSubmit} id="trade-form" className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
           {/* Section 1: Trade Details */}
           <div className="mb-5">
             <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/50">
@@ -293,14 +293,14 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   <button
                     type="button"
                     onClick={() => set('direction', 'long')}
-                    className={'flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold ' + (form.direction === 'long' ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-300' : 'border-white/10 bg-black/30 text-white/50')}
+                    className={'flex-1 rounded-lg border px-3 py-3 text-sm font-semibold ' + (form.direction === 'long' ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-300' : 'border-white/10 bg-black/30 text-white/50')}
                   >
                     &#9650; Long
                   </button>
                   <button
                     type="button"
                     onClick={() => set('direction', 'short')}
-                    className={'flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold ' + (form.direction === 'short' ? 'border-red-400/50 bg-red-500/15 text-red-300' : 'border-white/10 bg-black/30 text-white/50')}
+                    className={'flex-1 rounded-lg border px-3 py-3 text-sm font-semibold ' + (form.direction === 'short' ? 'border-red-400/50 bg-red-500/15 text-red-300' : 'border-white/10 bg-black/30 text-white/50')}
                   >
                     &#9660; Short
                   </button>
@@ -314,7 +314,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                       key={s}
                       type="button"
                       onClick={() => set('session', form.session === s ? '' : s)}
-                      className={'rounded-lg border px-2 py-2.5 text-xs font-semibold sm:text-sm ' + (form.session === s ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}
+                      className={'rounded-lg border px-2 py-3 text-xs font-semibold sm:text-sm ' + (form.session === s ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}
                     >
                       {s}
                     </button>
@@ -418,7 +418,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                             key={opt.v}
                             type="button"
                             onClick={() => set('setup_followed', form.setup_followed === opt.v ? '' : opt.v)}
-                            className={'flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ' + cls}
+                            className={'flex-1 rounded-lg border px-3 py-2.5 text-xs font-semibold ' + cls}
                           >
                             {opt.l}
                           </button>
@@ -440,7 +440,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                             key={r.value}
                             type="button"
                             onClick={() => set('no_setup_reason', active ? '' : r.value)}
-                            className={'rounded-full border px-3 py-1.5 text-xs ' + (active ? 'border-red-400/50 bg-red-500/15 text-red-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
+                            className={'rounded-full border px-3 py-2 text-xs ' + (active ? 'border-red-400/50 bg-red-500/15 text-red-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
                           >
                             {r.label}
                           </button>
@@ -506,7 +506,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                             key={em}
                             type="button"
                             onClick={() => toggleEmotion(em)}
-                            className={'rounded-full border px-3 py-1.5 text-xs ' + (on ? 'border-violet-400/50 bg-violet-500/15 text-violet-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
+                            className={'rounded-full border px-3 py-2 text-xs ' + (on ? 'border-violet-400/50 bg-violet-500/15 text-violet-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
                           >
                             {em}
                           </button>
@@ -518,7 +518,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     <label className={labelCls}>Confidence at entry</label>
                     <div className="flex gap-1 text-2xl">
                       {[1, 2, 3, 4, 5].map((i) => (
-                        <button key={i} type="button" onClick={() => setConfidence(i)} className={i <= confidence ? 'text-amber-400' : 'text-white/40'}>
+                        <button key={i} type="button" onClick={() => setConfidence(i)} className={'p-1 ' + (i <= confidence ? 'text-amber-400' : 'text-white/40')}>
                           &#9733;
                         </button>
                       ))}
@@ -544,7 +544,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                             <button
                               type="button"
                               onClick={() => removeScreenshot(i)}
-                              className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white group-hover:flex"
+                              className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
                             >
                               &#10005;
                             </button>
@@ -557,7 +557,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                       accept="image/*"
                       multiple
                       onChange={onFiles}
-                      className="block w-full text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:text-white"
+                      className="block w-full text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2.5 file:text-sm file:text-white"
                     />
                     {uploading && <p className="mt-1 text-xs text-cyan-400">Uploading...</p>}
                   </div>
@@ -569,8 +569,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
           {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
 
           <div className="mt-6 flex gap-3">
-            <Link href={mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades'} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</Link>
-            <button type="submit" disabled={saving || uploading} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            <Link href={mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades'} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">Cancel</Link>
+            <button type="submit" disabled={saving || uploading} className="rounded-xl px-5 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
               {saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Save trade'}
             </button>
           </div>

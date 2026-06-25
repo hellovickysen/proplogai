@@ -20,9 +20,9 @@ export default function AiInsight({ insight, tradeId }) {
   const wentWell = Array.isArray(a.went_well) ? a.went_well : [];
 
   return (
-    <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-6">
+    <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-4 sm:p-6">
       <div className="mb-4 flex items-center justify-between">
-        <div className="font-display text-base font-semibold" style={gradientText}>&#10022; AI Coach</div>
+        <div className="min-w-0 font-display text-base font-semibold" style={gradientText}>&#10022; AI Coach</div>
         <div className="flex items-center gap-3">
           <span className={'font-display text-2xl font-bold ' + (GRADE_COLOR[grade] || 'text-white')}>{grade}</span>
           {score != null ? <span className="font-mono text-xs text-white/50">{score}/100</span> : null}

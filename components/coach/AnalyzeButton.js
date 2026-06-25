@@ -36,7 +36,7 @@ export default function AnalyzeButton({ tradeId, label, usedThisMonth = 0 }) {
       <button
         onClick={go}
         disabled={busy}
-        className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60"
+        className="rounded-xl px-5 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60"
         style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
       >
         {busy ? 'Analyzing…' : label || '✦ Analyze this trade'}
@@ -53,10 +53,10 @@ export default function AnalyzeButton({ tradeId, label, usedThisMonth = 0 }) {
             }}
           />
         </div>
-        <span className="font-mono text-[10px] text-white/40">{usedThisMonth}/{FREE_LIMIT} this month</span>
+        <span className="font-mono text-[11px] text-white/50">{usedThisMonth}/{FREE_LIMIT} this month</span>
       </div>
       {usedThisMonth >= FREE_LIMIT && (
-        <p className="mt-1.5 text-[11px] text-amber-300/70">
+        <p className="mt-1.5 text-xs text-amber-300/70">
           ✦ Free limit reached — unlimited with Pro (coming soon)
         </p>
       )}

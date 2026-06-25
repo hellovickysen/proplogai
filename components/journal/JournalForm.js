@@ -112,7 +112,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
               key={e}
               type="button"
               onClick={() => toggleEmotion(e)}
-              className={'rounded-full border px-3 py-1.5 text-xs ' + (on ? 'border-violet-400/50 bg-violet-500/15 text-violet-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
+              className={'rounded-full border px-3 py-2 text-xs ' + (on ? 'border-violet-400/50 bg-violet-500/15 text-violet-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
             >
               {e}
             </button>
@@ -123,7 +123,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
       <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Confidence at entry</label>
       <div className="mb-5 flex gap-1 text-2xl">
         {[1, 2, 3, 4, 5].map((i) => (
-          <button key={i} type="button" onClick={() => setConfidence(i)} className={i <= confidence ? 'text-amber-400' : 'text-white/40'}>
+          <button key={i} type="button" onClick={() => setConfidence(i)} className={'p-1 ' + (i <= confidence ? 'text-amber-400' : 'text-white/40')}>
             &#9733;
           </button>
         ))}
@@ -150,7 +150,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
                   e.stopPropagation();
                   removeScreenshot(i);
                 }}
-                className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white group-hover:flex"
+                className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
               >
                 ✕
               </button>
@@ -163,7 +163,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
         accept="image/*"
         multiple
         onChange={onFiles}
-        className="mb-1 block w-full text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:text-white"
+        className="mb-1 block w-full text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2.5 file:text-sm file:text-white"
       />
       {uploading ? <p className="text-xs text-cyan-400">Uploading…</p> : null}
 
@@ -173,7 +173,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
       <button
         onClick={onSave}
         disabled={saving || uploading}
-        className="mt-5 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60"
+        className="mt-5 rounded-xl px-5 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60"
         style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
       >
         {saving ? 'Saving…' : 'Save journal'}

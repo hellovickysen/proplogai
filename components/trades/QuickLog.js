@@ -87,7 +87,7 @@ export default function QuickLog() {
           >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-display text-base font-bold">Quick Log</h3>
-              <button onClick={handleClose} className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 bg-white/5 text-xs text-white/60 hover:text-white">&#10005;</button>
+              <button onClick={handleClose} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-xs text-white/60 hover:text-white">&#10005;</button>
             </div>
 
             <form onSubmit={handleSave} className="space-y-3">
@@ -105,11 +105,11 @@ export default function QuickLog() {
 
               <div className="flex gap-2">
                 <button type="button" onClick={() => setDirection('long')}
-                  className={'flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold ' + (direction === 'long' ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-300' : 'border-white/10 bg-black/30 text-white/50')}>
+                  className={'flex-1 rounded-lg border px-3 py-3 text-sm font-semibold ' + (direction === 'long' ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-300' : 'border-white/10 bg-black/30 text-white/50')}>
                   &#9650; Long
                 </button>
                 <button type="button" onClick={() => setDirection('short')}
-                  className={'flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold ' + (direction === 'short' ? 'border-red-400/50 bg-red-500/15 text-red-300' : 'border-white/10 bg-black/30 text-white/50')}>
+                  className={'flex-1 rounded-lg border px-3 py-3 text-sm font-semibold ' + (direction === 'short' ? 'border-red-400/50 bg-red-500/15 text-red-300' : 'border-white/10 bg-black/30 text-white/50')}>
                   &#9660; Short
                 </button>
               </div>

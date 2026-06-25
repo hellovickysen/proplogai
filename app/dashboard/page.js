@@ -16,7 +16,7 @@ const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', We
 function EquityCurve({ series }) {
   if (!series || series.length < 2) {
     return (
-      <div className="flex h-[200px] items-center justify-center text-sm text-white/55">
+      <div className="flex h-[140px] sm:h-[200px] items-center justify-center text-sm text-white/55">
         Log at least two trades to see your equity curve.
       </div>
     );
@@ -32,7 +32,7 @@ function EquityCurve({ series }) {
   const line = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
   const area = line + ' L ' + pts[pts.length - 1][0].toFixed(1) + ' ' + (h - pad) + ' L ' + pts[0][0].toFixed(1) + ' ' + (h - pad) + ' Z';
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-[200px] w-full">
+    <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" className="h-[140px] sm:h-[200px] w-full">
       <defs>
         <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#8b5cf6" stopOpacity="0.4" />
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
   const dailyShareData = { pnl: todayPnl, date: today, trades: todayTrades.length, winRate: todayWinRate, bestTrade: todayBest, worstTrade: todayWorst };
 
   return (
-    <div className="px-4 py-8 sm:px-6">
+    <div className="px-3 py-8 sm:px-4">
       <ReferralCapture />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
@@ -229,7 +229,7 @@ export default async function DashboardPage() {
                 </div>
                 <Link href="/dashboard/expenses" className="font-mono text-xs text-cyan-400">Details &rarr;</Link>
               </div>
-              <div className="mt-3 grid grid-cols-3 gap-2">
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div className="rounded-lg border border-red-400/15 bg-red-500/[0.04] p-2.5">
                   <div className="font-mono text-[10px] uppercase text-white/40">Spent</div>
                   <div className="mt-1 font-display text-base font-bold text-red-400">{fmtCurrency(totalExpense)}</div>
@@ -252,7 +252,7 @@ export default async function DashboardPage() {
           <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-5">
             <div className="flex items-center justify-between">
               <div className="font-display text-sm font-semibold" style={gradientText}>&#10022; AI Coach</div>
-              <Link href="/dashboard/coach" className="font-mono text-xs text-cyan-400">Open &rarr;</Link>
+              <Link href="/dashboard/coach" className="flex min-h-[44px] items-center font-mono text-xs text-cyan-400">Open &rarr;</Link>
             </div>
             {report ? (
               <div className="mt-2">

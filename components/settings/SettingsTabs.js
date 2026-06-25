@@ -71,7 +71,7 @@ function ProfileTab({ user, prefs }) {
     <div className="space-y-6">
       <div className={card}>
         <div className="mb-4 font-display text-base font-semibold">Profile image</div>
-        <div className="flex items-center gap-5">
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-5">
           <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-white/10 bg-white/5">
             {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
@@ -183,12 +183,12 @@ function JournalSettingsTab({ prefs, onSaved }) {
           {emotions.map((em, i) => (
             <span key={i} className="group flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200">
               {em}
-              <button type="button" onClick={() => removeEmotion(i)} className="hidden text-red-400 hover:text-red-300 group-hover:inline">✕</button>
+              <button type="button" onClick={() => removeEmotion(i)} className="inline text-red-400 hover:text-red-300">✕</button>
             </span>
           ))}
         </div>
         <div className="flex gap-2">
-          <input className={field + ' max-w-xs'} value={newEmotion} onChange={(e) => setNewEmotion(e.target.value)} placeholder="e.g. Anxious, Excited…" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())} />
+          <input className={field + ' flex-1'} value={newEmotion} onChange={(e) => setNewEmotion(e.target.value)} placeholder="e.g. Anxious, Excited…" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())} />
           <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
         </div>
         <button type="button" onClick={resetEmotionDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
@@ -202,12 +202,12 @@ function JournalSettingsTab({ prefs, onSaved }) {
           {setups.map((s, i) => (
             <span key={i} className="group flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
               {s}
-              <button type="button" onClick={() => removeSetup(i)} className="hidden text-red-400 hover:text-red-300 group-hover:inline">✕</button>
+              <button type="button" onClick={() => removeSetup(i)} className="inline text-red-400 hover:text-red-300">✕</button>
             </span>
           ))}
         </div>
         <div className="flex gap-2">
-          <input className={field + ' max-w-xs'} value={newSetup} onChange={(e) => setNewSetup(e.target.value)} placeholder="e.g. Order Block, Break & Retest…" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSetup())} />
+          <input className={field + ' flex-1'} value={newSetup} onChange={(e) => setNewSetup(e.target.value)} placeholder="e.g. Order Block, Break & Retest…" onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSetup())} />
           <button type="button" onClick={addSetup} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
         </div>
         <button type="button" onClick={resetSetupDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
@@ -222,7 +222,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
             i === 0 ? (
               <button key={i} type="button" onClick={() => setDefaultConfidence(0)} className={'rounded-lg border px-2 py-1 text-xs ' + (defaultConfidence === 0 ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 text-white/30')}>None</button>
             ) : (
-              <button key={i} type="button" onClick={() => setDefaultConfidence(i)} className={i <= defaultConfidence ? 'text-amber-400' : 'text-white/40'}>&#9733;</button>
+              <button key={i} type="button" onClick={() => setDefaultConfidence(i)} className={'p-1 ' + (i <= defaultConfidence ? 'text-amber-400' : 'text-white/40')}>&#9733;</button>
             )
           )}
         </div>
@@ -251,7 +251,7 @@ export default function SettingsTabs({ user, prefs: initialPrefs }) {
     <div>
       <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={'flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ' + (tab === t.id ? 'bg-white/10 text-white' : 'text-white/55 hover:text-white/70')}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={'flex-1 rounded-lg px-4 py-2 text-xs sm:text-sm font-semibold transition-colors ' + (tab === t.id ? 'bg-white/10 text-white' : 'text-white/55 hover:text-white/70')}>
             {t.label}
           </button>
         ))}

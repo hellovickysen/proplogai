@@ -129,7 +129,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       const satContent = (
                         <div
                           className={
-                            'flex h-24 flex-col sm:h-28 ' +
+                            'flex h-20 flex-col sm:h-28 ' +
                             (isOverflow ? 'opacity-25' : '') +
                             (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '')
                           }
@@ -140,7 +140,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                           </div>
                           <div className="flex flex-1 flex-col items-center justify-center">
                             <span className="text-[10px] font-semibold text-white/50 sm:text-xs">Week {wi + 1}</span>
-                            <span className={'font-mono text-base font-extrabold sm:text-lg ' + (ws.count === 0 ? 'text-white/25' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                            <span className={'font-mono text-[11px] font-extrabold sm:text-lg ' + (ws.count === 0 ? 'text-white/25' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                               {fmtPnl(ws.net)}
                             </span>
                             <span className="text-[10px] text-white/45">{ws.count} trades</span>
@@ -161,7 +161,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                     const cellContent = (
                       <div
                         className={
-                          'flex h-24 flex-col sm:h-28 ' +
+                          'flex h-20 flex-col sm:h-28 ' +
                           (isOverflow ? 'opacity-25' : '') +
                           (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') +
                           (e ? ' cursor-pointer' : '')
@@ -176,7 +176,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                         {/* P&L — centered */}
                         {e ? (
                           <div className="flex flex-1 flex-col items-center justify-center">
-                            <span className={'font-mono text-base font-extrabold sm:text-xl ' + (e.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                            <span className={'font-mono text-[11px] font-extrabold sm:text-xl ' + (e.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                               {fmtPnl(e.net)}
                             </span>
                             {/* Trade count + journal icon together */}

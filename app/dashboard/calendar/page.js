@@ -117,23 +117,23 @@ export default async function CalendarPage({ searchParams }) {
       <div className="rounded-2xl border border-white/10 bg-[#12121a] overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 sm:px-5">
           <div className="flex items-center gap-2">
-            <Link href={'/dashboard/calendar?month=' + shift(-1)} className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-sm text-white/50 hover:text-white">&#8249;</Link>
+            <Link href={'/dashboard/calendar?month=' + shift(-1)} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-sm text-white/50 hover:text-white">&#8249;</Link>
             <span className="font-display text-sm font-semibold">{MONTHS_SHORT[month]} {year}</span>
-            <Link href={'/dashboard/calendar?month=' + shift(1)} className="grid h-7 w-7 place-items-center rounded-lg border border-white/10 text-sm text-white/50 hover:text-white">&#8250;</Link>
+            <Link href={'/dashboard/calendar?month=' + shift(1)} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-sm text-white/50 hover:text-white">&#8250;</Link>
           </div>
           <div className="flex items-center gap-2">
             <div className="hidden gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 sm:flex">
               <span className="rounded-md bg-white/10 px-3 py-1 text-xs font-semibold text-white">Calendar</span>
               <Link href="/dashboard/trades" className="rounded-md px-3 py-1 text-xs text-white/50 hover:text-white/70">Trades</Link>
             </div>
-            <Link href="/dashboard/calendar" className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white">Today</Link>
+            <Link href="/dashboard/calendar" className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-medium text-white/60 hover:text-white">Today</Link>
           </div>
         </div>
         <CalendarMonth trades={list} year={year} month={month} selected={selected} monthParam={monthParam} monthlyPnl={monthlyPnl} journalDays={journalDays} />
       </div>
 
       {selected && dayTrades.length > 0 && (
-        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <div className="font-display text-base font-semibold">Trades on {selected}</div>
             <div className={'font-mono text-sm ' + (dayNet >= 0 ? 'text-emerald-400' : 'text-red-400')}>

@@ -51,14 +51,14 @@ export default async function TradesPage() {
     .maybeSingle();
 
   return (
-    <div className="px-6 py-8">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="px-4 py-8 sm:px-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-display text-2xl font-bold">Trades</h1>
         <div className="flex items-center gap-2">
           {enriched.length > 0 && <ExportButton />}
           <Link
             href="/dashboard/trades/new"
-            className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]"
+            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#08080f]"
             style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
           >
             + New Trade
@@ -67,7 +67,7 @@ export default async function TradesPage() {
       </div>
 
       {enriched.length === 0 ? (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center sm:p-10">
           <div
             className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl"
             style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}

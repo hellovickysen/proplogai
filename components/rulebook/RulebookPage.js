@@ -37,7 +37,7 @@ function SetupCard({ setup, onEdit, onToggle, onDelete }) {
       <div className="mt-4 flex items-center gap-2">
         <button
           onClick={() => onEdit(setup)}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/60 hover:text-white"
+          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white"
         >
           Edit
         </button>
@@ -45,13 +45,13 @@ function SetupCard({ setup, onEdit, onToggle, onDelete }) {
           <>
             <button
               onClick={() => onToggle(setup.id, !setup.is_active)}
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/60 hover:text-white"
+              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white"
             >
               {setup.is_active ? 'Deactivate' : 'Activate'}
             </button>
             <button
               onClick={() => onDelete(setup.id)}
-              className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 hover:bg-red-500/20"
+              className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
             >
               Delete
             </button>
@@ -96,8 +96,8 @@ function SetupForm({ initial, onSave, onCancel }) {
         </div>
       </div>
       <div className="mt-5 flex gap-3">
-        <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
-        <button type="submit" disabled={saving} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">Cancel</button>
+        <button type="submit" disabled={saving} className="rounded-xl px-5 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
           {saving ? 'Saving...' : initial ? 'Save changes' : 'Create setup'}
         </button>
       </div>
@@ -172,7 +172,7 @@ export default function RulebookPage({ setups }) {
   // Empty state — no setups yet
   if (setups.length === 0) {
     return (
-      <div className="px-6 py-8">
+      <div className="px-4 sm:px-6 py-8">
         <h1 className="font-display text-2xl font-bold">Rulebook</h1>
         <p className="mt-1 text-sm text-white/55">Define your trading setups and rules. Each setup is a rule in your rulebook.</p>
 
@@ -211,7 +211,7 @@ export default function RulebookPage({ setups }) {
   }
 
   return (
-    <div className="px-6 py-8">
+    <div className="px-4 sm:px-6 py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl font-bold">Rulebook</h1>
@@ -221,7 +221,7 @@ export default function RulebookPage({ setups }) {
         </div>
         <button
           onClick={() => setEditing('new')}
-          className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]"
+          className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#08080f]"
           style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
         >
           + New setup

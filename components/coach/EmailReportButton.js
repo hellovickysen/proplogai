@@ -27,7 +27,7 @@ export default function EmailReportButton() {
     <button
       onClick={handleSend}
       disabled={busy}
-      className="rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white disabled:opacity-60"
+      className="rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-medium text-white/70 transition-colors hover:text-white disabled:opacity-60"
     >
       {busy ? 'Sending…' : '✉ Email Report'}
     </button>
