@@ -745,11 +745,11 @@ export default function ExpenseTracker({ expenses, payouts }) {
     if (type === 'expense') {
       const res = await deleteExpense(id);
       if (res.error) { if (toast) toast.error(res.error); }
-      else { router.refresh(); }
+      else { if (toast) toast.warning('Expense deleted'); router.refresh(); }
     } else {
       const res = await deletePayout(id);
       if (res.error) { if (toast) toast.error(res.error); }
-      else { router.refresh(); }
+      else { if (toast) toast.warning('Payout deleted'); router.refresh(); }
     }
   }
 

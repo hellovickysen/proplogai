@@ -172,7 +172,7 @@ export default function RulebookPage({ setups }) {
     if (res.error) {
       if (toast) toast.error(res.error);
     } else {
-      if (toast) toast.success('Setup deleted.');
+      if (toast) toast.warning('Setup deleted');
       router.refresh();
     }
   }

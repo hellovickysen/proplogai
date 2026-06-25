@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteTrade } from '@/app/dashboard/trades/actions';
+import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 export default function DeleteTradeButton({ tradeId }) {
   const router = useRouter();
+  const toast = useToast();
   const [busy, setBusy] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -15,9 +17,10 @@ export default function DeleteTradeButton({ tradeId }) {
     setBusy(true);
     const res = await deleteTrade(tradeId);
     if (res && res.error) {
-      window.alert(res.error);
+      if (toast) toast.error(res.error);
       setBusy(false);
     } else {
+      if (toast) toast.warning('Trade deleted');
       router.push('/dashboard/trades');
       router.refresh();
     }

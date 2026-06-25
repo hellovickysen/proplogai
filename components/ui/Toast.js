@@ -19,17 +19,11 @@ export function ToastProvider({ children }) {
     }, 3500);
   }, []);
 
-  const toast = useCallback({
-    success: (msg) => addToast(msg, 'success'),
-    error: (msg) => addToast(msg, 'error'),
-    info: (msg) => addToast(msg, 'info'),
-  }, [addToast]);
-
-  // Make toast callable as toast.success() etc
   const api = {
     success: (msg) => addToast(msg, 'success'),
     error: (msg) => addToast(msg, 'error'),
     info: (msg) => addToast(msg, 'info'),
+    warning: (msg) => addToast(msg, 'warning'),
   };
 
   return (
@@ -46,12 +40,14 @@ export function ToastProvider({ children }) {
                 ? 'border-emerald-400/20 bg-emerald-500/15 text-emerald-300'
                 : t.type === 'error'
                 ? 'border-red-400/20 bg-red-500/15 text-red-300'
+                : t.type === 'warning'
+                ? 'border-red-400/20 bg-red-500/15 text-red-300'
                 : 'border-cyan-400/20 bg-cyan-500/15 text-cyan-300')
             }
             style={{ pointerEvents: 'auto', minWidth: 220 }}
           >
             <span className="mr-2">
-              {t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : 'ℹ'}
+              {t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : t.type === 'warning' ? '🗑' : 'ℹ'}
             </span>
             {t.message}
           </div>

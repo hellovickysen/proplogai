@@ -241,7 +241,7 @@ export default function TrophyWall({ trophies }) {
     setPendingDeleteId(null);
     const res = await deleteTrophy(id);
     if (res.error) { if (toast) toast.error(res.error); }
-    else { if (toast) toast.success('Trophy deleted.'); router.refresh(); }
+    else { if (toast) toast.warning('Trophy deleted'); router.refresh(); }
   }
 
   async function handleTogglePublic(id, isPublic) {
