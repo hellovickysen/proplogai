@@ -143,7 +143,7 @@ export default function ShareModal({ type, data, onClose }) {
           <ShareCard ref={cardRef} type={type} ratio={ratio} data={data} quote={quote} />
         </div>
 
-        <div className="max-w-full overflow-hidden rounded-xl border border-white/10 shadow-2xl">
+        <div className="w-fit max-w-full overflow-hidden rounded-xl border border-white/10 shadow-2xl">
           {previewUrl ? (
             <img
               src={previewUrl}
