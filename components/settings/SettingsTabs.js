@@ -7,7 +7,6 @@ import { useToast } from '@/components/ui/Toast';
 import { validatePassword } from '@/lib/security';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
-const DEFAULT_SETUPS = ['Fib Level', 'London Low Sweep', 'London High Sweep', 'ChoCh On Line'];
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -188,13 +187,8 @@ function JournalSettingsTab({ prefs, onSaved }) {
   const toast = useToast();
   const existingEmotions = (prefs && prefs.custom_emotions && prefs.custom_emotions.length > 0)
     ? prefs.custom_emotions : DEFAULT_EMOTIONS;
-  const existingSetups = (prefs && prefs.custom_setups && prefs.custom_setups.length > 0)
-    ? prefs.custom_setups : DEFAULT_SETUPS;
-
   const [emotions, setEmotions] = useState(existingEmotions);
   const [newEmotion, setNewEmotion] = useState('');
-  const [setups, setSetups] = useState(existingSetups);
-  const [newSetup, setNewSetup] = useState('');
   const [defaultConfidence, setDefaultConfidence] = useState((prefs && prefs.default_confidence) || 0);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -209,22 +203,13 @@ function JournalSettingsTab({ prefs, onSaved }) {
   function removeEmotion(idx) { setEmotions(emotions.filter((_, i) => i !== idx)); }
   function resetEmotionDefaults() { setEmotions([...DEFAULT_EMOTIONS]); }
 
-  function addSetup() {
-    const t = newSetup.trim();
-    if (!t || setups.map((s) => s.toLowerCase()).includes(t.toLowerCase())) return;
-    setSetups([...setups, t]);
-    setNewSetup('');
-  }
-  function removeSetup(idx) { setSetups(setups.filter((_, i) => i !== idx)); }
-  function resetSetupDefaults() { setSetups([...DEFAULT_SETUPS]); }
-
   async function onSave() {
     setSaving(true);
     setError(null);
     setMsg(null);
     const res = await savePreferences({
       custom_emotions: emotions,
-      custom_setups: setups,
+      custom_setups: (prefs && prefs.custom_setups) || [],
       default_confidence: defaultConfidence,
       avatar_url: (prefs && prefs.avatar_url) || null,
     });
@@ -232,7 +217,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
     else {
       setMsg('Settings saved!');
       if (toast) toast.success('Settings saved!');
-      if (onSaved) onSaved({ custom_emotions: emotions, custom_setups: setups, default_confidence: defaultConfidence });
+      if (onSaved) onSaved({ custom_emotions: emotions, default_confidence: defaultConfidence });
     }
     setSaving(false);
   }
@@ -256,25 +241,6 @@ function JournalSettingsTab({ prefs, onSaved }) {
           <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
         </div>
         <button type="button" onClick={resetEmotionDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
-      </div>
-
-      {/* Trade setups */}
-      <div className={card}>
-        <div className="mb-1 font-display text-base font-semibold">Trade setups</div>
-        <p className="mb-4 text-xs text-white/55">Your saved trading setups. These appear as a dropdown when logging trades.</p>
-        <div className="mb-4 flex flex-wrap gap-2">
-          {setups.map((s, i) => (
-            <span key={i} className="group flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
-              {s}
-              <button type="button" onClick={() => removeSetup(i)} className="inline text-red-400 hover:text-red-300">&#10005;</button>
-            </span>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <input className={field + ' flex-1'} value={newSetup} onChange={(e) => setNewSetup(e.target.value)} placeholder="e.g. Order Block, Break & Retest..." onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addSetup())} />
-          <button type="button" onClick={addSetup} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
-        </div>
-        <button type="button" onClick={resetSetupDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
       </div>
 
       {/* Default confidence */}
@@ -308,7 +274,7 @@ export default function SettingsTabs({ user, prefs: initialPrefs }) {
 
   const tabs = [
     { id: 'profile', label: 'Profile' },
-    { id: 'journal', label: 'Journal & Trade settings' },
+    { id: 'journal', label: 'Journal settings' },
   ];
 
   return (
