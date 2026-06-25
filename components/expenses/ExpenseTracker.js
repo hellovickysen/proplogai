@@ -570,7 +570,7 @@ function FirmDashboard({
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
         <HeroStat label="Total Expenses" value={fmtCurrency(totalExpenses)} tone="red" icon="💸" />
         <HeroStat label="Total Payouts" value={fmtCurrency(totalPayouts)} tone="green" icon="💰" />
-        <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon={netPL >= 0 ? '📈' : '📉'} />
+        <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon={<span className={'inline-block h-3 w-3 rounded-full ' + (netPL >= 0 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]')} />} />
       </div>
 
       {/* Expenses Section */}
@@ -813,7 +813,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
               <div className="grid gap-4 sm:grid-cols-3">
                 <HeroStat label="Total Expense" value={fmtCurrency(totalExpense)} tone="red" icon="💸" />
                 <HeroStat label="Total Payout" value={fmtCurrency(totalPayout)} tone="green" icon="💰" />
-                <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon={netPL >= 0 ? '📈' : '📉'} />
+                <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon={<span className={'inline-block h-3 w-3 rounded-full ' + (netPL >= 0 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]')} />} />
               </div>
 
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
