@@ -18,7 +18,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function Sidebar({ email, credits, avatarUrl }) {
+export default function Sidebar({ email, credits, avatarUrl, isAdmin }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -104,6 +104,18 @@ export default function Sidebar({ email, credits, avatarUrl }) {
                 >
                   <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">Credits</span>
                   <span className="font-display text-sm font-bold text-emerald-400">${Number(credits).toFixed(2)}</span>
+                </Link>
+              )}
+
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors hover:bg-white/[0.08]"
+                  style={{ background: 'linear-gradient(120deg, rgba(248,113,113,0.1), rgba(251,191,36,0.1))', border: '1px solid rgba(248,113,113,0.2)' }}
+                >
+                  <span>&#9881;</span>
+                  <span className="text-amber-300">Admin Panel</span>
                 </Link>
               )}
 

@@ -8,6 +8,7 @@ import RiskFooter from '@/components/layout/RiskFooter';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
 import { num, fmtMoney } from '@/lib/stats';
+import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,7 +72,7 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} />
+      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={user.email === ADMIN_EMAIL} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
