@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { createExpense, updateExpense, deleteExpense, createPayout, updatePayout, deletePayout, renameFirm, updateFirmLogo } from '@/app/dashboard/expenses/actions';
-import { createClient } from '@/lib/supabase/client';
+import { createExpense, updateExpense, deleteExpense, createPayout, updatePayout, deletePayout, renameFirm } from '@/app/dashboard/expenses/actions';
 import { useToast } from '@/components/ui/Toast';
 import { ExpensesEmptyIcon } from '@/components/ui/EmptyStates';
 
@@ -482,17 +481,15 @@ function EditPayoutForm({ payout, onSave, onCancel, existingFirms }) {
 /* ─── Firm Dashboard ─────────────────────────────────────────── */
 
 function FirmDashboard({
-  firmName, expenses, payouts, profile,
+  firmName, expenses, payouts,
   onBack, onDeleteExpense, onDeletePayout,
   onEditExpense, onEditPayout,
   onAddExpense, onAddPayout,
-  onRenameFirm, onUpdateLogo, toast
+  onRenameFirm
 }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(firmName);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [savingName, setSavingName] = useState(false);
-  const fileInputRef = useRef(null);
 
   const totalExpenses = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
   const totalPayouts = payouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
@@ -514,43 +511,6 @@ function FirmDashboard({
     if (e.key === 'Escape') { setIsEditingName(false); setEditName(firmName); }
   }
 
-  async function handleLogoUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 2 * 1024 * 1024) {
-      if (toast) toast.error('Logo must be under 2MB');
-      return;
-    }
-
-    setUploadingLogo(true);
-    try {
-      const supabase = createClient();
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
-      const path = `firm-logos/${Date.now()}.${ext}`;
-
-      const { error } = await supabase.storage.from('avatars').upload(path, file, {
-        cacheControl: '3600',
-        upsert: true,
-      });
-
-      if (error) {
-        if (toast) toast.error('Upload failed: ' + error.message);
-        setUploadingLogo(false);
-        return;
-      }
-
-      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
-      await onUpdateLogo(firmName, publicUrl);
-      if (toast) toast.success('Logo updated!');
-    } catch (err) {
-      if (toast) toast.error('Upload failed');
-    }
-    setUploadingLogo(false);
-    // Reset input so same file can be re-selected
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  }
-
   return (
     <div className="px-4 sm:px-6 py-8">
       {/* Back button */}
@@ -563,31 +523,13 @@ function FirmDashboard({
 
       {/* Firm Header */}
       <div className="mb-8 flex items-center gap-4 sm:gap-5">
-        {/* Logo / Avatar — clickable for upload */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploadingLogo}
-          className="group relative grid h-16 w-16 flex-shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] font-display text-2xl font-bold transition-all hover:border-cyan-400/40 hover:bg-white/[0.08] sm:h-20 sm:w-20 sm:text-3xl overflow-hidden"
-          title="Click to upload logo"
+        {/* Letter Avatar */}
+        <div
+          className="grid h-16 w-16 flex-shrink-0 place-items-center rounded-2xl font-display text-2xl font-bold sm:h-20 sm:w-20 sm:text-3xl"
+          style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.2))' }}
         >
-          {profile?.logo_url ? (
-            <img src={profile.logo_url} alt={firmName} className="h-full w-full rounded-2xl object-cover" />
-          ) : (
-            <span style={gradientText}>{firmInitial(firmName)}</span>
-          )}
-          {/* Camera overlay on hover */}
-          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
-            {uploadingLogo ? (
-              <Spinner />
-            ) : (
-              <svg className="h-6 w-6 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
-                <circle cx="12" cy="13" r="4" />
-              </svg>
-            )}
-          </div>
-        </button>
-        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+          <span style={gradientText}>{firmInitial(firmName)}</span>
+        </div>
 
         {/* Firm name — inline edit */}
         <div className="min-w-0 flex-1">
@@ -713,7 +655,7 @@ function FirmDashboard({
 
 /* ─── Main Component ─────────────────────────────────────────── */
 
-export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] }) {
+export default function ExpenseTracker({ expenses, payouts }) {
   const router = useRouter();
   const toast = useToast();
   const [tab, setTab] = useState('Dashboard');
@@ -745,13 +687,6 @@ export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] })
 
   const firms = useMemo(() => Object.values(firmMap).sort((a, b) => b.totalCost - a.totalCost), [firmMap]);
   const firmNames = useMemo(() => [...new Set([...expenses.map((e) => e.firm_name), ...payouts.map((p) => p.firm_name)])].filter(Boolean).sort(), [expenses, payouts]);
-
-  // Firm profiles map
-  const firmProfileMap = useMemo(() => {
-    const map = {};
-    firmProfiles.forEach((fp) => { map[fp.firm_name] = fp; });
-    return map;
-  }, [firmProfiles]);
 
   // Handlers
   async function handleAddExpense(data) {
@@ -802,12 +737,6 @@ export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] })
     }
   }
 
-  async function handleUpdateFirmLogo(firmNameVal, logoUrl) {
-    const res = await updateFirmLogo(firmNameVal, logoUrl);
-    if (res.error) { if (toast) toast.error(res.error); }
-    else { router.refresh(); }
-  }
-
   function openFirmDashboard(name) {
     setSelectedFirm(name);
   }
@@ -820,7 +749,6 @@ export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] })
           firmName={selectedFirm}
           expenses={expenses.filter((e) => e.firm_name === selectedFirm)}
           payouts={payouts.filter((p) => p.firm_name === selectedFirm)}
-          profile={firmProfileMap[selectedFirm]}
           onBack={() => setSelectedFirm(null)}
           onDeleteExpense={handleDeleteExpense}
           onDeletePayout={handleDeletePayout}
@@ -829,8 +757,6 @@ export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] })
           onAddExpense={() => setShowExpenseForm(true)}
           onAddPayout={() => setShowPayoutForm(true)}
           onRenameFirm={handleRenameFirm}
-          onUpdateLogo={handleUpdateFirmLogo}
-          toast={toast}
         />
       ) : (
         <div className="px-4 sm:px-6 py-8">
@@ -884,9 +810,7 @@ export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] })
                       .map((item, i) => (
                         <div key={i} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
                           <div className={'grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg font-display text-sm font-bold ' + (item.type === 'payout' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60')}>
-                            {firmProfileMap[item.firm_name]?.logo_url ? (
-                              <img src={firmProfileMap[item.firm_name].logo_url} alt="" className="h-full w-full rounded-lg object-cover" />
-                            ) : firmInitial(item.firm_name)}
+                            {firmInitial(item.firm_name)}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
@@ -930,10 +854,8 @@ export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] })
                       <button onClick={() => openFirmDashboard(firm.name)}
                         className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-cyan-400/30 hover:bg-white/[0.05]">
                         <div className="flex items-center gap-3">
-                          <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl font-display text-base font-bold overflow-hidden" style={{ background: firmProfileMap[firm.name]?.logo_url ? 'transparent' : 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(34,211,238,0.15))' }}>
-                            {firmProfileMap[firm.name]?.logo_url ? (
-                              <img src={firmProfileMap[firm.name].logo_url} alt={firm.name} className="h-full w-full rounded-xl object-cover" />
-                            ) : firmInitial(firm.name)}
+                          <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl font-display text-base font-bold" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(34,211,238,0.15))' }}>
+                            {firmInitial(firm.name)}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="font-display text-base font-semibold">{firm.name}</div>
@@ -973,10 +895,8 @@ export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] })
                 <div className="space-y-3">
                   {payouts.map((p) => (
                     <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                      <button onClick={() => openFirmDashboard(p.firm_name)} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 font-display text-sm font-bold text-emerald-300 overflow-hidden">
-                        {firmProfileMap[p.firm_name]?.logo_url ? (
-                          <img src={firmProfileMap[p.firm_name].logo_url} alt={p.firm_name} className="h-full w-full rounded-xl object-cover" />
-                        ) : firmInitial(p.firm_name)}
+                      <button onClick={() => openFirmDashboard(p.firm_name)} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 font-display text-sm font-bold text-emerald-300">
+                        {firmInitial(p.firm_name)}
                       </button>
                       <div className="min-w-0 flex-1">
                         <button onClick={() => openFirmDashboard(p.firm_name)} className="font-display text-base font-semibold hover:text-cyan-300 transition-colors">{p.firm_name}</button>

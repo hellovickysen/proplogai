@@ -180,33 +180,7 @@ export async function renameFirm(oldName, newName) {
     .eq('user_id', user.id);
   if (e2) return { error: e2.message };
 
-  // Update firm_profiles
-  const { error: e3 } = await supabase
-    .from('firm_profiles')
-    .update({ firm_name: cleanNew, updated_at: new Date().toISOString() })
-    .eq('firm_name', cleanOld)
-    .eq('user_id', user.id);
-  // Ignore e3 — profile row might not exist yet
-
   revalidatePath('/dashboard/expenses');
   revalidatePath('/dashboard');
-  return { ok: true };
-}
-
-export async function updateFirmLogo(firmName, logoUrl) {
-  const { supabase, user } = await getCtx();
-  if (!user) return { error: 'Not signed in.' };
-
-  const cleanName = sanitize(firmName, 100);
-  if (!cleanName) return { error: 'Firm name is required.' };
-
-  // Upsert into firm_profiles
-  const { error } = await supabase.from('firm_profiles').upsert(
-    { user_id: user.id, firm_name: cleanName, logo_url: logoUrl, updated_at: new Date().toISOString() },
-    { onConflict: 'user_id,firm_name' }
-  );
-
-  if (error) return { error: error.message };
-  revalidatePath('/dashboard/expenses');
   return { ok: true };
 }
