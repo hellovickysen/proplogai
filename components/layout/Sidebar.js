@@ -116,12 +116,21 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
                 >
                   <span>&#9881;</span>
                   <span className="text-amber-300">Admin Panel</span>
-                  <span
-                      className={'ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold ' + (adminNotifCount > 0 ? 'text-[#08080f]' : 'text-white/40')}
-                      style={{ background: adminNotifCount > 0 ? 'linear-gradient(135deg,#f87171,#fbbf24)' : 'rgba(255,255,255,0.1)' }}
+                  {adminNotifCount > 0 ? (
+                    <span
+                      className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-[#08080f]"
+                      style={{ background: 'linear-gradient(135deg,#f87171,#fbbf24)' }}
                     >
                       {adminNotifCount}
                     </span>
+                  ) : (
+                    <span
+                      className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white/40"
+                      style={{ background: 'rgba(255,255,255,0.1)' }}
+                    >
+                      0
+                    </span>
+                  )}
                 </Link>
               )}
 
