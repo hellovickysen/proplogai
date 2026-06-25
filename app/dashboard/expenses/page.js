@@ -19,5 +19,16 @@ export default async function ExpensesPage() {
     .eq('user_id', user.id)
     .order('payout_date', { ascending: false, nullsFirst: false });
 
-  return <ExpenseTracker expenses={expenses || []} payouts={payouts || []} />;
+  const { data: firmProfiles } = await supabase
+    .from('firm_profiles')
+    .select('*')
+    .eq('user_id', user.id);
+
+  return (
+    <ExpenseTracker
+      expenses={expenses || []}
+      payouts={payouts || []}
+      firmProfiles={firmProfiles || []}
+    />
+  );
 }

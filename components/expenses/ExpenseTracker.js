@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { createExpense, deleteExpense, createPayout, deletePayout } from '@/app/dashboard/expenses/actions';
+import { createExpense, updateExpense, deleteExpense, createPayout, updatePayout, deletePayout, renameFirm, updateFirmLogo } from '@/app/dashboard/expenses/actions';
+import { createClient } from '@/lib/supabase/client';
 import { useToast } from '@/components/ui/Toast';
 import { ExpensesEmptyIcon } from '@/components/ui/EmptyStates';
 
@@ -44,10 +45,19 @@ function todayStr() {
   return new Date().toISOString().slice(0, 10);
 }
 
-/** Capitalize first letter of each word */
 function capitalizeWords(str) {
   if (!str) return '';
   return str.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/* ─── Pencil Icon ────────────────────────────────────────────── */
+
+function PencilIcon({ className = 'h-3.5 w-3.5' }) {
+  return (
+    <svg className={className} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" />
+    </svg>
+  );
 }
 
 /* ─── Stat Cards ─────────────────────────────────────────────── */
@@ -78,7 +88,7 @@ function SecStat({ label, value }) {
 
 /* ─── Autocomplete Input ─────────────────────────────────────── */
 
-function FirmNameInput({ value, onChange, existingFirms, placeholder }) {
+function FirmNameInput({ value, onChange, existingFirms, placeholder, disabled }) {
   const [focused, setFocused] = useState(false);
   const suggestions = value.length >= 1
     ? existingFirms.filter((fn) => fn.toLowerCase().startsWith(value.toLowerCase()) && fn.toLowerCase() !== value.toLowerCase())
@@ -88,13 +98,14 @@ function FirmNameInput({ value, onChange, existingFirms, placeholder }) {
   return (
     <div className="relative">
       <input
-        className={field}
+        className={field + (disabled ? ' opacity-50 cursor-not-allowed' : '')}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 150)}
         placeholder={placeholder || 'e.g. FTMO, Topstep, Apex...'}
         required
+        disabled={disabled}
       />
       {showDropdown && (
         <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-white/10 bg-[#12121a] shadow-xl">
@@ -120,7 +131,7 @@ function Modal({ open, onClose, title, children }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="mx-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#0e0e18] p-4 sm:p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="mx-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#0e0e18] p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">{title}</h2>
           <button onClick={onClose} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
@@ -133,13 +144,22 @@ function Modal({ open, onClose, title, children }) {
 
 /* ─── Add Expense Form ───────────────────────────────────────── */
 
-function AddExpenseForm({ onSave, onCancel, existingFirms }) {
-  const [f, setF] = useState({ firm_name: '', account_type: 'futures', account_size: '$50K', purchase_type: 'new', account_cost: '', num_accounts: 1, total_cost: '', expense_date: todayStr(), notes: '' });
+function AddExpenseForm({ onSave, onCancel, existingFirms, defaultFirmName }) {
+  const [f, setF] = useState({
+    firm_name: defaultFirmName || '',
+    account_type: 'futures',
+    account_size: '$50K',
+    purchase_type: 'new',
+    account_cost: '',
+    num_accounts: 1,
+    total_cost: '',
+    expense_date: todayStr(),
+    notes: ''
+  });
   const [saving, setSaving] = useState(false);
 
   function set(k, v) { setF((p) => ({ ...p, [k]: v })); }
 
-  /** Update cost fields with auto-calculation */
   function setCostField(k, v) {
     setF((p) => {
       const next = { ...p, [k]: v };
@@ -169,7 +189,7 @@ function AddExpenseForm({ onSave, onCancel, existingFirms }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className={labelCls}>Prop firm name *</label>
-        <FirmNameInput value={f.firm_name} onChange={(v) => set('firm_name', v)} existingFirms={existingFirms} placeholder="e.g. FTMO, Topstep, Apex..." />
+        <FirmNameInput value={f.firm_name} onChange={(v) => set('firm_name', v)} existingFirms={existingFirms} placeholder="e.g. FTMO, Topstep, Apex..." disabled={!!defaultFirmName} />
       </div>
 
       <div>
@@ -209,7 +229,6 @@ function AddExpenseForm({ onSave, onCancel, existingFirms }) {
         </div>
       </div>
 
-      {/* Cost row — aligned 3 columns */}
       <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
         <div>
           <label className={labelCls}>Cost per acct ($) *</label>
@@ -218,7 +237,7 @@ function AddExpenseForm({ onSave, onCancel, existingFirms }) {
         <div>
           <label className={labelCls}>Accounts</label>
           <div className="flex items-center gap-1.5">
-            <button type="button" onClick={() => adjustAccounts(-1)} className="grid h-[42px] w-10 place-items-center rounded-lg border border-white/10 bg-black/30 text-lg text-white/60 hover:text-white">−</button>
+            <button type="button" onClick={() => adjustAccounts(-1)} className="grid h-[42px] w-10 place-items-center rounded-lg border border-white/10 bg-black/30 text-lg text-white/60 hover:text-white">&minus;</button>
             <span className="grid h-[42px] w-10 place-items-center font-display text-lg font-bold">{f.num_accounts}</span>
             <button type="button" onClick={() => adjustAccounts(1)} className="grid h-[42px] w-10 place-items-center rounded-lg border border-white/10 bg-black/30 text-lg text-white/60 hover:text-white">+</button>
           </div>
@@ -244,10 +263,131 @@ function AddExpenseForm({ onSave, onCancel, existingFirms }) {
   );
 }
 
+/* ─── Edit Expense Form ──────────────────────────────────────── */
+
+function EditExpenseForm({ expense, onSave, onCancel, existingFirms }) {
+  const [f, setF] = useState({
+    firm_name: expense.firm_name || '',
+    account_type: expense.account_type || 'futures',
+    account_size: expense.account_size || '$50K',
+    purchase_type: expense.purchase_type || 'new',
+    account_cost: expense.account_cost?.toString() || '',
+    num_accounts: expense.num_accounts || 1,
+    total_cost: expense.total_cost?.toString() || '',
+    expense_date: expense.expense_date || todayStr(),
+    notes: expense.notes || ''
+  });
+  const [saving, setSaving] = useState(false);
+
+  function set(k, v) { setF((p) => ({ ...p, [k]: v })); }
+
+  function setCostField(k, v) {
+    setF((p) => {
+      const next = { ...p, [k]: v };
+      const cost = Number(next.account_cost) || 0;
+      const count = Number(next.num_accounts) || 1;
+      next.total_cost = cost > 0 ? (cost * count).toFixed(2) : '';
+      return next;
+    });
+  }
+
+  function adjustAccounts(delta) {
+    setF((p) => {
+      const count = Math.max(1, Math.min(100, (p.num_accounts || 1) + delta));
+      const cost = Number(p.account_cost) || 0;
+      return { ...p, num_accounts: count, total_cost: cost > 0 ? (cost * count).toFixed(2) : '' };
+    });
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSaving(true);
+    await onSave(expense.id, { ...f, firm_name: capitalizeWords(f.firm_name) });
+    setSaving(false);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className={labelCls}>Prop firm name *</label>
+        <FirmNameInput value={f.firm_name} onChange={(v) => set('firm_name', v)} existingFirms={existingFirms} />
+      </div>
+
+      <div>
+        <label className={labelCls}>Account type</label>
+        <div className="flex gap-2">
+          {['futures', 'cfd'].map((t) => (
+            <button key={t} type="button" onClick={() => set('account_type', t)}
+              className={'flex-1 rounded-lg border px-3 py-2.5 text-sm font-semibold capitalize ' + (f.account_type === t ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}>
+              {t === 'cfd' ? 'CFD' : 'Futures'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls}>Account size</label>
+          <select className={field} value={f.account_size} onChange={(e) => set('account_size', e.target.value)}>
+            {ACCOUNT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Date</label>
+          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.expense_date} onChange={(e) => set('expense_date', e.target.value)} />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelCls}>Purchase type</label>
+        <div className="flex flex-wrap gap-2">
+          {['new', 'renewal', 'activation'].map((t) => (
+            <button key={t} type="button" onClick={() => set('purchase_type', t)}
+              className={'flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ' + (f.purchase_type === t ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300' : 'border-white/10 bg-black/30 text-white/50')}>
+              {PURCHASE_LABELS[t]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 items-end gap-4 sm:grid-cols-[1fr_auto_1fr]">
+        <div>
+          <label className={labelCls}>Cost per acct ($) *</label>
+          <input className={field} value={f.account_cost} onChange={(e) => setCostField('account_cost', e.target.value)} inputMode="decimal" placeholder="0.00" required />
+        </div>
+        <div>
+          <label className={labelCls}>Accounts</label>
+          <div className="flex items-center gap-1.5">
+            <button type="button" onClick={() => adjustAccounts(-1)} className="grid h-[42px] w-10 place-items-center rounded-lg border border-white/10 bg-black/30 text-lg text-white/60 hover:text-white">&minus;</button>
+            <span className="grid h-[42px] w-10 place-items-center font-display text-lg font-bold">{f.num_accounts}</span>
+            <button type="button" onClick={() => adjustAccounts(1)} className="grid h-[42px] w-10 place-items-center rounded-lg border border-white/10 bg-black/30 text-lg text-white/60 hover:text-white">+</button>
+          </div>
+        </div>
+        <div>
+          <label className={labelCls}>Total cost ($)</label>
+          <input className={field + ' bg-white/[0.02] text-white/70'} value={f.total_cost} readOnly tabIndex={-1} placeholder="Auto" />
+        </div>
+      </div>
+
+      <div>
+        <label className={labelCls}>Notes (optional)</label>
+        <textarea className={field} rows={2} value={f.notes} onChange={(e) => set('notes', e.target.value)} placeholder="e.g. 2nd attempt, renewal after drawdown violation..." />
+      </div>
+
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
+        <button type="submit" disabled={saving || !f.account_cost} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+          {saving ? <><Spinner /> Saving...</> : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
 /* ─── Add Payout Form ────────────────────────────────────────── */
 
-function AddPayoutForm({ onSave, onCancel, existingFirms }) {
-  const [f, setF] = useState({ firm_name: '', amount: '', payout_date: todayStr(), notes: '' });
+function AddPayoutForm({ onSave, onCancel, existingFirms, defaultFirmName }) {
+  const [f, setF] = useState({ firm_name: defaultFirmName || '', amount: '', payout_date: todayStr(), notes: '' });
   const [saving, setSaving] = useState(false);
 
   function set(k, v) { setF((p) => ({ ...p, [k]: v })); }
@@ -263,7 +403,7 @@ function AddPayoutForm({ onSave, onCancel, existingFirms }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className={labelCls}>Prop firm name *</label>
-        <FirmNameInput value={f.firm_name} onChange={(v) => set('firm_name', v)} existingFirms={existingFirms} placeholder="e.g. FTMO, Topstep..." />
+        <FirmNameInput value={f.firm_name} onChange={(v) => set('firm_name', v)} existingFirms={existingFirms} placeholder="e.g. FTMO, Topstep..." disabled={!!defaultFirmName} />
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -289,15 +429,300 @@ function AddPayoutForm({ onSave, onCancel, existingFirms }) {
   );
 }
 
+/* ─── Edit Payout Form ───────────────────────────────────────── */
+
+function EditPayoutForm({ payout, onSave, onCancel, existingFirms }) {
+  const [f, setF] = useState({
+    firm_name: payout.firm_name || '',
+    amount: payout.amount?.toString() || '',
+    payout_date: payout.payout_date || todayStr(),
+    notes: payout.notes || ''
+  });
+  const [saving, setSaving] = useState(false);
+
+  function set(k, v) { setF((p) => ({ ...p, [k]: v })); }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setSaving(true);
+    await onSave(payout.id, { ...f, firm_name: capitalizeWords(f.firm_name) });
+    setSaving(false);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className={labelCls}>Prop firm name *</label>
+        <FirmNameInput value={f.firm_name} onChange={(v) => set('firm_name', v)} existingFirms={existingFirms} />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className={labelCls}>Amount ($) *</label>
+          <input className={field} value={f.amount} onChange={(e) => set('amount', e.target.value)} inputMode="decimal" placeholder="0.00" required />
+        </div>
+        <div>
+          <label className={labelCls}>Date</label>
+          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.payout_date} onChange={(e) => set('payout_date', e.target.value)} />
+        </div>
+      </div>
+      <div>
+        <label className={labelCls}>Notes (optional)</label>
+        <textarea className={field} rows={2} value={f.notes} onChange={(e) => set('notes', e.target.value)} placeholder="e.g. $1.5k requested, got $1.2k after 20% cut" />
+      </div>
+      <div className="flex gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
+        <button type="submit" disabled={saving} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
+          {saving ? <><Spinner /> Saving...</> : 'Save Changes'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+/* ─── Firm Dashboard ─────────────────────────────────────────── */
+
+function FirmDashboard({
+  firmName, expenses, payouts, profile,
+  onBack, onDeleteExpense, onDeletePayout,
+  onEditExpense, onEditPayout,
+  onAddExpense, onAddPayout,
+  onRenameFirm, onUpdateLogo, toast
+}) {
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editName, setEditName] = useState(firmName);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [savingName, setSavingName] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const totalExpenses = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
+  const totalPayouts = payouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
+  const netPL = totalPayouts - totalExpenses;
+  const totalAccounts = expenses.reduce((a, e) => a + (Number(e.num_accounts) || 0), 0);
+
+  async function handleSaveName() {
+    const trimmed = capitalizeWords(editName);
+    if (!trimmed) { setIsEditingName(false); return; }
+    if (trimmed === firmName) { setIsEditingName(false); return; }
+    setSavingName(true);
+    await onRenameFirm(firmName, trimmed);
+    setSavingName(false);
+    setIsEditingName(false);
+  }
+
+  function handleNameKeyDown(e) {
+    if (e.key === 'Enter') { e.preventDefault(); handleSaveName(); }
+    if (e.key === 'Escape') { setIsEditingName(false); setEditName(firmName); }
+  }
+
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      if (toast) toast.error('Logo must be under 2MB');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const supabase = createClient();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+      const path = `firm-logos/${Date.now()}.${ext}`;
+
+      const { error } = await supabase.storage.from('avatars').upload(path, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+
+      if (error) {
+        if (toast) toast.error('Upload failed: ' + error.message);
+        setUploadingLogo(false);
+        return;
+      }
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+      await onUpdateLogo(firmName, publicUrl);
+      if (toast) toast.success('Logo updated!');
+    } catch (err) {
+      if (toast) toast.error('Upload failed');
+    }
+    setUploadingLogo(false);
+    // Reset input so same file can be re-selected
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  return (
+    <div className="px-4 sm:px-6 py-8">
+      {/* Back button */}
+      <button
+        onClick={onBack}
+        className="mb-6 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.05] hover:text-white/80"
+      >
+        <span className="text-lg">&larr;</span> Back to Expenses
+      </button>
+
+      {/* Firm Header */}
+      <div className="mb-8 flex items-center gap-4 sm:gap-5">
+        {/* Logo / Avatar — clickable for upload */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploadingLogo}
+          className="group relative grid h-16 w-16 flex-shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[0.04] font-display text-2xl font-bold transition-all hover:border-cyan-400/40 hover:bg-white/[0.08] sm:h-20 sm:w-20 sm:text-3xl overflow-hidden"
+          title="Click to upload logo"
+        >
+          {profile?.logo_url ? (
+            <img src={profile.logo_url} alt={firmName} className="h-full w-full rounded-2xl object-cover" />
+          ) : (
+            <span style={gradientText}>{firmInitial(firmName)}</span>
+          )}
+          {/* Camera overlay on hover */}
+          <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+            {uploadingLogo ? (
+              <Spinner />
+            ) : (
+              <svg className="h-6 w-6 text-white/80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+            )}
+          </div>
+        </button>
+        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+
+        {/* Firm name — inline edit */}
+        <div className="min-w-0 flex-1">
+          {isEditingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                className="rounded-lg border border-cyan-400/50 bg-black/40 px-3 py-2 font-display text-xl font-bold outline-none sm:text-2xl"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onBlur={handleSaveName}
+                onKeyDown={handleNameKeyDown}
+                autoFocus
+                disabled={savingName}
+              />
+              {savingName && <Spinner />}
+            </div>
+          ) : (
+            <button
+              onClick={() => { setIsEditingName(true); setEditName(firmName); }}
+              className="group flex items-center gap-2 text-left"
+            >
+              <h1 className="font-display text-2xl font-bold sm:text-3xl">{firmName}</h1>
+              <PencilIcon className="h-4 w-4 text-white/30 transition-colors group-hover:text-cyan-400" />
+            </button>
+          )}
+          <div className="mt-1 flex items-center gap-3 font-mono text-xs text-white/45">
+            <span>{totalAccounts} account{totalAccounts !== 1 ? 's' : ''}</span>
+            <span>&middot;</span>
+            <span>{expenses.length} expense{expenses.length !== 1 ? 's' : ''}</span>
+            <span>&middot;</span>
+            <span>{payouts.length} payout{payouts.length !== 1 ? 's' : ''}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="mb-8 grid gap-4 sm:grid-cols-3">
+        <HeroStat label="Total Expenses" value={fmtCurrency(totalExpenses)} tone="red" icon="&#8595;" />
+        <HeroStat label="Total Payouts" value={fmtCurrency(totalPayouts)} tone="green" icon="&#8593;" />
+        <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon="&#9651;" />
+      </div>
+
+      {/* Expenses Section */}
+      <div className="mb-8">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-base font-semibold">
+            Expenses <span className="ml-1 font-mono text-xs text-white/40">({expenses.length})</span>
+          </h2>
+          <button onClick={onAddExpense} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            + Add Expense
+          </button>
+        </div>
+
+        {expenses.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+            <p className="text-sm text-white/40">No expenses for {firmName} yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {expenses.map((e) => (
+              <div key={e.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="font-mono text-white/50">{e.num_accounts} Acct{e.num_accounts > 1 ? 's' : ''}</span>
+                    {e.account_size && <span className="font-mono text-white/50">{e.account_size}</span>}
+                    {e.account_type && <span className="font-mono uppercase text-white/35">{e.account_type}</span>}
+                    {e.purchase_type && (
+                      <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (PURCHASE_COLORS[e.purchase_type] || '')}>
+                        {PURCHASE_LABELS[e.purchase_type]}
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-0.5 font-mono text-[11px] text-white/35">{fmtDate(e.expense_date)}</div>
+                  {e.notes && <p className="mt-0.5 text-[11px] text-white/35">{e.notes}</p>}
+                </div>
+                <div className="font-mono text-sm font-bold text-red-400">{fmtCurrency(e.total_cost)}</div>
+                <button onClick={() => onEditExpense(e)} className="grid h-8 w-8 place-items-center rounded text-white/30 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors" title="Edit">
+                  <PencilIcon className="h-3 w-3" />
+                </button>
+                <button onClick={() => onDeleteExpense(e.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Payouts Section */}
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="font-display text-base font-semibold">
+            Payouts <span className="ml-1 font-mono text-xs text-white/40">({payouts.length})</span>
+          </h2>
+          <button onClick={onAddPayout} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
+            + Add Payout
+          </button>
+        </div>
+
+        {payouts.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+            <p className="text-sm text-white/40">No payouts from {firmName} yet.</p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {payouts.map((p) => (
+              <div key={p.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
+                  {p.notes && <p className="mt-0.5 text-xs text-white/50">{p.notes}</p>}
+                </div>
+                <div className="font-mono text-sm font-bold text-emerald-400">+{fmtCurrency(p.amount)}</div>
+                <button onClick={() => onEditPayout(p)} className="grid h-8 w-8 place-items-center rounded text-white/30 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors" title="Edit">
+                  <PencilIcon className="h-3 w-3" />
+                </button>
+                <button onClick={() => onDeletePayout(p.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Component ─────────────────────────────────────────── */
 
-export default function ExpenseTracker({ expenses, payouts }) {
+export default function ExpenseTracker({ expenses, payouts, firmProfiles = [] }) {
   const router = useRouter();
   const toast = useToast();
   const [tab, setTab] = useState('Dashboard');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showPayoutForm, setShowPayoutForm] = useState(false);
   const [expandedFirm, setExpandedFirm] = useState(null);
+  const [selectedFirm, setSelectedFirm] = useState(null);
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [editingPayout, setEditingPayout] = useState(null);
 
   // Aggregates
   const totalExpense = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
@@ -321,11 +746,24 @@ export default function ExpenseTracker({ expenses, payouts }) {
   const firms = useMemo(() => Object.values(firmMap).sort((a, b) => b.totalCost - a.totalCost), [firmMap]);
   const firmNames = useMemo(() => [...new Set([...expenses.map((e) => e.firm_name), ...payouts.map((p) => p.firm_name)])].filter(Boolean).sort(), [expenses, payouts]);
 
+  // Firm profiles map
+  const firmProfileMap = useMemo(() => {
+    const map = {};
+    firmProfiles.forEach((fp) => { map[fp.firm_name] = fp; });
+    return map;
+  }, [firmProfiles]);
+
   // Handlers
   async function handleAddExpense(data) {
     const res = await createExpense(data);
     if (res.error) { if (toast) toast.error(res.error); }
     else { if (toast) toast.success('Expense added!'); setShowExpenseForm(false); router.refresh(); }
+  }
+
+  async function handleUpdateExpense(id, data) {
+    const res = await updateExpense(id, data);
+    if (res.error) { if (toast) toast.error(res.error); }
+    else { if (toast) toast.success('Expense updated!'); setEditingExpense(null); router.refresh(); }
   }
 
   async function handleDeleteExpense(id) {
@@ -341,6 +779,12 @@ export default function ExpenseTracker({ expenses, payouts }) {
     else { if (toast) toast.success('Payout added!'); setShowPayoutForm(false); router.refresh(); }
   }
 
+  async function handleUpdatePayout(id, data) {
+    const res = await updatePayout(id, data);
+    if (res.error) { if (toast) toast.error(res.error); }
+    else { if (toast) toast.success('Payout updated!'); setEditingPayout(null); router.refresh(); }
+  }
+
   async function handleDeletePayout(id) {
     if (!confirm('Delete this payout?')) return;
     const res = await deletePayout(id);
@@ -348,193 +792,232 @@ export default function ExpenseTracker({ expenses, payouts }) {
     else { router.refresh(); }
   }
 
+  async function handleRenameFirm(oldName, newName) {
+    const res = await renameFirm(oldName, newName);
+    if (res.error) { if (toast) toast.error(res.error); }
+    else {
+      if (toast) toast.success('Firm renamed!');
+      setSelectedFirm(newName);
+      router.refresh();
+    }
+  }
+
+  async function handleUpdateFirmLogo(firmNameVal, logoUrl) {
+    const res = await updateFirmLogo(firmNameVal, logoUrl);
+    if (res.error) { if (toast) toast.error(res.error); }
+    else { router.refresh(); }
+  }
+
+  function openFirmDashboard(name) {
+    setSelectedFirm(name);
+  }
+
+  // ─── Render ────────────────────────────────────────────
   return (
-    <div className="px-4 sm:px-6 py-8">
-      {/* Header */}
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-bold">Expenses</h1>
-          <p className="mt-1 text-sm text-white/55">Track your prop firm costs and payouts</p>
-        </div>
-        <button onClick={() => setShowExpenseForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-          + Add Expense
-        </button>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
-        {TABS.map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={'flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ' + (tab === t ? 'bg-white/[0.08] text-white' : 'text-white/45 hover:text-white/70')}>
-            {t}
-          </button>
-        ))}
-      </div>
-
-      {/* ─── Dashboard Tab ──────────────────────────────── */}
-      {tab === 'Dashboard' && (
-        <div className="space-y-6">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <HeroStat label="Total Expense" value={fmtCurrency(totalExpense)} tone="red" icon="&#8595;" />
-            <HeroStat label="Total Payout" value={fmtCurrency(totalPayout)} tone="green" icon="&#8593;" />
-            <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon="&#9651;" />
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 sm:gap-3">
-            <SecStat label="Total Firms" value={firms.length} />
-            <SecStat label="Total Accounts" value={totalAccounts} />
-            <SecStat label="Payouts" value={payouts.length} />
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <div className="mb-4 font-display text-base font-semibold">Recent activity</div>
-            {expenses.length === 0 && payouts.length === 0 ? (
-              <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first expense or payout.</p></div>
-            ) : (
-              <div className="space-y-3">
-                {[...expenses.slice(0, 5).map((e) => ({ type: 'expense', ...e, date: e.expense_date, amt: e.total_cost })),
-                  ...payouts.slice(0, 5).map((p) => ({ type: 'payout', ...p, date: p.payout_date, amt: p.amount }))
-                ]
-                  .sort((a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at))
-                  .slice(0, 8)
-                  .map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
-                      <div className={'grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg font-display text-sm font-bold ' + (item.type === 'payout' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60')}>
-                        {firmInitial(item.firm_name)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold">{item.firm_name}</span>
-                          {item.type === 'expense' && item.purchase_type && (
-                            <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (PURCHASE_COLORS[item.purchase_type] || 'border-white/10 text-white/50')}>
-                              {PURCHASE_LABELS[item.purchase_type] || item.purchase_type}
-                            </span>
-                          )}
-                        </div>
-                        <div className="font-mono text-[11px] text-white/40">{fmtDate(item.date)}</div>
-                        {item.notes && <p className="mt-0.5 text-xs text-white/40">{item.notes}</p>}
-                      </div>
-                      <div className={'font-mono text-sm font-bold ' + (item.type === 'payout' ? 'text-emerald-400' : 'text-red-400')}>
-                        {item.type === 'payout' ? '+' : '-'}{fmtCurrency(item.amt)}
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ─── Accounts Tab ───────────────────────────────── */}
-      {tab === 'Accounts' && (
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-red-400/15 p-5" style={{ background: 'rgba(248,113,113,0.04)' }}>
-            <div className="font-mono text-xs uppercase tracking-wider text-white/45">Total Expense</div>
-            <div className="mt-1 font-display text-3xl font-bold text-red-400">{fmtCurrency(totalExpense)}</div>
-          </div>
-
-          {firms.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
-              <div className="text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No expenses yet. Add your first prop firm expense.</p></div>
-            </div>
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2">
-              {firms.map((firm) => (
-                <div key={firm.name}>
-                  <button onClick={() => setExpandedFirm(expandedFirm === firm.name ? null : firm.name)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-white/20 hover:bg-white/[0.05]">
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl font-display text-base font-bold" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(34,211,238,0.15))' }}>
-                        {firmInitial(firm.name)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-display text-base font-semibold">{firm.name}</div>
-                        <div className="font-mono text-xs text-white/45">{firm.accounts} account{firm.accounts !== 1 ? 's' : ''}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-mono text-base font-bold text-red-400">{fmtCurrency(firm.totalCost)}</div>
-                      </div>
-                    </div>
-                  </button>
-
-                  {expandedFirm === firm.name && (
-                    <div className="mt-1 space-y-2 rounded-b-2xl border border-t-0 border-white/10 bg-white/[0.02] p-4">
-                      {firm.expenses.map((e) => (
-                        <div key={e.id} className="flex items-center gap-3 rounded-lg border border-white/5 bg-black/20 px-3 py-2.5">
-                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2 text-xs">
-                              <span className="font-mono text-white/50">{e.num_accounts} Acct{e.num_accounts > 1 ? 's' : ''}</span>
-                              {e.account_size && <span className="font-mono text-white/50">{e.account_size}</span>}
-                              {e.purchase_type && (
-                                <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (PURCHASE_COLORS[e.purchase_type] || '')}>
-                                  {PURCHASE_LABELS[e.purchase_type]}
-                                </span>
-                              )}
-                            </div>
-                            <div className="mt-0.5 font-mono text-[11px] text-white/35">{fmtDate(e.expense_date)}</div>
-                            {e.notes && <p className="mt-0.5 text-[11px] text-white/35">{e.notes}</p>}
-                          </div>
-                          <div className="font-mono text-sm font-bold text-red-400">{fmtCurrency(e.total_cost)}</div>
-                          <button onClick={() => handleDeleteExpense(e.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400">&#10005;</button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ─── Payouts Tab ────────────────────────────────── */}
-      {tab === 'Payouts' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-2xl border border-emerald-400/15 p-5" style={{ background: 'rgba(52,211,153,0.04)' }}>
+    <div>
+      {selectedFirm ? (
+        <FirmDashboard
+          firmName={selectedFirm}
+          expenses={expenses.filter((e) => e.firm_name === selectedFirm)}
+          payouts={payouts.filter((p) => p.firm_name === selectedFirm)}
+          profile={firmProfileMap[selectedFirm]}
+          onBack={() => setSelectedFirm(null)}
+          onDeleteExpense={handleDeleteExpense}
+          onDeletePayout={handleDeletePayout}
+          onEditExpense={setEditingExpense}
+          onEditPayout={setEditingPayout}
+          onAddExpense={() => setShowExpenseForm(true)}
+          onAddPayout={() => setShowPayoutForm(true)}
+          onRenameFirm={handleRenameFirm}
+          onUpdateLogo={handleUpdateFirmLogo}
+          toast={toast}
+        />
+      ) : (
+        <div className="px-4 sm:px-6 py-8">
+          {/* Header */}
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="font-mono text-xs uppercase tracking-wider text-white/45">Total Payouts</div>
-              <div className="mt-1 font-display text-3xl font-bold text-emerald-400">{fmtCurrency(totalPayout)}</div>
+              <h1 className="font-display text-2xl font-bold">Expenses</h1>
+              <p className="mt-1 text-sm text-white/55">Track your prop firm costs and payouts</p>
             </div>
-            <button onClick={() => setShowPayoutForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
-              + Add Payout
+            <button onClick={() => setShowExpenseForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+              + Add Expense
             </button>
           </div>
 
-          {payouts.length === 0 ? (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
-              <ExpensesEmptyIcon />
-              <p className="text-sm text-white/40">No payouts recorded yet. Add your first payout!</p>
+          {/* Tab Navigation */}
+          <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+            {TABS.map((t) => (
+              <button key={t} onClick={() => setTab(t)}
+                className={'flex-1 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all ' + (tab === t ? 'bg-white/[0.08] text-white' : 'text-white/45 hover:text-white/70')}>
+                {t}
+              </button>
+            ))}
+          </div>
+
+          {/* ─── Dashboard Tab ──────────────────────────────── */}
+          {tab === 'Dashboard' && (
+            <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <HeroStat label="Total Expense" value={fmtCurrency(totalExpense)} tone="red" icon="&#8595;" />
+                <HeroStat label="Total Payout" value={fmtCurrency(totalPayout)} tone="green" icon="&#8593;" />
+                <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon="&#9651;" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <SecStat label="Total Firms" value={firms.length} />
+                <SecStat label="Total Accounts" value={totalAccounts} />
+                <SecStat label="Payouts" value={payouts.length} />
+              </div>
+
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                <div className="mb-4 font-display text-base font-semibold">Recent activity</div>
+                {expenses.length === 0 && payouts.length === 0 ? (
+                  <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first expense or payout.</p></div>
+                ) : (
+                  <div className="space-y-3">
+                    {[...expenses.slice(0, 5).map((e) => ({ type: 'expense', ...e, date: e.expense_date, amt: e.total_cost })),
+                      ...payouts.slice(0, 5).map((p) => ({ type: 'payout', ...p, date: p.payout_date, amt: p.amount }))
+                    ]
+                      .sort((a, b) => new Date(b.date || b.created_at) - new Date(a.date || a.created_at))
+                      .slice(0, 8)
+                      .map((item, i) => (
+                        <div key={i} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
+                          <div className={'grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg font-display text-sm font-bold ' + (item.type === 'payout' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60')}>
+                            {firmProfileMap[item.firm_name]?.logo_url ? (
+                              <img src={firmProfileMap[item.firm_name].logo_url} alt="" className="h-full w-full rounded-lg object-cover" />
+                            ) : firmInitial(item.firm_name)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <button onClick={() => openFirmDashboard(item.firm_name)} className="text-sm font-semibold hover:text-cyan-300 transition-colors">{item.firm_name}</button>
+                              {item.type === 'expense' && item.purchase_type && (
+                                <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (PURCHASE_COLORS[item.purchase_type] || 'border-white/10 text-white/50')}>
+                                  {PURCHASE_LABELS[item.purchase_type] || item.purchase_type}
+                                </span>
+                              )}
+                            </div>
+                            <div className="font-mono text-[11px] text-white/40">{fmtDate(item.date)}</div>
+                            {item.notes && <p className="mt-0.5 text-xs text-white/40">{item.notes}</p>}
+                          </div>
+                          <div className={'font-mono text-sm font-bold ' + (item.type === 'payout' ? 'text-emerald-400' : 'text-red-400')}>
+                            {item.type === 'payout' ? '+' : '-'}{fmtCurrency(item.amt)}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {payouts.map((p) => (
-                <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                  <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 font-display text-sm font-bold text-emerald-300">
-                    {firmInitial(p.firm_name)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-display text-base font-semibold">{p.firm_name}</div>
-                    <div className="font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
-                    {p.notes && <p className="mt-1 text-xs text-white/50">{p.notes}</p>}
-                  </div>
-                  <div className="text-right">
-                    <div className="font-mono text-lg font-bold text-emerald-400">+{fmtCurrency(p.amount)}</div>
-                  </div>
-                  <button onClick={() => handleDeletePayout(p.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400">&#10005;</button>
+          )}
+
+          {/* ─── Accounts Tab ───────────────────────────────── */}
+          {tab === 'Accounts' && (
+            <div className="space-y-4">
+              <div className="rounded-2xl border border-red-400/15 p-5" style={{ background: 'rgba(248,113,113,0.04)' }}>
+                <div className="font-mono text-xs uppercase tracking-wider text-white/45">Total Expense</div>
+                <div className="mt-1 font-display text-3xl font-bold text-red-400">{fmtCurrency(totalExpense)}</div>
+              </div>
+
+              {firms.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
+                  <div className="text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No expenses yet. Add your first prop firm expense.</p></div>
                 </div>
-              ))}
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {firms.map((firm) => (
+                    <div key={firm.name}>
+                      <button onClick={() => openFirmDashboard(firm.name)}
+                        className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-cyan-400/30 hover:bg-white/[0.05]">
+                        <div className="flex items-center gap-3">
+                          <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl font-display text-base font-bold overflow-hidden" style={{ background: firmProfileMap[firm.name]?.logo_url ? 'transparent' : 'linear-gradient(135deg, rgba(139,92,246,0.2), rgba(34,211,238,0.15))' }}>
+                            {firmProfileMap[firm.name]?.logo_url ? (
+                              <img src={firmProfileMap[firm.name].logo_url} alt={firm.name} className="h-full w-full rounded-xl object-cover" />
+                            ) : firmInitial(firm.name)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-display text-base font-semibold">{firm.name}</div>
+                            <div className="font-mono text-xs text-white/45">{firm.accounts} account{firm.accounts !== 1 ? 's' : ''}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-mono text-base font-bold text-red-400">{fmtCurrency(firm.totalCost)}</div>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── Payouts Tab ────────────────────────────────── */}
+          {tab === 'Payouts' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-2xl border border-emerald-400/15 p-5" style={{ background: 'rgba(52,211,153,0.04)' }}>
+                <div>
+                  <div className="font-mono text-xs uppercase tracking-wider text-white/45">Total Payouts</div>
+                  <div className="mt-1 font-display text-3xl font-bold text-emerald-400">{fmtCurrency(totalPayout)}</div>
+                </div>
+                <button onClick={() => setShowPayoutForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
+                  + Add Payout
+                </button>
+              </div>
+
+              {payouts.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
+                  <ExpensesEmptyIcon />
+                  <p className="text-sm text-white/40">No payouts recorded yet. Add your first payout!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {payouts.map((p) => (
+                    <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                      <button onClick={() => openFirmDashboard(p.firm_name)} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 font-display text-sm font-bold text-emerald-300 overflow-hidden">
+                        {firmProfileMap[p.firm_name]?.logo_url ? (
+                          <img src={firmProfileMap[p.firm_name].logo_url} alt={p.firm_name} className="h-full w-full rounded-xl object-cover" />
+                        ) : firmInitial(p.firm_name)}
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <button onClick={() => openFirmDashboard(p.firm_name)} className="font-display text-base font-semibold hover:text-cyan-300 transition-colors">{p.firm_name}</button>
+                        <div className="font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
+                        {p.notes && <p className="mt-1 text-xs text-white/50">{p.notes}</p>}
+                      </div>
+                      <div className="text-right">
+                        <div className="font-mono text-lg font-bold text-emerald-400">+{fmtCurrency(p.amount)}</div>
+                      </div>
+                      <button onClick={() => setEditingPayout(p)} className="grid h-8 w-8 place-items-center rounded text-white/30 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors" title="Edit">
+                        <PencilIcon className="h-3 w-3" />
+                      </button>
+                      <button onClick={() => handleDeletePayout(p.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
       )}
 
-      {/* ─── Modals ─────────────────────────────────────── */}
-      <Modal open={showExpenseForm} onClose={() => setShowExpenseForm(false)} title="Add Expense">
-        <AddExpenseForm onSave={handleAddExpense} onCancel={() => setShowExpenseForm(false)} existingFirms={firmNames} />
+      {/* ─── Modals (always available) ──────────────────── */}
+      <Modal open={showExpenseForm} onClose={() => setShowExpenseForm(false)} title={selectedFirm ? `Add Expense — ${selectedFirm}` : 'Add Expense'}>
+        <AddExpenseForm onSave={handleAddExpense} onCancel={() => setShowExpenseForm(false)} existingFirms={firmNames} defaultFirmName={selectedFirm} />
       </Modal>
 
-      <Modal open={showPayoutForm} onClose={() => setShowPayoutForm(false)} title="Add Payout">
-        <AddPayoutForm onSave={handleAddPayout} onCancel={() => setShowPayoutForm(false)} existingFirms={firmNames} />
+      <Modal open={showPayoutForm} onClose={() => setShowPayoutForm(false)} title={selectedFirm ? `Add Payout — ${selectedFirm}` : 'Add Payout'}>
+        <AddPayoutForm onSave={handleAddPayout} onCancel={() => setShowPayoutForm(false)} existingFirms={firmNames} defaultFirmName={selectedFirm} />
+      </Modal>
+
+      <Modal open={!!editingExpense} onClose={() => setEditingExpense(null)} title="Edit Expense">
+        {editingExpense && (
+          <EditExpenseForm expense={editingExpense} onSave={handleUpdateExpense} onCancel={() => setEditingExpense(null)} existingFirms={firmNames} />
+        )}
+      </Modal>
+
+      <Modal open={!!editingPayout} onClose={() => setEditingPayout(null)} title="Edit Payout">
+        {editingPayout && (
+          <EditPayoutForm payout={editingPayout} onSave={handleUpdatePayout} onCancel={() => setEditingPayout(null)} existingFirms={firmNames} />
+        )}
       </Modal>
     </div>
   );
