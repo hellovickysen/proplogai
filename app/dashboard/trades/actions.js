@@ -131,6 +131,38 @@ export async function createTrade(payload) {
   const dir = payload.direction === 'short' ? 'short' : 'long';
   await notify(supabase, user.id, TYPES.TRADE_LOGGED, 'Trade Logged', `${pair} ${dir} ${fmtPnl(payload.pnl)}`, { link: '/dashboard/trades/' + data.id });
 
+  // ── Check for referral reward (DB trigger fires on 3rd trade) ──
+  try {
+    const { data: referral } = await supabase
+      .from('referrals')
+      .select('referrer_id, reward_given')
+      .eq('referred_user_id', user.id)
+      .eq('reward_given', true)
+      .maybeSingle();
+    if (referral) {
+      const { data: alreadyNotified } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('type', 'referral_reward')
+        .maybeSingle();
+      if (!alreadyNotified) {
+        await notify(supabase, user.id, TYPES.REFERRAL_REWARD, '🎁 Referral Reward', 'You earned $1.00 credit for completing 3 trades!', { link: '/dashboard/referrals' });
+        const { createAdminClient } = await import('@/lib/supabase/admin');
+        const adminSb = createAdminClient();
+        if (adminSb) {
+          await adminSb.from('notifications').insert({
+            user_id: referral.referrer_id,
+            type: 'referral_reward',
+            title: '🎁 Referral Reward',
+            message: 'Your referral completed 3 trades! You earned $1.00 credit.',
+            metadata: { link: '/dashboard/referrals' },
+          });
+        }
+      }
+    }
+  } catch (e) {}
+
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/trades');
   return { ok: true };
