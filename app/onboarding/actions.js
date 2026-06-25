@@ -3,6 +3,16 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
+const DEFAULT_SETUPS = [
+  { name: 'Breakout', direction: 'Only trade breakouts after a confirmed candle close above or below a key level. Avoid chasing if price is already extended.', sort_order: 1 },
+  { name: 'Pullback', direction: 'Trade with the trend after price pulls back to a valid area and shows continuation confirmation.', sort_order: 2 },
+  { name: 'Liquidity Sweep', direction: 'Trade only after price sweeps liquidity and shows rejection or reversal confirmation.', sort_order: 3 },
+  { name: 'Support / Resistance', direction: 'Trade around clearly marked levels with confirmation. Avoid random entries in the middle of a range.', sort_order: 4 },
+  { name: 'Trend Continuation', direction: 'Enter in the direction of the established trend after a healthy retracement or consolidation breakout.', sort_order: 5 },
+  { name: 'Reversal', direction: 'Trade reversals only at major structural levels with multiple confirmations. Higher risk — reduce size.', sort_order: 6 },
+  { name: 'No Setup', direction: 'Use this when the trade did not follow any planned setup, was emotional, or was taken impulsively.', is_default: true, sort_order: 99 },
+];
+
 export async function completeOnboarding(payload) {
   const supabase = createClient();
   const {
@@ -34,6 +44,25 @@ export async function completeOnboarding(payload) {
     error = res.error;
   }
   if (error) return { error: error.message };
+
+  // Seed default setups for the new user (only if they have none)
+  const { count } = await supabase
+    .from('setups')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id);
+
+  if (!count || count === 0) {
+    const setupRows = DEFAULT_SETUPS.map((s) => ({
+      user_id: user.id,
+      name: s.name,
+      direction: s.direction,
+      is_default: s.is_default || false,
+      is_active: true,
+      sort_order: s.sort_order,
+    }));
+    await supabase.from('setups').insert(setupRows);
+  }
+
   revalidatePath('/dashboard');
   return { ok: true };
 }
