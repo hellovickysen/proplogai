@@ -11,6 +11,9 @@ import Link from 'next/link';
 import { num, fmtMoney } from '@/lib/stats';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 
+/* Admin notification types — excluded from user dashboard bell */
+const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup'];
+
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardLayout({ children }) {
@@ -75,11 +78,13 @@ export default async function DashboardLayout({ children }) {
   let notifCount = 0;
   let adminNotifCount = 0;
   try {
-    const { count } = await supabase
+    let q = supabase
       .from('notifications')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('is_read', false);
+    for (const t of ADMIN_NOTIF_TYPES) { q = q.neq('type', t); }
+    const { count } = await q;
     notifCount = count || 0;
   } catch (e) {
     // notifications table may not exist yet (pre-migration)
@@ -109,7 +114,7 @@ export default async function DashboardLayout({ children }) {
             <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:block">PropLogAI</span>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <NotificationBell initialCount={notifCount} />
+            <NotificationBell initialCount={notifCount} excludeTypes={ADMIN_NOTIF_TYPES} />
             <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5 min-h-[44px]">
               <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:inline">Today</span>
               <span className={'font-mono text-xs font-semibold sm:text-sm ' + tone}>{fmtMoney(todayPnl)}</span>

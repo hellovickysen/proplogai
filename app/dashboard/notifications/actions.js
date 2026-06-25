@@ -10,7 +10,7 @@ async function getCtx() {
 }
 
 /* ── Fetch paginated notifications (optional type filter) ── */
-export async function getNotifications(limit = 20, offset = 0, typeFilter = null) {
+export async function getNotifications(limit = 20, offset = 0, typeFilter = null, excludeTypes = null) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
 
@@ -22,6 +22,11 @@ export async function getNotifications(limit = 20, offset = 0, typeFilter = null
   if (typeFilter && typeFilter.length > 0) {
     query = query.in('type', typeFilter);
   }
+  if (excludeTypes && excludeTypes.length > 0) {
+    for (const t of excludeTypes) {
+      query = query.neq('type', t);
+    }
+  }
 
   const { data, error, count } = await query
     .order('created_at', { ascending: false })
@@ -32,7 +37,7 @@ export async function getNotifications(limit = 20, offset = 0, typeFilter = null
 }
 
 /* ── Unread count (optional type filter) ─────────────────── */
-export async function getUnreadCount(typeFilter = null) {
+export async function getUnreadCount(typeFilter = null, excludeTypes = null) {
   const { supabase, user } = await getCtx();
   if (!user) return { count: 0 };
 
@@ -45,6 +50,11 @@ export async function getUnreadCount(typeFilter = null) {
   if (typeFilter && typeFilter.length > 0) {
     query = query.in('type', typeFilter);
   }
+  if (excludeTypes && excludeTypes.length > 0) {
+    for (const t of excludeTypes) {
+      query = query.neq('type', t);
+    }
+  }
 
   const { count, error } = await query;
 
@@ -53,7 +63,7 @@ export async function getUnreadCount(typeFilter = null) {
 }
 
 /* ── Mark ALL as read (optional type filter) ─────────────── */
-export async function markAllAsRead(typeFilter = null) {
+export async function markAllAsRead(typeFilter = null, excludeTypes = null) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
 
@@ -65,6 +75,11 @@ export async function markAllAsRead(typeFilter = null) {
 
   if (typeFilter && typeFilter.length > 0) {
     query = query.in('type', typeFilter);
+  }
+  if (excludeTypes && excludeTypes.length > 0) {
+    for (const t of excludeTypes) {
+      query = query.neq('type', t);
+    }
   }
 
   const { error } = await query;

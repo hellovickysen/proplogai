@@ -44,7 +44,7 @@ function BellIcon({ className }) {
 }
 
 /* ── Main component ──────────────────────────────────────── */
-export default function NotificationBell({ initialCount = 0, typeFilter = null }) {
+export default function NotificationBell({ initialCount = 0, typeFilter = null, excludeTypes = null }) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(initialCount);
   const [items, setItems] = useState([]);
@@ -71,7 +71,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null }
   /* Poll unread count every 60s */
   useEffect(() => {
     const id = setInterval(async () => {
-      const res = await getUnreadCount(typeFilter);
+      const res = await getUnreadCount(typeFilter, excludeTypes);
       if (typeof res.count === 'number') setCount(res.count);
     }, 60_000);
     return () => clearInterval(id);
@@ -83,15 +83,15 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null }
   /* Fetch notifications when panel opens */
   const fetchItems = useCallback(async () => {
     setLoading(true);
-    const res = await getNotifications(15, 0, typeFilter);
+    const res = await getNotifications(15, 0, typeFilter, excludeTypes);
     if (res.data) {
       setItems(res.data);
       setHasMore((res.total || 0) > 15);
     }
-    const c = await getUnreadCount(typeFilter);
+    const c = await getUnreadCount(typeFilter, excludeTypes);
     if (typeof c.count === 'number') setCount(c.count);
     setLoading(false);
-  }, [typeFilter]);
+  }, [typeFilter, excludeTypes]);
 
   function toggle() {
     const next = !open;
@@ -101,7 +101,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null }
 
   /* Mark all as read */
   async function handleMarkAll() {
-    await markAllAsRead(typeFilter);
+    await markAllAsRead(typeFilter, excludeTypes);
     setItems((prev) => prev.map((n) => ({ ...n, is_read: true })));
     setCount(0);
   }
