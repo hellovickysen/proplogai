@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSetup, updateSetup, deleteSetup, seedDefaultSetups } from '@/app/dashboard/rulebook/actions';
+import { createSetup, updateSetup, deleteSetup, seedDefaultSetups, resetToDefaultSetups } from '@/app/dashboard/rulebook/actions';
 import { useToast } from '@/components/ui/Toast';
 import { RulebookEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -111,6 +111,8 @@ export default function RulebookPage({ setups }) {
   const toast = useToast();
   const [editing, setEditing] = useState(null);
   const [seeding, setSeeding] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const activeSetups = setups.filter((s) => s.is_active);
@@ -162,6 +164,19 @@ export default function RulebookPage({ setups }) {
 
   function handleDelete(id) {
     setPendingDeleteId(id);
+  }
+
+  async function handleResetToDefaults() {
+    setShowResetConfirm(false);
+    setResetting(true);
+    const res = await resetToDefaultSetups();
+    if (res.error) {
+      if (toast) toast.error(res.error);
+    } else {
+      if (toast) toast.success('Default setups restored!');
+      router.refresh();
+    }
+    setResetting(false);
   }
 
   async function handleConfirmDelete() {
@@ -266,6 +281,18 @@ export default function RulebookPage({ setups }) {
         </div>
       )}
 
+      {/* Restore defaults */}
+      <div className="mt-8 border-t border-white/[0.06] pt-6">
+        <button
+          onClick={() => setShowResetConfirm(true)}
+          disabled={resetting}
+          className="text-xs text-white/40 underline hover:text-white/60 disabled:opacity-50"
+        >
+          {resetting ? 'Restoring...' : 'Restore default setups'}
+        </button>
+        <p className="mt-1 text-[10px] text-white/25">Replaces all your current setups with the 7 default setups.</p>
+      </div>
+
       {/* Delete confirmation */}
       <ConfirmDialog
         open={!!pendingDeleteId}
@@ -273,6 +300,16 @@ export default function RulebookPage({ setups }) {
         onConfirm={handleConfirmDelete}
         title="Delete this setup?"
         message="This action can't be undone. Trades using this setup will keep their history."
+      />
+
+      {/* Reset confirmation */}
+      <ConfirmDialog
+        open={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={handleResetToDefaults}
+        title="Restore default setups?"
+        message="This will remove all your current setups and replace them with the 7 defaults. This action can't be undone."
+        confirmLabel="Restore"
       />
     </div>
   );

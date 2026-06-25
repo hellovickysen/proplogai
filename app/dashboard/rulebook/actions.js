@@ -53,6 +53,30 @@ export async function seedDefaultSetups() {
   return { ok: true, seeded: true };
 }
 
+export async function resetToDefaultSetups() {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'Not signed in.' };
+
+  // Delete all existing setups for this user
+  await supabase.from('setups').delete().eq('user_id', user.id);
+
+  // Re-insert defaults
+  const rows = DEFAULT_SETUPS.map((s) => ({
+    user_id: user.id,
+    name: s.name,
+    direction: s.direction,
+    is_default: s.is_default || false,
+    is_active: true,
+    sort_order: s.sort_order,
+  }));
+
+  const { error } = await supabase.from('setups').insert(rows);
+  if (error) return { error: error.message };
+  revalidatePath('/dashboard/rulebook');
+  revalidatePath('/dashboard/trades/new');
+  return { ok: true };
+}
+
 export async function createSetup(payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
