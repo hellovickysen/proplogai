@@ -82,6 +82,8 @@ export default function LoginPage() {
     try {
       const p = new URLSearchParams(window.location.search);
       if (p.get('signup') === '1' || p.get('mode') === 'signup') setMode('signup');
+      if (p.get('verified') === '1') setMsg('Email verified! You can now sign in.');
+      if (p.get('error') === 'verification_failed') setError('Verification link expired or invalid. Please try signing up again.');
     } catch (e) {}
   }, []);
 
