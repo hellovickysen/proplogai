@@ -494,7 +494,7 @@ function FirmDashboard({
   const totalExpenses = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
   const totalPayouts = payouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
   const netPL = totalPayouts - totalExpenses;
-  const totalAccounts = expenses.reduce((a, e) => a + (Number(e.num_accounts) || 0), 0);
+  const totalAccounts = expenses.reduce((a, e) => a + (e.purchase_type === 'new' ? (Number(e.num_accounts) || 0) : 0), 0);
 
   async function handleSaveName() {
     const trimmed = capitalizeWords(editName);
@@ -670,7 +670,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
   const totalExpense = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
   const totalPayout = payouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
   const netPL = totalPayout - totalExpense;
-  const totalAccounts = expenses.reduce((a, e) => a + (Number(e.num_accounts) || 0), 0);
+  const totalAccounts = expenses.reduce((a, e) => a + (e.purchase_type === 'new' ? (Number(e.num_accounts) || 0) : 0), 0);
 
   // Firms
   const firmMap = useMemo(() => {
@@ -679,7 +679,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
       const fn = e.firm_name;
       if (!map[fn]) map[fn] = { name: fn, totalCost: 0, accounts: 0, expenses: [] };
       map[fn].totalCost += Number(e.total_cost) || 0;
-      map[fn].accounts += Number(e.num_accounts) || 0;
+      if (e.purchase_type === 'new') map[fn].accounts += Number(e.num_accounts) || 0;
       map[fn].expenses.push(e);
     });
     return map;
