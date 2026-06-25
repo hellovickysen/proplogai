@@ -14,10 +14,10 @@ const CATEGORIES = {
 
 const STATUSES = [
   { value: 'all', label: 'All' },
-  { value: 'open', label: 'Open', color: 'text-amber-300' },
-  { value: 'in_progress', label: 'In Progress', color: 'text-cyan-300' },
-  { value: 'resolved', label: 'Resolved', color: 'text-emerald-300' },
-  { value: 'closed', label: 'Closed', color: 'text-white/50' },
+  { value: 'open', label: 'Open' },
+  { value: 'in_progress', label: 'In Progress' },
+  { value: 'resolved', label: 'Resolved' },
+  { value: 'closed', label: 'Closed' },
 ];
 
 const STATUS_STYLES = {
@@ -26,7 +26,6 @@ const STATUS_STYLES = {
   resolved: 'border-emerald-400/30 bg-emerald-500/15 text-emerald-300',
   closed: 'border-white/10 bg-white/5 text-white/50',
 };
-
 const STATUS_LABELS = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved', closed: 'Closed' };
 
 function fmtDate(d) {
@@ -35,125 +34,155 @@ function fmtDate(d) {
   catch { return ''; }
 }
 
-function TicketCard({ ticket, onStatusChange, onReply }) {
-  const [replyText, setReplyText] = useState(ticket.admin_reply || '');
-  const [showReply, setShowReply] = useState(false);
-  const [saving, setSaving] = useState(false);
+function getScreenshots(ticket) {
+  const urls = [];
+  if (ticket.screenshot_urls && Array.isArray(ticket.screenshot_urls)) urls.push(...ticket.screenshot_urls);
+  if (ticket.screenshot_url && !urls.includes(ticket.screenshot_url)) urls.push(ticket.screenshot_url);
+  return urls;
+}
+
+/* ─── Admin Ticket Detail ────────────────────────────────────── */
+
+function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply }) {
   const cat = CATEGORIES[ticket.category] || CATEGORIES.general_support;
+  const screenshots = getScreenshots(ticket);
+  const [replyText, setReplyText] = useState(ticket.admin_reply || '');
+  const [saving, setSaving] = useState(false);
+  const [statusSaving, setStatusSaving] = useState(false);
 
   async function handleReply() {
     setSaving(true);
     await onReply(ticket.id, replyText);
     setSaving(false);
-    setShowReply(false);
   }
 
   async function handleStatus(status) {
+    setStatusSaving(true);
     await onStatusChange(ticket.id, status);
+    setStatusSaving(false);
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+    <div>
+      <button onClick={onBack} className="mb-6 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.05] hover:text-white/80">
+        <span className="text-lg">&larr;</span> Back to Tickets
+      </button>
+
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-sm font-semibold">{ticket.subject}</h3>
-            <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>
-              {cat.icon} {cat.label}
-            </span>
-            <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (STATUS_STYLES[ticket.status] || '')}>
-              {STATUS_LABELS[ticket.status]}
-            </span>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <span className={'rounded-full border px-2.5 py-1 text-xs font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
+            <span className={'rounded-full border px-2.5 py-1 text-xs font-semibold ' + (STATUS_STYLES[ticket.status] || '')}>{STATUS_LABELS[ticket.status]}</span>
           </div>
-          <div className="mt-1 flex items-center gap-3 font-mono text-[11px] text-white/40">
-            <span>{ticket.user_email || 'Unknown'}</span>
+          <h1 className="font-display text-xl font-bold sm:text-2xl">{ticket.subject}</h1>
+          <div className="mt-1 flex flex-wrap items-center gap-3 font-mono text-xs text-white/40">
+            <span>{ticket.user_email || 'Unknown user'}</span>
             <span>&middot;</span>
             <span>{fmtDate(ticket.created_at)}</span>
           </div>
         </div>
+
+        {/* Status control */}
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-wider text-white/35">Status</span>
+          <select
+            value={ticket.status}
+            onChange={(e) => handleStatus(e.target.value)}
+            disabled={statusSaving}
+            className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/70 outline-none disabled:opacity-50"
+            style={{ colorScheme: 'dark' }}
+          >
+            {STATUSES.filter((s) => s.value !== 'all').map((s) => (
+              <option key={s.value} value={s.value}>{s.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Description */}
-      <p className="text-xs text-white/55 whitespace-pre-wrap mb-3">{ticket.description}</p>
+      <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-white/40">Description</div>
+        <p className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed">{ticket.description}</p>
+      </div>
 
       {/* Screenshots */}
-      {(() => {
-        const urls = [];
-        if (ticket.screenshot_urls && Array.isArray(ticket.screenshot_urls)) urls.push(...ticket.screenshot_urls);
-        if (ticket.screenshot_url && !urls.includes(ticket.screenshot_url)) urls.push(ticket.screenshot_url);
-        return urls.length > 0 ? (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {urls.map((url, i) => (
-              <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                <img src={url} alt="Screenshot" className="h-24 rounded-lg border border-white/10 object-cover" />
+      {screenshots.length > 0 && (
+        <div className="mb-6">
+          <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/40">Screenshots ({screenshots.length})</div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {screenshots.map((url, i) => (
+              <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="group overflow-hidden rounded-xl border border-white/10 transition-all hover:border-white/20">
+                <img src={url} alt={'Screenshot ' + (i + 1)} className="w-full object-cover transition-transform group-hover:scale-105" style={{ maxHeight: 240 }} />
               </a>
             ))}
           </div>
-        ) : null;
-      })()}
-
-      {/* Existing reply */}
-      {ticket.admin_reply && !showReply && (
-        <div className="mb-3 rounded-xl border border-cyan-400/20 bg-cyan-500/[0.05] p-3">
-          <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-cyan-400/60">Your Reply</div>
-          <p className="text-xs text-white/70 whitespace-pre-wrap">{ticket.admin_reply}</p>
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
-        {/* Status buttons */}
-        <select
-          value={ticket.status}
-          onChange={(e) => handleStatus(e.target.value)}
-          className="rounded-lg border border-white/10 bg-black/30 px-2 py-1.5 text-xs text-white/70 outline-none"
-          style={{ colorScheme: 'dark' }}
-        >
-          {STATUSES.filter((s) => s.value !== 'all').map((s) => (
-            <option key={s.value} value={s.value}>{s.label}</option>
-          ))}
-        </select>
-
-        <button
-          onClick={() => setShowReply(!showReply)}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/60 hover:text-white"
-        >
-          {showReply ? 'Cancel' : ticket.admin_reply ? 'Edit Reply' : 'Reply'}
-        </button>
+      {/* Reply section */}
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/40">
+          {ticket.admin_reply ? 'Edit Reply' : 'Write Reply'}
+        </div>
+        <textarea
+          className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60"
+          rows={4}
+          value={replyText}
+          onChange={(e) => setReplyText(e.target.value)}
+          placeholder="Write your reply to the user..."
+        />
+        <div className="mt-3 flex items-center justify-between">
+          <p className="text-[10px] text-white/30">The user will see this reply on their ticket.</p>
+          <button
+            onClick={handleReply}
+            disabled={saving || !replyText.trim()}
+            className="rounded-lg px-4 py-2 text-xs font-semibold text-[#08080f] disabled:opacity-60"
+            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+          >
+            {saving ? 'Sending...' : ticket.admin_reply ? 'Update Reply' : 'Send Reply'}
+          </button>
+        </div>
       </div>
-
-      {/* Reply form */}
-      {showReply && (
-        <div className="mt-3">
-          <textarea
-            className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60"
-            rows={3}
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            placeholder="Write your reply to the user..."
-          />
-          <div className="mt-2 flex gap-2">
-            <button onClick={() => setShowReply(false)} className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/60">Cancel</button>
-            <button
-              onClick={handleReply}
-              disabled={saving || !replyText.trim()}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-60"
-              style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-            >
-              {saving ? 'Sending...' : 'Send Reply'}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
+
+/* ─── Ticket List Card ───────────────────────────────────────── */
+
+function TicketListCard({ ticket, onClick }) {
+  const cat = CATEGORIES[ticket.category] || CATEGORIES.general_support;
+  const screenshots = getScreenshots(ticket);
+
+  return (
+    <button onClick={onClick} className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-cyan-400/20 hover:bg-white/[0.05]">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-display text-sm font-semibold">{ticket.subject}</h3>
+            <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
+            <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (STATUS_STYLES[ticket.status] || '')}>{STATUS_LABELS[ticket.status]}</span>
+          </div>
+          <div className="mt-1 font-mono text-[11px] text-white/35">{ticket.user_email}</div>
+          <p className="mt-1 text-xs text-white/40 line-clamp-1">{ticket.description}</p>
+          <div className="mt-2 flex items-center gap-3">
+            {screenshots.length > 0 && <span className="font-mono text-[10px] text-white/30">📎 {screenshots.length}</span>}
+            {ticket.admin_reply && <span className="font-mono text-[10px] text-cyan-400/50">💬 Replied</span>}
+          </div>
+        </div>
+        <div className="font-mono text-[11px] text-white/30">{fmtDate(ticket.created_at)}</div>
+      </div>
+    </button>
+  );
+}
+
+/* ─── Main Component ─────────────────────────────────────────── */
 
 export default function AdminTickets({ tickets }) {
   const router = useRouter();
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
 
   const filtered = tickets.filter((t) => {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false;
@@ -176,6 +205,23 @@ export default function AdminTickets({ tickets }) {
     else router.refresh();
   }
 
+  // Detail view
+  if (selectedTicketId) {
+    const ticket = tickets.find((t) => t.id === selectedTicketId);
+    if (ticket) {
+      return (
+        <AdminTicketDetail
+          ticket={ticket}
+          onBack={() => setSelectedTicketId(null)}
+          onStatusChange={handleStatusChange}
+          onReply={handleReply}
+        />
+      );
+    }
+    setSelectedTicketId(null);
+  }
+
+  // List view
   return (
     <div>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -192,29 +238,21 @@ export default function AdminTickets({ tickets }) {
         <div className="flex items-center gap-1">
           <span className="mr-1 font-mono text-[10px] uppercase tracking-wider text-white/35">Status</span>
           {STATUSES.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => setStatusFilter(s.value)}
-              className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (statusFilter === s.value ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}
-            >
+            <button key={s.value} onClick={() => setStatusFilter(s.value)}
+              className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (statusFilter === s.value ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}>
               {s.label}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-1">
           <span className="mr-1 font-mono text-[10px] uppercase tracking-wider text-white/35">Category</span>
-          <button
-            onClick={() => setCategoryFilter('all')}
-            className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (categoryFilter === 'all' ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}
-          >
+          <button onClick={() => setCategoryFilter('all')}
+            className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (categoryFilter === 'all' ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}>
             All
           </button>
           {Object.entries(CATEGORIES).map(([key, c]) => (
-            <button
-              key={key}
-              onClick={() => setCategoryFilter(key)}
-              className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (categoryFilter === key ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}
-            >
+            <button key={key} onClick={() => setCategoryFilter(key)}
+              className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (categoryFilter === key ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}>
               {c.icon}
             </button>
           ))}
@@ -229,7 +267,7 @@ export default function AdminTickets({ tickets }) {
       ) : (
         <div className="space-y-3">
           {filtered.map((t) => (
-            <TicketCard key={t.id} ticket={t} onStatusChange={handleStatusChange} onReply={handleReply} />
+            <TicketListCard key={t.id} ticket={t} onClick={() => setSelectedTicketId(t.id)} />
           ))}
         </div>
       )}
