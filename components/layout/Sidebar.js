@@ -96,10 +96,14 @@ export default function Sidebar({ email, credits, avatarUrl }) {
               <div className="mb-2 truncate px-1 font-mono text-[11px] text-white/50">{email}</div>
 
               {credits != null && (
-                <div className="mb-2 flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2">
+                <Link
+                  href="/dashboard/referrals"
+                  onClick={() => setMenuOpen(false)}
+                  className="mb-2 flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2 transition-colors hover:bg-white/[0.08]"
+                >
                   <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">Credits</span>
                   <span className="font-display text-sm font-bold text-emerald-400">${Number(credits).toFixed(2)}</span>
-                </div>
+                </Link>
               )}
 
               <form action="/auth/signout" method="post">
