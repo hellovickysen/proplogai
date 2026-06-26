@@ -57,7 +57,7 @@ function smoothPath(points) {
     const p2 = points[i + 1];
     const p3 = points[Math.min(points.length - 1, i + 2)];
 
-    const tension = 0.3;
+    const tension = 0.5;
     const cp1x = p1[0] + (p2[0] - p0[0]) * tension;
     const cp1y = p1[1] + (p2[1] - p0[1]) * tension;
     const cp2x = p2[0] - (p3[0] - p1[0]) * tension;
