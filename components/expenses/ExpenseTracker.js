@@ -498,6 +498,9 @@ function FirmDashboard({
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(firmName);
   const [savingName, setSavingName] = useState(false);
+  const [showAllExpenses, setShowAllExpenses] = useState(false);
+  const [showAllPayouts, setShowAllPayouts] = useState(false);
+  const PAGE_SIZE = 5;
 
   const totalExpenses = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
   const totalPayouts = payouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
@@ -603,7 +606,7 @@ function FirmDashboard({
           </div>
         ) : (
           <div className="space-y-2">
-            {expenses.map((e) => (
+            {(showAllExpenses ? expenses : expenses.slice(0, PAGE_SIZE)).map((e) => (
               <div key={e.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -612,7 +615,7 @@ function FirmDashboard({
                     {e.account_type && <span className="font-mono uppercase text-white/35">{e.account_type}</span>}
                     {e.purchase_type && (
                       <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (PURCHASE_COLORS[e.purchase_type] || '')}>
-                        {PURCHASE_LABELS[e.purchase_type] || item.purchase_type}
+                        {PURCHASE_LABELS[e.purchase_type] || e.purchase_type}
                       </span>
                     )}
                   </div>
@@ -626,6 +629,11 @@ function FirmDashboard({
                 <button onClick={() => onDeleteExpense(e.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
               </div>
             ))}
+            {!showAllExpenses && expenses.length > PAGE_SIZE && (
+              <button onClick={() => setShowAllExpenses(true)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 text-xs font-medium text-white/50 hover:bg-white/[0.06] hover:text-white/70">
+                Show all {expenses.length} expenses
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -647,7 +655,7 @@ function FirmDashboard({
           </div>
         ) : (
           <div className="space-y-2">
-            {payouts.map((p) => (
+            {(showAllPayouts ? payouts : payouts.slice(0, PAGE_SIZE)).map((p) => (
               <div key={p.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
                 <div className="min-w-0 flex-1">
                   <div className="font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
@@ -660,6 +668,11 @@ function FirmDashboard({
                 <button onClick={() => onDeletePayout(p.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
               </div>
             ))}
+            {!showAllPayouts && payouts.length > PAGE_SIZE && (
+              <button onClick={() => setShowAllPayouts(true)} className="mt-2 w-full rounded-xl border border-white/10 bg-white/[0.03] py-2.5 text-xs font-medium text-white/50 hover:bg-white/[0.06] hover:text-white/70">
+                Show all {payouts.length} payouts
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -672,7 +685,7 @@ function FirmDashboard({
               Trophies <span className="ml-1 font-mono text-xs text-white/40">({trophies.length})</span>
             </h2>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {trophies.map((t) => {
               const cat = TROPHY_CATS[t.category] || TROPHY_CATS.other;
               return (
@@ -712,6 +725,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
   const [accountsSort, setAccountsSort] = useState('recent');
   const [accountTypeFilter, setAccountTypeFilter] = useState('all');
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [payoutsVisible, setPayoutsVisible] = useState(5);
 
   const allTrophies = trophies || [];
 
@@ -997,7 +1011,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {payouts.map((p) => (
+                  {payouts.slice(0, payoutsVisible).map((p) => (
                     <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
                       <button onClick={() => openFirmDashboard(p.firm_name)} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 font-display text-sm font-bold text-emerald-300">
                         {firmInitial(p.firm_name)}
@@ -1016,6 +1030,11 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                       <button onClick={() => handleDeletePayout(p.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
                     </div>
                   ))}
+                  {payoutsVisible < payouts.length && (
+                    <button onClick={() => setPayoutsVisible((v) => v + 5)} className="w-full rounded-xl border border-white/10 bg-white/[0.03] py-3 text-xs font-medium text-white/50 hover:bg-white/[0.06] hover:text-white/70">
+                      Show more ({payouts.length - payoutsVisible} remaining)
+                    </button>
+                  )}
                 </div>
               )}
             </div>
