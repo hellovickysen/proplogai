@@ -10,7 +10,7 @@ function fmtDate(d) {
   }
 }
 
-export default function TradeTable({ rows, showFilters = false }) {
+export default function TradeTable({ rows, showFilters = false, compact = false }) {
   if (!rows || rows.length === 0) {
     return <div className="py-6 text-center text-sm text-white/40">No trades to show yet.</div>;
   }
@@ -72,8 +72,8 @@ export default function TradeTable({ rows, showFilters = false }) {
             <th className="px-3 pb-3">P&amp;L</th>
             <th className="px-3 pb-3">Entry</th>
             <th className="px-3 pb-3">Exit</th>
-            <th className="px-3 pb-3">Setup</th>
-            <th className="px-3 pb-3">Emotions</th>
+            {!compact && <th className="px-3 pb-3">Setup</th>}
+            {!compact && <th className="px-3 pb-3">Emotions</th>}
             <th className="px-3 pb-3">Conf</th>
             <th className="px-3 pb-3"></th>
           </tr>
@@ -144,7 +144,8 @@ export default function TradeTable({ rows, showFilters = false }) {
                 {/* Exit */}
                 <td className="px-3 py-3.5 font-mono text-white/60">{t.exit_price != null ? t.exit_price : '—'}</td>
 
-                {/* Setup — compact: first tag + count with tooltip */}
+                {/* Setup — hidden in compact mode */}
+                {!compact && (
                 <td className="px-3 py-3.5">
                   {setupNames.length > 0 ? (
                     <div className="flex items-center gap-1">
@@ -162,8 +163,10 @@ export default function TradeTable({ rows, showFilters = false }) {
                     <span className="text-white/40">—</span>
                   )}
                 </td>
+                )}
 
-                {/* Emotions — compact: first tag + count with tooltip */}
+                {/* Emotions — hidden in compact mode */}
+                {!compact && (
                 <td className="px-3 py-3.5">
                   {emotions.length > 0 ? (
                     <div className="flex items-center gap-1">
@@ -181,6 +184,7 @@ export default function TradeTable({ rows, showFilters = false }) {
                     <span className="text-white/40">—</span>
                   )}
                 </td>
+                )}
 
                 {/* Confidence */}
                 <td className="px-3 py-3.5 font-mono text-xs text-white/60">

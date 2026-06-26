@@ -247,7 +247,7 @@ export default async function DashboardPage() {
               <div className="font-display text-base font-semibold">Recent trades</div>
               <Link href="/dashboard/trades" className="font-mono text-xs text-cyan-400">View all &rarr;</Link>
             </div>
-            <TradeTable rows={recent} />
+            <TradeTable rows={recent} compact />
           </div>
         </div>
 
