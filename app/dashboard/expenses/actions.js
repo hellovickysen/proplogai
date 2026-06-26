@@ -2,7 +2,6 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { notify, TYPES } from '@/lib/notifications';
 
 function sanitize(str, maxLen) {
   if (!str) return null;
@@ -48,9 +47,6 @@ export async function createExpense(payload) {
   });
 
   if (error) return { error: error.message };
-
-  // ── Notification ──
-  await notify(supabase, user.id, TYPES.EXPENSE_LOGGED, 'Expense Logged', `${firmName} — $${totalCost.toFixed(2)}`, { link: '/dashboard/expenses' });
 
   revalidatePath('/dashboard/expenses');
   revalidatePath('/dashboard');
@@ -118,9 +114,6 @@ export async function createPayout(payload) {
   });
 
   if (error) return { error: error.message };
-
-  // ── Notification ──
-  await notify(supabase, user.id, TYPES.PAYOUT_LOGGED, 'Payout Logged', `${firmName} — $${amount.toFixed(2)}`, { link: '/dashboard/expenses' });
 
   revalidatePath('/dashboard/expenses');
   revalidatePath('/dashboard');

@@ -126,11 +126,6 @@ export async function createTrade(payload) {
     await supabase.from('journal_entries').insert(entry);
   }
 
-  // ── Notification ──
-  const pair = (sanitizeText(payload.pair, MAX_PAIR_LENGTH) || '').toUpperCase();
-  const dir = payload.direction === 'short' ? 'short' : 'long';
-  await notify(supabase, user.id, TYPES.TRADE_LOGGED, 'Trade Logged', `${pair} ${dir} ${fmtPnl(payload.pnl)}`, { link: '/dashboard/trades/' + data.id });
-
   // ── Check for referral reward (DB trigger fires on 3rd trade) ──
   try {
     const { data: referral } = await supabase
@@ -223,9 +218,6 @@ export async function saveJournal(tradeId, payload) {
     error = res.error;
   }
   if (error) return { error: error.message };
-
-  // ── Notification ──
-  await notify(supabase, user.id, TYPES.JOURNAL_ADDED, 'Journal Updated', 'Your journal entry has been saved', { link: '/dashboard/trades/' + tradeId });
 
   revalidatePath('/dashboard/trades/' + tradeId);
   return { ok: true };
