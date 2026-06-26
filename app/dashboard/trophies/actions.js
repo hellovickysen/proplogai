@@ -25,6 +25,25 @@ export async function createTrophy(payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
 
+  // Plan-gate: free users limited to 5 trophies
+  const FREE_TROPHY_LIMIT = 5;
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('plan')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const plan = (sub && sub.plan) || 'free';
+
+  if (plan === 'free') {
+    const { count } = await supabase
+      .from('trophies')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+    if (count >= FREE_TROPHY_LIMIT) {
+      return { error: 'Free plan is limited to ' + FREE_TROPHY_LIMIT + ' trophies. Upgrade to Pro for unlimited uploads.' };
+    }
+  }
+
   const title = sanitize(payload.title, 100);
   if (!title) return { error: 'Title is required.' };
   if (!payload.file_url) return { error: 'File upload is required.' };

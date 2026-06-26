@@ -20,5 +20,13 @@ export default async function TrophiesPage() {
     .eq('user_id', user.id);
   const firmNames = [...new Set((expenses || []).map((e) => e.firm_name).filter(Boolean))].sort();
 
-  return <TrophyWall trophies={trophies || []} firmNames={firmNames} />;
+  // Fetch user plan for trophy limits
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('plan')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const plan = (sub && sub.plan) || 'free';
+
+  return <TrophyWall trophies={trophies || []} firmNames={firmNames} plan={plan} />;
 }

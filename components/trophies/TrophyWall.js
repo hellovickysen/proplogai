@@ -278,7 +278,11 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
 
 /* ─── Main Component ─────────────────────────────────────────── */
 
-export default function TrophyWall({ trophies, firmNames }) {
+const FREE_TROPHY_LIMIT = 5;
+
+export default function TrophyWall({ trophies, firmNames, plan }) {
+  const isFree = plan !== 'pro' && plan !== 'elite';
+  const atLimit = isFree && trophies.length >= FREE_TROPHY_LIMIT;
   const router = useRouter();
   const toast = useToast();
   const [showUpload, setShowUpload] = useState(false);
@@ -379,11 +383,18 @@ export default function TrophyWall({ trophies, firmNames }) {
           <h1 className="font-display text-2xl font-bold">Trophy Wall</h1>
           <p className="mt-1 text-sm text-white/55">
             {trophies.length} achievement{trophies.length !== 1 ? 's' : ''} earned
+            {isFree && <span className="ml-2 font-mono text-xs text-white/40">({trophies.length}/{FREE_TROPHY_LIMIT})</span>}
           </p>
         </div>
-        <button onClick={() => setShowUpload(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-          + Upload Trophy
-        </button>
+        {atLimit ? (
+          <span className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300">
+            Limit reached — Upgrade to Pro
+          </span>
+        ) : (
+          <button onClick={() => setShowUpload(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            + Upload Trophy
+          </button>
+        )}
       </div>
 
       {/* Filter bar */}
