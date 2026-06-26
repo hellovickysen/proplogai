@@ -21,5 +21,12 @@ export default async function ExpensesPage() {
     .order('payout_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
 
-  return <ExpenseTracker expenses={expenses || []} payouts={payouts || []} />;
+  // Fetch trophies to show in firm dashboards
+  const { data: trophies } = await supabase
+    .from('trophies')
+    .select('id, title, category, description, file_url, firm_name, is_public, share_id, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+
+  return <ExpenseTracker expenses={expenses || []} payouts={payouts || []} trophies={trophies || []} />;
 }

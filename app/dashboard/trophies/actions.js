@@ -29,12 +29,16 @@ export async function createTrophy(payload) {
   if (!title) return { error: 'Title is required.' };
   if (!payload.file_url) return { error: 'File upload is required.' };
 
+  const firmName = sanitize(payload.firm_name, 100);
+  if (!firmName) return { error: 'Prop firm name is required.' };
+
   const { error } = await supabase.from('trophies').insert({
     user_id: user.id,
     title,
     category: VALID_CATEGORIES.includes(payload.category) ? payload.category : 'other',
     description: sanitize(payload.description, 500),
     file_url: payload.file_url,
+    firm_name: firmName,
     is_public: false,
     share_id: null,
   });
@@ -45,6 +49,7 @@ export async function createTrophy(payload) {
   await notify(supabase, user.id, TYPES.TROPHY_UPLOADED, 'Trophy Added', title, { link: '/dashboard/trophies' });
 
   revalidatePath('/dashboard/trophies');
+  revalidatePath('/dashboard/expenses');
   return { ok: true };
 }
 
@@ -72,6 +77,7 @@ export async function deleteTrophy(id) {
   }
 
   revalidatePath('/dashboard/trophies');
+  revalidatePath('/dashboard/expenses');
   return { ok: true };
 }
 

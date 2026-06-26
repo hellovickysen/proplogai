@@ -13,5 +13,12 @@ export default async function TrophiesPage() {
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
-  return <TrophyWall trophies={trophies || []} />;
+  // Fetch unique firm names from expenses for autocomplete
+  const { data: expenses } = await supabase
+    .from('expenses')
+    .select('firm_name')
+    .eq('user_id', user.id);
+  const firmNames = [...new Set((expenses || []).map((e) => e.firm_name).filter(Boolean))].sort();
+
+  return <TrophyWall trophies={trophies || []} firmNames={firmNames} />;
 }

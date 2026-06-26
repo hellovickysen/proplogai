@@ -30,13 +30,51 @@ function fmtDate(d) {
   catch { return ''; }
 }
 
+/* ─── Firm Name Autocomplete ─────────────────────────────────── */
+
+function FirmNameInput({ value, onChange, firmNames }) {
+  const [focused, setFocused] = useState(false);
+  const suggestions = value.length >= 1
+    ? firmNames.filter((fn) => fn.toLowerCase().startsWith(value.toLowerCase()) && fn.toLowerCase() !== value.toLowerCase())
+    : [];
+  const showDropdown = focused && suggestions.length > 0;
+
+  return (
+    <div className="relative">
+      <input
+        className={field}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setTimeout(() => setFocused(false), 150)}
+        placeholder="e.g. FTMO, Topstep, Apex..."
+        required
+      />
+      {showDropdown && (
+        <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-40 overflow-y-auto rounded-lg border border-white/10 bg-[#12121a] shadow-xl">
+          {suggestions.map((fn) => (
+            <button
+              key={fn}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); onChange(fn); setFocused(false); }}
+              className="block w-full px-3.5 py-2 text-left text-sm text-white/70 hover:bg-white/[0.06] hover:text-white"
+            >
+              {fn}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Modal ──────────────────────────────────────────────────── */
 
 function Modal({ open, onClose, title, children }) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
-      <div className="mx-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#0e0e18] p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="mx-4 w-full max-w-lg rounded-2xl border border-white/10 bg-[#0e0e18] p-6 shadow-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">{title}</h2>
           <button onClick={onClose} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
@@ -60,6 +98,7 @@ function Lightbox({ trophy, onClose }) {
             <h3 className="font-display text-lg font-bold">{trophy.title}</h3>
             <div className="mt-1 flex items-center gap-2">
               <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>{cat.label}</span>
+              {trophy.firm_name && <span className="font-mono text-[11px] text-white/50">{trophy.firm_name}</span>}
               <span className="font-mono text-[11px] text-white/40">{fmtDate(trophy.created_at)}</span>
             </div>
           </div>
@@ -74,7 +113,8 @@ function Lightbox({ trophy, onClose }) {
 
 /* ─── Upload Form ────────────────────────────────────────────── */
 
-function UploadTrophyForm({ onSave, onCancel }) {
+function UploadTrophyForm({ onSave, onCancel, firmNames }) {
+  const [firmName, setFirmName] = useState('');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('payout');
   const [description, setDescription] = useState('');
@@ -112,12 +152,17 @@ function UploadTrophyForm({ onSave, onCancel }) {
     e.preventDefault();
     if (!fileUrl) return;
     setSaving(true);
-    await onSave({ title, category, description, file_url: fileUrl });
+    await onSave({ firm_name: firmName.trim(), title, category, description, file_url: fileUrl });
     setSaving(false);
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className={labelCls}>Prop firm name *</label>
+        <FirmNameInput value={firmName} onChange={setFirmName} firmNames={firmNames || []} />
+      </div>
+
       <div>
         <label className={labelCls}>Upload certificate / proof *</label>
         {preview ? (
@@ -158,7 +203,7 @@ function UploadTrophyForm({ onSave, onCancel }) {
 
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
-        <button type="submit" disabled={saving || uploading || !fileUrl} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <button type="submit" disabled={saving || uploading || !fileUrl || !firmName.trim()} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
           {saving ? 'Saving...' : 'Add Trophy'}
         </button>
       </div>
@@ -176,9 +221,14 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
       <button onClick={() => onView(trophy)} className="block w-full">
         <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
           <img src={trophy.file_url} alt={trophy.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
-          <div className="absolute left-2 top-2">
+          <div className="absolute left-2 top-2 flex items-center gap-1.5">
             <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-sm ' + cat.color}>{cat.label}</span>
           </div>
+          {trophy.firm_name && (
+            <div className="absolute right-2 top-2">
+              <span className="rounded-full border border-white/20 bg-black/50 px-2 py-0.5 text-[10px] font-semibold text-white/80 backdrop-blur-sm">{trophy.firm_name}</span>
+            </div>
+          )}
         </div>
       </button>
 
@@ -218,7 +268,7 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
 
 /* ─── Main Component ─────────────────────────────────────────── */
 
-export default function TrophyWall({ trophies }) {
+export default function TrophyWall({ trophies, firmNames }) {
   const router = useRouter();
   const toast = useToast();
   const [showUpload, setShowUpload] = useState(false);
@@ -287,7 +337,7 @@ export default function TrophyWall({ trophies }) {
         </div>
 
         <Modal open={showUpload} onClose={() => setShowUpload(false)} title="Upload Trophy">
-          <UploadTrophyForm onSave={handleUpload} onCancel={() => setShowUpload(false)} />
+          <UploadTrophyForm onSave={handleUpload} onCancel={() => setShowUpload(false)} firmNames={firmNames} />
         </Modal>
       </div>
     );
@@ -327,7 +377,7 @@ export default function TrophyWall({ trophies }) {
 
       {/* Upload modal */}
       <Modal open={showUpload} onClose={() => setShowUpload(false)} title="Upload Trophy">
-        <UploadTrophyForm onSave={handleUpload} onCancel={() => setShowUpload(false)} />
+        <UploadTrophyForm onSave={handleUpload} onCancel={() => setShowUpload(false)} firmNames={firmNames} />
       </Modal>
 
       {/* Delete confirmation */}

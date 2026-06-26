@@ -26,6 +26,13 @@ const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
 const dateStyle = { colorScheme: 'dark' };
 
+const TROPHY_CATS = {
+  payout: { label: 'Payout', color: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30' },
+  challenge_pass: { label: 'Challenge Pass', color: 'bg-cyan-500/15 text-cyan-300 border-cyan-400/30' },
+  funded: { label: 'Funded', color: 'bg-violet-500/15 text-violet-300 border-violet-400/30' },
+  other: { label: 'Other', color: 'bg-white/10 text-white/60 border-white/20' },
+};
+
 function fmtCurrency(v) {
   const n = Number(v) || 0;
   return '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -47,7 +54,7 @@ function todayStr() {
 
 function capitalizeWords(str) {
   if (!str) return '';
-  return str.trim().replace(/\b\w/g, (c) => c.toUpperCase());
+  return str.trim().replace(/\w/g, (c) => c.toUpperCase());
 }
 
 /* ─── Pencil Icon ────────────────────────────────────────────── */
@@ -482,7 +489,7 @@ function EditPayoutForm({ payout, onSave, onCancel, existingFirms }) {
 /* ─── Firm Dashboard ─────────────────────────────────────────── */
 
 function FirmDashboard({
-  firmName, expenses, payouts,
+  firmName, expenses, payouts, trophies,
   onBack, onDeleteExpense, onDeletePayout,
   onEditExpense, onEditPayout,
   onAddExpense, onAddPayout,
@@ -562,6 +569,12 @@ function FirmDashboard({
             <span>{expenses.length} expense{expenses.length !== 1 ? 's' : ''}</span>
             <span>&middot;</span>
             <span>{payouts.length} payout{payouts.length !== 1 ? 's' : ''}</span>
+            {trophies.length > 0 && (
+              <>
+                <span>&middot;</span>
+                <span>{trophies.length} troph{trophies.length !== 1 ? 'ies' : 'y'}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -599,7 +612,7 @@ function FirmDashboard({
                     {e.account_type && <span className="font-mono uppercase text-white/35">{e.account_type}</span>}
                     {e.purchase_type && (
                       <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (PURCHASE_COLORS[e.purchase_type] || '')}>
-                        {PURCHASE_LABELS[e.purchase_type]}
+                        {PURCHASE_LABELS[e.purchase_type] || item.purchase_type}
                       </span>
                     )}
                   </div>
@@ -618,7 +631,7 @@ function FirmDashboard({
       </div>
 
       {/* Payouts Section */}
-      <div>
+      <div className="mb-8">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="font-display text-base font-semibold">
             Payouts <span className="ml-1 font-mono text-xs text-white/40">({payouts.length})</span>
@@ -650,13 +663,43 @@ function FirmDashboard({
           </div>
         )}
       </div>
+
+      {/* Trophies Section */}
+      {trophies.length > 0 && (
+        <div>
+          <div className="mb-4">
+            <h2 className="font-display text-base font-semibold">
+              Trophies <span className="ml-1 font-mono text-xs text-white/40">({trophies.length})</span>
+            </h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {trophies.map((t) => {
+              const cat = TROPHY_CATS[t.category] || TROPHY_CATS.other;
+              return (
+                <div key={t.id} className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+                  <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
+                    <img src={t.file_url} alt={t.title} className="h-full w-full object-cover" />
+                    <div className="absolute left-2 top-2">
+                      <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-sm ' + cat.color}>{cat.label}</span>
+                    </div>
+                  </div>
+                  <div className="p-3">
+                    <h3 className="text-sm font-semibold">{t.title}</h3>
+                    {t.description && <p className="mt-0.5 text-xs text-white/45 line-clamp-1">{t.description}</p>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ─── Main Component ─────────────────────────────────────────── */
 
-export default function ExpenseTracker({ expenses, payouts }) {
+export default function ExpenseTracker({ expenses, payouts, trophies }) {
   const router = useRouter();
   const toast = useToast();
   const [tab, setTab] = useState('Dashboard');
@@ -669,6 +712,8 @@ export default function ExpenseTracker({ expenses, payouts }) {
   const [accountsSort, setAccountsSort] = useState('recent');
   const [accountTypeFilter, setAccountTypeFilter] = useState('all');
   const [pendingDelete, setPendingDelete] = useState(null);
+
+  const allTrophies = trophies || [];
 
   // Aggregates
   const totalExpense = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
@@ -775,6 +820,7 @@ export default function ExpenseTracker({ expenses, payouts }) {
           firmName={selectedFirm}
           expenses={expenses.filter((e) => e.firm_name === selectedFirm)}
           payouts={payouts.filter((p) => p.firm_name === selectedFirm)}
+          trophies={allTrophies.filter((t) => t.firm_name === selectedFirm)}
           onBack={() => { setSelectedFirm(null); router.refresh(); }}
           onDeleteExpense={handleDeleteExpense}
           onDeletePayout={handleDeletePayout}
