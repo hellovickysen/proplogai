@@ -133,17 +133,17 @@ export default function ReferralDashboard({ code, referrals, balance }) {
         ) : (
           <div className="space-y-2">
             {referrals.map((r) => (
-              <div key={r.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
-                <div className="flex min-w-0 items-center gap-3">
+              <div key={r.id} className="flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-3 sm:px-4">
+                <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                   <div className="grid h-9 w-9 place-items-center rounded-lg bg-white/[0.06] font-mono text-sm text-white/50">
                     {(r.referred_email || '?').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <div className="font-mono text-sm">{trimEmail(r.referred_email)}</div>
+                    <div className="truncate font-mono text-sm">{trimEmail(r.referred_email)}</div>
                     <div className="font-mono text-[11px] text-white/35">{fmtDate(r.created_at)}</div>
                   </div>
                 </div>
-                <div className="flex flex-shrink-0 items-center gap-3">
+                <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-3">
                   {r.status === 'completed' && (
                     <span className="font-mono text-xs font-bold text-emerald-400">+$1.00</span>
                   )}

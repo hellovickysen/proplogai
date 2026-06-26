@@ -672,7 +672,7 @@ function FirmDashboard({
             {(showAllPayouts ? payouts : payouts.slice(0, PAGE_SIZE)).map((p) => (
               <div key={p.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <div className="font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
+                  <div className="whitespace-nowrap font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
                   {p.notes && <p className="mt-0.5 text-xs text-white/50">{p.notes}</p>}
                 </div>
                 <div className="font-mono text-sm font-bold text-emerald-400">+{fmtCurrency(p.amount)}</div>
@@ -1060,17 +1060,17 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
               ) : (
                 <div className="space-y-3">
                   {payouts.slice(0, payoutsVisible).map((p) => (
-                    <div key={p.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+                    <div key={p.id} className="flex items-start gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:gap-3 sm:p-5">
                       <button onClick={() => openFirmDashboard(p.firm_name)} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 font-display text-sm font-bold text-emerald-300">
                         {firmInitial(p.firm_name)}
                       </button>
                       <div className="min-w-0 flex-1">
                         <button onClick={() => openFirmDashboard(p.firm_name)} className="font-display text-base font-semibold hover:text-cyan-300 transition-colors">{p.firm_name}</button>
-                        <div className="font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
+                        <div className="whitespace-nowrap font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
                         {p.notes && <p className="mt-1 text-xs text-white/50">{p.notes}</p>}
                       </div>
                       <div className="text-right">
-                        <div className="font-mono text-lg font-bold text-emerald-400">+{fmtCurrency(p.amount)}</div>
+                        <div className="font-mono text-sm font-bold text-emerald-400 sm:text-lg">+{fmtCurrency(p.amount)}</div>
                       </div>
                       <button onClick={() => setEditingPayout(p)} className="grid h-8 w-8 place-items-center rounded text-white/30 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors" title="Edit">
                         <PencilIcon className="h-3 w-3" />

@@ -254,7 +254,7 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
             onClick={() => onTogglePublic(trophy.id, !trophy.is_public)}
             className={'rounded-lg border px-2.5 py-2 text-[11px] font-semibold ' + (trophy.is_public ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300' : 'border-white/10 bg-white/5 text-white/50')}
           >
-            {trophy.is_public ? '&#127760; Public' : '&#128274; Private'}
+            {trophy.is_public ? '🌐 Public' : '🔒 Private'}
           </button>
           {trophy.is_public && trophy.share_id && (
             <button

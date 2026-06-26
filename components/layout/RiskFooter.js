@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function RiskFooter() {
   return (
-    <footer className="border-t border-white/10 py-4 px-6">
+    <footer className="border-t border-white/10 py-4 px-6 pb-24 sm:pb-4">
       <div className="max-w-3xl mx-auto text-center">
         <p
           className="text-xs text-white/40 mb-2"

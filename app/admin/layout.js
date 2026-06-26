@@ -9,6 +9,14 @@ export const dynamic = 'force-dynamic';
 /* Admin notification types — only these show in the admin bell */
 const ADMIN_TYPES = ['new_support_ticket', 'new_user_signup'];
 
+const ADMIN_NAV = [
+  { label: 'Overview', href: '/admin', icon: '▦' },
+  { label: 'Users', href: '/admin/users', icon: '👥' },
+  { label: 'Tickets', href: '/admin/tickets', icon: '📩' },
+  { label: 'AI Usage', href: '/admin/ai-usage', icon: '✦' },
+  { label: 'Revenue', href: '/admin/revenue', icon: '💰' },
+];
+
 export default async function AdminLayout({ children }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -54,13 +62,7 @@ export default async function AdminLayout({ children }) {
           </Link>
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 px-3">
-          {[
-            { label: 'Overview', href: '/admin', icon: '▦' },
-            { label: 'Users', href: '/admin/users', icon: '👥' },
-            { label: 'Tickets', href: '/admin/tickets', icon: '📩', badge: ticketCount },
-            { label: 'AI Usage', href: '/admin/ai-usage', icon: '✦' },
-            { label: 'Revenue', href: '/admin/revenue', icon: '💰' },
-          ].map((item) => (
+          {ADMIN_NAV.map((item) => (
             <Link
               key={item.label}
               href={item.href}
@@ -68,12 +70,12 @@ export default async function AdminLayout({ children }) {
             >
               <span className="w-4 text-center">{item.icon}</span>
               <span>{item.label}</span>
-              {item.badge > 0 && (
+              {item.label === 'Tickets' && ticketCount > 0 && (
                 <span
                   className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-[#08080f]"
                   style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
                 >
-                  {item.badge}
+                  {ticketCount}
                 </span>
               )}
             </Link>
@@ -84,14 +86,39 @@ export default async function AdminLayout({ children }) {
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-white/10 px-6 py-4">
-          <span className="font-mono text-xs uppercase tracking-wider text-white/55">Admin</span>
+        <header className="flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
+          {/* Mobile: back link + admin label */}
           <div className="flex items-center gap-3">
+            <Link href="/dashboard" className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-sm text-white/70 sm:hidden">&larr;</Link>
+            <span className="font-mono text-xs uppercase tracking-wider text-white/55">Admin</span>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell initialCount={notifCount} typeFilter={ADMIN_TYPES} />
-            <span className="font-mono text-xs text-white/40">{user.email}</span>
+            <span className="hidden font-mono text-xs text-white/40 sm:block">{user.email}</span>
           </div>
         </header>
-        <main className="flex-1 px-6 py-6">{children}</main>
+        {/* Mobile admin nav tabs */}
+        <div className="flex gap-1 overflow-x-auto border-b border-white/10 px-3 py-2 sm:hidden">
+          {ADMIN_NAV.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="flex flex-shrink-0 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/60 hover:bg-white/[0.06]"
+            >
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+              {item.label === 'Tickets' && ticketCount > 0 && (
+                <span
+                  className="flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-[#08080f]"
+                  style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
+                >
+                  {ticketCount}
+                </span>
+              )}
+            </Link>
+          ))}
+        </div>
+        <main className="flex-1 px-4 py-4 sm:px-6 sm:py-6">{children}</main>
       </div>
     </div>
   );

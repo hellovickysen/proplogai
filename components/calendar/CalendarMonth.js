@@ -14,6 +14,15 @@ function fmtPnl(v) {
   return sign + '$' + abs.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
+/* Short P&L for mobile calendar cells — drops decimals to fit narrow columns */
+function fmtPnlShort(v) {
+  if (v === 0) return '$0';
+  const sign = v < 0 ? '-' : '';
+  const abs = Math.abs(v);
+  if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  return sign + '$' + Math.round(abs);
+}
+
 export default function CalendarMonth({ trades, year, month, selected, monthParam, monthlyPnl, journalDays }) {
   const now = new Date();
   const todayDay = (now.getUTCFullYear() === year && now.getUTCMonth() === month) ? now.getUTCDate() : null;
@@ -135,15 +144,16 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                           }
                           style={bgStyle}
                         >
-                          <div className="flex items-center gap-1 px-2 pt-1.5">
+                          <div className="flex items-center gap-1 px-1 pt-1 sm:px-2 sm:pt-1.5">
                             <span className={dayNumClass(isToday, isOverflow)}>{d}</span>
                           </div>
-                          <div className="flex flex-1 flex-col items-center justify-center">
-                            <span className="text-[10px] font-semibold text-white/50 sm:text-xs">Week {wi + 1}</span>
-                            <span className={'font-mono text-[11px] font-extrabold sm:text-lg ' + (ws.count === 0 ? 'text-white/25' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                              {fmtPnl(ws.net)}
+                          <div className="flex flex-1 flex-col items-center justify-center overflow-hidden px-0.5">
+                            <span className="text-[9px] font-semibold text-white/50 sm:text-xs">Week {wi + 1}</span>
+                            <span className={'truncate max-w-full font-mono text-[10px] font-extrabold sm:text-lg ' + (ws.count === 0 ? 'text-white/25' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                              <span className="sm:hidden">{fmtPnlShort(ws.net)}</span>
+                              <span className="hidden sm:inline">{fmtPnl(ws.net)}</span>
                             </span>
-                            <span className="text-[10px] text-white/45">{ws.count} trades</span>
+                            <span className="text-[9px] text-white/45 sm:text-[10px]">{ws.count} trades</span>
                           </div>
                         </div>
                       );
@@ -169,19 +179,20 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                         style={bgStyle}
                       >
                         {/* Day number — top aligned */}
-                        <div className="flex items-center gap-1 px-2 pt-1.5">
+                        <div className="flex items-center gap-1 px-1 pt-1 sm:px-2 sm:pt-1.5">
                           <span className={dayNumClass(isToday, isOverflow)}>{d}</span>
                         </div>
 
                         {/* P&L — centered */}
                         {e ? (
-                          <div className="flex flex-1 flex-col items-center justify-center">
-                            <span className={'font-mono text-[11px] font-extrabold sm:text-xl ' + (e.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                              {fmtPnl(e.net)}
+                          <div className="flex flex-1 flex-col items-center justify-center overflow-hidden px-0.5">
+                            <span className={'truncate max-w-full font-mono text-[10px] font-extrabold sm:text-xl ' + (e.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                              <span className="sm:hidden">{fmtPnlShort(e.net)}</span>
+                              <span className="hidden sm:inline">{fmtPnl(e.net)}</span>
                             </span>
                             {/* Trade count + journal icon together */}
-                            <span className="mt-0.5 flex items-center gap-1 text-[10px] text-white/45 sm:text-xs">
-                              {e.count} trade{e.count !== 1 ? 's' : ''}
+                            <span className="mt-0.5 flex items-center gap-0.5 text-[9px] text-white/45 sm:gap-1 sm:text-xs">
+                              {e.count}{e.count !== 1 ? '' : ''}
                               {hasJournal && <span title="Has journal entry">📝</span>}
                             </span>
                           </div>
