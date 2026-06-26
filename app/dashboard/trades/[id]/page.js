@@ -7,6 +7,7 @@ import DeleteTradeButton from '@/components/trades/DeleteTradeButton';
 import ShareButton from '@/components/share/ShareButton';
 import AiInsight from '@/components/coach/AiInsight';
 import AnalyzeButton from '@/components/coach/AnalyzeButton';
+import ShareJournalButton from '@/components/share/ShareJournalButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,7 +47,7 @@ export default async function TradeDetailPage({ params }) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data: trade } = await supabase.from('trades').select('*').eq('id', id).eq('user_id', user.id).maybeSingle();
+  const { data: trade } = await supabase.from('trades').select('*, share_id, shared_until').eq('id', id).eq('user_id', user.id).maybeSingle();
   if (!trade) notFound();
   const { data: journal } = await supabase.from('journal_entries').select('*').eq('trade_id', id).maybeSingle();
   const { data: insight } = await supabase
@@ -118,6 +119,7 @@ export default async function TradeDetailPage({ params }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <ShareJournalButton tradeId={id} initialShareId={trade.share_id} initialSharedUntil={trade.shared_until} />
           <ShareButton type="trade" data={{ pnl: trade.pnl, pair: trade.pair, direction: trade.direction, entry_price: trade.entry_price, exit_price: trade.exit_price, setup: trade.setup, session: trade.session, trade_date: trade.trade_date || trade.closed_at || trade.created_at }} />
           <Link href={'/dashboard/trades/' + id + '/edit'} className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white">Edit trade</Link>
           <DeleteTradeButton tradeId={id} />

@@ -272,3 +272,54 @@ export async function analyzeTrade(tradeId) {
   revalidatePath('/dashboard/trades/' + tradeId);
   return { ok: true };
 }
+
+
+/* ─── Trade Journal Sharing (24h expiry) ──────────────────── */
+
+export async function shareTrade(tradeId) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+
+  // Verify ownership
+  const { data: trade } = await supabase
+    .from('trades')
+    .select('id, share_id, shared_until')
+    .eq('id', tradeId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (!trade) return { error: 'Trade not found.' };
+
+  // If already shared and not expired, return existing link
+  if (trade.share_id && trade.shared_until && new Date(trade.shared_until) > new Date()) {
+    return { ok: true, shareId: trade.share_id, sharedUntil: trade.shared_until };
+  }
+
+  // Generate new share_id and set 24h expiry
+  const shareId = crypto.randomUUID();
+  const sharedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+  const { error } = await supabase
+    .from('trades')
+    .update({ share_id: shareId, shared_until: sharedUntil })
+    .eq('id', tradeId)
+    .eq('user_id', user.id);
+  if (error) return { error: error.message };
+
+  revalidatePath('/dashboard/trades/' + tradeId);
+  return { ok: true, shareId, sharedUntil };
+}
+
+export async function unshareTrade(tradeId) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+
+  const { error } = await supabase
+    .from('trades')
+    .update({ share_id: null, shared_until: null })
+    .eq('id', tradeId)
+    .eq('user_id', user.id);
+  if (error) return { error: error.message };
+
+  revalidatePath('/dashboard/trades/' + tradeId);
+  return { ok: true };
+}
