@@ -771,7 +771,7 @@ export default async function Home() {
                 Start free →
               </Link>
               <ul className="mt-8 space-y-3">
-                {['Unlimited trade logging', 'Journal entries with emotions & 1 screenshot/trade', 'P&L calendar (full)', 'Dashboard with basic stats', 'Rulebook — up to 3 custom setups', 'Prop firm expense tracker', 'Public trader profile', 'Referral rewards', '3 AI trade analyses / month', '1 AI coach report / month'].map((f, i) => (
+                {['Unlimited trade logging', 'Journal entries with emotions & 1 screenshot/trade', 'P&L calendar (full)', 'Dashboard with basic stats', 'Rulebook — up to 3 custom setups', 'Prop firm expense tracker', 'Public trader profile', 'Referral rewards', 'Trophy wall (5 uploads)', '3 AI trade analyses / month', '1 AI coach report / month'].map((f, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-white/60">
                     <span className="mt-0.5 text-white/30">✓</span>{f}
                   </li>
