@@ -83,36 +83,27 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const { data: trades } = await supabase
     .from('trades')
-    .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
+    .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, journal_entries(emotions, note, screenshot_url, screenshot_urls, confidence)')
     .eq('user_id', user.id)
     .order('trade_date', { ascending: false, nullsFirst: false });
-  const rawList = trades || [];
 
-  // Fetch journal data for recent trades (emotions, confidence, screenshots)
-  const tradeIds = rawList.slice(0, 6).map((t) => t.id);
-  let journalMap = {};
-  if (tradeIds.length > 0) {
-    const { data: journals } = await supabase
-      .from('journal_entries')
-      .select('trade_id, emotions, note, screenshot_url, screenshot_urls, confidence')
-      .in('trade_id', tradeIds);
-    (journals || []).forEach((j) => {
+  // Enrich trades with journal data from the joined relation
+  const list = (trades || []).map((t) => {
+    const j = Array.isArray(t.journal_entries) ? t.journal_entries[0] : t.journal_entries;
+    let _journal = null;
+    if (j) {
       const urls = Array.isArray(j.screenshot_urls) ? j.screenshot_urls.filter(Boolean) : [];
       const hasImages = urls.length > 0 || (j.screenshot_url && j.screenshot_url !== '');
-      journalMap[j.trade_id] = {
+      _journal = {
         emotions: j.emotions || [],
         hasNote: !!(j.note && j.note.trim()),
         hasImages,
         confidence: j.confidence != null ? j.confidence : null,
       };
-    });
-  }
-
-  // Enrich trades with journal data
-  const list = rawList.map((t) => ({
-    ...t,
-    _journal: journalMap[t.id] || null,
-  }));
+    }
+    const { journal_entries, ...trade } = t;
+    return { ...trade, _journal };
+  });
 
   const s = computeStats(list);
   const series = equitySeries(list);
