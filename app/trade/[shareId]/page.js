@@ -1,8 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { fmtMoney, num } from '@/lib/stats';
+import { fmtMoney, fmtR, num } from '@/lib/stats';
 import Logo from '@/components/Logo';
+import SharedScreenshots from '@/components/share/SharedScreenshots';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,19 +80,19 @@ function EmotionPill({ emotion }) {
   );
 }
 
-/* ─── Confidence stars (1-5 scale) ──────────────────────────── */
+/* ─── Confidence bar ────────────────────────────────────────── */
 
-function ConfidenceStars({ value }) {
+function ConfidenceBar({ value }) {
   if (!value && value !== 0) return null;
-  const max = 5;
-  const filled = Math.min(Math.max(Math.round(value), 0), max);
+  const pct = Math.min(Math.max(value, 0), 10) * 10;
   return (
-    <div className="flex items-center gap-2">
-      <span className="font-mono text-xs uppercase tracking-wider text-white/50">Confidence</span>
-      <div className="flex gap-0.5">
-        {Array.from({ length: max }, (_, i) => (
-          <span key={i} className={i < filled ? 'text-amber-400' : 'text-white/15'} style={{ fontSize: '14px' }}>&#9733;</span>
-        ))}
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="font-mono text-xs uppercase tracking-wider text-white/50">Confidence</span>
+        <span className="font-mono text-sm font-bold text-white/80">{value}/10</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-white/10">
+        <div className="h-full rounded-full" style={{ width: pct + '%', background: 'linear-gradient(90deg,#a78bfa,#22d3ee)' }} />
       </div>
     </div>
   );
@@ -216,7 +217,11 @@ export default async function SharedTradePage({ params }) {
                 <div className={'font-display text-2xl font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>
                   {fmtMoney(trade.pnl)}
                 </div>
-
+                {trade.r_multiple != null && (
+                  <div className={'font-mono text-sm ' + (win ? 'text-emerald-400/70' : 'text-red-400/70')}>
+                    {fmtR(trade.r_multiple)}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -276,7 +281,7 @@ export default async function SharedTradePage({ params }) {
               {/* Confidence */}
               {journal.confidence != null && (
                 <div className="mb-4">
-                  <ConfidenceStars value={journal.confidence} />
+                  <ConfidenceBar value={journal.confidence} />
                 </div>
               )}
 
@@ -287,14 +292,8 @@ export default async function SharedTradePage({ params }) {
                 </div>
               )}
 
-              {/* Screenshots */}
-              {screenshots.length > 0 && (
-                <div className="grid gap-2 grid-cols-1 sm:grid-cols-2">
-                  {screenshots.map((url, i) => (
-                    <img key={i} src={url} alt={'Screenshot ' + (i + 1)} className="rounded-xl border border-white/10 w-full" />
-                  ))}
-                </div>
-              )}
+              {/* Screenshots with lightbox */}
+              <SharedScreenshots urls={screenshots} />
 
               {/* Empty journal */}
               {!journal.note && (!journal.emotions || journal.emotions.length === 0) && journal.confidence == null && screenshots.length === 0 && (
