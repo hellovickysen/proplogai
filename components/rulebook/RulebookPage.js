@@ -77,7 +77,7 @@ function SetupForm({ initial, onSave, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-cyan-400/30 bg-white/[0.03] p-6">
       <h3 className="mb-4 font-display text-base font-semibold">
         {initial ? 'Edit setup' : 'New setup'}
       </h3>
@@ -251,32 +251,49 @@ export default function RulebookPage({ setups }) {
         </button>
       </div>
 
-      {/* New / Edit form */}
-      {editing && (
+      {/* New setup form — only for creating new setups */}
+      {editing === 'new' && (
         <div className="mb-6">
           <SetupForm
-            initial={editing === 'new' ? null : editing}
-            onSave={editing === 'new' ? handleCreate : handleUpdate}
+            onSave={handleCreate}
             onCancel={() => setEditing(null)}
           />
         </div>
       )}
 
-      {/* Active setups */}
+      {/* Active setups — edit form appears inline replacing the card */}
       <div className="grid gap-4 sm:grid-cols-2">
-        {activeSetups.map((s) => (
-          <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
-        ))}
+        {activeSetups.map((s) =>
+          editing && editing !== 'new' && editing.id === s.id ? (
+            <SetupForm
+              key={s.id}
+              initial={editing}
+              onSave={handleUpdate}
+              onCancel={() => setEditing(null)}
+            />
+          ) : (
+            <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
+          )
+        )}
       </div>
 
-      {/* Inactive setups */}
+      {/* Inactive setups — edit form appears inline here too */}
       {inactiveSetups.length > 0 && (
         <div className="mt-8">
           <h2 className="mb-3 font-mono text-xs uppercase tracking-wider text-white/40">Inactive setups</h2>
           <div className="grid gap-4 sm:grid-cols-2">
-            {inactiveSetups.map((s) => (
-              <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
-            ))}
+            {inactiveSetups.map((s) =>
+              editing && editing !== 'new' && editing.id === s.id ? (
+                <SetupForm
+                  key={s.id}
+                  initial={editing}
+                  onSave={handleUpdate}
+                  onCancel={() => setEditing(null)}
+                />
+              ) : (
+                <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
+              )
+            )}
           </div>
         </div>
       )}
