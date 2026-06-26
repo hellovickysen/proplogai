@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { fmtMoney, num } from '@/lib/stats';
+import { fmtMoney, fmtR, num } from '@/lib/stats';
 import Logo from '@/components/Logo';
 import SharedScreenshots from '@/components/share/SharedScreenshots';
 
@@ -80,19 +80,19 @@ function EmotionPill({ emotion }) {
   );
 }
 
-/* ─── Confidence stars (1-5 scale) ──────────────────────────── */
+/* ─── Confidence bar ────────────────────────────────────────── */
 
-function ConfidenceStars({ value }) {
+function ConfidenceBar({ value }) {
   if (!value && value !== 0) return null;
-  const max = 5;
-  const filled = Math.min(Math.max(Math.round(value), 0), max);
+  const pct = Math.min(Math.max(value, 0), 10) * 10;
   return (
-    <div className="flex items-center gap-2">
-      <span className="font-mono text-xs uppercase tracking-wider text-white/50">Confidence</span>
-      <div className="flex gap-0.5">
-        {Array.from({ length: max }, (_, i) => (
-          <span key={i} className={i < filled ? 'text-amber-400' : 'text-white/15'} style={{ fontSize: '14px' }}>&#9733;</span>
-        ))}
+    <div>
+      <div className="mb-1 flex items-center justify-between">
+        <span className="font-mono text-xs uppercase tracking-wider text-white/50">Confidence</span>
+        <span className="font-mono text-sm font-bold text-white/80">{value}/10</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-white/10">
+        <div className="h-full rounded-full" style={{ width: pct + '%', background: 'linear-gradient(90deg,#a78bfa,#22d3ee)' }} />
       </div>
     </div>
   );
@@ -217,7 +217,11 @@ export default async function SharedTradePage({ params }) {
                 <div className={'font-display text-2xl font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>
                   {fmtMoney(trade.pnl)}
                 </div>
-
+                {trade.r_multiple != null && (
+                  <div className={'font-mono text-sm ' + (win ? 'text-emerald-400/70' : 'text-red-400/70')}>
+                    {fmtR(trade.r_multiple)}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -251,10 +255,13 @@ export default async function SharedTradePage({ params }) {
 
             {/* Setups */}
             {setupNames.length > 0 && (
-              <div className="mt-4 flex flex-wrap gap-1.5">
+              <div className="mt-4">
+                <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-white/45">Setups</div>
+                <div className="flex flex-wrap gap-1.5">
                 {setupNames.map((name, i) => (
                   <span key={i} className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-300">{name}</span>
                 ))}
+                </div>
               </div>
             )}
           </div>
@@ -277,7 +284,7 @@ export default async function SharedTradePage({ params }) {
               {/* Confidence */}
               {journal.confidence != null && (
                 <div className="mb-4">
-                  <ConfidenceStars value={journal.confidence} />
+                  <ConfidenceBar value={journal.confidence} />
                 </div>
               )}
 
