@@ -57,7 +57,7 @@ export default function PnlCalendar({ trades, monthPnl }) {
           <div className="font-display text-base font-semibold">P&amp;L calendar</div>
           {monthPnl !== undefined && monthPnl !== null && (
             <span className={'rounded-lg border px-2.5 py-1 font-mono text-xs font-bold ' + (monthPnl >= 0 ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-400' : 'border-red-400/20 bg-red-500/10 text-red-400')}>
-              {monthPnl >= 0 ? '+' : '-'}${Math.abs(monthPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              {(monthPnl >= 0 ? '+' : '-') + '$' + Math.abs(monthPnl).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           )}
         </div>
