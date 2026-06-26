@@ -49,7 +49,7 @@ export default function BetaNotice() {
             onClick={handleDismiss}
             className="mt-3 rounded-lg border border-amber-400/20 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300 transition-colors hover:bg-amber-500/20"
           >
-            Got it, let's trade
+            Let's journal
           </button>
         </div>
       </div>
