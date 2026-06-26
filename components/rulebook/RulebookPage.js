@@ -261,39 +261,34 @@ export default function RulebookPage({ setups }) {
         </div>
       )}
 
-      {/* Active setups — edit form appears inline replacing the card */}
-      <div className="grid items-start gap-4 sm:grid-cols-2">
-        {activeSetups.map((s) =>
-          editing && editing !== 'new' && editing.id === s.id ? (
+      {/* Active setups */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {activeSetups.map((s) => (
+          <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
+        ))}
+      </div>
+
+      {/* Inactive setups */}
+      {inactiveSetups.length > 0 && (
+        <div className="mt-8">
+          <h2 className="mb-3 font-mono text-xs uppercase tracking-wider text-white/40">Inactive setups</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {inactiveSetups.map((s) => (
+              <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Edit modal — appears over the page when editing an existing setup */}
+      {editing && editing !== 'new' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => setEditing(null)}>
+          <div className="w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
             <SetupForm
-              key={s.id}
               initial={editing}
               onSave={handleUpdate}
               onCancel={() => setEditing(null)}
             />
-          ) : (
-            <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
-          )
-        )}
-      </div>
-
-      {/* Inactive setups — edit form appears inline here too */}
-      {inactiveSetups.length > 0 && (
-        <div className="mt-8">
-          <h2 className="mb-3 font-mono text-xs uppercase tracking-wider text-white/40">Inactive setups</h2>
-          <div className="grid items-start gap-4 sm:grid-cols-2">
-            {inactiveSetups.map((s) =>
-              editing && editing !== 'new' && editing.id === s.id ? (
-                <SetupForm
-                  key={s.id}
-                  initial={editing}
-                  onSave={handleUpdate}
-                  onCancel={() => setEditing(null)}
-                />
-              ) : (
-                <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
-              )
-            )}
           </div>
         </div>
       )}
