@@ -111,6 +111,50 @@ export async function updateSetup(id, payload) {
 
   const { error } = await supabase.from('setups').update(updates).eq('id', id).eq('user_id', user.id);
   if (error) return { error: error.message };
+
+  // Cascade: if name changed, update the denormalized setup text on all trades
+  // that reference this setup via setup_ids
+  if (updates.name) {
+    const { data: affectedTrades } = await supabase
+      .from('trades')
+      .select('id, setup_ids')
+      .eq('user_id', user.id)
+      .contains('setup_ids', [id]);
+
+    if (affectedTrades && affectedTrades.length > 0) {
+      // Collect all setup IDs referenced across affected trades
+      const allSetupIds = [...new Set(affectedTrades.flatMap((t) => t.setup_ids || []))];
+
+      // Fetch current names for all referenced setups (already updated above)
+      const { data: allSetups } = await supabase
+        .from('setups')
+        .select('id, name')
+        .in('id', allSetupIds);
+
+      const nameMap = {};
+      if (allSetups) {
+        allSetups.forEach((s) => { nameMap[s.id] = s.name; });
+      }
+
+      // Rebuild the setup text field for each affected trade
+      for (const trade of affectedTrades) {
+        const names = (trade.setup_ids || [])
+          .map((sid) => nameMap[sid])
+          .filter(Boolean);
+        await supabase
+          .from('trades')
+          .update({ setup: names.join(', ') })
+          .eq('id', trade.id)
+          .eq('user_id', user.id);
+      }
+
+      // Revalidate trade-related pages so they pick up the new names
+      revalidatePath('/dashboard');
+      revalidatePath('/dashboard/trades');
+      revalidatePath('/dashboard/calendar');
+    }
+  }
+
   revalidatePath('/dashboard/rulebook');
   return { ok: true };
 }
