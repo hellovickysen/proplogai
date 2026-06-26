@@ -10,6 +10,7 @@ export default function TradeFilters({ trades, prefs }) {
   const [result, setResult] = useState('all'); // all | win | loss
   const [setupFilter, setSetupFilter] = useState('');
   const [emotionFilter, setEmotionFilter] = useState('');
+  const [sessionFilter, setSessionFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
@@ -29,6 +30,11 @@ export default function TradeFilters({ trades, prefs }) {
     return [...new Set([...fromPrefs, ...fromTrades])].sort();
   }, [trades, prefs]);
 
+  const sessionOptions = useMemo(() => {
+    const sessions = trades.map((t) => t.session).filter(Boolean);
+    return [...new Set(sessions)].sort();
+  }, [trades]);
+
   const filtered = useMemo(() => {
     return trades.filter((t) => {
       // Result filter
@@ -47,6 +53,11 @@ export default function TradeFilters({ trades, prefs }) {
         if (!emotions.includes(emotionFilter)) return false;
       }
 
+      // Session filter
+      if (sessionFilter) {
+        if (t.session !== sessionFilter) return false;
+      }
+
       // Date range
       const tDate = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
       if (dateFrom && tDate < dateFrom) return false;
@@ -54,9 +65,9 @@ export default function TradeFilters({ trades, prefs }) {
 
       return true;
     });
-  }, [trades, result, setupFilter, emotionFilter, dateFrom, dateTo]);
+  }, [trades, result, setupFilter, emotionFilter, sessionFilter, dateFrom, dateTo]);
 
-  const hasFilters = result !== 'all' || setupFilter || emotionFilter || dateFrom || dateTo;
+  const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || dateFrom || dateTo;
 
   return (
     <div>
@@ -104,6 +115,17 @@ export default function TradeFilters({ trades, prefs }) {
           </select>
         </div>
 
+        {/* Session */}
+        <div>
+          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Session</label>
+          <select className={field} value={sessionFilter} onChange={(e) => setSessionFilter(e.target.value)}>
+            <option value="">All sessions</option>
+            {sessionOptions.map((s) => (
+              <option key={s} value={s}>{s}</option>
+            ))}
+          </select>
+        </div>
+
         {/* Date from */}
         <div>
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">From</label>
@@ -119,7 +141,7 @@ export default function TradeFilters({ trades, prefs }) {
         {/* Clear */}
         {hasFilters && (
           <button
-            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setDateFrom(''); setDateTo(''); }}
+            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setDateFrom(''); setDateTo(''); }}
             className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white"
           >
             Clear filters
