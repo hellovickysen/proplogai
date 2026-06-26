@@ -295,12 +295,12 @@ export default async function DashboardPage() {
                   <div className="mt-1 font-display text-base font-bold text-emerald-400">{fmtCurrency(totalPayout)}</div>
                 </div>
                 <div className={'rounded-lg border p-2.5 ' + (expenseNet >= 0 ? 'border-emerald-400/15 bg-emerald-500/[0.04]' : 'border-red-400/15 bg-red-500/[0.04]')}>
-                  <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase text-white/40">
-                    <span className={'inline-block h-2 w-2 rounded-full ' + (expenseNet >= 0 ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.5)]')} />
-                    Net P&amp;L
-                  </div>
-                  <div className={'mt-1 font-display text-base font-bold ' + (expenseNet >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                    {expenseNet >= 0 ? '+' : '-'}{fmtCurrency(Math.abs(expenseNet))}
+                  <div className="font-mono text-[10px] uppercase text-white/40">Net P&amp;L</div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <div className={'font-display text-base font-bold ' + (expenseNet >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                      {expenseNet >= 0 ? '+' : '-'}{fmtCurrency(Math.abs(expenseNet))}
+                    </div>
+                    <span className={'inline-block h-3 w-3 rounded-full ' + (expenseNet >= 0 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]')} />
                   </div>
                 </div>
               </div>
