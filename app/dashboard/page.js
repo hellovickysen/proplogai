@@ -86,7 +86,34 @@ export default async function DashboardPage() {
     .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
     .eq('user_id', user.id)
     .order('trade_date', { ascending: false, nullsFirst: false });
-  const list = trades || [];
+  const rawList = trades || [];
+
+  // Fetch journal data for recent trades (emotions, confidence, screenshots)
+  const tradeIds = rawList.slice(0, 6).map((t) => t.id);
+  let journalMap = {};
+  if (tradeIds.length > 0) {
+    const { data: journals } = await supabase
+      .from('journal_entries')
+      .select('trade_id, emotions, note, screenshot_url, screenshot_urls, confidence')
+      .in('trade_id', tradeIds);
+    (journals || []).forEach((j) => {
+      const urls = Array.isArray(j.screenshot_urls) ? j.screenshot_urls.filter(Boolean) : [];
+      const hasImages = urls.length > 0 || (j.screenshot_url && j.screenshot_url !== '');
+      journalMap[j.trade_id] = {
+        emotions: j.emotions || [],
+        hasNote: !!(j.note && j.note.trim()),
+        hasImages,
+        confidence: j.confidence != null ? j.confidence : null,
+      };
+    });
+  }
+
+  // Enrich trades with journal data
+  const list = rawList.map((t) => ({
+    ...t,
+    _journal: journalMap[t.id] || null,
+  }));
+
   const s = computeStats(list);
   const series = equitySeries(list);
   const chartData = equityChartData(list);
