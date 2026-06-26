@@ -121,6 +121,10 @@ export default function LoginPage() {
       const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
         setError(friendlyError(error.message));
+      } else if (data.user && data.user.identities && data.user.identities.length === 0) {
+        // Email already exists — Supabase returns user with empty identities array
+        setError('This email is already registered. Please sign in.');
+        setMode('signin');
       } else if (data.user && !data.session) {
         // Email verification required
         setShowVerify(true);
