@@ -115,25 +115,31 @@ export async function updateSetup(id, payload) {
   // Cascade: if name changed, update the denormalized setup text on all trades
   // that reference this setup via setup_ids
   if (updates.name) {
-    const { data: affectedTrades } = await supabase
+    // Fetch all user trades that have setup_ids populated
+    const { data: allTrades } = await supabase
       .from('trades')
       .select('id, setup_ids')
       .eq('user_id', user.id)
-      .contains('setup_ids', [id]);
+      .not('setup_ids', 'is', null);
 
-    if (affectedTrades && affectedTrades.length > 0) {
+    // Filter in JS — find trades whose setup_ids array includes this setup
+    const affectedTrades = (allTrades || []).filter((t) =>
+      Array.isArray(t.setup_ids) && t.setup_ids.includes(id)
+    );
+
+    if (affectedTrades.length > 0) {
       // Collect all setup IDs referenced across affected trades
       const allSetupIds = [...new Set(affectedTrades.flatMap((t) => t.setup_ids || []))];
 
       // Fetch current names for all referenced setups (already updated above)
-      const { data: allSetups } = await supabase
+      const { data: setupRows } = await supabase
         .from('setups')
         .select('id, name')
         .in('id', allSetupIds);
 
       const nameMap = {};
-      if (allSetups) {
-        allSetups.forEach((s) => { nameMap[s.id] = s.name; });
+      if (setupRows) {
+        setupRows.forEach((s) => { nameMap[s.id] = s.name; });
       }
 
       // Rebuild the setup text field for each affected trade
