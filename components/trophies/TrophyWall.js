@@ -16,7 +16,7 @@ const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-w
 const CATEGORIES = [
   { value: 'payout', label: 'Payout Certificate', color: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30' },
   { value: 'challenge_pass', label: 'Challenge Pass', color: 'bg-cyan-500/15 text-cyan-300 border-cyan-400/30' },
-  { value: 'funded', label: 'Funded Account', color: 'bg-violet-500/15 text-violet-300 border-violet-400/30' },
+  { value: 'funded', label: 'Funded Certificate', color: 'bg-violet-500/15 text-violet-300 border-violet-400/30' },
   { value: 'other', label: 'Other', color: 'bg-white/10 text-white/60 border-white/20' },
 ];
 
