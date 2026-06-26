@@ -77,7 +77,7 @@ function SetupForm({ initial, onSave, onCancel }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-cyan-400/30 bg-white/[0.03] p-6">
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-cyan-400/30 bg-[#12121a] p-6">
       <h3 className="mb-4 font-display text-base font-semibold">
         {initial ? 'Edit setup' : 'New setup'}
       </h3>
