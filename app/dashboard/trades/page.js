@@ -18,13 +18,13 @@ export default async function TradesPage() {
     .order('trade_date', { ascending: false, nullsFirst: false });
   const list = trades || [];
 
-  // Fetch all journal entries for these trades to get emotions
+  // Fetch all journal entries for these trades to get emotions, confidence
   const tradeIds = list.map((t) => t.id);
   let journalMap = {};
   if (tradeIds.length > 0) {
     const { data: journals } = await supabase
       .from('journal_entries')
-      .select('trade_id, emotions, note, screenshot_url, screenshot_urls')
+      .select('trade_id, emotions, note, screenshot_url, screenshot_urls, confidence')
       .in('trade_id', tradeIds);
     (journals || []).forEach((j) => {
       const urls = Array.isArray(j.screenshot_urls) ? j.screenshot_urls.filter(Boolean) : [];
@@ -33,6 +33,7 @@ export default async function TradesPage() {
         emotions: j.emotions || [],
         hasNote: !!(j.note && j.note.trim()),
         hasImages,
+        confidence: j.confidence != null ? j.confidence : null,
       };
     });
   }

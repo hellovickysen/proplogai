@@ -39,10 +39,7 @@ export default function TradeTable({ rows, showFilters = false }) {
                   <div className="flex items-center gap-1.5">
                     <span className="font-display font-semibold">{t.pair}</span>
                     {hasJournal && (
-                      <span className="inline-flex gap-0.5">
-                        {hasNote && <span className="text-xs text-amber-400/70">&#128221;</span>}
-                        {hasImages && <span className="text-xs text-cyan-400/70">&#128444;</span>}
-                      </span>
+                      <span className="text-xs text-amber-400/70" title="Has journal entry">&#128221;</span>
                     )}
                   </div>
                   <div className="font-mono text-xs text-white/50">
@@ -64,18 +61,20 @@ export default function TradeTable({ rows, showFilters = false }) {
 
       {/* Desktop table — hidden below sm breakpoint */}
       <div className="hidden sm:block overflow-x-auto">
-      <table className="w-full min-w-[800px] border-collapse text-sm">
+      <table className="w-full min-w-[900px] border-collapse text-sm">
         <thead>
           <tr className="text-left font-mono text-xs uppercase tracking-wider text-white/55">
             <th className="px-3 pb-3">Pair</th>
             <th className="px-3 pb-3">Dir</th>
             <th className="px-3 pb-3">Date</th>
+            <th className="px-3 pb-3">Session</th>
             <th className="px-3 pb-3">Result</th>
             <th className="px-3 pb-3">P&amp;L</th>
             <th className="px-3 pb-3">Entry</th>
             <th className="px-3 pb-3">Exit</th>
             <th className="px-3 pb-3">Setup</th>
             <th className="px-3 pb-3">Emotions</th>
+            <th className="px-3 pb-3">Conf</th>
             <th className="px-3 pb-3"></th>
           </tr>
         </thead>
@@ -86,6 +85,7 @@ export default function TradeTable({ rows, showFilters = false }) {
             const hasNote = t._journal && t._journal.hasNote;
             const hasImages = t._journal && t._journal.hasImages;
             const hasJournal = hasNote || hasImages;
+            const confidence = t._journal && t._journal.confidence != null ? t._journal.confidence : null;
             const zebra = idx % 2 === 1 ? 'bg-white/[0.02]' : '';
             const leftBorder = win
               ? 'border-l-[3px] border-l-emerald-400/40'
@@ -101,58 +101,83 @@ export default function TradeTable({ rows, showFilters = false }) {
                   zebra + ' ' + leftBorder
                 }
               >
+                {/* Pair + journal icon */}
                 <td className="px-3 py-3.5 font-display font-semibold">
                   <Link href={'/dashboard/trades/' + t.id} className="hover:text-cyan-400">
                     {t.pair}
                     {hasJournal && (
-                      <span className="ml-1.5 inline-flex gap-1 align-middle">
-                        {hasNote && <span className="text-xs text-amber-400/70" title="Has journal note">&#128221;</span>}
-                        {hasImages && <span className="text-xs text-cyan-400/70" title="Has screenshots">&#128444;</span>}
-                      </span>
+                      <span className="ml-1.5 text-xs text-amber-400/70 align-middle" title="Has journal entry">&#128221;</span>
                     )}
                   </Link>
                 </td>
+
+                {/* Direction */}
                 <td className="px-3 py-3.5">
                   <span className={'rounded px-2 py-0.5 font-mono text-xs ' + (t.direction === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>
                     {(t.direction || '').toUpperCase()}
                   </span>
                 </td>
+
+                {/* Date — just the date */}
                 <td className="px-3 py-3.5 font-mono text-white/60">
                   {fmtDate(t.trade_date || t.closed_at || t.created_at)}
-                  {t.session ? <span className="ml-1.5 text-xs text-white/50">{t.session}</span> : null}
                 </td>
+
+                {/* Session — separate column */}
+                <td className="px-3 py-3.5 font-mono text-xs text-white/50">
+                  {t.session || '—'}
+                </td>
+
+                {/* Result */}
                 <td className="px-3 py-3.5">
                   <span className={'rounded-full px-2.5 py-0.5 font-mono text-xs font-semibold ' + (win ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>
                     {win ? 'WIN' : 'LOSS'}
                   </span>
                 </td>
+
+                {/* P&L */}
                 <td className={'px-3 py-3.5 font-mono text-base font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>{fmtMoneyCompact(t.pnl)}</td>
+
+                {/* Entry */}
                 <td className="px-3 py-3.5 font-mono text-white/60">{t.entry_price != null ? t.entry_price : '—'}</td>
+
+                {/* Exit */}
                 <td className="px-3 py-3.5 font-mono text-white/60">{t.exit_price != null ? t.exit_price : '—'}</td>
+
+                {/* Setup — compact: first tag + count */}
                 <td className="px-3 py-3.5">
                   {setupNames.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {setupNames.slice(0, 3).map((s, i) => (
-                        <span key={i} className={'rounded-full border px-2 py-0.5 text-xs ' + (s === 'No Setup' ? 'border-red-400/20 bg-red-500/10 text-red-300' : 'border-cyan-400/20 bg-cyan-500/10 text-cyan-300')}>{s}</span>
-                      ))}
-                      {setupNames.length > 3 && <span className="text-xs text-white/50">+{setupNames.length - 3}</span>}
+                    <div className="flex items-center gap-1">
+                      <span className={'rounded-full border px-2 py-0.5 text-xs ' + (setupNames[0] === 'No Setup' ? 'border-red-400/20 bg-red-500/10 text-red-300' : 'border-cyan-400/20 bg-cyan-500/10 text-cyan-300')}>{setupNames[0]}</span>
+                      {setupNames.length > 1 && <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-xs text-white/50">+{setupNames.length - 1}</span>}
                     </div>
                   ) : (
                     <span className="text-white/40">—</span>
                   )}
                 </td>
+
+                {/* Emotions — compact: first tag + count */}
                 <td className="px-3 py-3.5">
                   {emotions.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
-                      {emotions.slice(0, 3).map((em, i) => (
-                        <span key={i} className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2 py-0.5 text-xs text-violet-200">{em}</span>
-                      ))}
-                      {emotions.length > 3 && <span className="text-xs text-white/50">+{emotions.length - 3}</span>}
+                    <div className="flex items-center gap-1">
+                      <span className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2 py-0.5 text-xs text-violet-200">{emotions[0]}</span>
+                      {emotions.length > 1 && <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-xs text-white/50">+{emotions.length - 1}</span>}
                     </div>
                   ) : (
                     <span className="text-white/40">—</span>
                   )}
                 </td>
+
+                {/* Confidence */}
+                <td className="px-3 py-3.5 font-mono text-xs text-white/60">
+                  {confidence != null ? (
+                    <span className={'rounded-full px-2 py-0.5 ' + (confidence >= 4 ? 'bg-emerald-500/15 text-emerald-300' : confidence >= 2 ? 'bg-amber-500/15 text-amber-300' : 'bg-red-500/15 text-red-300')}>{confidence}/5</span>
+                  ) : (
+                    <span className="text-white/40">—</span>
+                  )}
+                </td>
+
+                {/* Details link */}
                 <td className="px-3 py-3.5 text-right">
                   <Link href={'/dashboard/trades/' + t.id} className="font-mono text-xs text-cyan-400 hover:underline">Details &rarr;</Link>
                 </td>
