@@ -39,12 +39,22 @@ export async function savePreferences(payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
 
+  // Validate avatar_url
+  const avatarUrl = payload.avatar_url || null;
+  if (avatarUrl && typeof avatarUrl === 'string' && !avatarUrl.startsWith('http')) {
+    return { error: 'Invalid avatar URL.' };
+  }
+
   const row = {
     user_id: user.id,
-    custom_emotions: Array.isArray(payload.custom_emotions) ? payload.custom_emotions : [],
-    custom_setups: Array.isArray(payload.custom_setups) ? payload.custom_setups : [],
+    custom_emotions: Array.isArray(payload.custom_emotions)
+      ? payload.custom_emotions.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().slice(0, 50)).slice(0, 50)
+      : [],
+    custom_setups: Array.isArray(payload.custom_setups)
+      ? payload.custom_setups.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().slice(0, 100)).slice(0, 50)
+      : [],
     default_confidence: Number(payload.default_confidence) || 0,
-    avatar_url: payload.avatar_url || null,
+    avatar_url: avatarUrl,
     updated_at: new Date().toISOString(),
   };
 

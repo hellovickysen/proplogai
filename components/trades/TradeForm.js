@@ -106,7 +106,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
           timeframe: d.timeframe || f.timeframe,
         }));
       }
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[TradeForm]', e?.message);
+    }
   }, []);
 
   function set(k, v) {
@@ -267,7 +269,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         localStorage.setItem('pj_trade_defaults', JSON.stringify({
           pair: form.pair, session: form.session, timeframe: form.timeframe,
         }));
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[TradeForm]', e?.message);
+      }
       router.push(mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades');
       router.refresh();
     }

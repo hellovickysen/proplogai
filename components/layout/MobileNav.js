@@ -57,22 +57,26 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
 
       {/* Slide-from-left drawer */}
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
         className={'fixed left-0 top-0 z-50 flex h-dvh w-[280px] flex-col border-r border-white/10 bg-[#0b0b14] shadow-2xl transition-transform duration-300 ease-in-out ' + (open ? 'translate-x-0' : '-translate-x-full')}
       >
-        {/* ── Logo + Close ── */}
+        {/* -- Logo + Close -- */}
         <div className="flex items-center justify-between px-4 pt-5 pb-4">
           <Link href="/dashboard" onClick={close} className="flex items-center gap-2.5">
             <Logo size={30} wordmarkClassName="font-display text-base font-bold" />
           </Link>
           <button
             onClick={close}
+            aria-label="Close menu"
             className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-sm text-white/50 hover:text-white"
           >
             &#10005;
           </button>
         </div>
 
-        {/* ── New Trade button ── */}
+        {/* -- New Trade button -- */}
         <div className="px-4 pb-3">
           <Link
             href="/dashboard/trades/new"
@@ -84,7 +88,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
           </Link>
         </div>
 
-        {/* ── Nav links ── */}
+        {/* -- Nav links -- */}
         <nav className="flex-1 overflow-y-auto px-3 py-1">
           <div className="flex flex-col gap-0.5">
             {NAV.map((item) => {
@@ -115,7 +119,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
           </div>
         </nav>
 
-        {/* ── Bottom section ── */}
+        {/* -- Bottom section -- */}
         <div className="border-t border-white/[0.06] px-3 py-3">
           {/* Admin Panel */}
           {isAdmin && (
@@ -157,7 +161,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
             </Link>
           )}
 
-          {/* User row — avatar + email */}
+          {/* User row -- avatar + email */}
           <Link
             href="/dashboard/settings"
             onClick={close}

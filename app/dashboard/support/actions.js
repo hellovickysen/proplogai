@@ -26,7 +26,9 @@ export async function createTicket(payload) {
   // Handle screenshot URLs array (max 5)
   let screenshotUrls = [];
   if (Array.isArray(payload.screenshot_urls)) {
-    screenshotUrls = payload.screenshot_urls.filter((u) => typeof u === 'string' && u.startsWith('http')).slice(0, 5);
+    screenshotUrls = payload.screenshot_urls
+      .filter((u) => typeof u === 'string' && u.startsWith('https://'))
+      .slice(0, 5);
   }
 
   const { error } = await supabase.from('support_tickets').insert({

@@ -1,8 +1,11 @@
 "use client";
 
-const gradientId = 'weeklyScoreGrad';
+import { useId } from 'react';
 
 export default function WeeklyScoreRing({ score, breakdown }) {
+  const instanceId = useId();
+  const gradientId = 'weeklyScoreGrad-' + instanceId;
+
   const size = 140;
   const stroke = 10;
   const radius = (size - stroke) / 2;

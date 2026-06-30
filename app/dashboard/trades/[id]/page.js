@@ -70,9 +70,8 @@ export default async function TradeDetailPage({ params }) {
     .maybeSingle();
 
   // Count AI analyses used this month (for usage badge)
-  const monthStart = new Date();
-  monthStart.setDate(1);
-  monthStart.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const { count: aiUsedThisMonth } = await supabase
     .from('ai_insights')
     .select('id', { count: 'exact', head: true })

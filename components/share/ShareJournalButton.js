@@ -21,9 +21,15 @@ export default function ShareJournalButton({ tradeId, initialShareId, initialSha
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [remaining, setRemaining] = useState('');
+  const [origin, setOrigin] = useState('');
 
   const isActive = shareId && sharedUntil && new Date(sharedUntil) > new Date();
-  const shareUrl = shareId ? (typeof window !== 'undefined' ? window.location.origin : '') + '/trade/' + shareId : '';
+  const shareUrl = shareId ? origin + '/trade/' + shareId : '';
+
+  // Set origin client-side to avoid SSR hydration mismatch
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   // Update countdown every minute
   useEffect(() => {

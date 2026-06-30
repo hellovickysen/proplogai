@@ -31,7 +31,7 @@ function fmtDate(d) {
   catch { return ''; }
 }
 
-/* ─── Firm Name Autocomplete ─────────────────────────────────── */
+/* --- Firm Name Autocomplete ----------------------------------------- */
 
 function FirmNameInput({ value, onChange, firmNames }) {
   const [focused, setFocused] = useState(false);
@@ -69,7 +69,7 @@ function FirmNameInput({ value, onChange, firmNames }) {
   );
 }
 
-/* ─── Modal ──────────────────────────────────────────────────── */
+/* --- Modal ---------------------------------------------------------- */
 
 function Modal({ open, onClose, title, children }) {
   if (!open) return null;
@@ -86,7 +86,7 @@ function Modal({ open, onClose, title, children }) {
   );
 }
 
-/* ─── Lightbox ───────────────────────────────────────────────── */
+/* --- Lightbox ------------------------------------------------------- */
 
 function Lightbox({ trophy, onClose }) {
   if (!trophy) return null;
@@ -112,9 +112,10 @@ function Lightbox({ trophy, onClose }) {
   );
 }
 
-/* ─── Upload Form ────────────────────────────────────────────── */
+/* --- Upload Form ---------------------------------------------------- */
 
 function UploadTrophyForm({ onSave, onCancel, firmNames }) {
+  const toast = useToast();
   const [firmName, setFirmName] = useState('');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('payout');
@@ -128,7 +129,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      alert('File must be under 10MB');
+      toast.error('File must be under 10MB');
       return;
     }
     setUploading(true);
@@ -136,7 +137,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
     // Convert to WebP
     const processed = await processImageFile(file);
     if (processed.error) {
-      alert(processed.error);
+      toast.error(processed.error);
       setUploading(false);
       return;
     }
@@ -147,7 +148,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
     const path = user.id + '/' + Date.now() + '_' + safe;
     const { error } = await supabase.storage.from('trophies').upload(path, processed.file, { upsert: true });
     if (error) {
-      alert('Upload failed: ' + error.message);
+      toast.error('Upload failed: ' + error.message);
       setUploading(false);
       return;
     }
@@ -221,7 +222,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
   );
 }
 
-/* ─── Trophy Card ────────────────────────────────────────────── */
+/* --- Trophy Card ---------------------------------------------------- */
 
 function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
   const cat = getCategoryStyle(trophy.category);
@@ -246,7 +247,7 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
         {trophy.description && <p className="mt-1 text-xs text-white/45 line-clamp-2">{trophy.description}</p>}
         <div className="mt-2 font-mono text-[11px] text-white/35">{fmtDate(trophy.created_at)}</div>
 
-        {/* Actions — pinned to bottom */}
+        {/* Actions -- pinned to bottom */}
         <div className="mt-auto flex items-center gap-1.5 border-t border-white/5 pt-3">
           <button
             onClick={() => onTogglePublic(trophy.id, !trophy.is_public)}
@@ -274,7 +275,7 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
   );
 }
 
-/* ─── Main Component ─────────────────────────────────────────── */
+/* --- Main Component ------------------------------------------------- */
 
 const FREE_TROPHY_LIMIT = 5;
 

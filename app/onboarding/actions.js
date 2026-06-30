@@ -29,7 +29,9 @@ export async function completeOnboarding(payload) {
   const row = {
     user_id: user.id,
     onboarding_complete: true,
-    custom_emotions: Array.isArray(payload.custom_emotions) ? payload.custom_emotions : [],
+    custom_emotions: Array.isArray(payload.custom_emotions)
+      ? payload.custom_emotions.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().slice(0, 50)).slice(0, 50)
+      : [],
     default_confidence: Number(payload.default_confidence) || 0,
     updated_at: new Date().toISOString(),
   };

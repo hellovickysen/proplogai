@@ -30,11 +30,26 @@ export default async function CalendarPage({ searchParams }) {
 
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  // Calculate the start and end of the displayed month
+  const monthStartDate = `${year}-${pad2(month + 1)}-01`;
+  const nextMonthVal = month === 11 ? 0 : month + 1;
+  const nextYearVal = month === 11 ? year + 1 : year;
+  const monthEndDate = `${nextYearVal}-${pad2(nextMonthVal + 1)}-01`;
+
   const { data: trades, error: tradesError } = await supabase
     .from('trades')
     .select('id, pair, direction, pnl, r_multiple, setup, timeframe, session, trade_date, closed_at, created_at')
     .eq('user_id', user.id)
+    .gte('trade_date', monthStartDate)
+    .lt('trade_date', monthEndDate)
     .order('trade_date', { ascending: false, nullsFirst: false });
+
+  // Lightweight count query to check if user has any trades at all (for empty state)
+  const { count: totalTradeCount } = await supabase
+    .from('trades')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id);
 
   if (tradesError) {
     return (

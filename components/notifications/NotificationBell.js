@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { NOTIFICATION_META } from '@/lib/notifications';
 import {
   getNotifications,
@@ -10,7 +11,7 @@ import {
   markAsRead,
 } from '@/app/dashboard/notifications/actions';
 
-/* ── Relative time helper ────────────────────────────────── */
+/* -- Relative time helper ---------------------------------------- */
 function timeAgo(dateStr) {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return 'just now';
@@ -23,7 +24,7 @@ function timeAgo(dateStr) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-/* ── Bell icon SVG ───────────────────────────────────────── */
+/* -- Bell icon SVG ------------------------------------------------ */
 function BellIcon({ className }) {
   return (
     <svg
@@ -43,7 +44,7 @@ function BellIcon({ className }) {
   );
 }
 
-/* ── Main component ──────────────────────────────────────── */
+/* -- Main component ----------------------------------------------- */
 export default function NotificationBell({ initialCount = 0, typeFilter = null, excludeTypes = null }) {
   const [open, setOpen] = useState(false);
   const [count, setCount] = useState(initialCount);
@@ -51,6 +52,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const ref = useRef(null);
+  const router = useRouter();
 
   /* Close on outside click */
   useEffect(() => {
@@ -116,7 +118,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
     // Navigate if the notification has a link
     if (item.metadata?.link) {
       setOpen(false);
-      window.location.href = item.metadata.link;
+      router.push(item.metadata.link);
     }
   }
 
@@ -124,7 +126,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
 
   return (
     <div ref={ref} className="relative">
-      {/* ── Bell button ── */}
+      {/* -- Bell button -- */}
       <button
         onClick={toggle}
         className="relative grid h-10 w-10 place-items-center rounded-xl transition-colors hover:bg-white/[0.06] min-h-[44px] min-w-[44px]"
@@ -141,10 +143,10 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
         )}
       </button>
 
-      {/* ── Backdrop (mobile) ── */}
+      {/* -- Backdrop (mobile) -- */}
       {open && <div className="fixed inset-0 z-[55] bg-black/60 sm:hidden" onClick={() => setOpen(false)} />}
 
-      {/* ── Dropdown panel ── */}
+      {/* -- Dropdown panel -- */}
       {open && (
         <div className="fixed left-3 right-3 top-[4.5rem] z-[60] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[380px] overflow-hidden rounded-2xl border border-white/10 bg-[#0e0e18] shadow-2xl">
           {/* Header */}

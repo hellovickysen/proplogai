@@ -3,6 +3,8 @@ import { HeroParticles, LandingMotion } from '@/components/landing/LandingMotion
 import { createClient } from '@/lib/supabase/server';
 import Logo from '@/components/Logo';
 
+export const revalidate = 300; // Revalidate every 5 minutes
+
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 const redGlow = { textShadow: '0 0 40px rgba(248,113,113,0.3)' };

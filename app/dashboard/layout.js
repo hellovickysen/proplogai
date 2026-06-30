@@ -66,12 +66,12 @@ export default async function DashboardLayout({ children }) {
   } catch (e) {}
 
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD format
-  const { data: trades } = await supabase.from('trades').select('pnl, trade_date, closed_at, created_at').eq('user_id', user.id);
-  let todayPnl = 0;
-  (trades || []).forEach((t) => {
-    const raw = String(t.trade_date || t.closed_at || t.created_at || '');
-    if (raw.slice(0, 10) === today) todayPnl += num(t.pnl);
-  });
+  const { data: todayTrades } = await supabase
+    .from('trades')
+    .select('pnl, trade_date')
+    .eq('user_id', user.id)
+    .gte('trade_date', today);
+  const todayPnl = (todayTrades || []).reduce((a, t) => a + (Number(t.pnl) || 0), 0);
   const tone = todayPnl >= 0 ? 'text-emerald-400' : 'text-red-400';
   // Short P&L for mobile header — drop decimals, use k suffix for $1000+
   const todayPnlShort = (() => {

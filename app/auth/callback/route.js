@@ -27,6 +27,10 @@ export async function GET(request) {
     if (type === 'recovery') {
       return NextResponse.redirect(`${origin}/dashboard/settings`);
     }
+    // For email change confirmation, redirect to settings with success flag
+    if (type === 'email_change') {
+      return NextResponse.redirect(`${origin}/dashboard/settings?email_updated=1`);
+    }
     return NextResponse.redirect(`${origin}/dashboard`);
   }
 

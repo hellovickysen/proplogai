@@ -50,6 +50,12 @@ async function getCtx() {
   return { supabase, user };
 }
 
+function isValidStorageUrl(url) {
+  if (!url || typeof url !== 'string') return false;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  return url.startsWith(supabaseUrl) || url.startsWith('https://');
+}
+
 const VALID_SETUP_FOLLOWED = ['yes', 'partial', 'no'];
 
 function buildRow(user, payload) {
@@ -90,8 +96,8 @@ function buildRow(user, payload) {
 
 /** Normalize screenshot data into a flat array of URL strings. */
 function normalizeScreenshots(urls, legacyUrl) {
-  const arr = Array.isArray(urls) ? urls.filter(Boolean) : [];
-  if (arr.length === 0 && legacyUrl) return [legacyUrl];
+  const arr = Array.isArray(urls) ? urls.filter(Boolean).filter(isValidStorageUrl) : [];
+  if (arr.length === 0 && legacyUrl && isValidStorageUrl(legacyUrl)) return [legacyUrl];
   return arr;
 }
 

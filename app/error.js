@@ -23,7 +23,7 @@ export default function Error({ error, reset }) {
           An unexpected error occurred. Please try again.
         </p>
 
-        {error?.message && (
+        {process.env.NODE_ENV === 'development' && error?.message && (
           <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left">
             <p className="text-xs text-white/50 font-mono break-words">
               {error.message}

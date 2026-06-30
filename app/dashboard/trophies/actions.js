@@ -45,7 +45,9 @@ export async function createTrophy(payload) {
 
   const title = sanitize(payload.title, 100);
   if (!title) return { error: 'Title is required.' };
-  if (!payload.file_url) return { error: 'File upload is required.' };
+  if (!payload.file_url || typeof payload.file_url !== 'string' || !payload.file_url.startsWith('http')) {
+    return { error: 'Invalid file URL.' };
+  }
 
   const firmName = sanitize(payload.firm_name, 100);
   if (!firmName) return { error: 'Prop firm name is required.' };
