@@ -75,7 +75,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
       if (typeof res.count === 'number') setCount(res.count);
     }, 60_000);
     return () => clearInterval(id);
-  }, []);
+  }, [typeFilter, excludeTypes]);
 
   /* Sync prop on server re-render */
   useEffect(() => { setCount(initialCount); }, [initialCount]);

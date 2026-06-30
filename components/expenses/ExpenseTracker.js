@@ -54,7 +54,7 @@ function todayStr() {
 
 function capitalizeWords(str) {
   if (!str) return '';
-  return str.trim().replace(/\w/g, (c) => c.toUpperCase());
+  return str.trim().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 /* ─── Pencil Icon ────────────────────────────────────────────── */

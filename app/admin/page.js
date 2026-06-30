@@ -74,16 +74,17 @@ function TrendChart({ data, label, color = '#a78bfa' }) {
 /* ── Helper: group rows by IST date ──────────────────────── */
 function groupByDay(rows, dateField = 'created_at', days = 14) {
   const buckets = {};
-  const now = new Date(Date.now() + 5.5 * 3600000);
+  const nowIST = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(now);
+    const d = new Date(nowIST);
     d.setDate(d.getDate() - i);
-    buckets[d.toISOString().slice(0, 10)] = 0;
+    const key = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+    buckets[key] = 0;
   }
   (rows || []).forEach((r) => {
     const raw = r[dateField];
     if (!raw) return;
-    const istDate = new Date(new Date(raw).getTime() + 5.5 * 3600000).toISOString().slice(0, 10);
+    const istDate = new Date(raw).toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     if (buckets[istDate] !== undefined) buckets[istDate]++;
   });
   return Object.entries(buckets).map(([date, value]) => ({ date, value }));
@@ -95,11 +96,19 @@ export default async function AdminOverviewPage() {
   if (!sb) return <SetupMessage />;
 
   try {
-    // ── Total users ──
+    // ── Total users (paginated to count beyond 1000) ──
     let totalUsers = 0;
+    let firstPageUsers = [];
     try {
-      const { data: authData } = await sb.auth.admin.listUsers({ page: 1, perPage: 1000 });
-      totalUsers = authData?.users?.length || 0;
+      let page = 1;
+      while (true) {
+        const { data: authData } = await sb.auth.admin.listUsers({ page, perPage: 1000 });
+        const users = authData?.users || [];
+        if (page === 1) firstPageUsers = users;
+        totalUsers += users.length;
+        if (users.length < 1000) break;
+        page++;
+      }
     } catch { totalUsers = 0; }
 
     // ── Aggregate counts ──
@@ -121,7 +130,7 @@ export default async function AdminOverviewPage() {
     } catch {}
 
     // ── Today's activity (IST) ──
-    const todayIST = new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10);
+    const todayIST = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     const todayStartUTC = new Date(todayIST + 'T00:00:00+05:30').toISOString();
     let todayTrades = 0, todayJournals = 0, todayInsights = 0, todaySignups = 0;
     try {

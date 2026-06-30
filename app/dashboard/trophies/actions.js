@@ -9,7 +9,7 @@ function sanitize(str, maxLen) {
 }
 
 function generateShareId() {
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+  return crypto.randomUUID();
 }
 
 async function getCtx() {

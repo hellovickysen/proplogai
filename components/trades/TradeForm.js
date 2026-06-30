@@ -194,7 +194,12 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     setUploading(true);
     setError(null);
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      setError('Session expired. Please refresh the page and try again.');
+      setUploading(false);
+      return;
+    }
     const newUrls = [];
 
     for (const file of files) {

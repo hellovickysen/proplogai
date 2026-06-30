@@ -65,7 +65,7 @@ export default async function DashboardLayout({ children }) {
     }
   } catch (e) {}
 
-  const today = new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10); // IST date
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD format
   const { data: trades } = await supabase.from('trades').select('pnl, trade_date, closed_at, created_at').eq('user_id', user.id);
   let todayPnl = 0;
   (trades || []).forEach((t) => {

@@ -10,10 +10,10 @@ export default function PnlCalendar({ trades, monthPnl }) {
   const [showWeekends, setShowWeekends] = useState(false);
 
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const today = now.getDate();
-  const monthName = now.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const year = now.getUTCFullYear();
+  const month = now.getUTCMonth();
+  const today = now.getUTCDate();
+  const monthName = now.toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
   /* ── aggregate trades by day ── */
   const byDay = {};
@@ -21,8 +21,8 @@ export default function PnlCalendar({ trades, monthPnl }) {
     const raw = t.trade_date || t.closed_at || t.created_at;
     if (!raw) return;
     const d = new Date(raw);
-    if (d.getFullYear() !== year || d.getMonth() !== month) return;
-    const day = d.getDate();
+    if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month) return;
+    const day = d.getUTCDate();
     const e = byDay[day] || { net: 0, count: 0 };
     e.net += num(t.pnl);
     e.count += 1;
@@ -30,9 +30,9 @@ export default function PnlCalendar({ trades, monthPnl }) {
   });
 
   /* ── build cells ── */
-  const firstDow = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const prevMonthDays = new Date(year, month, 0).getDate();
+  const firstDow = new Date(Date.UTC(year, month, 1)).getUTCDay();
+  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  const prevMonthDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
 
   const allCells = [];
   for (let i = 0; i < firstDow; i++) {

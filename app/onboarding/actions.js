@@ -37,7 +37,7 @@ export async function completeOnboarding(payload) {
   let error;
   if (existing) {
     delete row.user_id;
-    const res = await supabase.from('user_preferences').update(row).eq('id', existing.id);
+    const res = await supabase.from('user_preferences').update(row).eq('id', existing.id).eq('user_id', user.id);
     error = res.error;
   } else {
     const res = await supabase.from('user_preferences').insert(row);

@@ -208,10 +208,11 @@ export async function saveJournal(tradeId, payload) {
     .from('journal_entries')
     .select('id')
     .eq('trade_id', tradeId)
+    .eq('user_id', user.id)
     .maybeSingle();
   let error;
   if (existing) {
-    const res = await supabase.from('journal_entries').update(entry).eq('id', existing.id);
+    const res = await supabase.from('journal_entries').update(entry).eq('id', existing.id).eq('user_id', user.id);
     error = res.error;
   } else {
     const res = await supabase.from('journal_entries').insert(entry);
@@ -253,11 +254,12 @@ export async function analyzeTrade(tradeId) {
     .select('id')
     .eq('trade_id', tradeId)
     .eq('type', 'trade_analysis')
+    .eq('user_id', user.id)
     .maybeSingle();
 
   let error;
   if (existing) {
-    const res = await supabase.from('ai_insights').update(row).eq('id', existing.id);
+    const res = await supabase.from('ai_insights').update(row).eq('id', existing.id).eq('user_id', user.id);
     error = res.error;
   } else {
     const res = await supabase.from('ai_insights').insert(row);

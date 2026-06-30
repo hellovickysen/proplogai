@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
 function generateCode() {
-  return 'pj' + Math.random().toString(36).slice(2, 8);
+  return 'pl' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
 }
 
 async function getCtx() {
@@ -42,6 +42,8 @@ export async function generateReferralCode() {
 export async function captureReferral(refCode) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
+
+  if (!refCode || typeof refCode !== 'string' || refCode.length > 20) return { error: 'Invalid referral code.' };
 
   // Check if already referred
   const { data: prefs } = await supabase
@@ -86,7 +88,7 @@ export async function captureReferral(refCode) {
  * Check if the current user has earned a referral reward (called after creating a trade).
  * Triggers when: user has 3+ trades, was referred, and reward not yet given.
  */
-export async function checkAndRewardReferral(supabaseClient, userId) {
+async function checkAndRewardReferral(supabaseClient, userId) {
   const supabase = supabaseClient;
 
   // Get user prefs

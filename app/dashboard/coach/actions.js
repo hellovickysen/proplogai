@@ -73,7 +73,7 @@ export async function generateCoachReport() {
 
   let error;
   if (existing) {
-    const res = await supabase.from('ai_insights').update(row).eq('id', existing.id);
+    const res = await supabase.from('ai_insights').update(row).eq('id', existing.id).eq('user_id', user.id);
     error = res.error;
   } else {
     const res = await supabase.from('ai_insights').insert(row);

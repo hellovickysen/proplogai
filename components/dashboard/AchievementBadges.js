@@ -9,13 +9,10 @@ const BIG_MILESTONES = ['century', 'streak_30', 'score_90', 'discipline_100'];
 export default function AchievementBadges({ achievements }) {
   const [celebration, setCelebration] = useState(null); // { type: 'confetti'|'check', name, icon }
 
-  if (!achievements || achievements.length === 0) return null;
-
-  const earned = achievements.filter((a) => a.earned);
-  const inProgress = achievements.filter((a) => !a.earned && a.progress > 0);
-
   // Detect newly earned achievements
   useEffect(() => {
+    if (!achievements || achievements.length === 0) return;
+    const earned = achievements.filter((a) => a.earned);
     try {
       const stored = localStorage.getItem('pj_earned_badges');
       const prev = stored ? JSON.parse(stored) : [];
@@ -35,6 +32,12 @@ export default function AchievementBadges({ achievements }) {
       }
     } catch (e) {}
   }, []);
+
+  // NOW the early return is safe
+  if (!achievements || achievements.length === 0) return null;
+
+  const earned = achievements.filter((a) => a.earned);
+  const inProgress = achievements.filter((a) => !a.earned && a.progress > 0);
 
   return (
     <div>

@@ -12,6 +12,39 @@ const CATEGORY_LABELS = {
   other: 'Achievement',
 };
 
+export async function generateMetadata({ params }) {
+  const supabase = createClient();
+  const { data: trophy } = await supabase
+    .from('trophies')
+    .select('title, category, description, file_url')
+    .eq('share_id', params.id)
+    .eq('is_public', true)
+    .maybeSingle();
+
+  if (!trophy) {
+    return { title: 'Trophy — PropLogAI' };
+  }
+
+  const title = trophy.title + ' — PropLogAI';
+  const description = trophy.description || `${trophy.category} trophy shared on PropLogAI`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: trophy.file_url ? [{ url: trophy.file_url }] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: trophy.file_url ? [trophy.file_url] : [],
+    },
+  };
+}
+
 export default async function PublicTrophyPage({ params }) {
   const shareId = params.id;
   const supabase = createClient();
@@ -40,9 +73,11 @@ export default async function PublicTrophyPage({ params }) {
           {trophy.description && (
             <p className="mx-auto mt-3 max-w-lg text-sm leading-relaxed text-white/60">{trophy.description}</p>
           )}
-          <p className="mt-2 font-mono text-xs text-white/30">
-            {new Date(trophy.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-          </p>
+          {trophy.created_at && (
+            <p className="mt-2 font-mono text-xs text-white/30">
+              {new Date(trophy.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
         </div>
 
         {/* Image */}

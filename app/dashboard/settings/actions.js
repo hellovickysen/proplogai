@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { validatePassword } from '@/lib/security';
 
 async function getCtx() {
   const supabase = createClient();
@@ -14,7 +15,10 @@ async function getCtx() {
 export async function changePassword(newPassword) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
-  if (!newPassword || newPassword.length < 6) return { error: 'Password must be at least 6 characters.' };
+  if (!newPassword) return { error: 'Password is required.' };
+  if (newPassword.length > 128) return { error: 'Password is too long.' };
+  const validation = validatePassword(newPassword);
+  if (!validation.isValid) return { error: 'Password does not meet strength requirements. Need 8+ characters with uppercase, lowercase, number, and special character.' };
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) return { error: error.message };
   return { ok: true };
@@ -53,7 +57,7 @@ export async function savePreferences(payload) {
   let error;
   if (existing) {
     delete row.user_id;
-    const res = await supabase.from('user_preferences').update(row).eq('id', existing.id);
+    const res = await supabase.from('user_preferences').update(row).eq('id', existing.id).eq('user_id', user.id);
     error = res.error;
   } else {
     const res = await supabase.from('user_preferences').insert(row);

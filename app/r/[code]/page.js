@@ -14,7 +14,7 @@ export default function ReferralRedirect({ params }) {
     const code = params.code;
     if (code) {
       localStorage.setItem('ref_code', code);
-      document.cookie = 'ref_code=' + code + '; path=/; max-age=604800';
+      document.cookie = 'ref_code=' + encodeURIComponent(code) + '; path=/; max-age=604800; SameSite=Lax';
     }
     window.location.href = '/login';
   }, [params.code]);
