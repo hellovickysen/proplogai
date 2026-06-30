@@ -249,7 +249,7 @@ export default async function DashboardPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
-          <DashboardShareButton data={dailyShareData} />
+          <DashboardShareButton data={dailyShareData} type={todayTrades.length > 0 ? 'daily' : 'total'} />
           <Link href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
             + New Trade
           </Link>
