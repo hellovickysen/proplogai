@@ -25,6 +25,7 @@ const DEFAULT_SETUPS = [
   { name: 'Support / Resistance', direction: 'Trade around clearly marked levels with confirmation. Avoid random entries in the middle of a range.', sort_order: 4 },
   { name: 'Trend Continuation', direction: 'Enter in the direction of the established trend after a healthy retracement or consolidation breakout.', sort_order: 5 },
   { name: 'Reversal', direction: 'Trade reversals only at major structural levels with multiple confirmations. Higher risk — reduce size.', sort_order: 6 },
+  { name: 'Good SL', direction: 'You followed your setup correctly but the market hit your stop loss. This is not a mistake — it is the cost of doing business. Mark this when your process was right and the loss was simply the market doing its thing.', sort_order: 7 },
   { name: 'No Setup', direction: 'Use this when the trade did not follow any planned setup, was emotional, or was taken impulsively.', is_default: true, sort_order: 99 },
 ];
 
