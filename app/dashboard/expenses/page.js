@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import ExpensesTable from '@/components/expenses/ExpensesTable';
-import PayoutsTable from '@/components/expenses/PayoutsTable';
+import ExpenseTracker from '@/components/expenses/ExpenseTracker';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,12 +11,13 @@ export default async function ExpensesPage() {
     .from('expenses')
     .select('id, firm_name, account_type, account_size, purchase_type, account_cost, num_accounts, total_cost, expense_date, notes, created_at')
     .eq('user_id', user.id)
-    .order('date', { ascending: false, nullsFirst: false });
+    .order('expense_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
 
   if (expError) {
     return (
       <div className="px-4 py-8 sm:px-6">
-        <h1 className="font-display text-2xl font-bold">Expenses & Payouts</h1>
+        <h1 className="font-display text-2xl font-bold">Expenses</h1>
         <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-6 text-center">
           <p className="text-sm text-red-400">Something went wrong loading your data. Please try refreshing the page.</p>
         </div>
@@ -29,36 +29,17 @@ export default async function ExpensesPage() {
     .from('payouts')
     .select('id, firm_name, amount, payout_date, notes, created_at')
     .eq('user_id', user.id)
-    .order('date', { ascending: false, nullsFirst: false });
+    .order('payout_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
   if (payError) console.error('payouts error', payError);
 
-  const expenseList = expenses || [];
-  const payoutList = payouts || [];
+  // Fetch trophies to show in firm dashboards
+  const { data: trophies, error: trophiesError } = await supabase
+    .from('trophies')
+    .select('id, title, category, description, file_url, firm_name, is_public, share_id, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false });
+  if (trophiesError) console.error('trophies error', trophiesError);
 
-  const totalExpenses = expenseList.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-  const totalPayouts = payoutList.reduce((s, p) => s + (Number(p.amount) || 0), 0);
-
-  return (
-    <div className="px-4 py-8 sm:px-6">
-      <h1 className="font-display text-2xl font-bold">Expenses & Payouts</h1>
-
-      <div className="mt-6 grid gap-6 sm:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="font-display text-lg font-bold">Expenses</div>
-            <div className="font-mono text-sm text-red-400">-${totalExpenses.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-          </div>
-          <ExpensesTable expenses={expenseList} />
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="font-display text-lg font-bold">Payouts</div>
-            <div className="font-mono text-sm text-red-400">-${totalPayouts.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-          </div>
-          <PayoutsTable payouts={payoutList} />
-        </div>
-      </div>
-    </div>
-  );
+  return <ExpenseTracker expenses={expenses || []} payouts={payouts || []} trophies={trophies || []} />;
 }
