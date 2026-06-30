@@ -42,9 +42,10 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
   const pnl = Number(data.pnl) || 0;
   const isWin = pnl >= 0;
   const isStory = ratio === '9:16';
+  const isSquare = ratio === '1:1';
 
-  const w = isStory ? 360 : 640;
-  const h = isStory ? 640 : 360;
+  const w = isSquare ? 480 : isStory ? 360 : 640;
+  const h = isSquare ? 480 : isStory ? 640 : 360;
 
   const accentColor = isWin ? '#34d399' : '#f87171';
   const accentGlow = isWin ? 'rgba(52,211,153,0.4)' : 'rgba(248,113,113,0.35)';
@@ -57,7 +58,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
 
   const pnlParts = fmtPnlCard(data.pnl, isStory);
   const pnlLen = (pnlParts.prefix + pnlParts.whole + pnlParts.decimal).length;
-  const baseFontSize = isStory ? 48 : 52;
+  const baseFontSize = isSquare ? 50 : isStory ? 48 : 52;
   const pnlFontSize = pnlLen > 12 ? baseFontSize - 14 : pnlLen > 9 ? baseFontSize - 6 : baseFontSize;
 
   return (
@@ -88,7 +89,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: isStory ? '28px 28px 24px' : '20px 32px 18px',
+        padding: isSquare ? '24px 28px 20px' : isStory ? '28px 28px 24px' : '20px 32px 18px',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -112,7 +113,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          gap: isStory ? 12 : 6,
+          gap: isSquare ? 10 : isStory ? 12 : 6,
         }}>
           <div style={{
             fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em',
@@ -142,11 +143,11 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
 
           {cleanQuote && (
             <div style={{
-              fontSize: isStory ? 15 : 13,
+              fontSize: isSquare ? 14 : isStory ? 15 : 13,
               color: 'rgba(255,255,255,0.65)',
               fontWeight: 500,
               fontStyle: 'italic',
-              marginTop: isStory ? 10 : 6,
+              marginTop: isSquare ? 8 : isStory ? 10 : 6,
               padding: '0 16px',
               lineHeight: 1.5,
               letterSpacing: '0.03em',
@@ -160,8 +161,8 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
         <div>
           <div style={{
             display: 'flex', justifyContent: 'center', alignItems: 'stretch',
-            gap: isStory ? 8 : 10, flexWrap: 'nowrap',
-            marginBottom: isStory ? 16 : 10,
+            gap: isSquare ? 8 : isStory ? 8 : 10, flexWrap: 'nowrap',
+            marginBottom: isSquare ? 14 : isStory ? 16 : 10,
           }}>
             {type === 'daily' ? (
               <>

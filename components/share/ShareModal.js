@@ -113,6 +113,9 @@ export default function ShareModal({ type, data, onClose }) {
   }, [getFilename, type, data]);
 
   const isStory = ratio === '9:16';
+  const isSquare = ratio === '1:1';
+  const previewW = isSquare ? 400 : isStory ? 306 : 544;
+  const previewH = isSquare ? 400 : isStory ? 544 : 306;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm" onClick={onClose}>
@@ -125,18 +128,19 @@ export default function ShareModal({ type, data, onClose }) {
         </div>
 
         <div className="flex gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-          <button
-            onClick={() => setRatio('9:16')}
-            className={'rounded-md px-4 py-2 text-xs font-semibold transition-colors ' + (isStory ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60')}
-          >
-            Story (9:16)
-          </button>
-          <button
-            onClick={() => setRatio('16:9')}
-            className={'rounded-md px-4 py-2 text-xs font-semibold transition-colors ' + (!isStory ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60')}
-          >
-            Landscape (16:9)
-          </button>
+          {[
+            { r: '9:16', l: 'Story (9:16)' },
+            { r: '1:1', l: 'Square (1:1)' },
+            { r: '16:9', l: 'Landscape (16:9)' },
+          ].map((opt) => (
+            <button
+              key={opt.r}
+              onClick={() => setRatio(opt.r)}
+              className={'rounded-md px-3 py-2 text-xs font-semibold transition-colors ' + (ratio === opt.r ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60')}
+            >
+              {opt.l}
+            </button>
+          ))}
         </div>
 
         <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
@@ -150,15 +154,15 @@ export default function ShareModal({ type, data, onClose }) {
               alt="P&L Card Preview"
               className="max-w-full"
               style={{
-                width: isStory ? 306 : 544,
-                height: isStory ? 544 : 306,
+                width: previewW,
+                height: previewH,
                 display: 'block',
               }}
             />
           ) : (
             <div
               className="flex max-w-full items-center justify-center bg-white/[0.03]"
-              style={{ width: isStory ? 306 : 544, height: isStory ? 544 : 306 }}
+              style={{ width: previewW, height: previewH }}
             >
               <span className="text-sm text-white/40">{rendering ? 'Rendering...' : 'Loading...'}</span>
             </div>
