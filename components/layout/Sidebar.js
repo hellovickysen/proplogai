@@ -52,7 +52,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
     >
       <div className="sticky top-0 flex h-dvh flex-col py-5" style={{ width: collapsed ? 60 : 200, transition: 'width 300ms ease-in-out' }}>
 
-        {/* ── Logo ── */}
+        {/* -- Logo -- */}
         <div className={'mb-5 ' + (collapsed ? 'flex justify-center px-2' : 'px-3')}>
           <Link href="/dashboard" title="Dashboard">
             {collapsed
@@ -62,10 +62,11 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
           </Link>
         </div>
 
-        {/* ── Collapse/Expand toggle — vertically centered on right edge ── */}
+        {/* -- Collapse/Expand toggle -- vertically centered on right edge -- */}
         <button
           onClick={toggleCollapsed}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-expanded={!collapsed}
           className="absolute right-0 top-1/2 z-10 -translate-y-1/2 translate-x-1/2 grid h-6 w-6 place-items-center rounded-full border border-white/15 bg-[#12121a] text-white/40 shadow-lg transition-colors hover:bg-[#1a1a2e] hover:text-white/70"
         >
           <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className={'transition-transform duration-300 ' + (collapsed ? 'rotate-180' : '')}>
@@ -73,7 +74,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
           </svg>
         </button>
 
-        {/* ── New Trade ── */}
+        {/* -- New Trade -- */}
         <div className={collapsed ? 'mb-4 px-2' : 'mb-5 px-3'}>
           <Link
             href="/dashboard/trades/new"
@@ -85,7 +86,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
           </Link>
         </div>
 
-        {/* ── Nav ── */}
+        {/* -- Nav -- */}
         <nav className={'flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden ' + (collapsed ? 'px-1.5' : 'px-2')}>
           {NAV.map((item) => {
             const active = isActive(item.href);
@@ -112,7 +113,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
           })}
         </nav>
 
-        {/* ── Bottom section ── */}
+        {/* -- Bottom section -- */}
         <div className={'relative mt-4 border-t border-white/[0.06] pt-3 ' + (collapsed ? 'px-1.5' : 'px-2')}>
           <button
             onClick={() => setMenuOpen((o) => !o)}
@@ -123,7 +124,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
             }
           >
             {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="h-8 w-8 flex-shrink-0 rounded-full object-cover border border-white/10" />
+              <img src={avatarUrl} alt={email || 'Account'} className="h-8 w-8 flex-shrink-0 rounded-full object-cover border border-white/10" />
             ) : (
               <div
                 className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-sm font-bold text-[#08080f]"
@@ -145,6 +146,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
           {/* User popup */}
           {menuOpen && (
             <div
+              role="menu"
               className={
                 'absolute z-50 rounded-xl border border-white/10 bg-[#12121a] p-3 shadow-xl ' +
                 (collapsed

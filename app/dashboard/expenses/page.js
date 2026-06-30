@@ -10,7 +10,7 @@ export default async function ExpensesPage() {
 
   const { data: expenses, error: expError } = await supabase
     .from('expenses')
-    .select('id, amount, category, description, date, created_at')
+    .select('id, firm_name, account_type, account_size, purchase_type, account_cost, num_accounts, total_cost, expense_date, notes, created_at')
     .eq('user_id', user.id)
     .order('date', { ascending: false, nullsFirst: false });
 
@@ -27,7 +27,7 @@ export default async function ExpensesPage() {
 
   const { data: payouts, error: payError } = await supabase
     .from('payouts')
-    .select('id, amount, date, note, created_at')
+    .select('id, firm_name, amount, payout_date, notes, created_at')
     .eq('user_id', user.id)
     .order('date', { ascending: false, nullsFirst: false });
   if (payError) console.error('payouts error', payError);

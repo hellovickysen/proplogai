@@ -9,7 +9,7 @@ export default async function SupportRoute() {
 
   const { data: tickets, error: ticketsError } = await supabase
     .from('support_tickets')
-    .select('*')
+    .select('id, category, subject, description, status, admin_reply, screenshot_urls, created_at, updated_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 

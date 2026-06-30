@@ -297,8 +297,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className={labelCls}>Pair</label>
-                <input className={field} list="pairs" value={form.pair} onChange={(e) => set('pair', e.target.value)} />
+                <label htmlFor="field-pair" className={labelCls}>Pair</label>
+                <input id="field-pair" className={field} list="pairs" value={form.pair} onChange={(e) => set('pair', e.target.value)} />
                 <datalist id="pairs">
                   {PAIRS.map((p) => (
                     <option key={p} value={p} />
@@ -339,10 +339,10 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   ))}
                 </div>
               </div>
-              <div><label className={labelCls}>Trade date</label><input type="date" className={field + ' cursor-pointer'} style={{ colorScheme: 'dark' }} value={form.trade_date} onChange={(e) => set('trade_date', e.target.value)} /></div>
+              <div><label htmlFor="field-trade_date" className={labelCls}>Trade date</label><input id="field-trade_date" type="date" className={field + ' cursor-pointer'} style={{ colorScheme: 'dark' }} value={form.trade_date} onChange={(e) => set('trade_date', e.target.value)} /></div>
               <div>
-                <label className={labelCls}>Timeframe</label>
-                <select className={field} value={form.timeframe} onChange={(e) => set('timeframe', e.target.value)}>
+                <label htmlFor="field-timeframe" className={labelCls}>Timeframe</label>
+                <select id="field-timeframe" className={field} value={form.timeframe} onChange={(e) => set('timeframe', e.target.value)}>
                   {TIMEFRAMES.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
@@ -386,7 +386,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     )}
                   </div>
                 ) : (
-                  <select className={field} value={form.setup} onChange={(e) => set('setup', e.target.value)}>
+                  <select id="field-setup" className={field} value={form.setup} onChange={(e) => set('setup', e.target.value)}>
                     <option value="">Select setup...</option>
                     {(prefs && prefs.custom_setups && prefs.custom_setups.length > 0
                       ? prefs.custom_setups
@@ -478,11 +478,11 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               Price data
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><label className={labelCls}>Entry price</label><input className={field} value={form.entry_price} onChange={(e) => set('entry_price', e.target.value)} inputMode="decimal" /></div>
-              <div><label className={labelCls}>Exit price</label><input className={field} value={form.exit_price} onChange={(e) => set('exit_price', e.target.value)} inputMode="decimal" /></div>
-              <div><label className={labelCls}>Stop loss</label><input className={field} value={form.stop_loss} onChange={(e) => set('stop_loss', e.target.value)} inputMode="decimal" /></div>
-              <div><label className={labelCls}>Take profit</label><input className={field} value={form.take_profit} onChange={(e) => set('take_profit', e.target.value)} inputMode="decimal" /></div>
-              <div><label className={labelCls}>Lot size</label><input className={field} value={form.lot_size} onChange={(e) => set('lot_size', e.target.value)} inputMode="decimal" /></div>
+              <div><label htmlFor="field-entry_price" className={labelCls}>Entry price</label><input id="field-entry_price" className={field} value={form.entry_price} onChange={(e) => set('entry_price', e.target.value)} inputMode="decimal" /></div>
+              <div><label htmlFor="field-exit_price" className={labelCls}>Exit price</label><input id="field-exit_price" className={field} value={form.exit_price} onChange={(e) => set('exit_price', e.target.value)} inputMode="decimal" /></div>
+              <div><label htmlFor="field-stop_loss" className={labelCls}>Stop loss</label><input id="field-stop_loss" className={field} value={form.stop_loss} onChange={(e) => set('stop_loss', e.target.value)} inputMode="decimal" /></div>
+              <div><label htmlFor="field-take_profit" className={labelCls}>Take profit</label><input id="field-take_profit" className={field} value={form.take_profit} onChange={(e) => set('take_profit', e.target.value)} inputMode="decimal" /></div>
+              <div><label htmlFor="field-lot_size" className={labelCls}>Lot size</label><input id="field-lot_size" className={field} value={form.lot_size} onChange={(e) => set('lot_size', e.target.value)} inputMode="decimal" /></div>
             </div>
           </div>
 
@@ -493,8 +493,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               Result
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><label className={labelCls}>P&L ($) *</label><input className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
-              <div><label className={labelCls}>R multiple <span className="text-white/30">(auto)</span></label><input className={field} value={form.r_multiple} onChange={(e) => set('r_multiple', e.target.value)} inputMode="decimal" placeholder="auto from prices" /></div>
+              <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
+              <div><label htmlFor="field-r_multiple" className={labelCls}>R multiple <span className="text-white/30">(auto)</span></label><input id="field-r_multiple" className={field} value={form.r_multiple} onChange={(e) => set('r_multiple', e.target.value)} inputMode="decimal" placeholder="auto from prices" /></div>
             </div>
           </div>
 
@@ -533,8 +533,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls}>Confidence at entry</label>
-                    <div className="flex gap-1 text-2xl">
+                    <label htmlFor="field-confidence" className={labelCls}>Confidence at entry</label>
+                    <div id="field-confidence" className="flex gap-1 text-2xl">
                       {[1, 2, 3, 4, 5].map((i) => (
                         <button key={i} type="button" onClick={() => setConfidence(i)} className={'p-1 ' + (i <= confidence ? 'text-amber-400' : 'text-white/40')}>
                           &#9733;
@@ -543,8 +543,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     </div>
                   </div>
                   <div>
-                    <label className={labelCls}>Notes — what happened & why?</label>
+                    <label htmlFor="field-notes" className={labelCls}>Notes — what happened & why?</label>
                     <textarea
+                      id="field-notes"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
                       rows={4}
@@ -553,15 +554,15 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     />
                   </div>
                   <div>
-                    <label className={labelCls}>Chart screenshots</label>
+                    <label htmlFor="field-screenshots" className={labelCls}>Chart screenshots</label>
                     {screenshotUrls.length > 0 && (
                       <div className="mb-3 flex flex-wrap gap-2">
-                        {screenshotUrls.map((url, i) => (
-                          <div key={i} className="group relative">
+                        {screenshotUrls.map((url) => (
+                          <div key={url} className="group relative">
                             <img src={url} alt="" className="h-20 w-20 rounded-lg border border-white/10 object-cover" />
                             <button
                               type="button"
-                              onClick={() => removeScreenshot(i)}
+                              onClick={() => removeScreenshot(screenshotUrls.indexOf(url))}
                               className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
                             >
                               &#10005;
@@ -571,6 +572,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                       </div>
                     )}
                     <input
+                      id="field-screenshots"
                       type="file"
                       accept="image/*,application/pdf"
                       multiple
@@ -604,8 +606,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         </div>
         {form.setup && (
           <div className="mt-2 flex flex-wrap gap-1">
-            {form.setup.split(', ').map((s, i) => (
-              <span key={i} className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-300">{s}</span>
+            {form.setup.split(', ').map((s) => (
+              <span key={s} className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-300">{s}</span>
             ))}
             {form.setup_followed && (
               <span className={'rounded-full px-2 py-0.5 text-xs ' + (form.setup_followed === 'yes' ? 'bg-emerald-500/15 text-emerald-300' : form.setup_followed === 'partial' ? 'bg-amber-500/15 text-amber-300' : 'bg-red-500/15 text-red-300')}>

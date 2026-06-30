@@ -129,9 +129,7 @@ export default async function Image() {
                 style={{
                   fontSize: '28px',
                   fontWeight: 800,
-                  background: 'linear-gradient(120deg, #a78bfa, #22d3ee)',
-                  backgroundClip: 'text',
-                  color: 'transparent',
+                  color: '#a78bfa',
                 }}
               >
                 {s.val}

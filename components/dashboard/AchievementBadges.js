@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Confetti, { SuccessCheck } from '@/components/ui/Confetti';
 
 // Big milestones get confetti, small ones get checkmark
@@ -8,6 +8,7 @@ const BIG_MILESTONES = ['century', 'streak_30', 'score_90', 'discipline_100'];
 
 export default function AchievementBadges({ achievements }) {
   const [celebration, setCelebration] = useState(null); // { type: 'confetti'|'check', name, icon }
+  const bannerRef = useRef(null);
 
   // Detect newly earned achievements
   useEffect(() => {
@@ -33,6 +34,17 @@ export default function AchievementBadges({ achievements }) {
     } catch (e) {}
   }, []);
 
+  // Remove animate-pulse from the banner after 3 seconds
+  useEffect(() => {
+    if (!celebration || !bannerRef.current) return;
+    const timer = setTimeout(() => {
+      if (bannerRef.current) {
+        bannerRef.current.classList.remove('animate-pulse');
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [celebration]);
+
   // NOW the early return is safe
   if (!achievements || achievements.length === 0) return null;
 
@@ -51,7 +63,7 @@ export default function AchievementBadges({ achievements }) {
 
       {/* Achievement unlocked banner */}
       {celebration && (
-        <div className="mb-4 flex items-center gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] px-4 py-3 animate-pulse">
+        <div ref={bannerRef} className="mb-4 flex items-center gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] px-4 py-3 animate-pulse">
           <span className="text-xl">{celebration.icon}</span>
           <div className="min-w-0">
             <div className="text-xs font-semibold text-emerald-300">Achievement unlocked!</div>
@@ -91,7 +103,7 @@ export default function AchievementBadges({ achievements }) {
             {inProgress.map((a) => (
               <div
                 key={a.key}
-                className="group relative flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.02] px-3 py-2"
+                className="group relative flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.02] px-3 py-2"
                 title={a.desc + ' (' + Math.round(a.progress * 100) + '%)'}
               >
                 <span className="text-sm opacity-50">{a.icon}</span>

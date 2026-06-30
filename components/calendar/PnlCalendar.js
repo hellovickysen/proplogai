@@ -93,7 +93,7 @@ export default function PnlCalendar({ trades, monthPnl }) {
       <div className="hidden sm:block">
         <div className="mb-1.5 grid grid-cols-7 gap-1">
           {DOW_ALL.map((d, i) => (
-            <div key={i} className="text-center font-mono text-[10px] text-white/40">{d}</div>
+            <div key={d + '-' + i} className="text-center font-mono text-[10px] text-white/40">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1">
@@ -107,7 +107,7 @@ export default function PnlCalendar({ trades, monthPnl }) {
 
             return (
               <div
-                key={i}
+                key={cell.overflow ? 'prev-' + cell.day + '-' + i : 'day-' + cell.day}
                 className={
                   'flex aspect-square flex-col justify-between overflow-hidden rounded-lg border p-1.5 ' +
                   (isOverflow
@@ -171,7 +171,7 @@ export default function PnlCalendar({ trades, monthPnl }) {
         {/* DOW header */}
         <div className="mb-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(' + mobileCols + ', 1fr)', gap: '4px' }}>
           {mobileDow.map((d, i) => (
-            <div key={i} className="text-center font-mono text-[10px] text-white/40">{d}</div>
+            <div key={d + '-' + i} className="text-center font-mono text-[10px] text-white/40">{d}</div>
           ))}
         </div>
 
@@ -188,7 +188,7 @@ export default function PnlCalendar({ trades, monthPnl }) {
 
             return (
               <div
-                key={i}
+                key={cell.overflow ? 'prev-' + cell.day + '-' + i : 'day-' + cell.day}
                 className={
                   'flex min-h-[52px] flex-col justify-between overflow-hidden rounded-lg border p-1.5 ' +
                   (isOverflow

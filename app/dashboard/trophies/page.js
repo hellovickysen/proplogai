@@ -9,7 +9,7 @@ export default async function TrophiesPage() {
 
   const { data: trophies, error: trophiesError } = await supabase
     .from('trophies')
-    .select('*')
+    .select('id, title, category, description, file_url, firm_name, is_public, share_id, created_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 

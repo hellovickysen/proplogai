@@ -135,7 +135,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
               {weeks.map((week, wi) => {
                 const ws = weekSummary(week);
                 return (
-                  <tr key={wi}>
+                  <tr key={'week-' + wi}>
                     {week.map((cell, di) => {
                       const d = cell.day;
                       const isOverflow = cell.overflow;
@@ -257,7 +257,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
         <div className="px-2">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '2px' }}>
             {dowLabels.map((d, i) => (
-              <div key={i} className="py-2 text-center text-xs font-medium text-white/45">{d}</div>
+              <div key={d + '-' + i} className="py-2 text-center text-xs font-medium text-white/45">{d}</div>
             ))}
           </div>
 
@@ -266,7 +266,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
             const filtered = showWeekends ? week : week.filter((c) => !isWeekend(c.dow));
             return (
               <div
-                key={wi}
+                key={'week-' + wi}
                 style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '2px', marginBottom: '2px' }}
               >
                 {filtered.map((cell, di) => {
@@ -309,7 +309,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   );
 
                   return (
-                    <div key={di} className={'overflow-hidden border bg-white/[0.02] ' + (isToday ? 'border-2 border-cyan-400/50' : 'border-white/[0.08]')}>
+                    <div key={cell.overflow ? 'overflow-' + di : 'day-' + cell.day} className={'overflow-hidden border bg-white/[0.02] ' + (isToday ? 'border-2 border-cyan-400/50' : 'border-white/[0.08]')}>
                       {e && dateStr ? (
                         <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr}>{cellContent}</Link>
                       ) : cellContent}

@@ -36,22 +36,22 @@ export default function NotFound() {
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
-            href="/dashboard"
+            href="/"
             className="inline-block px-6 py-2.5 rounded-xl font-medium text-white text-sm transition-opacity hover:opacity-90"
             style={{
               fontFamily: "Poppins, sans-serif",
               background: "linear-gradient(120deg,#a78bfa,#22d3ee)",
             }}
           >
-            Go to Dashboard
+            Go Home
           </Link>
 
           <Link
-            href="/"
+            href="/dashboard"
             className="inline-block px-6 py-2.5 rounded-xl font-medium text-white/70 text-sm border border-white/10 hover:border-white/20 hover:text-white transition-colors"
             style={{ fontFamily: "Poppins, sans-serif" }}
           >
-            Go Home
+            Go to Dashboard
           </Link>
         </div>
       </div>

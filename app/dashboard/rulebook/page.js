@@ -9,7 +9,7 @@ export default async function RulebookRoute() {
 
   const { data: setups, error: setupsError } = await supabase
     .from('setups')
-    .select('*')
+    .select('id, name, direction, description, is_default, is_active, sort_order, created_at')
     .eq('user_id', user.id)
     .order('sort_order', { ascending: true });
 

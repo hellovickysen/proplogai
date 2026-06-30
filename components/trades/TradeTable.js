@@ -62,20 +62,21 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
       {/* Desktop table — hidden below sm breakpoint */}
       <div className="hidden sm:block overflow-x-auto">
       <table className="w-full min-w-[900px] border-collapse text-sm">
+        <caption className="sr-only">Trade history</caption>
         <thead>
           <tr className="text-left font-mono text-xs uppercase tracking-wider text-white/55">
-            <th className="px-3 pb-3">Pair</th>
-            <th className="px-3 pb-3">Dir</th>
-            <th className="px-3 pb-3">Date</th>
-            <th className="px-3 pb-3">Session</th>
-            <th className="px-3 pb-3">Result</th>
-            <th className="px-3 pb-3">P&amp;L</th>
-            <th className="px-3 pb-3">Entry</th>
-            <th className="px-3 pb-3">Exit</th>
-            {!compact && <th className="px-3 pb-3">Setup</th>}
-            {!compact && <th className="px-3 pb-3">Emotions</th>}
-            <th className="px-3 pb-3">Conf</th>
-            <th className="px-3 pb-3"></th>
+            <th scope="col" className="px-3 pb-3">Pair</th>
+            <th scope="col" className="px-3 pb-3">Dir</th>
+            <th scope="col" className="px-3 pb-3">Date</th>
+            <th scope="col" className="px-3 pb-3">Session</th>
+            <th scope="col" className="px-3 pb-3">Result</th>
+            <th scope="col" className="px-3 pb-3">P&amp;L</th>
+            <th scope="col" className="px-3 pb-3">Entry</th>
+            <th scope="col" className="px-3 pb-3">Exit</th>
+            {!compact && <th scope="col" className="px-3 pb-3">Setup</th>}
+            {!compact && <th scope="col" className="px-3 pb-3">Emotions</th>}
+            <th scope="col" className="px-3 pb-3">Conf</th>
+            <th scope="col" className="px-3 pb-3"></th>
           </tr>
         </thead>
         <tbody>
