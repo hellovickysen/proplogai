@@ -73,8 +73,8 @@ export default function TradeFilters({ trades, prefs }) {
     <div>
       {/* Filter bar */}
       <div className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end sm:gap-3">
-        {/* Result */}
-        <div>
+        {/* Result — full width on mobile so buttons don't overlap Setup */}
+        <div className="col-span-2 sm:col-span-1">
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Result</label>
           <div className="flex gap-1">
             {[
