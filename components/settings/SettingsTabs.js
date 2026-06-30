@@ -61,6 +61,11 @@ function ProfileTab({ user, prefs }) {
   const [pwMsg, setPwMsg] = useState(null);
   const [pwErr, setPwErr] = useState(null);
 
+  const [fullName, setFullName] = useState((prefs && prefs.full_name) || '');
+  const [nameSaving, setNameSaving] = useState(false);
+  const [nameMsg, setNameMsg] = useState(null);
+  const [nameErr, setNameErr] = useState(null);
+
   const [avatarUrl, setAvatarUrl] = useState((prefs && prefs.avatar_url) || '');
   const [uploading, setUploading] = useState(false);
   const [avatarMsg, setAvatarMsg] = useState(null);
@@ -110,8 +115,44 @@ function ProfileTab({ user, prefs }) {
     setUploading(false);
   }
 
+  async function onNameSave() {
+    setNameSaving(true);
+    setNameErr(null);
+    setNameMsg(null);
+    const res = await savePreferences({
+      full_name: fullName.trim(),
+      custom_emotions: (prefs && prefs.custom_emotions) || [],
+      custom_setups: (prefs && prefs.custom_setups) || [],
+      default_confidence: (prefs && prefs.default_confidence) || 0,
+      avatar_url: avatarUrl || null,
+    });
+    if (res.error) { setNameErr(res.error); if (toast) toast.error(res.error); }
+    else { setNameMsg('Name saved!'); if (toast) toast.success('Name saved!'); }
+    setNameSaving(false);
+  }
+
   return (
     <div className="space-y-6">
+      <div className={card}>
+        <div className="mb-4 font-display text-base font-semibold">Full Name</div>
+        <div>
+          <label className={labelCls}>Display name</label>
+          <input
+            type="text"
+            className={field}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Your full name"
+            maxLength={100}
+          />
+        </div>
+        {nameErr && <p className="mt-3 text-sm text-red-400">{nameErr}</p>}
+        {nameMsg && <p className="mt-3 text-sm text-emerald-400">{nameMsg}</p>}
+        <button onClick={onNameSave} disabled={nameSaving} className="mt-4 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+          {nameSaving ? 'Saving...' : 'Save name'}
+        </button>
+      </div>
+
       <div className={card}>
         <div className="mb-4 font-display text-base font-semibold">Profile image</div>
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-5">

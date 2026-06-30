@@ -26,14 +26,19 @@ export default async function AdminUsersPage({ searchParams }) {
       const { data: trades } = await sb.from('trades').select('user_id');
       (trades || []).forEach((t) => { tradeMap[t.user_id] = (tradeMap[t.user_id] || 0) + 1; });
     } catch {}
+    let nameMap = {};
     try {
-      const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete');
-      (prefs || []).forEach((p) => { onboardMap[p.user_id] = !!p.onboarding_complete; });
+      const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete, full_name');
+      (prefs || []).forEach((p) => {
+        onboardMap[p.user_id] = !!p.onboarding_complete;
+        if (p.full_name) nameMap[p.user_id] = p.full_name;
+      });
     } catch {}
 
     let users = authUsers.map((u) => ({
       id: u.id,
       email: u.email || '(no email)',
+      full_name: nameMap[u.id] || null,
       created_at: u.created_at,
       last_sign_in: u.last_sign_in_at,
       provider: u.app_metadata?.provider || 'email',
@@ -46,7 +51,7 @@ export default async function AdminUsersPage({ searchParams }) {
 
     if (search) {
       const q = search.toLowerCase();
-      users = users.filter((u) => u.email.toLowerCase().includes(q));
+      users = users.filter((u) => u.email.toLowerCase().includes(q) || (u.full_name && u.full_name.toLowerCase().includes(q)));
     }
     users.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 

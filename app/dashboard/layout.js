@@ -25,11 +25,25 @@ export default async function DashboardLayout({ children }) {
 
   const { data: prefs } = await supabase
     .from('user_preferences')
-    .select('onboarding_complete, referred_by, referral_balance, avatar_url')
+    .select('onboarding_complete, referred_by, referral_balance, avatar_url, full_name')
     .eq('user_id', user.id)
     .maybeSingle();
   if (!prefs || !prefs.onboarding_complete) {
     redirect('/onboarding');
+  }
+
+  /* Auto-save full_name from Google OAuth metadata if not yet set */
+  if (prefs && !prefs.full_name) {
+    const googleName = user.user_metadata?.full_name || user.user_metadata?.name;
+    if (googleName) {
+      try {
+        await supabase
+          .from('user_preferences')
+          .update({ full_name: googleName })
+          .eq('user_id', user.id);
+        prefs.full_name = googleName;
+      } catch (e) {}
+    }
   }
 
   try {
@@ -113,11 +127,11 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} />
+      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} fullName={prefs?.full_name || ''} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} />
+            <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} />
             <Link href="/dashboard" className="sm:hidden">
               <Logo size={28} wordmarkClassName="font-display text-base font-bold" />
             </Link>

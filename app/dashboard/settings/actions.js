@@ -45,6 +45,9 @@ export async function savePreferences(payload) {
     return { error: 'Invalid avatar URL.' };
   }
 
+  // Validate full_name
+  const fullName = (typeof payload.full_name === 'string') ? payload.full_name.trim().slice(0, 100) : undefined;
+
   const row = {
     user_id: user.id,
     custom_emotions: Array.isArray(payload.custom_emotions)
@@ -57,6 +60,11 @@ export async function savePreferences(payload) {
     avatar_url: avatarUrl,
     updated_at: new Date().toISOString(),
   };
+
+  // Only include full_name if explicitly provided in payload
+  if (fullName !== undefined) {
+    row.full_name = fullName || null;
+  }
 
   const { data: existing } = await supabase
     .from('user_preferences')

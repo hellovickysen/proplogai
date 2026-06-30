@@ -18,7 +18,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotifCount = 0 }) {
+export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotifCount = 0, fullName = '' }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -43,7 +43,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
     return pathname === href || pathname.startsWith(href + '/');
   }
 
-  const initial = email ? email.charAt(0).toUpperCase() : '?';
+  const initial = fullName ? fullName.charAt(0).toUpperCase() : email ? email.charAt(0).toUpperCase() : '?';
 
   return (
     <aside
@@ -136,7 +136,8 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
             {!collapsed && (
               <>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-xs text-white/70">{email || 'Account'}</div>
+                  {fullName && <div className="truncate text-xs font-semibold text-white">{fullName}</div>}
+                  <div className="truncate text-xs text-white/55">{email || 'Account'}</div>
                 </div>
                 <span className={'text-[10px] text-white/30 transition-transform ' + (menuOpen ? 'rotate-180' : '')}>&#9650;</span>
               </>

@@ -18,7 +18,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits }) {
+export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits, fullName = '' }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -29,7 +29,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  const initial = email ? email.charAt(0).toUpperCase() : '?';
+  const initial = fullName ? fullName.charAt(0).toUpperCase() : email ? email.charAt(0).toUpperCase() : '?';
 
   function isActive(href) {
     if (href === '/dashboard') return pathname === '/dashboard';
@@ -177,7 +177,10 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
                 {initial}
               </div>
             )}
-            <span className="truncate font-mono text-xs text-white/50">{email || 'Account'}</span>
+            <div className="min-w-0 flex-1">
+              {fullName && <div className="truncate text-xs font-semibold text-white">{fullName}</div>}
+              <div className="truncate font-mono text-xs text-white/55">{email || 'Account'}</div>
+            </div>
           </Link>
 
           {/* Sign out */}

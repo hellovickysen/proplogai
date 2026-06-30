@@ -53,7 +53,10 @@ export default function AdminUserTabs({ users, search }) {
           <tbody>
             {list.map((u) => (
               <tr key={u.id} className="border-t border-white/5 hover:bg-white/[0.02]">
-                <td className="px-4 py-3 font-medium">{u.email}</td>
+                <td className="px-4 py-3">
+                  {u.full_name && <div className="font-semibold">{u.full_name}</div>}
+                  <div className={'font-mono text-xs ' + (u.full_name ? 'text-white/50' : 'font-medium')}>{u.email}</div>
+                </td>
                 <td className="px-4 py-3">
                   <span className={'rounded-full px-2 py-0.5 text-[10px] font-semibold ' + (u.provider === 'google' ? 'bg-blue-500/15 text-blue-300' : 'bg-white/10 text-white/60')}>
                     {u.provider}
