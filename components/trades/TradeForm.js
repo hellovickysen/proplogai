@@ -275,6 +275,18 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     setSaving(true);
     setError(null);
 
+    // Validate: each selected regular setup must have a follow status
+    const regularSetups = selectedSetups.filter((s) => !s.is_default);
+    if (regularSetups.length > 0) {
+      const missing = regularSetups.filter((s) => !form.setup_follow_map[s.id]);
+      if (missing.length > 0) {
+        const names = missing.map((s) => s.name).join(', ');
+        setError('Please mark whether you followed each setup: ' + names);
+        setSaving(false);
+        return;
+      }
+    }
+
     const payload = { ...form };
 
     // Attach journal if in create mode and any journal field is filled
