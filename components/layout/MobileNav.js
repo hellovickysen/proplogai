@@ -15,7 +15,6 @@ const NAV = [
   { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach' },
   { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },
   { label: 'Feedback',  icon: '💬', href: '/dashboard/support' },
-  { label: 'Notifications', icon: '🔔', href: '/dashboard/notifications' },
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
