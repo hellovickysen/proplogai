@@ -10,6 +10,7 @@ import Logo from '@/components/Logo';
 import Link from 'next/link';
 import { num, fmtMoney, fmtMoneyCompact } from '@/lib/stats';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
+import GuidedTour from '@/components/ui/GuidedTour';
 
 /* Admin notification types — excluded from user dashboard bell */
 const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup'];
@@ -122,6 +123,13 @@ export default async function DashboardLayout({ children }) {
     } catch (e) {}
   }
 
+  /* ── Trade count for guided tour ── */
+  let tradeCount = 0;
+  try {
+    const { count } = await supabase.from('trades').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
+    tradeCount = count || 0;
+  } catch (e) {}
+
   const isAdmin = user.email === ADMIN_EMAIL;
   const initial = user.email ? user.email.charAt(0).toUpperCase() : '?';
 
@@ -150,6 +158,7 @@ export default async function DashboardLayout({ children }) {
         <RiskFooter />
       </div>
       <QuickLog />
+      <GuidedTour hasTrades={tradeCount > 0} />
     </div>
   );
 }

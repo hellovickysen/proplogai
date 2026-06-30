@@ -10,9 +10,9 @@ const NAV = [
   { label: 'Trades',    icon: '☰', href: '/dashboard/trades' },
   { label: 'Rulebook',  icon: '📋', href: '/dashboard/rulebook' },
   { label: 'Calendar',  icon: '📅', href: '/dashboard/calendar' },
-  { label: 'Expenses',  icon: '💳', href: '/dashboard/expenses' },
+  { label: 'Expenses',  icon: '💳', href: '/dashboard/expenses', tourId: 'nav-expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
-  { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach' },
+  { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach', tourId: 'nav-coach' },
   { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },
   { label: 'Feedback',  icon: '💬', href: '/dashboard/support' },
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
@@ -95,6 +95,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
                 key={item.href}
                 href={item.href}
                 title={item.label}
+                {...(item.tourId ? { 'data-tour': item.tourId } : {})}
                 className={
                   'flex items-center gap-2.5 rounded-xl whitespace-nowrap text-sm transition-all ' +
                   (collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5') + ' ' +
