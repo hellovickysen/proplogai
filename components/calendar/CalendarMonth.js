@@ -199,7 +199,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                                 {fmtPnl(e.net)}
                               </span>
                               <span className="mt-0.5 flex items-center gap-1 text-xs text-white/45">
-                                {e.count}{e.count !== 1 ? '' : ''}
+                                {e.count} trade{e.count !== 1 ? 's' : ''}
                                 {hasJournal && <span title="Has journal entry">&#128221;</span>}
                               </span>
                             </div>
