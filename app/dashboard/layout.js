@@ -8,7 +8,7 @@ import RiskFooter from '@/components/layout/RiskFooter';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
-import { num, fmtMoney } from '@/lib/stats';
+import { num, fmtMoney, fmtMoneyCompact } from '@/lib/stats';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 
 /* Admin notification types — excluded from user dashboard bell */
@@ -73,6 +73,13 @@ export default async function DashboardLayout({ children }) {
     if (raw.slice(0, 10) === today) todayPnl += num(t.pnl);
   });
   const tone = todayPnl >= 0 ? 'text-emerald-400' : 'text-red-400';
+  // Short P&L for mobile header — drop decimals, use k suffix for $1000+
+  const todayPnlShort = (() => {
+    const sign = todayPnl >= 0 ? '+' : '-';
+    const abs = Math.abs(todayPnl);
+    if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return sign + '$' + Math.round(abs);
+  })();
 
   /* ── Notification unread count ── */
   let notifCount = 0;
@@ -120,11 +127,14 @@ export default async function DashboardLayout({ children }) {
             <NotificationBell initialCount={notifCount} excludeTypes={ADMIN_NOTIF_TYPES} />
             <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5 min-h-[44px]">
               <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:inline">Today</span>
-              <span className={'font-mono text-xs font-semibold sm:text-sm ' + tone}>{fmtMoney(todayPnl)}</span>
+              <span className={'font-mono text-xs font-semibold sm:text-sm ' + tone}>
+                <span className="sm:hidden">{todayPnlShort}</span>
+                <span className="hidden sm:inline">{fmtMoney(todayPnl)}</span>
+              </span>
             </div>
             <span className="hidden font-mono text-xs text-white/55 sm:block">{user.email}</span>
             {/* Mobile avatar in header */}
-            <Link href="/dashboard/settings" className="sm:hidden">
+            <Link href="/dashboard/settings" className="flex-shrink-0 sm:hidden">
               {prefs.avatar_url ? (
                 <img src={prefs.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover border border-white/10" />
               ) : (
