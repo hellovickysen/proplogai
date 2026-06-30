@@ -38,6 +38,12 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         ? [initial.setup_id]
         : [];
 
+  // Build initial per-setup follow map: if editing, assign the saved overall status to each setup
+  const initialFollowMap = {};
+  if (initial && initial.setup_followed) {
+    initialSetupIds.forEach((id) => { initialFollowMap[id] = initial.setup_followed; });
+  }
+
   const [form, setForm] = useState({
     pair: (initial && initial.pair) || 'XAU/USD',
     direction: (initial && initial.direction) || 'long',
@@ -52,6 +58,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     setup_id: (initial && initial.setup_id) || '',
     setup_ids: initialSetupIds,
     setup_followed: (initial && initial.setup_followed) || '',
+    setup_follow_map: initialFollowMap,
     no_setup_reason: (initial && initial.no_setup_reason) || '',
     timeframe: (initial && initial.timeframe) || 'M5',
     session: (initial && initial.session) || '',
@@ -127,6 +134,15 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   const hasNoSetup = selectedSetups.some((s) => s.is_default);
 
+  // Compute overall setup_followed from per-setup map
+  function computeOverallFollowed(followMap, ids) {
+    const values = ids.map((id) => followMap[id]).filter(Boolean);
+    if (values.length === 0) return '';
+    if (values.every((v) => v === 'yes')) return 'yes';
+    if (values.every((v) => v === 'no')) return 'no';
+    return 'partial';
+  }
+
   function toggleSetup(setupId) {
     if (!activeSetups) return;
     const chosen = activeSetups.find((s) => s.id === setupId);
@@ -134,24 +150,28 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
     setForm((f) => {
       let newIds = [...f.setup_ids];
-      const wasNoSetup = f.setup_ids.length > 0 && activeSetups.some((s) => s.is_default && f.setup_ids.includes(s.id));
+      let newMap = { ...f.setup_follow_map };
 
       if (newIds.includes(setupId)) {
-        // Deselect
+        // Deselect — remove from map
         newIds = newIds.filter((id) => id !== setupId);
+        delete newMap[setupId];
       } else {
         // Select
         if (chosen.is_default) {
           // No Setup is exclusive — clear all others
           newIds = [setupId];
+          newMap = {};
         } else {
           // Regular setup: remove No Setup if present, enforce max
           const noSetupEntry = activeSetups.find((s) => s.is_default);
           if (noSetupEntry) {
             newIds = newIds.filter((id) => id !== noSetupEntry.id);
+            delete newMap[noSetupEntry.id];
           }
           if (newIds.length >= MAX_SETUPS) return f;
           newIds.push(setupId);
+          // New setup starts with no follow status (blank)
         }
       }
 
@@ -160,18 +180,32 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         .map((id) => (activeSetups.find((s) => s.id === id) || {}).name)
         .filter(Boolean);
 
-      const isNowNoSetup = newIds.length > 0 && activeSetups.some((s) => s.is_default && newIds.includes(s.id));
-      const switchedCategory = wasNoSetup !== isNowNoSetup;
-      const isEmpty = newIds.length === 0;
+      const isNoSetup = newIds.length > 0 && activeSetups.some((s) => s.is_default && newIds.includes(s.id));
 
       return {
         ...f,
         setup_ids: newIds,
         setup_id: newIds[0] || '',
         setup: names.join(', '),
-        // Only reset follow status when switching between regular/no-setup or deselecting all
-        setup_followed: (switchedCategory || isEmpty) ? '' : f.setup_followed,
-        no_setup_reason: (switchedCategory || isEmpty) ? '' : f.no_setup_reason,
+        setup_follow_map: isNoSetup ? {} : newMap,
+        setup_followed: isNoSetup ? '' : computeOverallFollowed(newMap, newIds),
+        no_setup_reason: isNoSetup ? f.no_setup_reason : '',
+      };
+    });
+  }
+
+  function setSetupFollowed(setupId, value) {
+    setForm((f) => {
+      const newMap = { ...f.setup_follow_map };
+      if (newMap[setupId] === value) {
+        delete newMap[setupId]; // Toggle off
+      } else {
+        newMap[setupId] = value;
+      }
+      return {
+        ...f,
+        setup_follow_map: newMap,
+        setup_followed: computeOverallFollowed(newMap, f.setup_ids),
       };
     });
   }
@@ -421,34 +455,40 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   </div>
                 )}
 
-                {/* Did you follow these setups? — regular setups only */}
+                {/* Per-setup follow tracking — regular setups only */}
                 {!hasNoSetup && (
-                  <div>
-                    <label className={labelCls}>
-                      Did you follow {selectedSetups.length > 1 ? 'these setups' : 'this setup'}?
-                    </label>
-                    <div className="flex gap-2">
-                      {[
-                        { v: 'yes', l: 'Yes', color: 'emerald' },
-                        { v: 'partial', l: 'Partially', color: 'amber' },
-                        { v: 'no', l: 'No', color: 'red' },
-                      ].map((opt) => {
-                        const active = form.setup_followed === opt.v;
-                        const cls = active
-                          ? 'border-' + opt.color + '-400/50 bg-' + opt.color + '-500/15 text-' + opt.color + '-300'
-                          : 'border-white/10 bg-black/30 text-white/50';
-                        return (
-                          <button
-                            key={opt.v}
-                            type="button"
-                            onClick={() => set('setup_followed', form.setup_followed === opt.v ? '' : opt.v)}
-                            className={'flex-1 rounded-lg border px-3 py-2.5 text-xs font-semibold ' + cls}
-                          >
-                            {opt.l}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="space-y-3">
+                    <label className={labelCls}>Did you follow each setup?</label>
+                    {selectedSetups.filter((s) => !s.is_default).map((s) => {
+                      const val = form.setup_follow_map[s.id] || '';
+                      return (
+                        <div key={s.id}>
+                          <div className="mb-1.5 font-mono text-[10px] uppercase text-cyan-400/60">{s.name}</div>
+                          <div className="flex gap-1.5">
+                            {[
+                              { v: 'yes', l: 'Yes', color: 'emerald' },
+                              { v: 'partial', l: 'Partially', color: 'amber' },
+                              { v: 'no', l: 'No', color: 'red' },
+                            ].map((opt) => {
+                              const active = val === opt.v;
+                              const cls = active
+                                ? 'border-' + opt.color + '-400/50 bg-' + opt.color + '-500/15 text-' + opt.color + '-300'
+                                : 'border-white/10 bg-black/30 text-white/50';
+                              return (
+                                <button
+                                  key={opt.v}
+                                  type="button"
+                                  onClick={() => setSetupFollowed(s.id, opt.v)}
+                                  className={'flex-1 rounded-lg border px-2 py-2 text-xs font-semibold ' + cls}
+                                >
+                                  {opt.l}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
@@ -610,20 +650,21 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
           {form.pair}{' '}
           <span className={'ml-1 text-xs ' + (form.direction === 'long' ? 'text-emerald-400' : 'text-red-400')}>{form.direction.toUpperCase()}</span>
         </div>
-        {form.setup && (
-          <div className="mt-2">
-            <div className="flex flex-wrap gap-1">
-              {form.setup.split(', ').map((s) => (
-                <span key={s} className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-300">{s}</span>
-              ))}
-            </div>
-            {form.setup_followed && (
-              <div className="mt-1.5">
-                <span className={'rounded-full px-2 py-0.5 text-xs ' + (form.setup_followed === 'yes' ? 'bg-emerald-500/15 text-emerald-300' : form.setup_followed === 'partial' ? 'bg-amber-500/15 text-amber-300' : 'bg-red-500/15 text-red-300')}>
-                  {form.setup_followed === 'yes' ? 'Followed' : form.setup_followed === 'partial' ? 'Partial' : 'Not followed'}
-                </span>
-              </div>
-            )}
+        {selectedSetups.length > 0 && (
+          <div className="mt-2 space-y-1">
+            {selectedSetups.map((s) => {
+              const val = form.setup_follow_map[s.id] || '';
+              const followBadge = val === 'yes' ? 'bg-emerald-500/15 text-emerald-300'
+                : val === 'partial' ? 'bg-amber-500/15 text-amber-300'
+                : val === 'no' ? 'bg-red-500/15 text-red-300' : '';
+              const followLabel = val === 'yes' ? 'Followed' : val === 'partial' ? 'Partial' : val === 'no' ? 'Not followed' : '';
+              return (
+                <div key={s.id} className="flex items-center gap-1.5">
+                  <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-300">{s.name}</span>
+                  {followLabel && <span className={'rounded-full px-2 py-0.5 text-xs ' + followBadge}>{followLabel}</span>}
+                </div>
+              );
+            })}
           </div>
         )}
         <div className={'mt-4 font-display text-3xl font-bold ' + (hasPnl ? (pnlNum >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/50')}>
