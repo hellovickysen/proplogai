@@ -47,7 +47,19 @@ export default async function TradeDetailPage({ params }) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const { data: trade } = await supabase.from('trades').select('*, share_id, shared_until').eq('id', id).eq('user_id', user.id).maybeSingle();
+  const { data: trade, error: tradeError } = await supabase.from('trades').select('*, share_id, shared_until').eq('id', id).eq('user_id', user.id).maybeSingle();
+
+  if (tradeError) {
+    return (
+      <div className="px-4 py-8 sm:px-6">
+        <h1 className="font-display text-2xl font-bold">Trade</h1>
+        <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-6 text-center">
+          <p className="text-sm text-red-400">Something went wrong loading your data. Please try refreshing the page.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!trade) notFound();
   const { data: journal } = await supabase.from('journal_entries').select('*').eq('trade_id', id).maybeSingle();
   const { data: insight } = await supabase

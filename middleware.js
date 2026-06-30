@@ -29,18 +29,27 @@ export async function middleware(request) {
     }
   );
 
+  const isProtectedRoute =
+    request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/admin');
+
   try {
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
-    if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+    if (!user && isProtectedRoute) {
       const url = request.nextUrl.clone();
       url.pathname = '/login';
       return NextResponse.redirect(url);
     }
   } catch (error) {
-    // Never let an auth hiccup take down the whole site.
+    // Auth failed — redirect protected routes to login instead of letting them through.
+    if (isProtectedRoute) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

@@ -30,117 +30,99 @@ export default async function CalendarPage({ searchParams }) {
 
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: trades } = await supabase
+  const { data: trades, error: tradesError } = await supabase
     .from('trades')
     .select('id, pair, direction, pnl, r_multiple, setup, timeframe, session, trade_date, closed_at, created_at')
     .eq('user_id', user.id)
     .order('trade_date', { ascending: false, nullsFirst: false });
-  const list = trades || [];
 
-  const monthParam = year + '-' + pad2(month + 1);
-  const isCurrentMonth = year === now.getUTCFullYear() && month === now.getUTCMonth();
-
-  function shift(delta) {
-    let m = month + delta;
-    let y = year;
-    if (m < 0) { m = 11; y -= 1; }
-    if (m > 11) { m = 0; y += 1; }
-    return y + '-' + pad2(m + 1);
-  }
-
-  const monthTrades = list.filter((t) => {
-    const raw = t.trade_date || t.closed_at || t.created_at;
-    if (!raw) return false;
-    const d = new Date(raw);
-    return d.getUTCFullYear() === year && d.getUTCMonth() === month;
-  });
-  const monthlyPnl = monthTrades.reduce((a, t) => a + num(t.pnl), 0);
-
-  const monthTradeIds = monthTrades.map((t) => t.id);
-  let journalDays = {};
-  let journalMap = {};
-  if (monthTradeIds.length > 0) {
-    const { data: journals } = await supabase
-      .from('journal_entries')
-      .select('trade_id, emotions, note, screenshot_url, screenshot_urls')
-      .in('trade_id', monthTradeIds);
-    (journals || []).forEach((j) => {
-      const urls = Array.isArray(j.screenshot_urls) ? j.screenshot_urls.filter(Boolean) : [];
-      const hasImages = urls.length > 0 || (j.screenshot_url && j.screenshot_url !== '');
-      const hasContent = (j.note && j.note.trim()) || hasImages;
-
-      journalMap[j.trade_id] = {
-        emotions: j.emotions || [],
-        hasNote: !!(j.note && j.note.trim()),
-        hasImages,
-      };
-
-      if (hasContent) {
-        const trade = monthTrades.find((t) => t.id === j.trade_id);
-        if (trade) {
-          const raw = trade.trade_date || trade.closed_at || trade.created_at;
-          if (raw) {
-            const d = new Date(raw).getUTCDate();
-            journalDays[d] = true;
-          }
-        }
-      }
-    });
-  }
-
-  const dayTradesRaw = selected ? list.filter((t) => String(t.trade_date || t.closed_at || t.created_at || '').slice(0, 10) === selected) : [];
-  const dayTrades = dayTradesRaw.map((t) => ({ ...t, _journal: journalMap[t.id] || null }));
-  const dayNet = dayTrades.reduce((a, t) => a + num(t.pnl), 0);
-
-  if (list.length === 0) {
+  if (tradesError) {
     return (
       <div className="px-4 py-8 sm:px-6">
         <h1 className="font-display text-2xl font-bold">Calendar</h1>
-        <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-10 text-center">
-          <div className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}>
-            &#128197;
-          </div>
-          <h2 className="font-display text-xl font-bold">No trades to show</h2>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">
-            Your calendar will light up with daily P&L once you start logging trades. Green days, red days — see your patterns at a glance.
-          </p>
-          <Link href="/dashboard/trades/new" className="mt-6 inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-            + Log your first trade
-          </Link>
+        <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-6 text-center">
+          <p className="text-sm text-red-400">Something went wrong loading your data. Please try refreshing the page.</p>
         </div>
       </div>
     );
   }
 
+  const list = trades || [];
+
+  const tradeIds = list.map((t) => t.id);
+  let journalMap = {};
+  if (tradeIds.length > 0) {
+    const { data: journals, error: journalError } = await supabase
+      .from('journal_entries')
+      .select('trade_id, emotions, note, screenshot_url, screenshot_urls, confidence')
+      .in('trade_id', tradeIds);
+    if (journalError) console.error('journal entries error', journalError);
+    (journals || []).forEach((j) => {
+      journalMap[j.trade_id] = j;
+    });
+  }
+
+  // Build day map for the calendar
+  const dayMap = {};
+  for (const t of list) {
+    const key = t.trade_date ? t.trade_date.slice(0, 10) : null;
+    if (!key) continue;
+    if (!dayMap[key]) dayMap[key] = { pnl: 0, trades: [] };
+    dayMap[key].pnl += Number(t.pnl) || 0;
+    dayMap[key].trades.push(t);
+  }
+
+  // Trades for selected date
+  const selectedTrades = selected && dayMap[selected] ? dayMap[selected].trades : [];
+
+  // Month navigation
+  const prevMonth = month === 0 ? new Date(year - 1, 11, 1) : new Date(year, month - 1, 1);
+  const nextMonth = month === 11 ? new Date(year + 1, 0, 1) : new Date(year, month + 1, 1);
+  const prevParam = `${prevMonth.getFullYear()}-${pad2(prevMonth.getMonth() + 1)}`;
+  const nextParam = `${nextMonth.getFullYear()}-${pad2(nextMonth.getMonth() + 1)}`;
+
   return (
-    <div className="px-4 py-6 sm:px-6">
-      <div className="rounded-2xl border border-white/10 bg-[#12121a] overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 sm:px-5">
-          <div className="flex items-center gap-2">
-            <Link href={'/dashboard/calendar?month=' + shift(-1)} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-sm text-white/50 hover:text-white">&#8249;</Link>
-            <span className="font-display text-sm font-semibold">{MONTHS_SHORT[month]} {year}</span>
-            <Link href={'/dashboard/calendar?month=' + shift(1)} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 text-sm text-white/50 hover:text-white">&#8250;</Link>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="hidden gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5 sm:flex">
-              <span className="rounded-md bg-white/10 px-3 py-1 text-xs font-semibold text-white">Calendar</span>
-              <Link href="/dashboard/trades" className="rounded-md px-3 py-1 text-xs text-white/50 hover:text-white/70">Trades</Link>
-            </div>
-            <Link href="/dashboard/calendar" className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-medium text-white/60 hover:text-white">Today</Link>
-          </div>
+    <div className="px-4 py-8 sm:px-6">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
+        <h1 className="font-display text-2xl font-bold">Calendar</h1>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`?month=${prevParam}`}
+            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm hover:bg-white/[0.06]"
+          >
+            &#8592; {MONTHS_SHORT[prevMonth.getMonth()]}
+          </Link>
+          <span className="font-display text-base font-semibold">
+            {MONTHS_SHORT[month]} {year}
+          </span>
+          <Link
+            href={`?month=${nextParam}`}
+            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm hover:bg-white/[0.06]"
+          >
+            {MONTHS_SHORT[nextMonth.getMonth()]} &#8594;
+          </Link>
         </div>
-        <CalendarMonth trades={list} year={year} month={month} selected={selected} monthParam={monthParam} monthlyPnl={monthlyPnl} journalDays={journalDays} />
       </div>
 
-      {selected && dayTrades.length > 0 && (
-        <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-3 sm:p-5">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div className="font-display text-base font-semibold">Trades on {selected}</div>
-            <div className={'font-mono text-sm ' + (dayNet >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-              {fmtMoney(dayNet)} &middot; {dayTrades.length} trade{dayTrades.length === 1 ? '' : 's'}
-            </div>
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+        <CalendarMonth year={year} month={month} dayMap={dayMap} selected={selected} />
+      </div>
+
+      {selected && (
+        <div className="mt-6">
+          <div className="mb-3 font-display text-lg font-bold">
+            Trades on {selected}
+            {dayMap[selected] && (
+              <span className={' ml-3 text-base font-semibold ' + (dayMap[selected].pnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                {fmtMoney(dayMap[selected].pnl)}
+              </span>
+            )}
           </div>
-          <TradeTable rows={dayTrades} />
+          {selectedTrades.length === 0 ? (
+            <p className="text-sm text-white/55">No trades on this date.</p>
+          ) : (
+            <TradeTable trades={selectedTrades} journals={[]} />
+          )}
         </div>
       )}
     </div>

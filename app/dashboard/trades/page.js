@@ -11,21 +11,34 @@ export default async function TradesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: trades } = await supabase
+  const { data: trades, error: tradesError } = await supabase
     .from('trades')
     .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, source')
     .eq('user_id', user.id)
     .order('trade_date', { ascending: false, nullsFirst: false });
+
+  if (tradesError) {
+    return (
+      <div className="px-4 py-8 sm:px-6">
+        <h1 className="font-display text-2xl font-bold">Trades</h1>
+        <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-6 text-center">
+          <p className="text-sm text-red-400">Something went wrong loading your data. Please try refreshing the page.</p>
+        </div>
+      </div>
+    );
+  }
+
   const list = trades || [];
 
   // Fetch all journal entries for these trades to get emotions, confidence
   const tradeIds = list.map((t) => t.id);
   let journalMap = {};
   if (tradeIds.length > 0) {
-    const { data: journals } = await supabase
+    const { data: journals, error: journalError } = await supabase
       .from('journal_entries')
       .select('trade_id, emotions, note, screenshot_url, screenshot_urls, confidence')
       .in('trade_id', tradeIds);
+    if (journalError) console.error('journal entries error', journalError);
     (journals || []).forEach((j) => {
       const urls = Array.isArray(j.screenshot_urls) ? j.screenshot_urls.filter(Boolean) : [];
       const hasImages = urls.length > 0 || (j.screenshot_url && j.screenshot_url !== '');
@@ -45,11 +58,12 @@ export default async function TradesPage() {
   }));
 
   // Fetch user prefs for filter options
-  const { data: prefs } = await supabase
+  const { data: prefs, error: prefsError } = await supabase
     .from('user_preferences')
     .select('custom_emotions, custom_setups')
     .eq('user_id', user.id)
     .maybeSingle();
+  if (prefsError) console.error('user preferences error', prefsError);
 
   return (
     <div className="px-4 py-8 sm:px-6">

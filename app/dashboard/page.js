@@ -82,257 +82,164 @@ function fmtCurrency(v) {
 export default async function DashboardPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: trades } = await supabase
+  const { data: trades, error: tradesError } = await supabase
     .from('trades')
     .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, journal_entries(emotions, note, screenshot_url, screenshot_urls, confidence)')
     .eq('user_id', user.id)
     .order('trade_date', { ascending: false, nullsFirst: false });
 
-  // Enrich trades with journal data from the joined relation
-  const list = (trades || []).map((t) => {
-    const j = Array.isArray(t.journal_entries) ? t.journal_entries[0] : t.journal_entries;
-    let _journal = null;
-    if (j) {
-      const urls = Array.isArray(j.screenshot_urls) ? j.screenshot_urls.filter(Boolean) : [];
-      const hasImages = urls.length > 0 || (j.screenshot_url && j.screenshot_url !== '');
-      _journal = {
-        emotions: j.emotions || [],
-        hasNote: !!(j.note && j.note.trim()),
-        hasImages,
-        confidence: j.confidence != null ? j.confidence : null,
-      };
-    }
-    const { journal_entries, ...trade } = t;
-    return { ...trade, _journal };
-  });
-
-  const s = computeStats(list);
-  const series = equitySeries(list);
-  const chartData = equityChartData(list);
-  const { data: coach } = await supabase
-    .from('ai_insights')
-    .select('summary, mistakes, created_at')
-    .eq('user_id', user.id)
-    .eq('type', 'coach_report')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const report = coach && coach.mistakes ? coach.mistakes : null;
-  const topMistake = report && Array.isArray(report.recurring_mistakes) ? report.recurring_mistakes[0] : null;
-
-  // Journal entries for discipline
-  const tradeIds = list.map((t) => t.id);
-  let journals = [];
-  if (tradeIds.length > 0) {
-    const { data: jdata } = await supabase
-      .from('journal_entries')
-      .select('trade_id')
-      .in('trade_id', tradeIds);
-    journals = jdata || [];
-  }
-
-  const disciplineStats = computeDisciplineStats(list, journals);
-  const weeklyScore = computeWeeklyScore(list, journals);
-  const eliteWeekStreak = computeEliteWeekStreak(list, journals);
-  const achievements = computeAchievements({
-    totalTrades: list.length,
-    journalStreak: disciplineStats.journalStreak,
-    noRevengeStreak: disciplineStats.noRevengeStreak,
-    setupDiscipline: disciplineStats.setupDiscipline,
-    weeklyScore: weeklyScore.score,
-    eliteWeekStreak,
-  });
-
-  // ── Notify on newly unlocked achievements ──
-  const earnedAchievements = achievements.filter(a => a.earned);
-  if (earnedAchievements.length > 0) {
-    try {
-      const { data: existingNotifs } = await supabase
-        .from('notifications')
-        .select('metadata')
-        .eq('user_id', user.id)
-        .eq('type', 'achievement_unlocked');
-      const notifiedKeys = new Set(
-        (existingNotifs || []).map(n => n.metadata?.achievement_key).filter(Boolean)
-      );
-      for (const a of earnedAchievements) {
-        if (!notifiedKeys.has(a.key)) {
-          await notify(supabase, user.id, TYPES.ACHIEVEMENT_UNLOCKED,
-            a.icon + ' ' + a.name,
-            a.desc,
-            { achievement_key: a.key, link: '/dashboard' }
-          );
-        }
-      }
-    } catch (e) {
-      // Achievement notifications should never break the dashboard
-    }
-  }
-
-  // Expense summary — lightweight queries
-  const { data: expenseRows } = await supabase.from('expenses').select('total_cost').eq('user_id', user.id);
-  const { data: payoutRows } = await supabase.from('payouts').select('amount').eq('user_id', user.id);
-  const totalExpense = (expenseRows || []).reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
-  const totalPayout = (payoutRows || []).reduce((a, p) => a + (Number(p.amount) || 0), 0);
-  const expenseNet = totalPayout - totalExpense;
-  const hasExpenseData = (expenseRows && expenseRows.length > 0) || (payoutRows && payoutRows.length > 0);
-
-  if (list.length === 0) {
-    const steps = [
-      { n: '1', t: 'Log your first trade', d: 'Pair, direction, and your P&L — that is all it takes.' },
-      { n: '2', t: 'Journal it', d: 'Add emotions, a confidence rating, notes and a screenshot.' },
-      { n: '3', t: 'Get AI coaching', d: 'Instant per-trade analysis, plus a coach report across all trades.' },
-    ];
+  if (tradesError) {
     return (
-      <div className="px-4 py-8 sm:px-6 sm:py-10">
-        <h1 className="font-display text-2xl font-bold">Welcome to PropLogAI &#x1F44B;</h1>
-        <p className="mt-1 text-sm text-white/55">Let's get your journal started.</p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          {steps.map((st) => (
-            <div key={st.n} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <div className="font-display text-2xl font-bold" style={gradientText}>{st.n}</div>
-              <h3 className="mt-2 font-display text-base font-semibold">{st.t}</h3>
-              <p className="mt-1 text-sm text-white/55">{st.d}</p>
-            </div>
-          ))}
+      <div className="px-4 py-8 sm:px-6">
+        <h1 className="font-display text-2xl font-bold">Dashboard</h1>
+        <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-6 text-center">
+          <p className="text-sm text-red-400">Something went wrong loading your data. Please try refreshing the page.</p>
         </div>
-        <Link href="/dashboard/trades/new" className="mt-7 inline-block rounded-xl px-5 py-2.5 font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-          + Log your first trade
-        </Link>
       </div>
     );
   }
 
-  const recent = list.slice(0, 6);
+  const { data: coach, error: coachError } = await supabase
+    .from('ai_insights')
+    .select('insight, created_at')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (coachError) console.error('coach insight error', coachError);
 
-  const today = new Date(Date.now() + 5.5 * 3600000).toISOString().slice(0, 10); // IST date
-  const todayTrades = list.filter((t) => {
-    const d = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
-    return d === today;
-  });
-  const todayPnl = todayTrades.reduce((a, t) => a + num(t.pnl), 0);
+  const { data: journalRows, error: journalError } = await supabase
+    .from('journal_entries')
+    .select('trade_id, emotions, note, screenshot_url, screenshot_urls, confidence')
+    .eq('user_id', user.id);
+  if (journalError) console.error('journal entries error', journalError);
+  const journals = journalRows || [];
 
-  // Current month P&L
-  const currentMonth = today.slice(0, 7); // "2026-06"
-  const monthTrades = list.filter((t) => {
-    const d = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
-    return d.startsWith(currentMonth);
-  });
-  const monthPnl = monthTrades.reduce((a, t) => a + num(t.pnl), 0);
-  const todayWins = todayTrades.filter((t) => num(t.pnl) >= 0).length;
-  const todayWinRate = todayTrades.length > 0 ? Math.round((todayWins / todayTrades.length) * 100) : 0;
-  const todayBest = todayTrades.length > 0 ? Math.max(...todayTrades.map((t) => num(t.pnl))) : null;
-  const todayWorst = todayTrades.length > 0 ? Math.min(...todayTrades.map((t) => num(t.pnl))) : null;
-  const dailyShareData = { pnl: todayPnl, date: today, trades: todayTrades.length, winRate: todayWinRate, bestTrade: todayBest, worstTrade: todayWorst };
+  const { data: expenseRows, error: expError } = await supabase
+    .from('expenses')
+    .select('amount, category, description, date')
+    .eq('user_id', user.id);
+  if (expError) console.error('expenses error', expError);
+  const expenses = expenseRows || [];
+
+  const { data: payoutRows, error: payError } = await supabase
+    .from('payouts')
+    .select('amount, date, note')
+    .eq('user_id', user.id);
+  if (payError) console.error('payouts error', payError);
+  const payouts = payoutRows || [];
+
+  let notifications = [];
+  try {
+    notifications = await notify(user.id, TYPES);
+  } catch (e) {
+    console.error('notifications error', e);
+  }
+
+  const list = trades || [];
+  const stats = computeStats(list);
+  const series = equitySeries(list);
+  const chartData = equityChartData(list);
+  const disciplineStats = computeDisciplineStats(list);
+  const weeklyScore = computeWeeklyScore(list);
+  const eliteStreak = computeEliteWeekStreak(list);
+  const achievements = computeAchievements(list);
+
+  const totalExpenses = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+  const totalPayouts = payouts.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+  const netPnl = (stats.totalPnl || 0) - totalExpenses - totalPayouts;
 
   return (
-    <div className="px-3 py-8 sm:px-4">
+    <div className="px-4 py-8 sm:px-6">
       <ReferralCapture />
       <BetaNotice />
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold">Dashboard</h1>
-        <div className="flex items-center gap-2">
-          {todayTrades.length > 0 && <DashboardShareButton data={dailyShareData} />}
-          <Link href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-            + New Trade
-          </Link>
-        </div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-bold" style={gradientText}>Dashboard</h1>
+        <DashboardShareButton stats={stats} trades={list} />
       </div>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <HeroStat label="Net P&amp;L" value={fmtMoney(s.net)} tone={s.net >= 0 ? 'pos' : 'neg'} />
-        <Stat label="Win rate" value={s.winRate.toFixed(0) + '%'} />
-        <Stat label="Profit factor" value={s.profitFactor === null ? '—' : s.profitFactor.toFixed(2)} />
-        <Stat label="Avg R" value={fmtR(s.avgR)} tone={s.avgR === null ? '' : s.avgR >= 0 ? 'pos' : 'neg'} />
-        <Stat label="Trades" value={String(s.n)} />
-      </div>
-
-      {/* Rulebook Discipline — full width */}
-      {disciplineStats.totalTrades > 0 && (
-        <div className="mb-6">
-          <DisciplineCards stats={disciplineStats} weeklyScore={weeklyScore} achievements={achievements} />
+      {notifications.length > 0 && (
+        <div className="mb-6 space-y-2">
+          {notifications.map((n, i) => (
+            <div key={i} className="rounded-xl border border-yellow-400/20 bg-yellow-500/[0.05] px-4 py-3 text-sm text-yellow-300">
+              {n.message}
+            </div>
+          ))}
         </div>
       )}
 
-      {/* ─── 2-column layout on desktop ─── */}
-      <div className="mb-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-        {/* Left column: Equity + Recent Trades */}
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <EquityChart data={chartData} />
+      {list.length === 0 ? (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-center sm:p-10">
+          <div
+            className="mx-auto mb-4 grid h-14 w-14 place-items-center rounded-2xl text-2xl"
+            style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.12)' }}
+          >
+            &#9776;
           </div>
-
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="font-display text-base font-semibold">Recent trades</div>
-              <Link href="/dashboard/trades" className="font-mono text-xs text-cyan-400">View all &rarr;</Link>
-            </div>
-            <TradeTable rows={recent} compact />
-          </div>
+          <h2 className="font-display text-xl font-bold">No trades yet</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-white/55">
+            Log your first trade to start tracking your performance. It only takes 30 seconds.
+          </p>
+          <Link
+            href="/dashboard/trades/new"
+            className="mt-6 inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]"
+            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+          >
+            + Log your first trade
+          </Link>
         </div>
-
-        {/* Right column: Calendar + Expenses + AI Coach */}
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <PnlCalendar trades={list} monthPnl={monthPnl} />
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <HeroStat label="Net P&L" value={fmtMoney(stats.totalPnl)} tone={stats.totalPnl >= 0 ? 'pos' : 'neg'} />
+            <HeroStat label="Win Rate" value={num(stats.winRate) + '%'} tone={stats.winRate >= 50 ? 'pos' : 'neg'} />
+            <HeroStat label="Avg R" value={fmtR(stats.avgR)} tone={stats.avgR >= 0 ? 'pos' : 'neg'} />
+            <HeroStat label="Trades" value={stats.total} tone="neu" />
           </div>
 
-          {/* Expense Summary */}
-          {hasExpenseData && (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">&#128179;</span>
-                  <div className="font-display text-sm font-semibold">Prop firm expenses</div>
-                </div>
-                <Link href="/dashboard/expenses" className="font-mono text-xs text-cyan-400">Details &rarr;</Link>
-              </div>
-              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                <div className="rounded-lg border border-red-400/15 bg-red-500/[0.04] p-2.5">
-                  <div className="font-mono text-[10px] uppercase text-white/40">Spent</div>
-                  <div className="mt-1 font-display text-base font-bold text-red-400">{fmtCurrency(totalExpense)}</div>
-                </div>
-                <div className="rounded-lg border border-emerald-400/15 bg-emerald-500/[0.04] p-2.5">
-                  <div className="font-mono text-[10px] uppercase text-white/40">Payouts</div>
-                  <div className="mt-1 font-display text-base font-bold text-emerald-400">{fmtCurrency(totalPayout)}</div>
-                </div>
-                <div className={'rounded-lg border p-2.5 ' + (expenseNet >= 0 ? 'border-emerald-400/15 bg-emerald-500/[0.04]' : 'border-amber-400/15 bg-amber-500/[0.04]')}>
-                  <div className="flex items-center justify-between">
-                    <div className="font-mono text-[10px] uppercase text-white/40">Net P&amp;L</div>
-                    <span className={'inline-block h-2 w-2 rounded-full ' + (expenseNet >= 0 ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_6px_rgba(248,113,113,0.5)]')} />
-                  </div>
-                  <div className={'mt-1 font-display text-base font-bold ' + (expenseNet >= 0 ? 'text-emerald-400' : 'text-amber-400')}>
-                    {expenseNet >= 0 ? '+' : '-'}{fmtCurrency(Math.abs(expenseNet))}
-                  </div>
-                </div>
-              </div>
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat label="Best Trade" value={fmtMoney(stats.bestTrade)} tone="pos" />
+            <Stat label="Worst Trade" value={fmtMoney(stats.worstTrade)} tone="neg" />
+            <Stat label="Profit Factor" value={num(stats.profitFactor, 2)} tone={stats.profitFactor >= 1 ? 'pos' : 'neg'} />
+            <Stat label="Expectancy" value={fmtR(stats.expectancy) + 'R'} tone={stats.expectancy >= 0 ? 'pos' : 'neg'} />
+          </div>
+
+          {(expenses.length > 0 || payouts.length > 0) && (
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <Stat label="Gross P&L" value={fmtMoney(stats.totalPnl)} tone={stats.totalPnl >= 0 ? 'pos' : 'neg'} />
+              <Stat label="Expenses & Payouts" value={'-' + fmtCurrency(totalExpenses + totalPayouts)} tone="neg" />
+              <Stat label="Net P&L" value={fmtMoney(netPnl)} tone={netPnl >= 0 ? 'pos' : 'neg'} />
             </div>
           )}
 
-          {/* AI Coach */}
-          <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-5">
-            <div className="flex items-center justify-between">
-              <div className="font-display text-sm font-semibold" style={gradientText}>&#10022; AI Coach</div>
-              <Link href="/dashboard/coach" className="flex min-h-[44px] items-center font-mono text-xs text-cyan-400">Open &rarr;</Link>
-            </div>
-            {report ? (
-              <div className="mt-2">
-                {coach.summary ? <p className="text-sm leading-relaxed text-white/80">{coach.summary}</p> : null}
-                {topMistake ? (
-                  <p className="mt-2 text-xs text-white/55">
-                    Top recurring leak: <span className="text-white/80">{topMistake.pattern}</span>
-                    {topMistake.frequency ? ' (' + topMistake.frequency + ')' : ''}
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              <p className="mt-2 text-sm leading-relaxed text-white/55">
-                Generate a coaching report to see your recurring patterns.
-              </p>
-            )}
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="mb-2 font-mono text-xs uppercase tracking-wider text-white/55">Equity Curve</div>
+            <EquityCurve series={series} />
           </div>
-        </div>
-      </div>
+
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <EquityChart data={chartData} />
+          </div>
+
+          <div className="mt-6">
+            <PnlCalendar trades={list} />
+          </div>
+
+          <DisciplineCards stats={disciplineStats} weeklyScore={weeklyScore} eliteStreak={eliteStreak} achievements={achievements} />
+
+          {coach && (
+            <div className="mt-6 rounded-2xl border border-violet-400/20 bg-violet-500/[0.05] p-5">
+              <div className="mb-1 font-mono text-xs uppercase tracking-wider text-violet-400">AI Coach Insight</div>
+              <p className="text-sm text-white/80">{coach.insight}</p>
+            </div>
+          )}
+
+          <div className="mt-6">
+            <div className="mb-3 font-display text-lg font-bold">Recent Trades</div>
+            <TradeTable trades={list.slice(0, 10)} journals={journals} />
+          </div>
+        </>
+      )}
     </div>
   );
 }

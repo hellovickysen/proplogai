@@ -6,7 +6,10 @@ export async function GET(request) {
   const code = searchParams.get('code');
   const token_hash = searchParams.get('token_hash');
   const type = searchParams.get('type');
-  const next = searchParams.get('next') ?? '/dashboard';
+
+  // Validate next param to prevent open redirects
+  const rawNext = searchParams.get('next') ?? '/dashboard';
+  const next = rawNext.startsWith('/') && !rawNext.startsWith('//') ? rawNext : '/dashboard';
 
   const supabase = createClient();
 
@@ -29,7 +32,10 @@ export async function GET(request) {
 
   // OAuth flow (code from Google/GitHub etc.)
   if (code) {
-    await supabase.auth.exchangeCodeForSession(code);
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) {
+      return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
+    }
   }
 
   return NextResponse.redirect(`${origin}${next}`);
