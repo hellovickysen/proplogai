@@ -1042,12 +1042,12 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           {/* ─── Payouts Tab ────────────────────────────────── */}
           {tab === 'Payouts' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-2xl border border-emerald-400/15 p-5" style={{ background: 'rgba(52,211,153,0.04)' }}>
+              <div className="flex flex-col gap-3 rounded-2xl border border-emerald-400/15 p-5 sm:flex-row sm:items-center sm:justify-between" style={{ background: 'rgba(52,211,153,0.04)' }}>
                 <div>
                   <div className="font-mono text-xs uppercase tracking-wider text-white/45">Total Payouts</div>
                   <div className="mt-1 font-display text-3xl font-bold text-emerald-400">{fmtCurrency(totalPayout)}</div>
                 </div>
-                <button onClick={() => setShowPayoutForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
+                <button onClick={() => setShowPayoutForm(true)} className="w-fit flex-shrink-0 rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
                   + Add Payout
                 </button>
               </div>
