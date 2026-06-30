@@ -439,53 +439,42 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               </div>
             </div>
 
-            {/* Setup directions + discipline fields */}
+            {/* Setup cards with directions + inline follow tracking */}
             {selectedSetups.length > 0 && (
               <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                {/* Show rule directions for all selected setups */}
-                {selectedSetups.some((s) => s.direction) && (
-                  <div className="mb-3 space-y-2">
-                    <div className="font-mono text-[10px] uppercase tracking-wider text-white/40">Rule directions</div>
-                    {selectedSetups.filter((s) => s.direction).map((s) => (
-                      <div key={s.id} className="rounded-lg bg-white/[0.02] px-3 py-2">
-                        <span className="font-mono text-[10px] uppercase text-cyan-400/60">{s.name}</span>
-                        <p className="mt-0.5 text-sm leading-relaxed text-white/60">{s.direction}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Per-setup follow tracking — regular setups only */}
+                {/* Each setup: direction + follow buttons in one card */}
                 {!hasNoSetup && (
                   <div className="space-y-3">
-                    <label className={labelCls}>Did you follow each setup?</label>
                     {selectedSetups.filter((s) => !s.is_default).map((s) => {
                       const val = form.setup_follow_map[s.id] || '';
                       return (
-                        <div key={s.id}>
-                          <div className="mb-1.5 font-mono text-[10px] uppercase text-cyan-400/60">{s.name}</div>
-                          <div className="flex gap-1.5">
-                            {[
-                              { v: 'yes', l: 'Yes', color: 'emerald' },
-                              { v: 'partial', l: 'Partially', color: 'amber' },
-                              { v: 'no', l: 'No', color: 'red' },
-                            ].map((opt) => {
-                              const active = val === opt.v;
-                              const cls = active
-                                ? 'border-' + opt.color + '-400/50 bg-' + opt.color + '-500/15 text-' + opt.color + '-300'
-                                : 'border-white/10 bg-black/30 text-white/50';
-                              return (
-                                <button
-                                  key={opt.v}
-                                  type="button"
-                                  onClick={() => setSetupFollowed(s.id, opt.v)}
-                                  className={'flex-1 rounded-lg border px-2 py-2 text-xs font-semibold ' + cls}
-                                >
-                                  {opt.l}
-                                </button>
-                              );
-                            })}
+                        <div key={s.id} className="rounded-lg bg-white/[0.02] px-3 py-2.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-[10px] uppercase text-cyan-400/60">{s.name}</span>
+                            <div className="flex gap-1">
+                              {[
+                                { v: 'yes', l: 'Yes', color: 'emerald' },
+                                { v: 'partial', l: 'Partial', color: 'amber' },
+                                { v: 'no', l: 'No', color: 'red' },
+                              ].map((opt) => {
+                                const active = val === opt.v;
+                                const cls = active
+                                  ? 'border-' + opt.color + '-400/50 bg-' + opt.color + '-500/15 text-' + opt.color + '-300'
+                                  : 'border-white/10 bg-black/20 text-white/40';
+                                return (
+                                  <button
+                                    key={opt.v}
+                                    type="button"
+                                    onClick={() => setSetupFollowed(s.id, opt.v)}
+                                    className={'rounded-md border px-2 py-1 text-[10px] font-semibold ' + cls}
+                                  >
+                                    {opt.l}
+                                  </button>
+                                );
+                              })}
+                            </div>
                           </div>
+                          {s.direction && <p className="mt-1 text-sm leading-relaxed text-white/60">{s.direction}</p>}
                         </div>
                       );
                     })}
