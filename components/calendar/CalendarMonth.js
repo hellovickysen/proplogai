@@ -218,9 +218,9 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                           <span className="sm:hidden">{fmtPnlShort(e.net)}</span>
                           <span className="hidden sm:inline">{fmtPnl(e.net)}</span>
                         </span>
-                        <span className="mt-0.5 flex items-center gap-1 text-[10px] text-white/45 sm:text-xs">
+                        <span className="mt-0.5 max-w-full truncate text-[10px] text-white/45 sm:text-xs">
                           {e.count} trade{e.count !== 1 ? 's' : ''}
-                          {hasJournal && <span title="Has journal entry">&#128221;</span>}
+                          {hasJournal && <span className="hidden sm:inline" title="Has journal entry">&#128221;</span>}
                         </span>
                       </div>
                     ) : (
