@@ -134,6 +134,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
     setForm((f) => {
       let newIds = [...f.setup_ids];
+      const wasNoSetup = f.setup_ids.length > 0 && activeSetups.some((s) => s.is_default && f.setup_ids.includes(s.id));
 
       if (newIds.includes(setupId)) {
         // Deselect
@@ -159,13 +160,18 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         .map((id) => (activeSetups.find((s) => s.id === id) || {}).name)
         .filter(Boolean);
 
+      const isNowNoSetup = newIds.length > 0 && activeSetups.some((s) => s.is_default && newIds.includes(s.id));
+      const switchedCategory = wasNoSetup !== isNowNoSetup;
+      const isEmpty = newIds.length === 0;
+
       return {
         ...f,
         setup_ids: newIds,
         setup_id: newIds[0] || '',
         setup: names.join(', '),
-        setup_followed: '',
-        no_setup_reason: '',
+        // Only reset follow status when switching between regular/no-setup or deselecting all
+        setup_followed: (switchedCategory || isEmpty) ? '' : f.setup_followed,
+        no_setup_reason: (switchedCategory || isEmpty) ? '' : f.no_setup_reason,
       };
     });
   }
