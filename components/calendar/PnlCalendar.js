@@ -172,7 +172,7 @@ export default function PnlCalendar({ trades, monthPnl }) {
                   >
                     {(pnl >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(pnl))}
                   </div>
-                  <div className="font-mono text-[9px] leading-tight text-white/35">
+                  <div className="truncate font-mono text-[9px] leading-tight text-white/35">
                     {entry.count} trade{entry.count !== 1 ? 's' : ''}
                   </div>
                 </div>
