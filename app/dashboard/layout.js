@@ -133,19 +133,6 @@ export default async function DashboardLayout({ children }) {
               </span>
             </div>
             <span className="hidden font-mono text-xs text-white/55 sm:block">{user.email}</span>
-            {/* Mobile avatar in header */}
-            <Link href="/dashboard/settings" className="flex-shrink-0 sm:hidden">
-              {prefs.avatar_url ? (
-                <img src={prefs.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover border border-white/10" />
-              ) : (
-                <div
-                  className="grid h-8 w-8 place-items-center rounded-full text-xs font-bold text-[#08080f]"
-                  style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
-                >
-                  {initial}
-                </div>
-              )}
-            </Link>
           </div>
         </header>
         <main className="flex-1">{children}</main>
