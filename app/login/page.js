@@ -84,6 +84,7 @@ export default function LoginPage() {
       if (p.get('signup') === '1' || p.get('mode') === 'signup') setMode('signup');
       if (p.get('verified') === '1') setMsg('Email verified! You can now sign in.');
       if (p.get('error') === 'verification_failed') setError('Verification link expired or invalid. Please try signing up again.');
+      if (p.get('error') === 'oauth_failed') setError('Google sign-in failed. If you signed up with email and password, try signing in with your password instead.');
     } catch (e) {}
   }, []);
 
