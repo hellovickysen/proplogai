@@ -557,12 +557,12 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     <label htmlFor="field-screenshots" className={labelCls}>Chart screenshots</label>
                     {screenshotUrls.length > 0 && (
                       <div className="mb-3 flex flex-wrap gap-2">
-                        {screenshotUrls.map((url) => (
-                          <div key={url} className="group relative">
+                        {screenshotUrls.map((url, i) => (
+                          <div key={`${url}-${i}`} className="group relative">
                             <img src={url} alt="" className="h-20 w-20 rounded-lg border border-white/10 object-cover" />
                             <button
                               type="button"
-                              onClick={() => removeScreenshot(screenshotUrls.indexOf(url))}
+                              onClick={() => removeScreenshot(i)}
                               className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
                             >
                               &#10005;

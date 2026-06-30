@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const revalidate = 86400; // Revalidate daily (for copyright year)
 
 import Link from 'next/link';
 
