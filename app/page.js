@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { HeroParticles, LandingMotion } from '@/components/landing/LandingMotion';
 import { createClient } from '@/lib/supabase/server';
 import Logo from '@/components/Logo';
+import LandingNav from '@/components/landing/LandingNav';
+import CookieBanner from '@/components/landing/CookieBanner';
 
 export const revalidate = 300; // Revalidate every 5 minutes
 
@@ -100,15 +102,7 @@ export default async function Home() {
       <LandingMotion />
 
       {/* Nav */}
-      <nav className="relative z-20 flex items-center justify-between px-4 py-5 sm:px-10">
-        <Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="hidden text-sm text-white/60 hover:text-white sm:inline">Log in</Link>
-          <Link href="/login?mode=signup" className="cta-glow rounded-xl px-4 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
-            Start free →
-          </Link>
-        </div>
-      </nav>
+      <LandingNav logo={<Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />} />
 
       {/* ═══════════════ HERO — NEGATIVE HOOK ═══════════════ */}
       <section className="hero-product-stage relative overflow-hidden px-4 pb-20 pt-16 sm:px-10 sm:pt-20">
@@ -874,6 +868,8 @@ export default async function Home() {
           </div>
         </div>
       </footer>
+
+      <CookieBanner />
     </main>
   );
 }
