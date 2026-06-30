@@ -206,9 +206,9 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       </span>
                     </div>
 
-                    {/* P&L + trade count */}
+                    {/* P&L + trade count — bottom-aligned to avoid overlapping day number */}
                     {e ? (
-                      <div className="flex flex-1 flex-col items-center justify-center overflow-hidden px-1">
+                      <div className="mt-auto flex flex-col items-center overflow-hidden px-1 pb-1.5">
                         <span
                           className={
                             'max-w-full truncate font-mono text-sm font-extrabold sm:text-xl ' +
