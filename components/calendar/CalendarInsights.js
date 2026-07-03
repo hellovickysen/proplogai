@@ -398,7 +398,7 @@ export default function CalendarInsights({ monthTrades, allTrades }) {
     },
     {
       label: 'Day Streak',
-      tooltip: 'Current consecutive winning or losing trading days.',
+      tooltip: data.isAllTime ? 'Best ever consecutive winning days and worst losing streak across all time.' : 'Current consecutive winning or losing trading days this month.',
       customRender: true,
     },
   ];
@@ -473,18 +473,40 @@ export default function CalendarInsights({ monthTrades, allTrades }) {
               </div>
             ) : card.label === 'Day Streak' ? (
               <div className="mt-2">
-                <div className="font-display text-2xl font-bold text-white">
-                  {data.currentStreak} day{data.currentStreak !== 1 ? 's' : ''}{' '}
-                  {data.currentStreak > 0 && '🔥'}
-                </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 font-mono text-xs font-bold text-emerald-400">
-                    {data.maxWinStreak}W
-                  </span>
-                  <span className="rounded-md bg-red-500/20 px-2 py-0.5 font-mono text-xs font-bold text-red-400">
-                    {data.maxLossStreak}L
-                  </span>
-                </div>
+                {data.isAllTime ? (
+                  <>
+                    {/* All-Time: show best ever streaks as main values */}
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-display text-2xl font-bold text-emerald-400">{data.maxWinStreak}</span>
+                      <span className="text-sm text-white/40">best win streak</span>
+                    </div>
+                    <div className="mt-1 flex items-baseline gap-2">
+                      <span className="font-display text-2xl font-bold text-red-400">{data.maxLossStreak}</span>
+                      <span className="text-sm text-white/40">worst loss streak</span>
+                    </div>
+                    {data.currentStreak > 0 && (
+                      <div className="mt-2 font-mono text-xs text-white/45">
+                        Current: {data.currentStreak} day{data.currentStreak !== 1 ? 's' : ''} {data.streakType === 'win' ? '🟢' : '🔴'} {data.streakType}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* Month: show current streak as main value */}
+                    <div className="font-display text-2xl font-bold text-white">
+                      {data.currentStreak} day{data.currentStreak !== 1 ? 's' : ''}{' '}
+                      {data.currentStreak > 0 && '🔥'}
+                    </div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 font-mono text-xs font-bold text-emerald-400">
+                        {data.maxWinStreak}W
+                      </span>
+                      <span className="rounded-md bg-red-500/20 px-2 py-0.5 font-mono text-xs font-bold text-red-400">
+                        {data.maxLossStreak}L
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
               <>
