@@ -607,35 +607,25 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
-              <div><label htmlFor="field-r_multiple" className={labelCls}>R multiple <span className="text-white/30">(auto)</span></label><input id="field-r_multiple" className={field} value={form.r_multiple} onChange={(e) => set('r_multiple', e.target.value)} inputMode="decimal" placeholder="auto from prices" /></div>
-            </div>
-
-            {/* Risk : Reward */}
-            <div className="mt-4">
-              <div className="flex items-center gap-3">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 text-cyan-400">
-                  <path d="M4 12L8 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M4 4L8 12L12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
-                </svg>
-                <span className="font-mono text-xs uppercase tracking-wider text-white/55">Risk : Reward</span>
-                <span className="text-[10px] text-white/25">(auto from prices)</span>
-              </div>
-              <div className="mt-2 flex items-center gap-2">
-                <input
-                  className="w-20 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
-                  value={rrRisk}
-                  onChange={(e) => { setRrRisk(e.target.value); setRrManual(true); }}
-                  inputMode="decimal"
-                  placeholder="1"
-                />
-                <span className="font-mono text-sm font-bold text-white/40">:</span>
-                <input
-                  className="w-20 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
-                  value={rrReward}
-                  onChange={(e) => { setRrReward(e.target.value); setRrManual(true); }}
-                  inputMode="decimal"
-                  placeholder="—"
-                />
+              <div>
+                <label className={labelCls}>Risk : Reward <span className="text-white/30">(auto)</span></label>
+                <div className="flex items-center gap-2">
+                  <input
+                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
+                    value={rrRisk}
+                    onChange={(e) => { setRrRisk(e.target.value); setRrManual(true); }}
+                    inputMode="decimal"
+                    placeholder="1"
+                  />
+                  <span className="font-mono text-sm font-bold text-white/40">:</span>
+                  <input
+                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
+                    value={rrReward}
+                    onChange={(e) => { setRrReward(e.target.value); setRrManual(true); }}
+                    inputMode="decimal"
+                    placeholder="—"
+                  />
+                </div>
               </div>
             </div>
           </div>
