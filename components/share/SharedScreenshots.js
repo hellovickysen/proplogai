@@ -15,7 +15,7 @@ export default function SharedScreenshots({ urls }) {
             <img
               src={url}
               alt={'Chart ' + (i + 1)}
-              className="w-full rounded-xl border border-white/10 cursor-pointer transition-all hover:border-white/25 hover:brightness-110"
+              className="max-h-80 w-full rounded-xl border border-white/10 object-contain cursor-pointer transition-all hover:border-white/25 hover:brightness-110"
             />
           </button>
         ))}

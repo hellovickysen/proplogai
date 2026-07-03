@@ -74,7 +74,7 @@ export default function JournalView({ journal }) {
                 src={url}
                 alt={`Trade screenshot ${i + 1}`}
                 onClick={() => setLightboxIdx(i)}
-                className="w-full cursor-pointer rounded-lg border border-white/10 object-contain transition-opacity hover:opacity-90"
+                className="max-h-80 w-full cursor-pointer rounded-lg border border-white/10 object-contain transition-opacity hover:opacity-90"
               />
             ))}
           </div>
