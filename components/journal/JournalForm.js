@@ -7,6 +7,7 @@ import { saveJournal } from '@/app/dashboard/trades/actions';
 import { processImageFile } from '@/lib/imageUtils';
 import Lightbox from '@/components/ui/Lightbox';
 import { resolveEmotions } from '@/lib/emotions';
+import { resolveTags } from '@/lib/tags';
 import { useToast } from '@/components/ui/Toast';
 
 /** Merge legacy screenshot_url + new screenshot_urls into one array. */
@@ -20,10 +21,12 @@ function mergeUrls(initial) {
 
 export default function JournalForm({ tradeId, userId, initial, prefs = null, onSaved = null }) {
   const EMOTIONS = resolveEmotions(prefs);
+  const TAGS = resolveTags(prefs);
   const toast = useToast();
   const router = useRouter();
   const [note, setNote] = useState((initial && initial.note) || '');
   const [lesson, setLesson] = useState((initial && initial.lesson) || '');
+  const [tradeTags, setTradeTags] = useState((initial && Array.isArray(initial.tags)) ? initial.tags : []);
   const [emotions, setEmotions] = useState((initial && initial.emotions) || []);
   const [confidence, setConfidence] = useState((initial && initial.confidence) || 0);
   const [screenshotUrls, setScreenshotUrls] = useState(mergeUrls(initial));
@@ -96,6 +99,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
       note,
       lesson,
       emotions,
+      tags: tradeTags,
       confidence,
       screenshot_urls: screenshotUrls,
     });
@@ -138,6 +142,23 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
             &#9733;
           </button>
         ))}
+      </div>
+
+      <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Tags</label>
+      <div className="mb-5 flex flex-wrap gap-2">
+        {TAGS.map((tag) => {
+          const on = tradeTags.includes(tag);
+          return (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => setTradeTags((cur) => cur.includes(tag) ? cur.filter((x) => x !== tag) : [...cur, tag])}
+              className={'rounded-full border px-3 py-2 text-xs ' + (on ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
+            >
+              {tag}
+            </button>
+          );
+        })}
       </div>
 
       <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Notes — what happened &amp; why?</label>

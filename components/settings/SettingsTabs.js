@@ -8,6 +8,8 @@ import { validatePassword } from '@/lib/security';
 import { replayTour } from '@/components/ui/GuidedTour';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
+const DEFAULT_TAGS = ['NFP', 'News', 'Holiday'];
+const MAX_CUSTOM_TAGS = 10;
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -269,6 +271,10 @@ function JournalSettingsTab({ prefs, onSaved }) {
   const [emotions, setEmotions] = useState(existingEmotions);
   const [newEmotion, setNewEmotion] = useState('');
   const [defaultConfidence, setDefaultConfidence] = useState((prefs && prefs.default_confidence) || 0);
+  const existingTags = (prefs && Array.isArray(prefs.custom_tags) && prefs.custom_tags.length > 0)
+    ? prefs.custom_tags : [...DEFAULT_TAGS];
+  const [tags, setTags] = useState(existingTags);
+  const [newTag, setNewTag] = useState('');
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   const [error, setError] = useState(null);
@@ -282,12 +288,23 @@ function JournalSettingsTab({ prefs, onSaved }) {
   function removeEmotion(idx) { setEmotions(emotions.filter((_, i) => i !== idx)); }
   function resetEmotionDefaults() { setEmotions([...DEFAULT_EMOTIONS]); }
 
+  function addTag() {
+    const t = newTag.trim();
+    if (!t || tags.map((x) => x.toLowerCase()).includes(t.toLowerCase())) return;
+    if (tags.length >= MAX_CUSTOM_TAGS) return;
+    setTags([...tags, t]);
+    setNewTag('');
+  }
+  function removeTag(idx) { setTags(tags.filter((_, i) => i !== idx)); }
+  function resetTagDefaults() { setTags([...DEFAULT_TAGS]); }
+
   async function onSave() {
     setSaving(true);
     setError(null);
     setMsg(null);
     const res = await savePreferences({
       custom_emotions: emotions,
+      custom_tags: tags,
       custom_setups: (prefs && prefs.custom_setups) || [],
       default_confidence: defaultConfidence,
       avatar_url: (prefs && prefs.avatar_url) || null,
@@ -296,7 +313,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
     else {
       setMsg('Settings saved!');
       if (toast) toast.success('Settings saved!');
-      if (onSaved) onSaved({ custom_emotions: emotions, default_confidence: defaultConfidence });
+      if (onSaved) onSaved({ custom_emotions: emotions, custom_tags: tags, default_confidence: defaultConfidence });
     }
     setSaving(false);
   }
@@ -305,7 +322,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
     <div className="space-y-6">
       {/* Emotion tags */}
       <div className={card}>
-        <div className="mb-1 font-display text-base font-semibold">Emotion tags</div>
+        <div className="mb-1 font-display text-base font-semibold">Emotions</div>
         <p className="mb-4 text-xs text-white/55">Customize the feelings you track in your journal.</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {emotions.map((em, i) => (
@@ -320,6 +337,27 @@ function JournalSettingsTab({ prefs, onSaved }) {
           <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
         </div>
         <button type="button" onClick={resetEmotionDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
+      </div>
+
+      {/* Tags */}
+      <div className={card}>
+        <div className="mb-1 font-display text-base font-semibold">Tags</div>
+        <p className="mb-4 text-xs text-white/55">Context tags for your trades (e.g. NFP, News, Holiday). Up to {MAX_CUSTOM_TAGS}.</p>
+        <div className="mb-4 flex flex-wrap gap-2">
+          {tags.map((tag, i) => (
+            <span key={i} className="group flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
+              {tag}
+              <button type="button" onClick={() => removeTag(i)} className="inline text-red-400 hover:text-red-300">&#10005;</button>
+            </span>
+          ))}
+        </div>
+        {tags.length < MAX_CUSTOM_TAGS && (
+          <div className="flex gap-2">
+            <input className={field + ' flex-1'} value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="e.g. CPI, Earnings..." onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} />
+            <button type="button" onClick={addTag} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
+          </div>
+        )}
+        <button type="button" onClick={resetTagDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
       </div>
 
       {/* Default confidence */}

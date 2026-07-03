@@ -56,6 +56,9 @@ export async function savePreferences(payload) {
     custom_setups: Array.isArray(payload.custom_setups)
       ? payload.custom_setups.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().slice(0, 100)).slice(0, 50)
       : [],
+    custom_tags: Array.isArray(payload.custom_tags)
+      ? payload.custom_tags.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().slice(0, 50)).slice(0, 10)
+      : [],
     default_confidence: Number(payload.default_confidence) || 0,
     avatar_url: avatarUrl,
     updated_at: new Date().toISOString(),

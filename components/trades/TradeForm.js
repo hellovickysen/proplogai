@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { createTrade, updateTrade } from '@/app/dashboard/trades/actions';
 import { DEFAULT_EMOTIONS, resolveEmotions } from '@/lib/emotions';
+import { resolveTags } from '@/lib/tags';
 import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 
@@ -113,11 +114,13 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   // Journal fields (create mode only)
   const EMOTIONS = resolveEmotions(prefs);
+  const TAGS = resolveTags(prefs);
   const [journalOpen, setJournalOpen] = useState(false);
   const [emotions, setEmotions] = useState([]);
   const [confidence, setConfidence] = useState((prefs && prefs.default_confidence) || 0);
   const [note, setNote] = useState('');
   const [lesson, setLesson] = useState('');
+  const [tradeTags, setTradeTags] = useState([]);
   const [screenshotUrls, setScreenshotUrls] = useState([]);
   const [uploading, setUploading] = useState(false);
 
@@ -285,6 +288,10 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     });
   }
 
+  function toggleTag(tag) {
+    setTradeTags((cur) => cur.includes(tag) ? cur.filter((x) => x !== tag) : [...cur, tag]);
+  }
+
   function toggleEmotion(e) {
     setEmotions((cur) => (cur.includes(e) ? cur.filter((x) => x !== e) : [...cur, e]));
   }
@@ -365,11 +372,12 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     const payload = { ...form };
 
     // Attach journal if in create mode and any journal field is filled
-    if (mode === 'create' && (note || lesson || emotions.length || confidence || screenshotUrls.length)) {
+    if (mode === 'create' && (note || lesson || emotions.length || tradeTags.length || confidence || screenshotUrls.length)) {
       payload.journal = {
         note,
         lesson,
         emotions,
+        tags: tradeTags,
         confidence,
         screenshot_urls: screenshotUrls,
       };
@@ -676,6 +684,24 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                           &#9733;
                         </button>
                       ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Tags</label>
+                    <div className="flex flex-wrap gap-2">
+                      {TAGS.map((tag) => {
+                        const on = tradeTags.includes(tag);
+                        return (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => toggleTag(tag)}
+                            className={'rounded-full border px-3 py-2 text-xs ' + (on ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-200' : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
+                          >
+                            {tag}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                   <div>

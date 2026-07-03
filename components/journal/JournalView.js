@@ -21,8 +21,9 @@ export default function JournalView({ journal }) {
   const confidence = journal.confidence || 0;
   const note = journal.note || '';
   const lesson = journal.lesson || '';
+  const tags = Array.isArray(journal.tags) ? journal.tags : [];
   const screenshots = mergeUrls(journal);
-  const isEmpty = !note && !lesson && emotions.length === 0 && confidence === 0 && screenshots.length === 0;
+  const isEmpty = !note && !lesson && emotions.length === 0 && tags.length === 0 && confidence === 0 && screenshots.length === 0;
 
   if (isEmpty) return null;
 
@@ -49,6 +50,20 @@ export default function JournalView({ journal }) {
           <div className="flex gap-0.5 text-lg">
             {[1, 2, 3, 4, 5].map((i) => (
               <span key={i} className={i <= confidence ? 'text-amber-400' : 'text-white/40'}>★</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tags */}
+      {tags.length > 0 && (
+        <div>
+          <div className="mb-2 font-mono text-xs uppercase tracking-wider text-white/50">Tags</div>
+          <div className="flex flex-wrap gap-1.5">
+            {tags.map((tag, i) => (
+              <span key={i} className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-2.5 py-1 text-xs text-cyan-200">
+                {tag}
+              </span>
             ))}
           </div>
         </div>
