@@ -138,11 +138,9 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
             {!collapsed && (
               <>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
-                    <PlanBadge access={planAccess} />
-                  </div>
+                  {fullName && <div className="truncate text-xs font-semibold text-white">{fullName}</div>}
                   <div className="truncate text-xs text-white/55">{email || 'Account'}</div>
+                  <div className="mt-1"><PlanBadge access={planAccess} /></div>
                 </div>
                 <span className={'text-[10px] text-white/30 transition-transform ' + (menuOpen ? 'rotate-180' : '')}>&#9650;</span>
               </>
@@ -160,7 +158,10 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
                   : 'bottom-full left-2 right-2 mb-2')
               }
             >
-              <div className="mb-2 truncate px-1 font-mono text-[11px] text-white/50">{email}</div>
+              <div className="mb-2 flex items-center justify-between px-1">
+                <span className="truncate font-mono text-[11px] text-white/50">{email}</span>
+                <PlanBadge access={planAccess} />
+              </div>
 
               {credits != null && (
                 <Link
