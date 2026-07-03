@@ -53,6 +53,12 @@ export default async function CalendarPage({ searchParams }) {
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
+  // All-time trades for CalendarInsights toggle (lightweight — only fields needed for insights)
+  const { data: allTrades } = await supabase
+    .from('trades')
+    .select('pair, direction, pnl, session, trade_date, closed_at, created_at')
+    .eq('user_id', user.id);
+
   if (tradesError) {
     return (
       <div className="px-4 py-8 sm:px-6">
@@ -165,7 +171,7 @@ export default async function CalendarPage({ searchParams }) {
         <h1 className="font-display text-2xl font-bold">Calendar</h1>
       </div>
 
-      {list.length > 0 && <CalendarInsights trades={list} />}
+      {list.length > 0 && <CalendarInsights monthTrades={list} allTrades={allTrades || []} />}
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         {/* Month navigation in the calendar card header */}

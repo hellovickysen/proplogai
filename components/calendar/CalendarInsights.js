@@ -124,7 +124,9 @@ function computeInsights(trades) {
   };
 }
 
-export default function CalendarInsights({ trades }) {
+export default function CalendarInsights({ monthTrades, allTrades }) {
+  const [view, setView] = useState('month');
+  const trades = view === 'month' ? monthTrades : allTrades;
   const data = computeInsights(trades);
   if (!data) return null;
 
@@ -187,7 +189,21 @@ export default function CalendarInsights({ trades }) {
   ];
 
   return (
-    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="mb-6">
+      {/* Month / All-Time toggle */}
+      <div className="mb-3 flex items-center justify-end gap-1">
+        <span className="mr-1 font-mono text-[10px] uppercase tracking-wider text-white/35">View</span>
+        {[{ key: 'month', label: 'Month' }, { key: 'all', label: 'All-Time' }].map((s) => (
+          <button
+            key={s.key}
+            onClick={() => setView(s.key)}
+            className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (view === s.key ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
       {cards.map((card) => (
         <div
           key={card.label}
@@ -209,6 +225,7 @@ export default function CalendarInsights({ trades }) {
           )}
         </div>
       ))}
+      </div>
     </div>
   );
 }
