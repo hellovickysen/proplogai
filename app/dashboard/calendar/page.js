@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import CalendarMonth from '@/components/calendar/CalendarMonth';
 import TradeTable from '@/components/trades/TradeTable';
 import { num, fmtMoney } from '@/lib/stats';
+import CalendarInsights from '@/components/calendar/CalendarInsights';
 
 export const dynamic = 'force-dynamic';
 
@@ -163,6 +164,8 @@ export default async function CalendarPage({ searchParams }) {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-display text-2xl font-bold">Calendar</h1>
       </div>
+
+      {list.length > 0 && <CalendarInsights trades={list} />}
 
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
         {/* Month navigation in the calendar card header */}
