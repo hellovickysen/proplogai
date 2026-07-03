@@ -20,8 +20,9 @@ export default function JournalView({ journal }) {
   const emotions = journal.emotions || [];
   const confidence = journal.confidence || 0;
   const note = journal.note || '';
+  const lesson = journal.lesson || '';
   const screenshots = mergeUrls(journal);
-  const isEmpty = !note && emotions.length === 0 && confidence === 0 && screenshots.length === 0;
+  const isEmpty = !note && !lesson && emotions.length === 0 && confidence === 0 && screenshots.length === 0;
 
   if (isEmpty) return null;
 
@@ -58,6 +59,14 @@ export default function JournalView({ journal }) {
         <div>
           <div className="mb-1 font-mono text-xs uppercase tracking-wider text-white/50">Notes</div>
           <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/70">{note}</p>
+        </div>
+      )}
+
+      {/* Lesson learned */}
+      {lesson && (
+        <div>
+          <div className="mb-1 font-mono text-xs uppercase tracking-wider text-white/50">Lesson learned</div>
+          <p className="whitespace-pre-wrap rounded-lg border border-emerald-400/15 bg-emerald-500/[0.04] px-3.5 py-2.5 text-sm leading-relaxed text-emerald-100/80">{lesson}</p>
         </div>
       )}
 

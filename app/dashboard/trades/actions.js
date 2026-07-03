@@ -127,11 +127,12 @@ export async function createTrade(payload) {
 
   // If journal fields were included, create the journal entry too
   const j = payload.journal;
-  if (j && (j.note || (j.emotions && j.emotions.length) || j.confidence || (j.screenshot_urls && j.screenshot_urls.length))) {
+  if (j && (j.note || j.lesson || (j.emotions && j.emotions.length) || j.confidence || (j.screenshot_urls && j.screenshot_urls.length))) {
     const entry = {
       user_id: user.id,
       trade_id: data.id,
       note: j.note || null,
+      lesson: sanitizeText(j.lesson, MAX_NOTE_LENGTH) || null,
       emotions: Array.isArray(j.emotions) ? j.emotions : [],
       confidence: toNum(j.confidence),
       screenshot_url: normalizeScreenshots(j.screenshot_urls)[0] || null,
@@ -234,6 +235,7 @@ export async function saveJournal(tradeId, payload) {
     user_id: user.id,
     trade_id: tradeId,
     note: sanitizeText(payload.note, MAX_NOTE_LENGTH),
+    lesson: sanitizeText(payload.lesson, MAX_NOTE_LENGTH) || null,
     emotions,
     confidence: toNum(payload.confidence),
     screenshot_url: urls[0] || null,

@@ -23,6 +23,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
   const toast = useToast();
   const router = useRouter();
   const [note, setNote] = useState((initial && initial.note) || '');
+  const [lesson, setLesson] = useState((initial && initial.lesson) || '');
   const [emotions, setEmotions] = useState((initial && initial.emotions) || []);
   const [confidence, setConfidence] = useState((initial && initial.confidence) || 0);
   const [screenshotUrls, setScreenshotUrls] = useState(mergeUrls(initial));
@@ -93,6 +94,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
     setMsg(null);
     const res = await saveJournal(tradeId, {
       note,
+      lesson,
       emotions,
       confidence,
       screenshot_urls: screenshotUrls,
@@ -145,6 +147,15 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
         rows={5}
         className="mb-5 w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm leading-relaxed outline-none focus:border-cyan-400/60"
         placeholder="Your reasoning, what went well, what you'd change..."
+      />
+
+      <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Lesson learned</label>
+      <textarea
+        value={lesson}
+        onChange={(e) => setLesson(e.target.value)}
+        rows={2}
+        className="mb-5 w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm leading-relaxed outline-none focus:border-cyan-400/60"
+        placeholder="What will you do differently next time?"
       />
 
       <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Chart screenshots</label>

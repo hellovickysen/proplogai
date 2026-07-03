@@ -117,6 +117,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   const [emotions, setEmotions] = useState([]);
   const [confidence, setConfidence] = useState((prefs && prefs.default_confidence) || 0);
   const [note, setNote] = useState('');
+  const [lesson, setLesson] = useState('');
   const [screenshotUrls, setScreenshotUrls] = useState([]);
   const [uploading, setUploading] = useState(false);
 
@@ -364,9 +365,10 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     const payload = { ...form };
 
     // Attach journal if in create mode and any journal field is filled
-    if (mode === 'create' && (note || emotions.length || confidence || screenshotUrls.length)) {
+    if (mode === 'create' && (note || lesson || emotions.length || confidence || screenshotUrls.length)) {
       payload.journal = {
         note,
+        lesson,
         emotions,
         confidence,
         screenshot_urls: screenshotUrls,
@@ -685,6 +687,17 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                       rows={4}
                       className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm leading-relaxed outline-none focus:border-cyan-400/60"
                       placeholder="Your reasoning, what went well, what you'd change..."
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="field-lesson" className={labelCls}>Lesson learned</label>
+                    <textarea
+                      id="field-lesson"
+                      value={lesson}
+                      onChange={(e) => setLesson(e.target.value)}
+                      rows={2}
+                      className="w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm leading-relaxed outline-none focus:border-cyan-400/60"
+                      placeholder="What will you do differently next time?"
                     />
                   </div>
                   <div>
