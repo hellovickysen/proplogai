@@ -611,19 +611,21 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                 <label className={labelCls}>Risk : Reward <span className="text-white/30">(auto)</span></label>
                 <div className="flex items-center gap-2">
                   <input
-                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
+                    className="w-14 rounded-lg border border-white/10 bg-black/30 px-2 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
                     value={rrRisk}
                     onChange={(e) => { setRrRisk(e.target.value); setRrManual(true); }}
                     inputMode="decimal"
                     placeholder="1"
+                    maxLength={4}
                   />
                   <span className="font-mono text-sm font-bold text-white/40">:</span>
                   <input
-                    className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
+                    className="w-14 rounded-lg border border-white/10 bg-black/30 px-2 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
                     value={rrReward}
                     onChange={(e) => { setRrReward(e.target.value); setRrManual(true); }}
                     inputMode="decimal"
                     placeholder="—"
+                    maxLength={4}
                   />
                 </div>
               </div>
