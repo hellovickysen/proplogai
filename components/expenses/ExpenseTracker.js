@@ -1001,9 +1001,9 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                   <div className="text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No expenses yet. Add your first prop firm expense.</p></div>
                 </div>
               ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="columns-1 gap-3 sm:columns-2">
                   {firms.map((firm) => (
-                    <div key={firm.name}>
+                    <div key={firm.name} className="mb-3 break-inside-avoid">
                       <button onClick={() => openFirmDashboard(firm.name)}
                         className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-cyan-400/30 hover:bg-white/[0.05]">
                         <div className="flex items-center gap-3">
