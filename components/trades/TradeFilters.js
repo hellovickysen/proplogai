@@ -1,10 +1,64 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import TradeTable from '@/components/trades/TradeTable';
 import { num } from '@/lib/stats';
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-cyan-400/60 sm:w-auto';
+
+/* ─── Custom themed dropdown ───────────────────────────────── */
+function FilterDropdown({ label, value, onChange, placeholder, options }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [open]);
+
+  const displayValue = value || placeholder;
+
+  return (
+    <div ref={ref} className="relative">
+      <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">{label}</label>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={field + ' flex w-full cursor-pointer items-center justify-between gap-2 text-left sm:w-auto sm:min-w-[130px]'}
+      >
+        <span className={value ? 'text-white' : 'text-white/50'}>{displayValue}</span>
+        <span className={'text-white/30 text-[10px] transition-transform ' + (open ? 'rotate-180' : '')}>&#9660;</span>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-30 mt-1 min-w-full rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl">
+          <button
+            type="button"
+            onClick={() => { onChange(''); setOpen(false); }}
+            className={'flex w-full items-center px-3.5 py-2 text-sm transition-colors ' +
+              (!value ? 'bg-cyan-500/15 text-cyan-300 font-semibold' : 'text-white/70 hover:bg-white/[0.06] hover:text-white')}
+          >
+            {placeholder}
+          </button>
+          {options.map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={() => { onChange(opt); setOpen(false); }}
+              className={'flex w-full items-center px-3.5 py-2 text-sm transition-colors ' +
+                (opt === value ? 'bg-cyan-500/15 text-cyan-300 font-semibold' : 'text-white/70 hover:bg-white/[0.06] hover:text-white')}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function TradeFilters({ trades, prefs }) {
   const [result, setResult] = useState('all'); // all | win | loss
@@ -106,49 +160,17 @@ export default function TradeFilters({ trades, prefs }) {
         </div>
 
         {/* Setup */}
-        <div>
-          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Setup</label>
-          <select className={field} value={setupFilter} onChange={(e) => setSetupFilter(e.target.value)}>
-            <option value="">All setups</option>
-            {setupOptions.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
+        <FilterDropdown label="Setup" value={setupFilter} onChange={setSetupFilter} placeholder="All setups" options={setupOptions} />
 
         {/* Emotion */}
-        <div>
-          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Emotion</label>
-          <select className={field} value={emotionFilter} onChange={(e) => setEmotionFilter(e.target.value)}>
-            <option value="">All emotions</option>
-            {emotionOptions.map((em) => (
-              <option key={em} value={em}>{em}</option>
-            ))}
-          </select>
-        </div>
+        <FilterDropdown label="Emotion" value={emotionFilter} onChange={setEmotionFilter} placeholder="All emotions" options={emotionOptions} />
 
         {/* Session */}
-        <div>
-          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Session</label>
-          <select className={field} value={sessionFilter} onChange={(e) => setSessionFilter(e.target.value)}>
-            <option value="">All sessions</option>
-            {sessionOptions.map((s) => (
-              <option key={s} value={s}>{s}</option>
-            ))}
-          </select>
-        </div>
+        <FilterDropdown label="Session" value={sessionFilter} onChange={setSessionFilter} placeholder="All sessions" options={sessionOptions} />
 
         {/* Tag */}
         {tagOptions.length > 0 && (
-          <div>
-            <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Tag</label>
-            <select className={field} value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}>
-              <option value="">All tags</option>
-              {tagOptions.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
+          <FilterDropdown label="Tag" value={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} />
         )}
 
         {/* Date from */}
