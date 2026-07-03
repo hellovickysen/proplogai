@@ -247,7 +247,7 @@ export default async function DashboardPage() {
   const todayWorst = todayTrades.length > 0 ? Math.min(...todayTrades.map((t) => num(t.pnl))) : null;
   const dailyShareData = todayTrades.length > 0
     ? { pnl: todayPnl, date: today, trades: todayTrades.length, winRate: todayWinRate, bestTrade: todayBest, worstTrade: todayWorst }
-    : { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null, avgR: s.avgR };
+    : { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null };
 
   return (
     <div className="px-3 py-8 sm:px-4">
@@ -269,7 +269,7 @@ export default async function DashboardPage() {
         <HeroStat label="Net P&amp;L" value={fmtMoney(s.net)} tone={s.net >= 0 ? 'pos' : 'neg'} />
         <Stat label="Win rate" value={s.winRate.toFixed(0) + '%'} />
         <Stat label="Profit factor" value={s.profitFactor === null ? '—' : s.profitFactor.toFixed(2)} />
-        <Stat label="Avg R" value={fmtR(s.avgR)} tone={s.avgR === null ? '' : s.avgR >= 0 ? 'pos' : 'neg'} />
+        <Stat label="Expectancy" value={s.n > 0 ? fmtMoney(s.net / s.n) : '—'} tone={s.n > 0 ? (s.net / s.n >= 0 ? 'pos' : 'neg') : ''} />
         <Stat label="Trades" value={String(s.n)} />
       </div>
 
