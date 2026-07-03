@@ -75,6 +75,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
             <th scope="col" className="px-3 pb-3">Entry</th>
             <th scope="col" className="px-3 pb-3">Exit</th>
             {!compact && <th scope="col" className="px-3 pb-3">Setup</th>}
+            {!compact && <th scope="col" className="px-3 pb-3">Tags</th>}
             {!compact && <th scope="col" className="px-3 pb-3">Emotions</th>}
             <th scope="col" className="px-3 pb-3">Conf</th>
             <th scope="col" className="px-3 pb-3"></th>
@@ -167,6 +168,30 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
                   )}
                 </td>
                 )}
+
+                {/* Tags — hidden in compact mode */}
+                {!compact && (() => {
+                  const tags = (t._journal && t._journal.tags) || [];
+                  return (
+                    <td className="px-3 py-3.5">
+                      {tags.length > 0 ? (
+                        <div className="flex items-center gap-1">
+                          <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-200">{tags[0]}</span>
+                          {tags.length > 1 && (
+                            <span className="group relative cursor-default">
+                              <span className="rounded-full border border-white/10 bg-white/5 px-1.5 py-0.5 text-xs text-white/50">+{tags.length - 1}</span>
+                              <span className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-[#12121a] px-3 py-2 text-xs text-white/80 shadow-lg group-hover:block">
+                                {tags.slice(1).join(', ')}
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-white/40">—</span>
+                      )}
+                    </td>
+                  );
+                })()}
 
                 {/* Emotions — hidden in compact mode */}
                 {!compact && (

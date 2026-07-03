@@ -8,7 +8,7 @@ import { validatePassword } from '@/lib/security';
 import { replayTour } from '@/components/ui/GuidedTour';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
-const DEFAULT_TAGS = ['NFP', 'News', 'Holiday'];
+const DEFAULT_TAGS = ['News', 'High Impact', 'Low Volume', 'Scalp', 'Swing'];
 const MAX_CUSTOM_TAGS = 10;
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';

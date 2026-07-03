@@ -41,7 +41,7 @@ export default async function TradesPage() {
   if (tradeIds.length > 0) {
     const { data: journals, error: journalError } = await supabase
       .from('journal_entries')
-      .select('trade_id, emotions, note, screenshot_url, screenshot_urls, confidence')
+      .select('trade_id, emotions, tags, note, screenshot_url, screenshot_urls, confidence')
       .in('trade_id', tradeIds);
     if (journalError) console.error('journal entries error', journalError);
     (journals || []).forEach((j) => {
@@ -49,6 +49,7 @@ export default async function TradesPage() {
       const hasImages = urls.length > 0 || (j.screenshot_url && j.screenshot_url !== '');
       journalMap[j.trade_id] = {
         emotions: j.emotions || [],
+        tags: Array.isArray(j.tags) ? j.tags : [],
         hasNote: !!(j.note && j.note.trim()),
         hasImages,
         confidence: j.confidence != null ? j.confidence : null,

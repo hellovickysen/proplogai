@@ -11,6 +11,7 @@ export default function TradeFilters({ trades, prefs }) {
   const [setupFilter, setSetupFilter] = useState('');
   const [emotionFilter, setEmotionFilter] = useState('');
   const [sessionFilter, setSessionFilter] = useState('');
+  const [tagFilter, setTagFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
@@ -33,6 +34,11 @@ export default function TradeFilters({ trades, prefs }) {
   const sessionOptions = useMemo(() => {
     const sessions = trades.map((t) => t.session).filter(Boolean);
     return [...new Set(sessions)].sort();
+  }, [trades]);
+
+  const tagOptions = useMemo(() => {
+    const fromTrades = trades.flatMap((t) => (t._journal && t._journal.tags) || []);
+    return [...new Set(fromTrades)].sort();
   }, [trades]);
 
   const filtered = useMemo(() => {
@@ -58,6 +64,12 @@ export default function TradeFilters({ trades, prefs }) {
         if (t.session !== sessionFilter) return false;
       }
 
+      // Tag filter
+      if (tagFilter) {
+        const tags = (t._journal && t._journal.tags) || [];
+        if (!tags.includes(tagFilter)) return false;
+      }
+
       // Date range
       const tDate = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
       if (dateFrom && tDate < dateFrom) return false;
@@ -65,9 +77,9 @@ export default function TradeFilters({ trades, prefs }) {
 
       return true;
     });
-  }, [trades, result, setupFilter, emotionFilter, sessionFilter, dateFrom, dateTo]);
+  }, [trades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, dateFrom, dateTo]);
 
-  const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || dateFrom || dateTo;
+  const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter || dateFrom || dateTo;
 
   return (
     <div>
@@ -126,6 +138,19 @@ export default function TradeFilters({ trades, prefs }) {
           </select>
         </div>
 
+        {/* Tag */}
+        {tagOptions.length > 0 && (
+          <div>
+            <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Tag</label>
+            <select className={field} value={tagFilter} onChange={(e) => setTagFilter(e.target.value)}>
+              <option value="">All tags</option>
+              {tagOptions.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Date from */}
         <div>
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">From</label>
@@ -141,7 +166,7 @@ export default function TradeFilters({ trades, prefs }) {
         {/* Clear */}
         {hasFilters && (
           <button
-            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setDateFrom(''); setDateTo(''); }}
+            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter(''); setDateFrom(''); setDateTo(''); }}
             className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white"
           >
             Clear filters
