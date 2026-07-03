@@ -86,7 +86,8 @@ export default async function DashboardPage() {
     .from('trades')
     .select('id, pair, direction, pnl, r_multiple, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, journal_entries(emotions, note, screenshot_url, screenshot_urls, confidence)')
     .eq('user_id', user.id)
-    .order('trade_date', { ascending: false, nullsFirst: false });
+    .order('trade_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
 
   if (tradesError) {
     return (

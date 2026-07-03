@@ -122,7 +122,8 @@ export default async function PublicProfilePage({ params }) {
       .from('trades')
       .select('id, pair, direction, pnl, r_multiple, entry_price, exit_price, trade_date, session, created_at')
       .eq('user_id', userId)
-      .order('trade_date', { ascending: false });
+      .order('trade_date', { ascending: false })
+      .order('created_at', { ascending: false });
 
     if (dateFrom) query = query.gte('trade_date', dateFrom);
     if (dateTo) query = query.lte('trade_date', dateTo);

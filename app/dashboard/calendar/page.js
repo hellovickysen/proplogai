@@ -43,7 +43,8 @@ export default async function CalendarPage({ searchParams }) {
     .eq('user_id', user.id)
     .gte('trade_date', monthStartDate)
     .lt('trade_date', monthEndDate)
-    .order('trade_date', { ascending: false, nullsFirst: false });
+    .order('trade_date', { ascending: false, nullsFirst: false })
+    .order('created_at', { ascending: false });
 
   // Lightweight count query to check if user has any trades at all (for empty state)
   const { count: totalTradeCount } = await supabase
