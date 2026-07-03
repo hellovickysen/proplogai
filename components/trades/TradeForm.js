@@ -120,6 +120,11 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   const [screenshotUrls, setScreenshotUrls] = useState([]);
   const [uploading, setUploading] = useState(false);
 
+  // Risk:Reward state
+  const [rrRisk, setRrRisk] = useState('1');
+  const [rrReward, setRrReward] = useState('');
+  const [rrManual, setRrManual] = useState(false);
+
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
   const toast = useToast();
@@ -144,6 +149,29 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       setForm((f) => ({ ...f, r_multiple: r }));
     }
   }, [form.entry_price, form.exit_price, form.stop_loss, form.direction]);
+
+  // Auto-calculate Risk:Reward from entry/exit/stop_loss
+  useEffect(() => {
+    if (rrManual) return; // user overrode manually
+    const entry = Number(form.entry_price);
+    const exit = Number(form.exit_price);
+    const sl = Number(form.stop_loss);
+    if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(sl)) {
+      setRrReward('');
+      return;
+    }
+    let risk, reward;
+    if (form.direction === 'long') {
+      risk = Math.abs(entry - sl);
+      reward = Math.abs(exit - entry);
+    } else {
+      risk = Math.abs(sl - entry);
+      reward = Math.abs(entry - exit);
+    }
+    if (risk <= 0) { setRrReward(''); return; }
+    setRrRisk('1');
+    setRrReward((reward / risk).toFixed(1));
+  }, [form.entry_price, form.exit_price, form.stop_loss, form.direction, rrManual]);
 
   // Load saved defaults (pair, session, timeframe) for new trades
   useEffect(() => {
@@ -566,9 +594,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="field-entry_price" className={labelCls}>Entry price</label><input id="field-entry_price" className={field} value={form.entry_price} onChange={(e) => set('entry_price', e.target.value)} inputMode="decimal" /></div>
               <div><label htmlFor="field-exit_price" className={labelCls}>Exit price</label><input id="field-exit_price" className={field} value={form.exit_price} onChange={(e) => set('exit_price', e.target.value)} inputMode="decimal" /></div>
-              <div><label htmlFor="field-stop_loss" className={labelCls}>Stop loss</label><input id="field-stop_loss" className={field} value={form.stop_loss} onChange={(e) => set('stop_loss', e.target.value)} inputMode="decimal" /></div>
-              <div><label htmlFor="field-take_profit" className={labelCls}>Take profit</label><input id="field-take_profit" className={field} value={form.take_profit} onChange={(e) => set('take_profit', e.target.value)} inputMode="decimal" /></div>
-              <div><label htmlFor="field-lot_size" className={labelCls}>Lot size</label><input id="field-lot_size" className={field} value={form.lot_size} onChange={(e) => set('lot_size', e.target.value)} inputMode="decimal" /></div>
+              <div><label htmlFor="field-stop_loss" className={labelCls}>Stop loss <span className="text-white/30">(optional)</span></label><input id="field-stop_loss" className={field} value={form.stop_loss} onChange={(e) => set('stop_loss', e.target.value)} inputMode="decimal" /></div>
+              <div><label htmlFor="field-lot_size" className={labelCls}>Lot / Contract size</label><input id="field-lot_size" className={field} value={form.lot_size} onChange={(e) => set('lot_size', e.target.value)} inputMode="decimal" /></div>
             </div>
           </div>
 
@@ -581,6 +608,35 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
               <div><label htmlFor="field-r_multiple" className={labelCls}>R multiple <span className="text-white/30">(auto)</span></label><input id="field-r_multiple" className={field} value={form.r_multiple} onChange={(e) => set('r_multiple', e.target.value)} inputMode="decimal" placeholder="auto from prices" /></div>
+            </div>
+
+            {/* Risk : Reward */}
+            <div className="mt-4">
+              <div className="flex items-center gap-3">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="shrink-0 text-cyan-400">
+                  <path d="M4 12L8 4L12 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 4L8 12L12 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.4" />
+                </svg>
+                <span className="font-mono text-xs uppercase tracking-wider text-white/55">Risk : Reward</span>
+                <span className="text-[10px] text-white/25">(auto from prices)</span>
+              </div>
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  className="w-20 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
+                  value={rrRisk}
+                  onChange={(e) => { setRrRisk(e.target.value); setRrManual(true); }}
+                  inputMode="decimal"
+                  placeholder="1"
+                />
+                <span className="font-mono text-sm font-bold text-white/40">:</span>
+                <input
+                  className="w-20 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
+                  value={rrReward}
+                  onChange={(e) => { setRrReward(e.target.value); setRrManual(true); }}
+                  inputMode="decimal"
+                  placeholder="—"
+                />
+              </div>
             </div>
           </div>
 
