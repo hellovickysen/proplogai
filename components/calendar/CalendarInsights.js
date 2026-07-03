@@ -114,10 +114,10 @@ function TradeWinGauge({ wins, losses, breakeven, total, winPct }) {
         </div>
       </div>
       {/* Count badges */}
-      <div className="mt-3 flex items-center gap-5">
-        <span className="rounded-lg bg-emerald-500/20 px-3 py-1 font-mono text-sm font-bold text-emerald-400">{wins}</span>
-        <span className="rounded-lg bg-white/10 px-3 py-1 font-mono text-sm font-bold text-white/50">{breakeven}</span>
-        <span className="rounded-lg bg-red-500/20 px-3 py-1 font-mono text-sm font-bold text-red-400">{losses}</span>
+      <div className="mt-4 flex items-center gap-8">
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-emerald-500/20 font-mono text-sm font-bold text-emerald-400">{wins}</span>
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-white/10 font-mono text-sm font-bold text-white/50">{breakeven}</span>
+        <span className="grid h-9 w-9 place-items-center rounded-full bg-red-500/20 font-mono text-sm font-bold text-red-400">{losses}</span>
       </div>
     </div>
   );
