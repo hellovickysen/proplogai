@@ -10,7 +10,7 @@ import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 
 const PAIRS = ['XAU/USD', 'EUR/USD', 'GBP/USD', 'USD/JPY', 'GBP/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
-const TIMEFRAMES = ['M5', 'M15', 'H1', 'H4', 'D1'];
+const TIMEFRAMES = ['M1', 'M5', 'M15', 'H1', 'H4', 'D1'];
 const SESSIONS = ['Asian', 'London', 'New York'];
 const MAX_SETUPS = 5;
 const NO_SETUP_REASONS = [
@@ -25,6 +25,52 @@ const NO_SETUP_REASONS = [
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
+}
+
+/* ─── Custom themed dropdown for Timeframe ─────────────────── */
+function TimeframeDropdown({ value, onChange, labelCls, fieldCls }) {
+  const [open, setOpen] = useState(false);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e) {
+      if (!e.target.closest('[data-tf-dropdown]')) setOpen(false);
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative" data-tf-dropdown>
+      <label className={labelCls}>Timeframe</label>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={fieldCls + ' flex w-full cursor-pointer items-center justify-between text-left'}
+      >
+        <span>{value}</span>
+        <span className={'text-white/30 text-xs transition-transform ' + (open ? 'rotate-180' : '')}>&#9660;</span>
+      </button>
+      {open && (
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl">
+          {TIMEFRAMES.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => { onChange(t); setOpen(false); }}
+              className={'flex w-full items-center px-3.5 py-2.5 text-sm transition-colors ' +
+                (t === value
+                  ? 'bg-cyan-500/15 text-cyan-300 font-semibold'
+                  : 'text-white/70 hover:bg-white/[0.06] hover:text-white')}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null }) {
@@ -392,14 +438,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                 </div>
               </div>
               <div><label htmlFor="field-trade_date" className={labelCls}>Trade date</label><input id="field-trade_date" type="date" className={field + ' cursor-pointer'} style={{ colorScheme: 'dark' }} value={form.trade_date} onChange={(e) => set('trade_date', e.target.value)} /></div>
-              <div>
-                <label htmlFor="field-timeframe" className={labelCls}>Timeframe</label>
-                <select id="field-timeframe" className={field} value={form.timeframe} onChange={(e) => set('timeframe', e.target.value)}>
-                  {TIMEFRAMES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
+              <TimeframeDropdown value={form.timeframe} onChange={(v) => set('timeframe', v)} labelCls={labelCls} fieldCls={field} />
 
               {/* Setup — multi-select toggle buttons or legacy dropdown */}
               <div className="sm:col-span-2">
