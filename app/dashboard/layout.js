@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { num, fmtMoney, fmtMoneyCompact, getTradingDate } from '@/lib/stats';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import GuidedTour from '@/components/ui/GuidedTour';
+import { buildAccess } from '@/lib/plans';
 
 /* Admin notification types — excluded from user dashboard bell */
 const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup'];
@@ -26,7 +27,7 @@ export default async function DashboardLayout({ children }) {
 
   const { data: prefs } = await supabase
     .from('user_preferences')
-    .select('onboarding_complete, referred_by, referral_balance, avatar_url, full_name')
+    .select('onboarding_complete, referred_by, referral_balance, avatar_url, full_name, is_beta')
     .eq('user_id', user.id)
     .maybeSingle();
   if (!prefs || !prefs.onboarding_complete) {
@@ -133,13 +134,17 @@ export default async function DashboardLayout({ children }) {
   const isAdmin = user.email === ADMIN_EMAIL;
   const initial = user.email ? user.email.charAt(0).toUpperCase() : '?';
 
+  /* ── Plan access ── */
+  const isBeta = prefs?.is_beta === true;
+  const planAccess = buildAccess('basic', isBeta, isAdmin).toJSON();
+
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} fullName={prefs?.full_name || ''} />
+      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} fullName={prefs?.full_name || ''} planAccess={planAccess} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} />
+            <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} planAccess={planAccess} />
             <Link href="/dashboard" className="sm:hidden">
               <Logo size={28} wordmarkClassName="font-display text-base font-bold" />
             </Link>

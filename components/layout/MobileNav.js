@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo from '@/components/Logo';
+import PlanBadge from '@/components/ui/PlanBadge';
 
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
@@ -18,7 +19,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits, fullName = '' }) {
+export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits, fullName = '', planAccess = null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -178,7 +179,10 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
               </div>
             )}
             <div className="min-w-0 flex-1">
-              {fullName && <div className="truncate text-xs font-semibold text-white">{fullName}</div>}
+              <div className="flex items-center gap-1.5">
+                {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
+                <PlanBadge access={planAccess} />
+              </div>
               <div className="truncate font-mono text-xs text-white/55">{email || 'Account'}</div>
             </div>
           </Link>

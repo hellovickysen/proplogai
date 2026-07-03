@@ -27,11 +27,13 @@ export default async function AdminUsersPage({ searchParams }) {
       (trades || []).forEach((t) => { tradeMap[t.user_id] = (tradeMap[t.user_id] || 0) + 1; });
     } catch {}
     let nameMap = {};
+    let betaMap = {};
     try {
-      const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete, full_name');
+      const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete, full_name, is_beta');
       (prefs || []).forEach((p) => {
         onboardMap[p.user_id] = !!p.onboarding_complete;
         if (p.full_name) nameMap[p.user_id] = p.full_name;
+        betaMap[p.user_id] = p.is_beta === true;
       });
     } catch {}
 
@@ -47,6 +49,7 @@ export default async function AdminUsersPage({ searchParams }) {
       banned: !!u.banned_until,
       banReason: u.user_metadata?.ban_reason || null,
       isAdmin: u.email === ADMIN_EMAIL,
+      isBeta: betaMap[u.id] || false,
     }));
 
     if (search) {

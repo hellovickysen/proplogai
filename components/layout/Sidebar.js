@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo, { LogoMark } from '@/components/Logo';
+import PlanBadge from '@/components/ui/PlanBadge';
 
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
@@ -18,7 +19,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotifCount = 0, fullName = '' }) {
+export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotifCount = 0, fullName = '', planAccess = null }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -137,7 +138,10 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
             {!collapsed && (
               <>
                 <div className="min-w-0 flex-1">
-                  {fullName && <div className="truncate text-xs font-semibold text-white">{fullName}</div>}
+                  <div className="flex items-center gap-1.5">
+                    {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
+                    <PlanBadge access={planAccess} />
+                  </div>
                   <div className="truncate text-xs text-white/55">{email || 'Account'}</div>
                 </div>
                 <span className={'text-[10px] text-white/30 transition-transform ' + (menuOpen ? 'rotate-180' : '')}>&#9650;</span>

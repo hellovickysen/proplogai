@@ -747,7 +747,7 @@ export default async function Home() {
           <div className="text-center mb-10">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/8 px-4 py-1.5 text-xs font-semibold text-emerald-200">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,0.85)]" />
-              Beta — all Pro features free for early adopters
+              Beta — all Elite features free for early adopters
             </div>
             <h2 className="font-display text-2xl font-bold sm:text-3xl">
               Simple pricing for <span style={gradientText}>serious traders</span>
@@ -760,7 +760,7 @@ export default async function Home() {
           <div className="grid gap-6 sm:grid-cols-2">
             {/* Free tier */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
-              <div className="font-mono text-xs uppercase tracking-wider text-white/40">Free</div>
+              <div className="font-mono text-xs uppercase tracking-wider text-white/40">Basic</div>
               <div className="mt-2 font-display text-3xl font-bold">$0</div>
               <div className="mt-1 text-sm text-white/40">Forever</div>
               <Link href="/login?mode=signup" className="mt-6 block w-full rounded-xl border border-white/15 bg-white/5 py-3 text-center text-sm font-semibold text-white/80 transition hover:border-white/25 hover:bg-white/10 hover:text-white">
@@ -778,7 +778,7 @@ export default async function Home() {
             {/* Pro tier */}
             <div className="relative rounded-2xl border border-violet-400/25 bg-gradient-to-b from-violet-500/[0.08] to-cyan-500/[0.03] p-8">
               <div className="absolute -top-3 right-6 rounded-full px-3 py-1 text-[10px] font-bold text-[#08080f]" style={gradientBtn}>MOST POPULAR</div>
-              <div className="font-mono text-xs uppercase tracking-wider text-violet-300/60">Pro</div>
+              <div className="font-mono text-xs uppercase tracking-wider text-violet-300/60">Elite</div>
               <div className="mt-2 flex items-baseline gap-1">
                 <span className="font-display text-3xl font-bold" style={gradientText}>$9.99</span>
                 <span className="text-sm text-white/40">/month</span>
@@ -788,7 +788,7 @@ export default async function Home() {
                 Start free — upgrade anytime →
               </Link>
               <ul className="mt-8 space-y-3">
-                {['Everything in Free', 'Unlimited AI trade analysis', 'Unlimited AI coach reports', 'Email coach reports', 'CSV trade export', 'Shareable P&L cards', 'Advanced discipline stats & achievements', 'Trophy wall (unlimited uploads)', 'Unlimited screenshots per trade', 'Unlimited custom setups'].map((f, i) => (
+                {['Everything in Basic', 'Unlimited AI trade analysis', 'Unlimited AI coach reports', 'Email coach reports', 'CSV trade export', 'Shareable P&L cards', 'Advanced discipline stats & achievements', 'Trophy wall (unlimited uploads)', 'Unlimited screenshots per trade', 'Unlimited custom setups'].map((f, i) => (
                   <li key={i} className="flex items-start gap-2.5 text-sm text-white/80">
                     <span className="mt-0.5 text-violet-400">✓</span>{f}
                   </li>
@@ -811,7 +811,7 @@ export default async function Home() {
           <div className="mt-10 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.04] p-6 text-center">
             <h3 className="font-display text-lg font-bold text-emerald-300">Early adopter? Everything is free right now.</h3>
             <p className="mx-auto mt-2 max-w-md text-sm text-white/50">
-              During the beta, all Pro features are unlocked for every user. Sign up now and you&apos;ll get early-adopter pricing when Pro launches.
+              During the beta, all Elite features are unlocked for every user. Sign up now and you&apos;ll get early-adopter pricing when Elite launches.
             </p>
           </div>
         </div>
@@ -824,7 +824,7 @@ export default async function Home() {
           <div className="space-y-4">
             {[
               { q: 'Is the beta really free?', a: 'Yes. Every feature — including AI coaching — is free during the beta. No credit card required.' },
-              { q: 'What happens when Pro launches?', a: 'Free tier stays free forever with the limits shown above. Beta users get early-adopter pricing on Pro.' },
+              { q: 'What happens when Elite launches?', a: 'Basic plan stays free forever with the limits shown above. Beta users get early-adopter pricing on Elite.' },
               { q: 'Why no broker auto-import?', a: 'Deliberate choice. Manual logging forces you to reflect on every trade — the emotion, the setup, the decision. That reflection is where discipline is built. Auto-import skips it.' },
               { q: 'Is my trading data secure?', a: 'All data is encrypted at rest (AES-256) and in transit (TLS 1.2+). We never ask for broker credentials and never sell your data.' },
               { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no commitments. Downgrade to Free anytime and keep all your trade data.' },
