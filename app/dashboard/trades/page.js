@@ -74,7 +74,10 @@ export default async function TradesPage() {
   return (
     <div className="px-4 py-8 sm:px-6">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="font-display text-2xl font-bold">Trades</h1>
+        <div className="flex items-baseline gap-2">
+          <h1 className="font-display text-2xl font-bold">Trades</h1>
+          {enriched.length > 0 && <span className="font-mono text-sm text-white/40">{enriched.length}</span>}
+        </div>
         <div className="flex items-center gap-2">
           {enriched.length > 0 && access.canUse('csv_export') && <ExportButton />}
           <Link
