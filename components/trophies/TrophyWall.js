@@ -128,8 +128,8 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
   async function handleFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('File must be under 10MB');
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File must be under 5MB');
       return;
     }
     setUploading(true);
