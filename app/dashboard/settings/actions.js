@@ -68,12 +68,20 @@ export async function savePreferences(payload) {
 
   const { data: existing } = await supabase
     .from('user_preferences')
-    .select('id')
+    .select('id, avatar_url')
     .eq('user_id', user.id)
     .maybeSingle();
 
   let error;
   if (existing) {
+    // Clean up old avatar from storage if being replaced (best effort)
+    if (existing.avatar_url && avatarUrl && existing.avatar_url !== avatarUrl) {
+      const oldPath = existing.avatar_url.split('/avatars/')[1];
+      if (oldPath) {
+        await supabase.storage.from('avatars').remove([oldPath]);
+      }
+    }
+
     delete row.user_id;
     const res = await supabase.from('user_preferences').update(row).eq('id', existing.id).eq('user_id', user.id);
     error = res.error;

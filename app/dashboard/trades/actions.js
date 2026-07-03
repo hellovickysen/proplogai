@@ -194,8 +194,29 @@ export async function updateTrade(id, payload) {
 export async function deleteTrade(id) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+
+  // Fetch journal screenshots before cascade delete removes them
+  const { data: journal } = await supabase
+    .from('journal_entries')
+    .select('screenshot_url, screenshot_urls')
+    .eq('trade_id', id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
   const { error } = await supabase.from('trades').delete().eq('id', id).eq('user_id', user.id);
   if (error) return { error: error.message };
+
+  // Clean up screenshot files from storage (best effort)
+  if (journal) {
+    const urls = Array.isArray(journal.screenshot_urls)
+      ? journal.screenshot_urls.filter(Boolean)
+      : journal.screenshot_url ? [journal.screenshot_url] : [];
+    const paths = urls.map((u) => u.split('/screenshots/')[1]).filter(Boolean);
+    if (paths.length > 0) {
+      await supabase.storage.from('screenshots').remove(paths);
+    }
+  }
+
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/trades');
   return { ok: true };
@@ -220,12 +241,24 @@ export async function saveJournal(tradeId, payload) {
   };
   const { data: existing } = await supabase
     .from('journal_entries')
-    .select('id')
+    .select('id, screenshot_url, screenshot_urls')
     .eq('trade_id', tradeId)
     .eq('user_id', user.id)
     .maybeSingle();
   let error;
   if (existing) {
+    // Clean up removed screenshots from storage (best effort)
+    const oldUrls = Array.isArray(existing.screenshot_urls)
+      ? existing.screenshot_urls.filter(Boolean)
+      : existing.screenshot_url ? [existing.screenshot_url] : [];
+    const removedUrls = oldUrls.filter((u) => !urls.includes(u));
+    if (removedUrls.length > 0) {
+      const paths = removedUrls.map((u) => u.split('/screenshots/')[1]).filter(Boolean);
+      if (paths.length > 0) {
+        await supabase.storage.from('screenshots').remove(paths);
+      }
+    }
+
     const res = await supabase.from('journal_entries').update(entry).eq('id', existing.id).eq('user_id', user.id);
     error = res.error;
   } else {
