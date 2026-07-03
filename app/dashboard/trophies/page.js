@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import TrophyWall from '@/components/trophies/TrophyWall';
+import { getUserAccess } from '@/lib/plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,12 +31,7 @@ export default async function TrophiesPage() {
     .eq('user_id', user.id);
   const firmNames = [...new Set((expenses || []).map((e) => e.firm_name).filter(Boolean))].sort();
 
-  const { data: sub, error: subError } = await supabase
-    .from('subscriptions')
-    .select('plan')
-    .eq('user_id', user.id)
-    .maybeSingle();
-  const plan = (sub && sub.plan) || 'free';
+  const access = await getUserAccess(supabase, user);
 
-  return <TrophyWall trophies={trophies || []} firmNames={firmNames} plan={plan} />;
+  return <TrophyWall trophies={trophies || []} firmNames={firmNames} planAccess={access.toJSON()} />;
 }
