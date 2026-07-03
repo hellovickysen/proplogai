@@ -33,7 +33,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
               <div className="flex items-center gap-3 min-w-0">
                 {/* Direction badge */}
                 <span className={'shrink-0 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold ' + (t.direction === 'long' ? 'border-blue-400/30 bg-blue-500/15 text-blue-300' : 'border-red-400/30 bg-red-500/15 text-red-300')}>
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0"><path d={t.direction === 'long' ? 'M2 10L6 3L10 10' : 'M2 2L6 9L10 2'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" className="shrink-0">{t.direction === 'long' ? <path d="M1 9L4.5 4L7.5 6.5L13 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M1 1L4.5 6L7.5 3.5L13 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}</svg>
                   {t.direction === 'long' ? 'Long' : 'Short'}
                 </span>
                 <div className="min-w-0">
@@ -116,7 +116,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
                 {/* Direction */}
                 <td className="px-3 py-3.5">
                   <span className={'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold ' + (t.direction === 'long' ? 'border-blue-400/30 bg-blue-500/15 text-blue-300' : 'border-red-400/30 bg-red-500/15 text-red-300')}>
-                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="shrink-0"><path d={t.direction === 'long' ? 'M2 10L6 3L10 10' : 'M2 2L6 9L10 2'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                    <svg width="14" height="10" viewBox="0 0 14 10" fill="none" className="shrink-0">{t.direction === 'long' ? <path d="M1 9L4.5 4L7.5 6.5L13 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M1 1L4.5 6L7.5 3.5L13 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}</svg>
                     {t.direction === 'long' ? 'Long' : 'Short'}
                   </span>
                 </td>
