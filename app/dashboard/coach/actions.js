@@ -6,6 +6,7 @@ import { analyzeCoachReport } from '@/lib/ai';
 import { sendEmail, buildCoachReportEmail, isEmailConfigured } from '@/lib/email';
 import { computeStats } from '@/lib/stats';
 import { notify, TYPES } from '@/lib/notifications';
+import { getUserAccess } from '@/lib/plans';
 
 /** Rate limiter: max 5 coach reports per hour per user */
 const coachRateLimit = new Map();
@@ -28,6 +29,14 @@ export async function generateCoachReport() {
   } = await supabase.auth.getUser();
   if (!user) return { error: 'You must be signed in.' };
   if (!checkCoachRate(user.id)) return { error: 'Rate limit reached. You can generate up to 5 reports per hour.' };
+
+  // Plan-based limit check
+  const access = await getUserAccess(supabase, user);
+  if (!access.canUse('coach_report')) return { error: 'AI Coach reports require the Elite plan.' };
+  const { remaining } = await access.remaining('coach_report', supabase, user.id);
+  if (remaining <= 0 && access.plan === 'basic' && !access.isBeta && !access.isAdmin) {
+    return { error: 'You\'ve used your 1 coach report this month. Upgrade to Elite for unlimited.' };
+  }
 
   const { data: trades } = await supabase
     .from('trades')
@@ -100,6 +109,10 @@ export async function sendCoachReportEmail() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: 'You must be signed in.' };
+
+  // Plan check — email reports are Elite-only
+  const access = await getUserAccess(supabase, user);
+  if (!access.canUse('email_coach')) return { error: 'Email coach reports require the Elite plan.' };
 
   // Fetch the latest coach report
   const { data: insight } = await supabase

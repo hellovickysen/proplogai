@@ -222,6 +222,26 @@ function ProfileTab({ user, prefs }) {
         </button>
       </div>
 
+      {/* Plan info */}
+      <div className={card}>
+        <div className="mb-2 font-display text-base font-semibold">Your Plan</div>
+        <div className="flex items-center gap-3">
+          <span className={'rounded-full border px-3 py-1 text-xs font-semibold ' +
+            (prefs?.is_beta ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300' :
+             'border-white/15 bg-white/5 text-white/60')}>
+            {prefs?.is_beta ? 'Beta Access' : 'Basic'}
+          </span>
+          {prefs?.is_beta && (
+            <span className="text-xs text-white/40">All Elite features unlocked free during beta</span>
+          )}
+        </div>
+        {!prefs?.is_beta && (
+          <a href="/#pricing" className="mt-3 inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            Upgrade to Elite
+          </a>
+        )}
+      </div>
+
       {/* Replay walkthrough */}
       <div className={card}>
         <div className="mb-2 font-display text-base font-semibold">Walkthrough</div>

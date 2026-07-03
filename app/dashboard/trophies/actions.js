@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getUserAccess } from '@/lib/plans';
 
 function sanitize(str, maxLen) {
   if (!str) return null;
@@ -24,23 +25,11 @@ export async function createTrophy(payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
 
-  // Plan-gate: free users limited to 5 trophies
-  const FREE_TROPHY_LIMIT = 5;
-  const { data: sub } = await supabase
-    .from('subscriptions')
-    .select('plan')
-    .eq('user_id', user.id)
-    .maybeSingle();
-  const plan = (sub && sub.plan) || 'free';
-
-  if (plan === 'free') {
-    const { count } = await supabase
-      .from('trophies')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-    if (count >= FREE_TROPHY_LIMIT) {
-      return { error: 'Free plan is limited to ' + FREE_TROPHY_LIMIT + ' trophies. Upgrade to Pro for unlimited uploads.' };
-    }
+  // Plan-based trophy limit check
+  const access = await getUserAccess(supabase, user);
+  const { remaining } = await access.remaining('trophy_uploads', supabase, user.id);
+  if (remaining <= 0 && !access.canUse('unlimited_trophies')) {
+    return { error: 'Basic plan is limited to 5 trophies. Upgrade to Elite for unlimited uploads.' };
   }
 
   const title = sanitize(payload.title, 100);

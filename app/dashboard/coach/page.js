@@ -4,6 +4,9 @@ import GenerateReportButton from '@/components/coach/GenerateReportButton';
 import EmailReportButton from '@/components/coach/EmailReportButton';
 import Link from 'next/link';
 import { isEmailConfigured } from '@/lib/email';
+import { getUserAccess } from '@/lib/plans';
+import BetaFeatureWarning from '@/components/ui/BetaFeatureWarning';
+import UpgradeCard from '@/components/ui/UpgradeCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +54,9 @@ export default async function CoachPage() {
   const hasEnough = tradeCount >= MIN_TRADES;
   const emailEnabled = isEmailConfigured();
 
+  // Plan access
+  const access = await getUserAccess(supabase, user);
+
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -59,10 +65,17 @@ export default async function CoachPage() {
           <p className="mt-1 text-sm text-white/55">Recurring patterns and trading psychology across your recent trades.</p>
         </div>
         <div className="flex items-center gap-2">
-          {report && emailEnabled ? <EmailReportButton /> : null}
-          {hasEnough ? <GenerateReportButton label={report ? '↻ Refresh report' : '✦ Generate report'} usedThisMonth={coachUsedThisMonth || 0} /> : null}
+          {report && emailEnabled && access.canUse('email_coach') ? <EmailReportButton /> : null}
+          {hasEnough && access.canUse('coach_report') ? <GenerateReportButton label={report ? '↻ Refresh report' : '✦ Generate report'} usedThisMonth={coachUsedThisMonth || 0} /> : null}
         </div>
       </div>
+
+      {access.showWarning('coach_report') && (
+        <div className="mb-4"><BetaFeatureWarning feature="coach_report" featureLabel="AI Coach reports" /></div>
+      )}
+      {!access.canUse('coach_report') && (
+        <div className="mb-4"><UpgradeCard feature="coach_report" featureLabel="AI Coach reports" /></div>
+      )}
 
       {report ? (
         <CoachReport report={report} updatedAt={insight.created_at} />

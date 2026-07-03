@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { analyzeTradeWithAI } from '@/lib/ai';
 import { notify, TYPES } from '@/lib/notifications';
+import { getUserAccess } from '@/lib/plans';
 
 /** Input validation limits */
 const MAX_PAIR_LENGTH = 20;
@@ -114,6 +115,13 @@ export async function createTrade(payload) {
   if (!user) return { error: 'You must be signed in.' };
   if (toNum(payload.pnl) === null) return { error: 'Please enter the trade P&L.' };
   if (!payload.pair) return { error: 'Please enter a pair.' };
+
+  // Plan-based screenshot limit
+  const access = await getUserAccess(supabase, user);
+  const screenshotLimit = access.limit('screenshots_per_trade');
+  if (payload.journal && Array.isArray(payload.journal.screenshot_urls) && payload.journal.screenshot_urls.length > screenshotLimit) {
+    payload.journal.screenshot_urls = payload.journal.screenshot_urls.slice(0, screenshotLimit);
+  }
   const { data, error } = await supabase.from('trades').insert(buildRow(user, payload)).select('id').single();
   if (error) return { error: error.message };
 
@@ -234,6 +242,14 @@ export async function analyzeTrade(tradeId) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
   if (!checkAiRateLimit(user.id)) return { error: 'Rate limit reached. Try again in an hour.' };
+
+  // Plan-based limit check
+  const access = await getUserAccess(supabase, user);
+  const { remaining } = await access.remaining('ai_analysis', supabase, user.id);
+  if (!access.canUse('ai_analysis')) return { error: 'AI trade analysis requires the Elite plan.' };
+  if (remaining <= 0 && access.plan === 'basic' && !access.isBeta && !access.isAdmin) {
+    return { error: 'You\'ve used all 3 AI analyses this month. Upgrade to Elite for unlimited.' };
+  }
 
   const { data: trade } = await supabase.from('trades').select('*').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
   if (!trade) return { error: 'Trade not found.' };

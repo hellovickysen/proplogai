@@ -3,6 +3,9 @@ import { createClient } from '@/lib/supabase/server';
 import { computeStats, equitySeries, equityChartData, fmtMoney, fmtR, num, getTradingDate } from '@/lib/stats';
 import EquityChart from '@/components/dashboard/EquityChart';
 import { computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak } from '@/lib/discipline';
+import { getUserAccess } from '@/lib/plans';
+import BetaFeatureWarning from '@/components/ui/BetaFeatureWarning';
+import UpgradeCard from '@/components/ui/UpgradeCard';
 import { computeAchievements } from '@/lib/achievements';
 import TradeTable from '@/components/trades/TradeTable';
 import PnlCalendar from '@/components/calendar/PnlCalendar';
@@ -119,6 +122,9 @@ export default async function DashboardPage() {
   });
 
   const s = computeStats(list);
+
+  // Plan access for conditional feature display
+  const access = await getUserAccess(supabase, user);
   const series = equitySeries(list);
   const chartData = equityChartData(list);
   const { data: coach, error: coachError } = await supabase
@@ -250,7 +256,9 @@ export default async function DashboardPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
-          <span data-tour="share-btn"><DashboardShareButton data={dailyShareData} type={todayTrades.length > 0 ? 'daily' : 'total'} /></span>
+          {access.canUse('shareable_cards') && (
+            <span data-tour="share-btn"><DashboardShareButton data={dailyShareData} type={todayTrades.length > 0 ? 'daily' : 'total'} /></span>
+          )}
           <Link data-tour="new-trade" href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
             + New Trade
           </Link>
@@ -333,6 +341,9 @@ export default async function DashboardPage() {
               <div className="font-display text-sm font-semibold" style={gradientText}>&#10022; AI Coach</div>
               <Link href="/dashboard/coach" className="flex min-h-[44px] items-center font-mono text-xs text-cyan-400">Open &rarr;</Link>
             </div>
+            {access.showWarning('coach_report') && (
+              <div className="mt-2"><BetaFeatureWarning feature="coach_report" featureLabel="AI Coach reports" /></div>
+            )}
             {report ? (
               <div className="mt-2">
                 {coach.summary ? <p className="text-sm leading-relaxed text-white/80">{coach.summary}</p> : null}

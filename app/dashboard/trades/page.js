@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import TradeFilters from '@/components/trades/TradeFilters';
 import ExportButton from '@/components/trades/ExportButton';
+import { getUserAccess } from '@/lib/plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +31,9 @@ export default async function TradesPage() {
   }
 
   const list = trades || [];
+
+  // Plan access for conditional features
+  const access = await getUserAccess(supabase, user);
 
   // Fetch all journal entries for these trades to get emotions, confidence
   const tradeIds = list.map((t) => t.id);
@@ -71,7 +75,7 @@ export default async function TradesPage() {
       <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
         <h1 className="font-display text-2xl font-bold">Trades</h1>
         <div className="flex items-center gap-2">
-          {enriched.length > 0 && <ExportButton />}
+          {enriched.length > 0 && access.canUse('csv_export') && <ExportButton />}
           <Link
             href="/dashboard/trades/new"
             className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#08080f]"

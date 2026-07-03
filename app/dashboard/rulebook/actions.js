@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { getUserAccess } from '@/lib/plans';
 
 const MAX_NAME = 60;
 const MAX_DIRECTION = 500;
@@ -81,6 +82,13 @@ export async function resetToDefaultSetups() {
 export async function createSetup(payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'Not signed in.' };
+
+  // Plan-based setup limit check
+  const access = await getUserAccess(supabase, user);
+  const { remaining } = await access.remaining('custom_setups', supabase, user.id);
+  if (remaining <= 0 && access.plan === 'basic' && !access.isBeta && !access.isAdmin) {
+    return { error: 'Basic plan allows up to 3 custom setups. Upgrade to Elite for unlimited.' };
+  }
 
   const name = sanitize(payload.name, MAX_NAME);
   if (!name) return { error: 'Setup name is required.' };
