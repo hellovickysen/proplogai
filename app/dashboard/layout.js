@@ -8,7 +8,7 @@ import RiskFooter from '@/components/layout/RiskFooter';
 import NotificationBell from '@/components/notifications/NotificationBell';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
-import { num, fmtMoney, fmtMoneyCompact } from '@/lib/stats';
+import { num, fmtMoney, fmtMoneyCompact, getTradingDate } from '@/lib/stats';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import GuidedTour from '@/components/ui/GuidedTour';
 
@@ -80,7 +80,7 @@ export default async function DashboardLayout({ children }) {
     }
   } catch (e) {}
 
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // YYYY-MM-DD format
+  const today = getTradingDate(); // UTC midnight = 5:30 AM IST trading day boundary
   const { data: todayTrades } = await supabase
     .from('trades')
     .select('pnl, trade_date')

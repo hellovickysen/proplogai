@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { computeStats, equitySeries, equityChartData, fmtMoney, fmtR, num } from '@/lib/stats';
+import { computeStats, equitySeries, equityChartData, fmtMoney, fmtR, num, getTradingDate } from '@/lib/stats';
 import EquityChart from '@/components/dashboard/EquityChart';
 import { computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak } from '@/lib/discipline';
 import { computeAchievements } from '@/lib/achievements';
@@ -220,7 +220,7 @@ export default async function DashboardPage() {
 
   const recent = list.slice(0, 6);
 
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // IST date
+  const today = getTradingDate(); // UTC midnight = 5:30 AM IST trading day boundary
   const todayTrades = list.filter((t) => {
     const d = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
     return d === today;
