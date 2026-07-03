@@ -89,6 +89,11 @@ function ProfileTab({ user, prefs }) {
   async function onAvatarFile(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarErr('File exceeds 5MB limit.');
+      if (toast) toast.error('File exceeds 5MB limit.');
+      return;
+    }
     setUploading(true);
     setAvatarErr(null);
     setAvatarMsg(null);
