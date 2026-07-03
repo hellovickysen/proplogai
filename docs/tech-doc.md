@@ -263,6 +263,8 @@ setup_followed: 'partial'  // Auto-computed overall for DB storage
 
 12. **Vercel deployments take 60-90s** and edge cache propagation can take longer. Users should hard-refresh (Ctrl+Shift+R) after deployments.
 
+13. **Trading day boundary is midnight UTC (= 5:30 AM IST).** Always use `getTradingDate()` or `getTradingMonth()` from `lib/stats.js` for "today" logic. Never use `toLocaleDateString` with a timezone — that was the old IST approach. A trade at 3:00 AM IST belongs to the previous trading day; a trade at 6:00 AM IST starts the new day.
+
 ## 9. Phase L Changes (June 30, 2026 — post-K)
 
 ### Landing Nav Redesign (LandingNav.js + CookieBanner.js)

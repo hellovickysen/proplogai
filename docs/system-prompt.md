@@ -17,7 +17,7 @@ PropLogAI lets traders log trades daily, tag their emotions, and receive AI coac
 - Supabase project ref: irdlflbcugzmxazeuyod
 
 ## Architecture
-Fully serverless. Next.js Server Components fetch data directly from Supabase. Server Actions handle mutations. All auth is cookie-based via @supabase/ssr middleware. Auto-deploy: every push to main deploys to Vercel within ~60 seconds. IMPORTANT: All Supabase queries on dashboard pages MUST include explicit .eq('user_id', user.id) — never rely solely on RLS for data isolation.
+Fully serverless. Next.js Server Components fetch data directly from Supabase. Server Actions handle mutations. All auth is cookie-based via @supabase/ssr middleware. Auto-deploy: every push to main deploys to Vercel within ~60 seconds. IMPORTANT: All Supabase queries on dashboard pages MUST include explicit .eq('user_id', user.id) — never rely solely on RLS for data isolation. Trading day boundary: midnight UTC = 5:30 AM IST. Use getTradingDate() from lib/stats.js for all "today" logic — never use local timezone.
 
 ## Project Structure
 - app/: Routes (dashboard/, trades/, calendar/, coach/, settings/, login/, onboarding/, admin/, admin/tickets/, privacy/, terms/, rulebook/, expenses/, trophies/, referrals/, profile/[code]/, r/[code]/, trophy/[id]/, trade/[shareId]/, auth/callback/, api/logo/, dashboard/support/, dashboard/notifications/)
@@ -79,7 +79,7 @@ Each selected setup has its own Yes/Partial/No follow status (inline buttons in 
 - Phase I: Mobile optimization 2 + shareable trade journal links with 24h auto-expiry, beta notice banner
 - Phase J: Calendar mobile redesign (dual-render), mobile nav slide-from-left drawer, collapsible desktop sidebar
 - Phase K: Codebase audit fix recovery — restored dashboard/page.js and coach/page.js destroyed by bulk audit commits, removed CSP strict-dynamic that blocked all client-side JS, reviewed and verified 50+ audit fixes across 27+ files, fixed ai.js timeout bug, per-setup follow tracking, mandatory setup follow, Good SL default setup, Google OAuth account linking, oauth_failed error handling
-- Phase L: Landing nav redesign (LandingNav.js with responsive desktop/mobile + hamburger overlay), cookie consent banner (CookieBanner.js with localStorage + brand gradient), 1:1 square P&L share card for Twitter/X (480x480px), share button always visible on dashboard (Total P&L fallback, removed Avg R stat chip), full name support (migration 0023, Google OAuth auto-fetch, Settings edit, Sidebar/MobileNav/Admin display with avatar initials), guided tooltip walkthrough (GuidedTour.js, 7 steps with spotlight overlay, auto-triggers for new users, replayable from Settings)
+- Phase L: Landing nav redesign + trading day boundary (5:30 AM IST = midnight UTC) — Landing nav redesign (LandingNav.js with responsive desktop/mobile + hamburger overlay), cookie consent banner (CookieBanner.js with localStorage + brand gradient), 1:1 square P&L share card for Twitter/X (480x480px), share button always visible on dashboard (Total P&L fallback, removed Avg R stat chip), full name support (migration 0023, Google OAuth auto-fetch, Settings edit, Sidebar/MobileNav/Admin display with avatar initials), guided tooltip walkthrough (GuidedTour.js, 7 steps with spotlight overlay, auto-triggers for new users, replayable from Settings)
 
 ## Remaining Roadmap
 1. Telegram bot — log trades from chat ("/log XAU/USD long +$145")
