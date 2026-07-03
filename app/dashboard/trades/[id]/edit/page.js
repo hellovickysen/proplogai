@@ -16,7 +16,7 @@ export default async function EditTradePage({ params }) {
 
   const { data: prefs } = await supabase
     .from('user_preferences')
-    .select('custom_emotions, default_confidence, custom_setups')
+    .select('custom_emotions, custom_tags, default_confidence, custom_setups')
     .eq('user_id', user.id)
     .maybeSingle();
 

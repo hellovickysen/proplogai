@@ -342,7 +342,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
       {/* Tags */}
       <div className={card}>
         <div className="mb-1 font-display text-base font-semibold">Tags</div>
-        <p className="mb-4 text-xs text-white/55">Context tags for your trades (e.g. NFP, News, Holiday). Up to {MAX_CUSTOM_TAGS}.</p>
+        <p className="mb-4 text-xs text-white/55">Context tags for your trades (e.g. news, scalp, nfp). Up to {MAX_CUSTOM_TAGS}.</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {tags.map((tag, i) => (
             <span key={i} className="group flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
