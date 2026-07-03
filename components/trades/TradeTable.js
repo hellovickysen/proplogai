@@ -31,9 +31,10 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
               className={'flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 border-l-[3px] ' + leftBorderColor}
             >
               <div className="flex items-center gap-3 min-w-0">
-                {/* Direction arrow */}
-                <span className={'shrink-0 font-mono text-base ' + (t.direction === 'long' ? 'text-emerald-400' : 'text-red-400')}>
-                  {t.direction === 'long' ? '▲' : '▼'}
+                {/* Direction badge */}
+                <span className={'shrink-0 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold ' + (t.direction === 'long' ? 'border-blue-400/30 bg-blue-500/15 text-blue-300' : 'border-red-400/30 bg-red-500/15 text-red-300')}>
+                  <span className="text-[10px]">{t.direction === 'long' ? '📈' : '📉'}</span>
+                  {t.direction === 'long' ? 'Long' : 'Short'}
                 </span>
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -114,8 +115,9 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
 
                 {/* Direction */}
                 <td className="px-3 py-3.5">
-                  <span className={'rounded px-2 py-0.5 font-mono text-xs ' + (t.direction === 'long' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-red-500/15 text-red-300')}>
-                    {(t.direction || '').toUpperCase()}
+                  <span className={'inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold ' + (t.direction === 'long' ? 'border-blue-400/30 bg-blue-500/15 text-blue-300' : 'border-red-400/30 bg-red-500/15 text-red-300')}>
+                    <span className="text-[10px]">{t.direction === 'long' ? '📈' : '📉'}</span>
+                    {t.direction === 'long' ? 'Long' : 'Short'}
                   </span>
                 </td>
 
