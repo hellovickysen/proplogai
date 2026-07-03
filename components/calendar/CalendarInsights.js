@@ -191,19 +191,19 @@ export default function CalendarInsights({ trades }) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+          className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"
         >
           <div className="flex items-center">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">
+            <span className="font-mono text-xs uppercase tracking-wider text-white/55">
               {card.label}
             </span>
             <Tooltip text={card.tooltip} />
           </div>
-          <div className={`mt-2 font-display text-lg font-bold ${card.valueColor || 'text-white'}`}>
+          <div className={`mt-2 font-display text-2xl font-bold ${card.valueColor || 'text-white'}`}>
             {card.value}
           </div>
           {card.sub && (
-            <div className={`mt-0.5 font-mono text-xs ${card.subColor || 'text-white/40'}`}>
+            <div className={`mt-1 font-mono text-sm ${card.subColor || 'text-white/45'}`}>
               {card.sub}
             </div>
           )}
