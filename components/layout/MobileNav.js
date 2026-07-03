@@ -179,9 +179,11 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
               </div>
             )}
             <div className="min-w-0 flex-1">
-              {fullName && <div className="truncate text-xs font-semibold text-white">{fullName}</div>}
+              <div className="flex items-center gap-1.5">
+                {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
+                <PlanBadge access={planAccess} />
+              </div>
               <div className="truncate font-mono text-xs text-white/55">{email || 'Account'}</div>
-              <div className="mt-1"><PlanBadge access={planAccess} /></div>
             </div>
           </Link>
 
