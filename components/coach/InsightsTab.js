@@ -140,13 +140,16 @@ function EmotionHeatmap({ items }) {
           const pct = (count / maxCount) * 100;
           const colors = ['bg-violet-400', 'bg-cyan-400', 'bg-amber-400', 'bg-emerald-400', 'bg-red-400'];
           return (
-            <div key={i} className="flex items-center gap-3">
-              <span className="w-20 shrink-0 text-xs text-white/55">{e.emotion || e.label}</span>
-              <div className="h-3 flex-1 rounded-full bg-white/[0.06]">
+            <div key={i}>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-xs text-white/55 truncate">{e.emotion || e.label}</span>
+                <span className="shrink-0 font-mono text-[10px] text-white/30 ml-2">
+                  {e.win_rate != null ? `${e.win_rate}% WR` : `${count} trades`}
+                </span>
+              </div>
+              <div className="h-2.5 rounded-full bg-white/[0.06]">
                 <div className={'h-full rounded-full ' + colors[i % colors.length]} style={{ width: Math.max(8, pct) + '%' }} />
               </div>
-              {e.win_rate != null && <span className="w-12 shrink-0 text-right font-mono text-[10px] text-white/40">{e.win_rate}% WR</span>}
-              {e.win_rate == null && <span className="w-12 shrink-0 text-right font-mono text-[10px] text-white/30">{count} trades</span>}
             </div>
           );
         })}
