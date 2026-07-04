@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { analyzeTradeWithAI } from '@/lib/ai';
 import { notify, TYPES } from '@/lib/notifications';
 import { getUserAccess } from '@/lib/plans';
+import { getUserTradeContext } from '@/lib/tradeContext';
 
 /** Input validation limits */
 const MAX_PAIR_LENGTH = 20;
@@ -285,16 +286,20 @@ export async function analyzeTrade(tradeId) {
   const { remaining } = await access.remaining('ai_analysis', supabase, user.id);
   if (!access.canUse('ai_analysis')) return { error: 'AI trade analysis requires the Elite plan.' };
   if (remaining <= 0 && access.plan === 'basic' && !access.isBeta && !access.isAdmin) {
-    return { error: 'You\'ve used all 3 AI analyses this month. Upgrade to Elite for unlimited.' };
+    return { error: 'You\'ve used all 5 AI analyses this month. Upgrade to Elite for more.' };
   }
 
   const { data: trade } = await supabase.from('trades').select('*').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
   if (!trade) return { error: 'Trade not found.' };
   const { data: journal } = await supabase.from('journal_entries').select('*').eq('trade_id', tradeId).maybeSingle();
 
+  // Build user context for personalized AI analysis
+  const depth = access.effectivePlan === 'elite' ? 90 : 30;
+  const context = await getUserTradeContext(supabase, user.id, { depth });
+
   let analysis;
   try {
-    analysis = await analyzeTradeWithAI(trade, journal);
+    analysis = await analyzeTradeWithAI(trade, journal, context);
   } catch (e) {
     return { error: (e && e.message) || 'AI analysis failed.' };
   }

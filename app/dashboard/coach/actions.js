@@ -7,8 +7,9 @@ import { sendEmail, buildCoachReportEmail, isEmailConfigured } from '@/lib/email
 import { computeStats } from '@/lib/stats';
 import { notify, TYPES } from '@/lib/notifications';
 import { getUserAccess } from '@/lib/plans';
+import { getUserTradeContext } from '@/lib/tradeContext';
 
-/** Rate limiter: max 5 coach reports per hour per user */
+/** Rate limiter: max 5 coach reports per hour per user (burst protection) */
 const coachRateLimit = new Map();
 function checkCoachRate(userId) {
   const now = Date.now();
@@ -32,21 +33,25 @@ export async function generateCoachReport() {
 
   // Plan-based limit check
   const access = await getUserAccess(supabase, user);
-  if (!access.canUse('coach_report')) return { error: 'AI Coach reports require the Elite plan.' };
+  if (!access.canUse('coach_report')) return { error: 'Propol AI reviews require the Elite plan.' };
   const { remaining } = await access.remaining('coach_report', supabase, user.id);
   if (remaining <= 0 && access.plan === 'basic' && !access.isBeta && !access.isAdmin) {
-    return { error: 'You\'ve used your 1 coach report this month. Upgrade to Elite for unlimited.' };
+    return { error: 'You\'ve used your monthly Propol review. Upgrade to Elite for weekly reviews.' };
   }
+
+  // Determine trade depth based on plan
+  const depth = access.effectivePlan === 'elite' ? 90 : 30;
 
   const { data: trades } = await supabase
     .from('trades')
     .select('*')
     .eq('user_id', user.id)
+    .order('trade_date', { ascending: false })
     .order('created_at', { ascending: false })
-    .limit(50);
+    .limit(depth);
   const list = trades || [];
   if (list.length < 5) {
-    return { error: 'Log at least 5 trades first so the coach has enough patterns to analyze.' };
+    return { error: 'Log at least 5 trades first so Propol has enough patterns to analyze.' };
   }
 
   const ids = list.map((t) => t.id);
@@ -56,13 +61,17 @@ export async function generateCoachReport() {
     jmap[j.trade_id] = j;
   });
 
+  // Build user context for personalized analysis
+  const context = await getUserTradeContext(supabase, user.id, { depth });
+
   let report;
   try {
-    report = await analyzeCoachReport(list, jmap);
+    report = await analyzeCoachReport(list, jmap, context);
   } catch (e) {
     return { error: (e && e.message) || 'AI report failed.' };
   }
 
+  // Always INSERT new reports (keep history for progress tracking)
   const row = {
     user_id: user.id,
     trade_id: null,
@@ -72,26 +81,11 @@ export async function generateCoachReport() {
     severity: list.length,
   };
 
-  const { data: existing } = await supabase
-    .from('ai_insights')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('type', 'coach_report')
-    .limit(1)
-    .maybeSingle();
-
-  let error;
-  if (existing) {
-    const res = await supabase.from('ai_insights').update(row).eq('id', existing.id).eq('user_id', user.id);
-    error = res.error;
-  } else {
-    const res = await supabase.from('ai_insights').insert(row);
-    error = res.error;
-  }
+  const { error } = await supabase.from('ai_insights').insert(row);
   if (error) return { error: error.message };
 
   // ── Notification ──
-  await notify(supabase, user.id, TYPES.AI_COACH_REPORT, 'Coach Report Ready', report.headline || 'Your AI coaching report is ready to review', { link: '/dashboard/coach' });
+  await notify(supabase, user.id, TYPES.AI_COACH_REPORT, 'Propol Review Ready', report.headline || 'Your AI coaching review is ready', { link: '/dashboard/coach' });
 
   revalidatePath('/dashboard/coach');
   revalidatePath('/dashboard');
@@ -125,7 +119,7 @@ export async function sendCoachReportEmail() {
     .maybeSingle();
 
   if (!insight || !insight.mistakes) {
-    return { error: 'No coach report found. Generate one first.' };
+    return { error: 'No Propol review found. Generate one first.' };
   }
 
   // Fetch trade stats for the email
@@ -146,7 +140,7 @@ export async function sendCoachReportEmail() {
 
   const result = await sendEmail({
     to: user.email,
-    subject: '✦ Your PropLogAI Coach Report',
+    subject: '✦ Your Propol AI Coach Review',
     html,
   });
 
