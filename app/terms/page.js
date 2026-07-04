@@ -113,14 +113,17 @@ export default function TermsPage() {
             items={[
               'Log and review your trades, including entry/exit prices, P&L, and instrument details.',
               'Write journal entries and attach emotion tags, mistake tags, and screenshots to trades.',
-              'Receive AI-generated coaching insights that analyse your journaled behaviour and highlight recurring patterns.',
+              'Receive AI-generated coaching insights from Propol, your AI Trading Performance Coach, which analyses your journaled behaviour, emotions, discipline, and adherence to your own trading plan to highlight recurring patterns.',
               'View performance statistics, an equity curve, and a trade calendar.',
             ]}
           />
           <p>
-            The Service is an educational self-improvement tool. All AI analysis is generated
-            automatically based solely on the data you provide. It does not account for live
-            market conditions, real-time risk, or your personal financial situation.
+            The Service is an educational self-improvement tool. Propol (the AI Trading
+            Performance Coach) analyses your journal, trading behaviour, emotions, discipline,
+            and adherence to your own trading plan. It does not provide financial, investment,
+            or trading advice. All AI analysis is generated automatically based solely on the
+            data you provide. It does not account for live market conditions, real-time risk,
+            or your personal financial situation.
           </p>
         </Section>
 

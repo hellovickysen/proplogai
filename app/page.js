@@ -70,12 +70,12 @@ const STATS = [
 ];
 
 const FEATURES = [
-  { icon: '✦', title: 'AI trade grading', desc: 'Every trade gets a brutal honest grade. Mistakes flagged. Execution scored. The one fix that matters — delivered instantly.', live: true },
+  { icon: '✦', title: 'Propol trade analysis', desc: 'Every trade scored by your AI coach Propol. Discipline, psychology, performance, and execution — graded with evidence from your own journal.', live: true },
   { icon: '🧠', title: 'Psychology tracking', desc: 'Tag emotions on every trade. See which feelings correlate with your worst days. Stop trading blind.', live: true },
-  { icon: '📊', title: 'AI Coach reports', desc: 'Weekly deep-dive finds your recurring leaks, ranks them by R lost, and gives you concrete guardrails.', live: true },
+  { icon: '📊', title: 'Propol monthly review', desc: 'Deep-dive performance review with 5 scores, recurring mistake detection, emotional patterns, and a personalized action plan — all from your data.', live: true },
   { icon: '📅', title: 'P&L calendar', desc: 'Visual monthly grid with daily P&L. Spot losing streaks, revenge days, and session patterns at a glance.', live: true },
   { icon: '☰', title: 'One-tap trade logging', desc: 'Pair, direction, session, setup, P&L — logged in 30 seconds. No excuses to skip it.', live: true },
-  { icon: '📏', title: 'Rulebook discipline', desc: 'Define your setups. Track if you followed them. The AI scores your discipline weekly and catches drift.', live: true },
+  { icon: '📏', title: 'Rulebook discipline', desc: 'Define your setups. Track if you followed them. Propol scores your discipline and catches drift.', live: true },
   { icon: '🔍', title: 'Smart filters', desc: 'Filter by result, setup, emotion, session. Find exactly which patterns make or lose you money.', live: true },
   { icon: '💰', title: 'Expense tracker', desc: 'Track challenge fees, activation costs, renewals, and payouts. Know your real ROI across all prop firms.', live: true },
   { icon: '🏆', title: 'Trophy wall & proof', desc: 'Upload payout certificates and funded-account wins. Share verified proof pages with anyone.', live: true },
@@ -121,7 +121,7 @@ export default async function Home() {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/60 sm:text-lg">
-            You don&apos;t have a strategy problem. You have a <strong className="text-white/90">psychology problem</strong> — and it&apos;s invisible until you track it. PropLogAI&apos;s AI finds the one pattern costing you funded accounts.
+            You don&apos;t have a strategy problem. You have a <strong className="text-white/90">psychology problem</strong> — and it&apos;s invisible until you track it. Propol, your AI Trading Performance Coach, finds the patterns costing you funded accounts — using only your own journal data.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -203,7 +203,7 @@ export default async function Home() {
           <div className="product-mockup relative rounded-[2rem] border border-white/12 bg-[#0b0b14]/85 p-4 shadow-2xl shadow-cyan-950/30 backdrop-blur-xl">
             <div className="mb-4 flex items-center justify-between border-b border-white/8 pb-4">
               <div>
-                <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/35">AI Coach Report</div>
+                <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/35">Propol AI Review</div>
                 <div className="mt-1 font-display text-lg font-bold text-white">Pattern detected</div>
               </div>
               <div className="rounded-full border border-amber-300/25 bg-amber-300/10 px-3 py-1 text-xs font-semibold text-amber-200">Action needed</div>
@@ -276,13 +276,13 @@ export default async function Home() {
       <section id="how-it-works" className="px-4 py-16 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="font-display text-2xl font-bold sm:text-3xl">Three steps to stop the cycle</h2>
-          <p className="mx-auto mt-3 max-w-lg text-sm text-white/50">60 seconds to log a trade. The AI does the rest.</p>
+          <p className="mx-auto mt-3 max-w-lg text-sm text-white/50">60 seconds to log a trade. Propol does the rest.</p>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
             {[
               { step: '1', icon: '☰', title: 'Log the trade', desc: 'Pair, direction, P&L, emotions, setup — 30 seconds. Add chart screenshots. No excuses.' },
-              { step: '2', icon: '✦', title: 'AI finds the leak', desc: 'Instant grading. It flags what went wrong, what went right, and the one thing to fix right now.' },
-              { step: '3', icon: '🎯', title: 'You see the pattern', desc: 'Calendar, filters, and weekly reports reveal the invisible loop. Now you can break it.' },
+              { step: '2', icon: '✦', title: 'Propol finds the leak', desc: 'Instant scoring across discipline, psychology, performance, and execution — evidence from your own journal.' },
+              { step: '3', icon: '🎯', title: 'You see the pattern', desc: 'Monthly reviews, insights, and progress tracking reveal the invisible loop. Now you can break it.' },
             ].map((s, i) => (
               <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-6" style={{ '--reveal-delay': `${i * 110}ms` }} data-reveal>
                 <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl text-xl" style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.25), rgba(34,211,238,0.15))', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -360,7 +360,7 @@ export default async function Home() {
           <div className="order-2 lg:order-1 rounded-2xl border border-white/10 bg-white/[0.03] p-5" data-reveal style={{ '--reveal-delay': '120ms' }}>
             {/* Fake AI coach report */}
             <div className="mb-4 flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">AI Coach Report</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">Propol AI Review</span>
               <span className="rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-0.5 text-[10px] font-semibold text-amber-200">2 patterns found</span>
             </div>
             <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 mb-4">
@@ -382,18 +382,18 @@ export default async function Home() {
               </div>
             </div>
             <div className="rounded-xl border border-emerald-300/15 bg-emerald-300/8 p-3">
-              <div className="font-mono text-[10px] uppercase tracking-wider text-emerald-300/60 mb-1">AI recommendation</div>
-              <p className="text-xs leading-relaxed text-emerald-50/75">Set a hard rule: no new trades for 20 minutes after 2 consecutive losses. Your win rate after cool-down is 71% vs 34% without.</p>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-emerald-300/60 mb-1">Propol insight</div>
+              <p className="text-xs leading-relaxed text-emerald-50/75">Your journal shows a 71% win rate after cool-down periods vs 34% without. Your records suggest a 20-minute pause after 2 consecutive losses has historically improved your results.</p>
             </div>
           </div>
           <div className="order-1 lg:order-2">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-300/8 px-3 py-1 text-[11px] font-semibold text-cyan-200">
-              AI Coach
+              Propol AI Coach
             </div>
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">The AI finds what<br />you can&apos;t see</h2>
-            <p className="mt-4 text-sm leading-relaxed text-white/55">Every week, the AI analyzes your trades, finds recurring mistakes, ranks them by R lost, and tells you exactly how to fix them. No generic advice — just your data.</p>
+            <h2 className="font-display text-2xl font-bold sm:text-3xl">Your AI Trading<br />Performance Coach</h2>
+            <p className="mt-4 text-sm leading-relaxed text-white/55">Propol analyzes your journal, behavior, emotions, discipline, and adherence to your own trading plan. No financial advice — just evidence from your own data.</p>
             <ul className="mt-6 space-y-3 text-sm text-white/60">
-              {['Per-trade grading with execution score', 'Weekly recurring mistake detection', 'Psychology insights with concrete guardrails'].map((item, i) => (
+              {['Per-trade scoring across 4 coaching dimensions', 'Monthly performance reviews with 5 key scores', 'Psychology and discipline insights from your journal'].map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5">
                   <span className="mt-0.5 text-cyan-400">✓</span>
                   {item}
@@ -827,8 +827,9 @@ export default async function Home() {
               { q: 'What happens when Elite launches?', a: 'Basic plan stays free forever with the limits shown above. Beta users get early-adopter pricing on Elite.' },
               { q: 'Why no broker auto-import?', a: 'Deliberate choice. Manual logging forces you to reflect on every trade — the emotion, the setup, the decision. That reflection is where discipline is built. Auto-import skips it.' },
               { q: 'Is my trading data secure?', a: 'All data is encrypted at rest (AES-256) and in transit (TLS 1.2+). We never ask for broker credentials and never sell your data.' },
-              { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no commitments. Downgrade to Free anytime and keep all your trade data.' },
-              { q: 'How is the AI coaching different from ChatGPT?', a: 'PropLogAI\'s AI analyzes YOUR trades specifically — your patterns, your emotions, your setups. It\'s not generic advice. It finds the one mistake that keeps costing you money.' },
+              { q: 'Can I cancel anytime?', a: 'Yes. No contracts, no commitments. Downgrade to Basic anytime and keep all your trade data.' },
+              { q: 'How is Propol different from ChatGPT?', a: 'Propol is your AI Trading Performance Coach — it analyzes YOUR journal, YOUR emotions, YOUR discipline. It never gives financial advice or trading signals. It finds the patterns in your own data that you can\'t see.' },
+              { q: 'Does Propol give trading advice?', a: 'No. Propol is an educational tool that analyzes your journal, behavior, and adherence to your own trading plan. It does not provide financial, investment, or trading advice of any kind.' },
             ].map((faq, i) => (
               <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
                 <h3 className="font-display text-sm font-semibold">{faq.q}</h3>
@@ -864,7 +865,7 @@ export default async function Home() {
           <div className="flex items-center gap-4 text-xs text-white/30">
             <Link href="/privacy" className="hover:text-white/50">Privacy</Link>
             <Link href="/terms" className="hover:text-white/50">Terms</Link>
-            <span>Trading involves substantial risk of loss.</span>
+            <span>Trading involves substantial risk of loss. PropLogAI does not provide financial advice.</span>
           </div>
         </div>
       </footer>
