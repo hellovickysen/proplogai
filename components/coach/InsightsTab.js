@@ -1,17 +1,17 @@
 "use client";
 
 const SEV_COLORS = {
-  critical: { bar: 'bg-red-400', text: 'text-red-300', border: 'border-red-400/30' },
-  high: { bar: 'bg-orange-400', text: 'text-orange-300', border: 'border-orange-400/30' },
-  medium: { bar: 'bg-amber-400', text: 'text-amber-300', border: 'border-amber-400/30' },
-  low: { bar: 'bg-white/30', text: 'text-white/50', border: 'border-white/15' },
+  critical: { border: 'border-red-400/30' },
+  high: { border: 'border-orange-400/30' },
+  medium: { border: 'border-amber-400/30' },
+  low: { border: 'border-white/15' },
 };
 
 /* ── Horizontal bar ─────────────────────────────────────────── */
 function Bar({ pct, color }) {
   return (
-    <div className="h-2 flex-1 rounded-full bg-white/[0.06]">
-      <div className={'h-full rounded-full transition-all ' + color} style={{ width: Math.min(100, pct) + '%' }} />
+    <div className="h-2.5 flex-1 rounded-full bg-white/[0.06]">
+      <div className={'h-full rounded-full transition-all ' + color} style={{ width: Math.max(4, Math.min(100, pct)) + '%' }} />
     </div>
   );
 }
@@ -27,7 +27,7 @@ function MistakesCard({ items }) {
           const sev = SEV_COLORS[m.severity] || SEV_COLORS.low;
           return (
             <div key={i} className={'flex items-center gap-2.5 rounded-lg border-l-[3px] bg-white/[0.02] px-3 py-2 ' + sev.border}>
-              <span className={'flex-1 text-sm font-medium ' + sev.text}>{m.pattern}</span>
+              <span className="flex-1 text-sm font-medium text-white/70 line-clamp-1">{m.pattern}</span>
               <span className="shrink-0 rounded-full bg-white/[0.06] px-2 py-0.5 font-mono text-[10px] text-white/40">{m.count}×</span>
             </div>
           );
@@ -40,18 +40,33 @@ function MistakesCard({ items }) {
 /* ── Emotions bar chart ─────────────────────────────────────── */
 function EmotionsCard({ items }) {
   if (!items.length) return <EmptyMini icon="🧠" text="Log emotions to see patterns" />;
-  const maxPct = Math.max(...items.map((e) => e.pct || 0), 1);
+  // Normalize: if no percentages, distribute evenly
+  const hasPct = items.some((e) => e.pct > 0);
+  const total = items.length;
+  const normalized = hasPct
+    ? items
+    : items.map((e, i) => ({ ...e, pct: Math.round(100 / total) }));
+  const maxPct = Math.max(...normalized.map((e) => e.pct), 1);
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-      <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/35">Emotion Distribution</div>
-      <div className="space-y-2">
-        {items.map((e, i) => (
-          <div key={i} className="flex items-center gap-3">
-            <span className="w-20 truncate text-xs text-white/55">{e.emotion}</span>
-            <Bar pct={(e.pct / maxPct) * 100} color={e.pct > 30 ? 'bg-violet-400' : e.pct > 15 ? 'bg-cyan-400' : 'bg-white/30'} />
-            <span className="w-10 text-right font-mono text-xs text-white/40">{e.pct}%</span>
-          </div>
-        ))}
+      <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/35">Emotions</div>
+      <div className="space-y-2.5">
+        {normalized.map((e, i) => {
+          const colors = ['bg-violet-400', 'bg-cyan-400', 'bg-amber-400', 'bg-emerald-400', 'bg-red-400'];
+          return (
+            <div key={i}>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-xs text-white/55">{e.label}</span>
+                {e.detail && <span className="text-[10px] text-white/25">{e.detail}</span>}
+              </div>
+              <div className="flex items-center gap-2">
+                <Bar pct={(e.pct / maxPct) * 100} color={colors[i % colors.length]} />
+                <span className="w-8 text-right font-mono text-xs text-white/40">{e.pct}%</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -63,15 +78,15 @@ function ListCard({ icon, title, items, numbered }) {
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/35">{title}</div>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {items.map((item, i) => (
           <div key={i} className="flex items-start gap-2 text-xs text-white/55">
             {numbered ? (
-              <span className="mt-px shrink-0 flex h-4 w-4 items-center justify-center rounded-full bg-white/[0.06] font-mono text-[9px] text-white/30">{i + 1}</span>
+              <span className="mt-px shrink-0 flex h-4 w-4 items-center justify-center rounded-full bg-white/[0.08] font-mono text-[9px] text-white/35">{i + 1}</span>
             ) : (
               <span className="mt-px text-cyan-400 shrink-0">→</span>
             )}
-            <span className="line-clamp-2">{item}</span>
+            <span className="line-clamp-1">{item}</span>
           </div>
         ))}
       </div>
@@ -111,13 +126,19 @@ export default function InsightsTab({ reports, analyses }) {
   });
   const topMistakes = Object.values(allMistakes).sort((a, b) => b.count - a.count).slice(0, 5);
 
-  // Emotion distribution
+  // Emotion distribution — handle both formats (percentage-based and text-based)
   const latestReport = reports?.[0]?.mistakes;
-  const emotionDist = latestReport?.emotional_analysis?.distribution || latestReport?.psychology?.insights || [];
-  const emotionItems = emotionDist.slice(0, 5).map((e) => ({
-    emotion: e.emotion,
-    pct: e.percentage != null ? e.percentage : 0,
-  }));
+  const rawEmotions = latestReport?.emotional_analysis?.distribution || latestReport?.psychology?.insights || [];
+  const emotionItems = rawEmotions.slice(0, 5).map((e) => {
+    const pct = e.percentage != null ? e.percentage : 0;
+    // Extract just the emotion name (before any parenthetical)
+    const emotionName = (e.emotion || '').split('(')[0].split('+')[0].trim();
+    const shortLabel = emotionName.length > 15 ? emotionName.slice(0, 15) + '…' : emotionName;
+    // Use stat or observation as detail
+    const detail = e.stat || e.observation || '';
+    const shortDetail = detail.length > 30 ? detail.slice(0, 30) + '…' : detail;
+    return { label: shortLabel || e.emotion, pct, detail: shortDetail };
+  });
 
   const actionPlan = (latestReport?.action_plan || []).slice(0, 4);
   const guardrails = (latestReport?.psychology?.guardrails || []).slice(0, 4);
