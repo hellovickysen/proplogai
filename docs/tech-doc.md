@@ -52,7 +52,8 @@ proplogai/
 │   │   ├── referrals/         # Referral dashboard + actions
 │   │   ├── settings/          # User settings + actions
 │   │   ├── support/           # Support tickets + actions
-│   │   └── notifications/     # Notification list + actions
+│   │   ├── notifications/     # Notification list + actions
+│   │   └── tools/             # Tool card grid; tools/consistency-calculator/ (Consistency Calculator)
 │   ├── admin/                 # Admin panel (overview, users, tickets, AI, revenue) + actions.js (toggleBeta())
 │   ├── profile/[code]/        # Public trader profile
 │   ├── trade/[shareId]/       # Shared trade journal (24h expiry)
@@ -61,6 +62,7 @@ proplogai/
 │   ├── auth/callback/         # OAuth + email verification handler
 │   ├── privacy/               # Privacy policy (ISR daily)
 │   ├── terms/                 # Terms of service (ISR daily)
+│   ├── tools/                 # Public tools landing (SEO); tools/consistency-calculator/ (public Consistency Calculator page)
 │   └── api/logo/              # PNG logo for email templates
 ├── components/
 │   ├── ui/                    # Skeleton, Toast, EmptyStates, Fab, ConfirmDialog, BetaNotice, GuidedTour, PlanBadge, BetaFeatureWarning, UpgradeCard
@@ -82,6 +84,7 @@ proplogai/
 │   ├── share/                 # ShareButton, ShareCard, ShareModal, ShareJournalButton, SharedScreenshots
 │   ├── support/               # SupportPage (conversation thread, reply form, close with transcript opt-out, multi-select bulk delete)
 │   ├── notifications/         # NotificationBell, NotificationList
+│   ├── tools/                 # ToolCard, ConsistencyCalculator
 │   └── Logo.js                # Logo + LogoMark components
 ├── lib/
 │   ├── ai.js                  # OpenRouter integration (callOpenRouter, analyzeTradeWithAI, analyzeCoachReport, tradeToText, datasetToText)
@@ -513,3 +516,11 @@ ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
   - Support ticket screenshots ✅ (added in Phase N)
   - Avatar uploads ✅ (added in Phase N)
 - Files modified: `components/support/SupportPage.js`, `components/settings/SettingsTabs.js`
+
+## 12. Phase Q Changes (July 5, 2026 — post-N)
+
+- Phase Q: Tools Section — /dashboard/tools route with tool card grid, /tools public route for SEO. First tool: Consistency Calculator (components/tools/ConsistencyCalculator.js) with method toggle (largest day/trade), limit presets (15/20/30/custom), real-time calculation, color-coded results, What If simulator, Copy Result, FAQ. Public pages with OG images, sitemap.xml, robots.txt. Nav updated in Sidebar.js + MobileNav.js.
+
+### Components
+- `tools/ToolCard.js` — reusable tool card for tools menu
+- `tools/ConsistencyCalculator.js` — consistency rule calculator with method toggle, What If simulator, Copy Result, SEO FAQ
