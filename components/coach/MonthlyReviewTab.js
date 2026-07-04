@@ -71,7 +71,18 @@ function ReviewCard({ report }) {
 
       {expanded && (
         <div className="px-3.5 pb-3.5">
-          {/* Summary — always open */}
+          {/* AI Coach Summary — warm conversational paragraph */}
+          {data.coach_summary && (
+            <div className="rounded-xl border border-white/10 bg-gradient-to-br from-violet-500/[0.05] to-cyan-500/[0.03] p-4 mb-2">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>P</div>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-white/30">Propol&apos;s Summary</span>
+              </div>
+              <p className="text-sm leading-relaxed text-white/60">{data.coach_summary}</p>
+            </div>
+          )}
+
+          {/* Details — collapsible sections */}
           <Section title="Summary" icon="📝" defaultOpen>
             <p className="text-sm text-white/60">{data.headline}</p>
             {data.key_insight && <p className="mt-1 text-xs text-white/40">{data.key_insight}</p>}

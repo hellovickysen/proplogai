@@ -57,23 +57,23 @@ export default function HeroCard({ report, persona, userName }) {
           <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400/70 mb-2">If you fix one thing</div>
           <div className="text-base font-semibold text-white/90">{oneHabit.habit}</div>
           {oneHabit.reason && <p className="mt-1 text-sm text-white/50">{oneHabit.reason}</p>}
-          <div className="mt-2 flex flex-wrap items-center gap-4">
-            {oneHabit.estimated_pnl_impact != null && (
+          <div className="mt-3 flex flex-wrap items-center gap-4">
+            {oneHabit.improvement && (
               <div>
-                <div className="font-display text-xl font-bold text-emerald-400">{fmtPnl(oneHabit.estimated_pnl_impact)}</div>
-                <div className="font-mono text-[9px] text-white/25">estimated impact</div>
+                <div className="text-sm font-semibold text-emerald-400">{oneHabit.improvement}</div>
+                <div className="font-mono text-[9px] text-white/25">historical opportunity</div>
               </div>
             )}
-            {oneHabit.confidence_pct != null && (
+            {(oneHabit.evidence_strength ?? oneHabit.confidence_pct) != null && (
               <div>
-                <div className="font-display text-xl font-bold text-cyan-400">{oneHabit.confidence_pct}%</div>
-                <div className="font-mono text-[9px] text-white/25">confidence</div>
+                <div className="font-display text-lg font-bold text-cyan-400">{oneHabit.evidence_strength ?? oneHabit.confidence_pct}%</div>
+                <div className="font-mono text-[9px] text-white/25">evidence strength</div>
               </div>
             )}
             {oneHabit.trade_count != null && (
               <div>
-                <div className="font-display text-xl font-bold text-white/60">{oneHabit.trade_count}</div>
-                <div className="font-mono text-[9px] text-white/25">trades analyzed</div>
+                <div className="font-display text-lg font-bold text-white/50">{oneHabit.trade_count}</div>
+                <div className="font-mono text-[9px] text-white/25">similar trades</div>
               </div>
             )}
           </div>

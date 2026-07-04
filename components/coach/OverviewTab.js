@@ -56,6 +56,7 @@ function TraderScore({ reports }) {
       <div className={'mt-1 text-xs font-medium ' + (trend ? trend.color : 'text-white/30')}>
         {trendWord} {trend && trend.text !== 'Stable' ? `· ${trend.text}` : ''}
       </div>
+      <div className="mt-1 font-mono text-[9px] text-white/20">Based on Discipline · Execution · Psychology · Risk · Consistency</div>
       {/* Mini timeline */}
       {timeline.length > 1 && (
         <div className="mt-3 flex items-end gap-1">
@@ -79,7 +80,7 @@ function TraderDNA({ persona, scores }) {
     { label: 'Psychology', value: scores?.psychology || 0 },
     { label: 'Consistency', value: scores?.consistency || 0 },
     { label: 'Risk Mgmt', value: scores?.risk_management || 0 },
-    { label: 'Confidence', value: persona?.avgConfidence ? Math.round(persona.avgConfidence * 20) : 0 },
+    { label: 'Patience', value: scores?.consistency ? Math.round((scores.consistency + (scores?.execution || 0)) / 2) : 0 },
   ];
 
   return (
@@ -204,10 +205,54 @@ export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, 
     setAdding(false);
   }
 
+  // Daily coaching card — compute a single insight from persona data
+  const dailyInsight = (() => {
+    if (!persona || !persona.tradeCount) return null;
+    const day = new Date().getDate();
+    const insights = [];
+    if (persona.mainEmotion) insights.push(`Trades tagged "${persona.mainEmotion}" appear most frequently in your journal. Your records show how this emotion correlates with your outcomes.`);
+    if (persona.bestSession) insights.push(`Your ${persona.bestSession.name} session trades show a ${persona.bestSession.winRate}% win rate — your strongest session historically.`);
+    if (persona.worstSession && persona.worstSession.name !== persona.bestSession?.name) insights.push(`Your ${persona.worstSession.name} session has been your most challenging. Consider reviewing your journal entries from those trades.`);
+    if (persona.commonMistake) insights.push(`"${persona.commonMistake}" has been your most recurring pattern. Your journal suggests focusing here could have the highest impact.`);
+    if (persona.adherencePct != null) insights.push(`Your setup adherence is at ${persona.adherencePct}%. Historically, trades where you fully followed your plan performed better.`);
+    if (persona.revengeDays > 0) insights.push(`Your records show ${persona.revengeDays} trading days with potential revenge patterns. Taking a short break after consecutive losses has historically helped.`);
+    if (insights.length === 0) return null;
+    return insights[day % insights.length];
+  })();
+
+  // Celebrations — compute milestones from streaks and persona
+  const celebrations = [];
+  if (streaks?.logging?.current >= 3) celebrations.push({ icon: '🔥', text: `${streaks.logging.current}-day logging streak!` });
+  if (streaks?.discipline?.current >= 3) celebrations.push({ icon: '🎯', text: `${streaks.discipline.current} disciplined days in a row!` });
+  if (streaks?.profit?.current >= 3) celebrations.push({ icon: '💰', text: `${streaks.profit.current}-day profit streak!` });
+  if (persona?.adherencePct >= 80) celebrations.push({ icon: '⭐', text: `${persona.adherencePct}% setup adherence — excellent discipline` });
+
   return (
     <div className="space-y-4">
       {/* 1. Hero Card */}
       <HeroCard report={latest} persona={persona} userName={userName} />
+
+      {/* Daily Coaching Card */}
+      {dailyInsight && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>P</div>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-white/30">Today&apos;s Coaching</span>
+          </div>
+          <p className="text-sm text-white/60 leading-relaxed">{dailyInsight}</p>
+        </div>
+      )}
+
+      {/* Celebrations */}
+      {celebrations.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {celebrations.map((c, i) => (
+            <div key={i} className="flex items-center gap-1.5 rounded-full border border-amber-400/20 bg-amber-500/[0.06] px-3 py-1.5 text-xs text-amber-300">
+              <span>{c.icon}</span><span>{c.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 2. Trader Score + Timeline */}
       <TraderScore reports={reports} />
