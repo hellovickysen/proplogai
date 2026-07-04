@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import PropolCoachHub from '@/components/coach/PropolCoachHub';
 import { isEmailConfigured } from '@/lib/email';
 import { getUserAccess } from '@/lib/plans';
-import { computePersona, computeStreaks, checkAutoHabits } from '@/lib/persona';
+import { computePersona, computeStreaks } from '@/lib/persona';
 import { getTradingDate } from '@/lib/stats';
 import BetaFeatureWarning from '@/components/ui/BetaFeatureWarning';
 import UpgradeCard from '@/components/ui/UpgradeCard';
@@ -97,61 +97,6 @@ export default async function CoachPage() {
     .maybeSingle();
   const userName = prefs?.full_name || user?.user_metadata?.full_name || null;
 
-  // ── Habits ──
-  let habits = [];
-  let habitLogs = [];
-  let autoHabitStatus = {};
-  const todayDate = getTradingDate(new Date().toISOString());
-
-  try {
-    // Check if habits exist, seed auto-habits if empty
-    const { data: h } = await supabase
-      .from('habits')
-      .select('id, name, is_custom, is_active, sort_order')
-      .eq('user_id', user.id)
-      .eq('is_active', true)
-      .order('sort_order');
-    habits = h || [];
-
-    // Auto-seed default habits on first visit
-    if (habits.length === 0) {
-      const autoHabits = [
-        { user_id: user.id, name: 'Log trades daily', is_custom: false, is_active: true, sort_order: 0 },
-        { user_id: user.id, name: 'Tag emotions', is_custom: false, is_active: true, sort_order: 1 },
-        { user_id: user.id, name: 'Record lessons', is_custom: false, is_active: true, sort_order: 2 },
-        { user_id: user.id, name: 'Follow setups', is_custom: false, is_active: true, sort_order: 3 },
-      ];
-      await supabase.from('habits').insert(autoHabits);
-      // Re-fetch after seeding
-      const { data: seeded } = await supabase
-        .from('habits')
-        .select('id, name, is_custom, is_active, sort_order')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('sort_order');
-      habits = seeded || [];
-    }
-
-    // Fetch today's logs
-    if (habits.length > 0) {
-      const { data: logs } = await supabase
-        .from('habit_logs')
-        .select('habit_id, log_date, completed')
-        .eq('user_id', user.id)
-        .eq('log_date', todayDate);
-      habitLogs = logs || [];
-    }
-
-    // Auto-habit status for today
-    const todayTrades = tradeList.filter((t) => (t.trade_date || getTradingDate(t.created_at)) === todayDate);
-    const todayJmap = {};
-    todayTrades.forEach((t) => { if (jmap[t.id]) todayJmap[t.id] = jmap[t.id]; });
-    autoHabitStatus = checkAutoHabits(todayTrades, todayJmap);
-  } catch (e) {
-    // habits table might not exist yet (migration not run)
-    console.log('Habits not available yet (migration 0028 may not be run):', e?.message);
-  }
-
   // Plan access
   const access = await getUserAccess(supabase, user);
   const coachLimit = access.limit('coach_report');
@@ -179,10 +124,6 @@ export default async function CoachPage() {
         emailEnabled={emailEnabled}
         persona={persona}
         streaks={streaks}
-        habits={habits}
-        habitLogs={habitLogs}
-        autoHabitStatus={autoHabitStatus}
-        todayDate={todayDate}
         userName={userName}
       />
     </div>

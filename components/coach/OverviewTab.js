@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import HeroCard from './HeroCard';
-import { toggleHabitLog, createHabit } from '@/app/dashboard/coach/habit-actions';
 
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
@@ -161,49 +158,13 @@ function StreakBadge({ icon, label, current, best }) {
   );
 }
 
-/* ── Habit row ────────────────────────────────────────────── */
-function HabitRow({ habit, completed, autoCompleted, onToggle }) {
-  const isAuto = !habit.is_custom;
-  const done = isAuto ? autoCompleted : completed;
-  return (
-    <div className="flex items-center gap-2.5 py-1">
-      <button onClick={() => !isAuto && onToggle(habit.id, !done)} disabled={isAuto}
-        className={'flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded border transition-colors ' +
-          (done ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-400' : 'border-white/15 bg-white/[0.03] text-transparent hover:border-white/25')}>
-        {done && <span className="text-[10px]">✓</span>}
-      </button>
-      <span className={'flex-1 text-xs ' + (done ? 'text-white/40 line-through' : 'text-white/60')}>{habit.name}</span>
-      {isAuto && <span className="font-mono text-[8px] text-white/30">auto</span>}
-    </div>
-  );
-}
-
 /* ── Main Overview ────────────────────────────────────────── */
-export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, habits, habitLogs, autoHabitStatus, todayDate, userName }) {
-  const router = useRouter();
-  const [newHabit, setNewHabit] = useState('');
-  const [adding, setAdding] = useState(false);
+export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, userName }) {
 
   const latest = reports?.[0] || null;
   const previous = reports?.[1] || null;
   const latestScores = latest?.mistakes?.scores || {};
   const previousScores = previous?.mistakes?.scores || {};
-
-  const todayLogs = {};
-  (habitLogs || []).forEach((l) => { if (l.log_date === todayDate) todayLogs[l.habit_id] = l.completed; });
-
-  async function handleToggle(habitId, completed) {
-    await toggleHabitLog(habitId, todayDate, completed);
-    router.refresh();
-  }
-
-  async function handleAddHabit() {
-    if (!newHabit.trim()) return;
-    setAdding(true);
-    const res = await createHabit(newHabit.trim());
-    if (res.ok) { setNewHabit(''); router.refresh(); }
-    setAdding(false);
-  }
 
   // Daily coaching card — compute a single insight from persona data
   const dailyInsight = (() => {
@@ -274,30 +235,6 @@ export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, 
       {/* 5. Detailed Scores (collapsible) */}
       <ScoreDetails scores={latestScores} previousScores={previousScores} />
 
-      {/* 6. Daily Habits */}
-      {habits && habits.length > 0 && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-white/30">Today&apos;s Habits</span>
-            <span className="font-mono text-[11px] text-white/30">{todayDate}</span>
-          </div>
-          <div className="space-y-0.5">
-            {habits.map((h) => (
-              <HabitRow key={h.id} habit={h}
-                completed={!!todayLogs[h.id]}
-                autoCompleted={!h.is_custom && autoHabitStatus ? autoHabitStatus[
-                  h.name === 'Log trades daily' ? 'log_daily' : h.name === 'Tag emotions' ? 'tag_emotions' : h.name === 'Record lessons' ? 'record_lessons' : h.name === 'Follow setups' ? 'follow_setups' : ''
-                ] : false}
-                onToggle={handleToggle} />
-            ))}
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <input type="text" value={newHabit} onChange={(e) => setNewHabit(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()} placeholder="Add a habit..." maxLength={60}
-              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs outline-none placeholder:text-white/35 focus:border-cyan-400/40" />
-            <button onClick={handleAddHabit} disabled={adding || !newHabit.trim()} className="rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white/40 hover:text-white/70 disabled:opacity-30">+Add</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
