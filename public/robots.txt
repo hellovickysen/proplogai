@@ -1,0 +1,9 @@
+# PropLogAI robots.txt
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /api/
+
+Sitemap: https://proplogai.com/sitemap.xml
