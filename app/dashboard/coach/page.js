@@ -104,6 +104,7 @@ export default async function CoachPage() {
   const todayDate = getTradingDate(new Date().toISOString());
 
   try {
+    // Check if habits exist, seed auto-habits if empty
     const { data: h } = await supabase
       .from('habits')
       .select('id, name, is_custom, is_active, sort_order')
@@ -111,6 +112,25 @@ export default async function CoachPage() {
       .eq('is_active', true)
       .order('sort_order');
     habits = h || [];
+
+    // Auto-seed default habits on first visit
+    if (habits.length === 0) {
+      const autoHabits = [
+        { user_id: user.id, name: 'Log trades daily', is_custom: false, is_active: true, sort_order: 0 },
+        { user_id: user.id, name: 'Tag emotions', is_custom: false, is_active: true, sort_order: 1 },
+        { user_id: user.id, name: 'Record lessons', is_custom: false, is_active: true, sort_order: 2 },
+        { user_id: user.id, name: 'Follow setups', is_custom: false, is_active: true, sort_order: 3 },
+      ];
+      await supabase.from('habits').insert(autoHabits);
+      // Re-fetch after seeding
+      const { data: seeded } = await supabase
+        .from('habits')
+        .select('id, name, is_custom, is_active, sort_order')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('sort_order');
+      habits = seeded || [];
+    }
 
     // Fetch today's logs
     if (habits.length > 0) {
