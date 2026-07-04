@@ -30,6 +30,7 @@ export default function ConsistencyCalculator() {
   const [limitChoice, setLimitChoice] = useState('20');
   const [customLimit, setCustomLimit] = useState('');
   const [nextWin, setNextWin] = useState('');
+  const [copied, setCopied] = useState(false);
 
   const resultsRef = useRef(null);
 
@@ -106,6 +107,28 @@ export default function ConsistencyCalculator() {
     resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const handleCopy = () => {
+    if (!calc) return;
+    const lines = [
+      'Consistency Calculator Result',
+      `Total Profit: ${fmtCurrency(totalProfitNum)}`,
+      `Largest Winner: ${fmtCurrency(largestWinNum)}`,
+      `Consistency: ${fmtPct(calc.consistencyPct)}`,
+      `Status: ${
+        calc.isEligible ? 'Ready for Payout ✅' : 'More Profit Required ❌'
+      }`,
+      `Rule: ${fmtPct(limit, 0)}`,
+      '— PropLogAI (proplogai.com)',
+    ];
+    const text = lines.join('\n');
+
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -140,6 +163,7 @@ export default function ConsistencyCalculator() {
                 className="w-full rounded-xl border border-white/10 bg-white/5 py-3 pl-8 pr-4 font-mono text-white placeholder-white/30 transition-colors focus:border-violet-500/50 focus:outline-none focus:ring-1 focus:ring-violet-500/30"
               />
             </div>
+            <p className="mt-1.5 text-xs text-white/40">Example: $1,365</p>
           </div>
 
           {/* Largest Winning Trade */}
@@ -162,6 +186,7 @@ export default function ConsistencyCalculator() {
             </div>
             <p className="mt-1.5 text-xs leading-snug text-white/40">
               Your single largest winning trade, not largest day or position.
+              Example: $265
             </p>
           </div>
         </div>
@@ -245,58 +270,69 @@ export default function ConsistencyCalculator() {
         {hasValidInputs && calc && (
           <div className="animate-[fadeIn_0.3s_ease-out] space-y-6">
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
-              <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-wider text-white/55">
-                    Consistency
-                  </p>
-                  <p
-                    className="mt-1 font-mono text-4xl font-bold md:text-5xl"
-                    style={{ color: zoneColor[calc.zone] }}
-                  >
-                    {fmtPct(calc.consistencyPct)}
-                  </p>
-                  <p className="mt-1 text-xs text-white/40">
-                    Limit: {fmtPct(limit, 0)}
-                  </p>
-                </div>
-
-                <div
-                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 font-mono text-sm font-medium ${
-                    calc.isEligible
-                      ? 'border-[#34d399]/30 bg-[#34d399]/10 text-[#34d399]'
-                      : 'border-[#f87171]/30 bg-[#f87171]/10 text-[#f87171]'
-                  }`}
+              {/* Hero status */}
+              <div className="text-center md:text-left">
+                <p
+                  className="text-2xl font-bold md:text-3xl"
+                  style={{
+                    color: calc.isEligible ? '#34d399' : '#f87171',
+                  }}
                 >
-                  {calc.isEligible ? '✅ Eligible' : '❌ Not Eligible'}
-                </div>
+                  {calc.isEligible
+                    ? '✅ Ready for Payout'
+                    : '❌ More Profit Required'}
+                </p>
+                <p
+                  className="mt-2 font-mono text-lg"
+                  style={{ color: zoneColor[calc.zone] }}
+                >
+                  Current Consistency: {fmtPct(calc.consistencyPct)}
+                </p>
+                <p className="mt-1 text-sm text-white/55">
+                  {calc.isEligible ? (
+                    <>You satisfy the {fmtPct(limit, 0)} consistency rule.</>
+                  ) : (
+                    <>
+                      Need another {fmtCurrency(calc.additionalNeeded)}{' '}
+                      profit to meet the {fmtPct(limit, 0)} rule.
+                    </>
+                  )}
+                </p>
               </div>
 
-              {/* Target / Remaining */}
+              {/* Required / Remaining */}
               <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
                   <p className="font-mono text-xs uppercase tracking-wider text-white/55">
-                    Target Profit
+                    Required Total Closed Profit
                   </p>
                   <p className="mt-1 font-mono text-xl font-semibold text-white">
                     {fmtCurrency(calc.requiredProfit)}
                   </p>
                 </div>
 
-                {!calc.isEligible && (
-                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                    <p className="font-mono text-xs uppercase tracking-wider text-white/55">
-                      Remaining
-                    </p>
-                    <p className="mt-1 font-mono text-xl font-semibold text-[#fbbf24]">
-                      {fmtCurrency(calc.additionalNeeded)}
-                    </p>
-                  </div>
-                )}
+                <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                  <p className="font-mono text-xs uppercase tracking-wider text-white/55">
+                    Remaining Profit Needed
+                  </p>
+                  <p
+                    className="mt-1 font-mono text-xl font-semibold"
+                    style={{
+                      color: calc.isEligible ? '#34d399' : '#fbbf24',
+                    }}
+                  >
+                    {calc.isEligible
+                      ? '$0.00'
+                      : fmtCurrency(calc.additionalNeeded)}
+                  </p>
+                </div>
               </div>
 
               {/* Progress bar */}
               <div className="mt-6">
+                <p className="font-mono text-xs uppercase tracking-wider text-white/55 mb-2">
+                  Progress toward required profit
+                </p>
                 <div className="h-3 w-full overflow-hidden rounded-full bg-white/10">
                   <div
                     className="h-full rounded-full transition-[width] duration-700 ease-out"
@@ -307,7 +343,8 @@ export default function ConsistencyCalculator() {
                   />
                 </div>
                 <p className="mt-2 text-center font-mono text-xs text-white/50">
-                  {fmtCurrency(totalProfitNum)} / {fmtCurrency(calc.requiredProfit)}
+                  {fmtCurrency(totalProfitNum)} of{' '}
+                  {fmtCurrency(calc.requiredProfit)}
                 </p>
               </div>
 
@@ -336,6 +373,13 @@ export default function ConsistencyCalculator() {
                     </>
                   )}
                 </p>
+
+                <button
+                  onClick={handleCopy}
+                  className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-mono text-xs text-white/60 transition-all hover:bg-white/10 hover:text-white"
+                >
+                  {copied ? '✓ Copied!' : '📋 Copy Result'}
+                </button>
               </div>
             </div>
 
@@ -398,8 +442,8 @@ export default function ConsistencyCalculator() {
                           }`}
                         >
                           {whatIf.futureEligible
-                            ? '✅ Would be Eligible'
-                            : '❌ Still Not Eligible'}
+                            ? '✅ Would Be Payout Ready'
+                            : '❌ Still More Profit Required'}
                         </span>
                       </div>
                     </div>
@@ -430,6 +474,17 @@ export default function ConsistencyCalculator() {
 
       {/* Explanation Section */}
       <ExplanationSection limit={limit} />
+
+      {/* Disclaimer */}
+      <p className="text-xs text-white/35 leading-relaxed px-1">
+        Note: This calculator uses the largest single winning trade method.
+        Some prop firms may calculate consistency differently (e.g., largest
+        trading day, largest position). Always verify your firm's specific
+        payout rules before requesting a withdrawal.
+      </p>
+
+      {/* FAQ Section */}
+      <FAQSection />
 
       <style jsx global>{`
         @keyframes fadeIn {
@@ -524,6 +579,71 @@ function ExplanationSection({ limit }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+const FAQ_ITEMS = [
+  {
+    q: 'What is the consistency rule in prop trading?',
+    a: "The consistency rule requires that no single winning trade (or, at some firms, a single trading day) accounts for more than a set percentage — typically 20-30% — of your total closed profit. It exists so that payouts reflect steady, repeatable trading rather than one large lucky trade carrying your whole account.",
+  },
+  {
+    q: 'Why was my payout rejected for consistency?',
+    a: "The most common reason is that one big winning trade (often from a news spike, an oversized position, or a lucky swing trade) made up too large a share of your total profit. Even if your account is profitable overall, firms will flag a payout if that single trade exceeds their consistency threshold.",
+  },
+  {
+    q: 'How do I reduce my consistency percentage?',
+    a: "Keep trading your normal strategy and position size rather than force-taking small trades just to pad the denominator — that can look artificial and firms may scrutinize it. The cleanest fix is simply accumulating more total closed profit over time through normal, consistent trading, which naturally lowers what percentage your largest win represents.",
+  },
+  {
+    q: 'Does every prop firm use the same consistency rule?',
+    a: 'No. Limits commonly range from 20% to 30%, and the calculation method varies by firm. Some measure the largest single trade against total profit (what this calculator uses), others measure the largest single trading day, and some apply the rule per position. Always check your specific firm\'s payout policy.',
+  },
+  {
+    q: 'What counts as the largest winning trade?',
+    a: "It's the profit from one individual closed trade, not your best day or your largest open position. If you had multiple winning trades on the same day, only the single largest trade counts toward this calculation — not the sum of that day's wins.",
+  },
+];
+
+function FAQSection() {
+  const [openIndex, setOpenIndex] = useState(null);
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      <h2 className="font-display text-base font-semibold text-white">
+        Frequently Asked Questions
+      </h2>
+      <div className="mt-4 divide-y divide-white/10">
+        {FAQ_ITEMS.map((item, i) => {
+          const isOpen = openIndex === i;
+          return (
+            <div key={item.q} className="py-3 first:pt-0 last:pb-0">
+              <button
+                type="button"
+                onClick={() => setOpenIndex(isOpen ? null : i)}
+                className="flex w-full items-center justify-between gap-4 text-left"
+              >
+                <span className="text-sm font-medium text-white/85">
+                  {item.q}
+                </span>
+                <span
+                  className={`shrink-0 font-mono text-white/50 transition-transform duration-300 ${
+                    isOpen ? 'rotate-180' : ''
+                  }`}
+                >
+                  ▾
+                </span>
+              </button>
+              {isOpen && (
+                <p className="mt-3 animate-[fadeIn_0.25s_ease-out] text-sm leading-relaxed text-white/60">
+                  {item.a}
+                </p>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
