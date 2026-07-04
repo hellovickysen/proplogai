@@ -239,7 +239,7 @@ setup_followed: 'partial'  // Auto-computed overall for DB storage
 | Variable | Description |
 |----------|-------------|
 | ADMIN_EMAIL | Admin user's email (for admin panel access) |
-| OPENROUTER_MODEL | Override AI model slug (default: anthropic/claude-3-5-haiku) |
+| OPENROUTER_MODEL | Override AI model slug (default: anthropic/claude-haiku-4.5) |
 | NEXT_PUBLIC_POSTHOG_KEY | PostHog analytics key |
 | RESEND_API_KEY | Resend email API key |
 | RESEND_FROM | Resend sender address |
