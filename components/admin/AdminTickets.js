@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { updateTicketStatus, replyToTicket, closeTicket } from '@/app/admin/tickets/actions';
+import { updateTicketStatus, replyToTicket, closeTicket, bulkDeleteTickets } from '@/app/admin/tickets/actions';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const CATEGORIES = {
@@ -77,6 +77,50 @@ function MessageBubble({ reply }) {
   );
 }
 
+/* ─── Close Ticket Modal ─────────────────────────────────────── */
+
+function CloseTicketModal({ open, onClose, onConfirm, closing }) {
+  const [sendTranscript, setSendTranscript] = useState(true);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/60" />
+      <div className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#12121a] p-6" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-display text-lg font-semibold text-white">Close this ticket?</h3>
+        <p className="mt-2 text-sm text-white/50">The ticket and all replies will be permanently deleted.</p>
+
+        <label className="mt-5 flex cursor-pointer items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 transition-colors hover:bg-white/[0.05]">
+          <input
+            type="checkbox"
+            checked={sendTranscript}
+            onChange={(e) => setSendTranscript(e.target.checked)}
+            className="h-4 w-4 rounded border-white/20 bg-black/30 text-cyan-400 accent-cyan-400"
+          />
+          <div>
+            <div className="text-sm font-medium text-white/80">Send transcript to user&apos;s email</div>
+            <div className="text-xs text-white/40">User receives a copy of the conversation before deletion</div>
+          </div>
+        </label>
+
+        <div className="mt-6 flex gap-3">
+          <button onClick={onClose} disabled={closing} className="flex-1 rounded-xl border border-white/15 bg-white/5 py-2.5 text-sm font-semibold text-white/70">
+            Cancel
+          </button>
+          <button
+            onClick={() => onConfirm(sendTranscript)}
+            disabled={closing}
+            className="flex-1 rounded-xl border border-red-400/30 bg-red-500/15 py-2.5 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/25 disabled:opacity-50"
+          >
+            {closing ? 'Closing...' : 'Close Ticket'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Admin Ticket Detail ────────────────────────────────────── */
 
 function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose }) {
@@ -87,7 +131,7 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
   const [saving, setSaving] = useState(false);
   const [statusSaving, setStatusSaving] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false);
 
   async function handleReply(e) {
     e.preventDefault();
@@ -104,10 +148,11 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
     setStatusSaving(false);
   }
 
-  async function handleClose() {
+  async function handleClose(sendTranscript) {
     setClosing(true);
-    await onClose(ticket.id);
+    await onClose(ticket.id, sendTranscript);
     setClosing(false);
+    setShowCloseModal(false);
   }
 
   return (
@@ -132,7 +177,6 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Status control */}
           <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] uppercase tracking-wider text-white/35">Status</span>
             <select
@@ -147,13 +191,12 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
               ))}
             </select>
           </div>
-          {/* Close button */}
           <button
-            onClick={() => setShowCloseConfirm(true)}
+            onClick={() => setShowCloseModal(true)}
             disabled={closing}
             className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-50"
           >
-            {closing ? 'Closing...' : 'Close Ticket'}
+            Close Ticket
           </button>
         </div>
       </div>
@@ -168,7 +211,6 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
         <p className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed">{ticket.description}</p>
       </div>
 
-      {/* Screenshots from original ticket */}
       {screenshots.length > 0 && (
         <div className="mb-6">
           <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/40">Attachments ({screenshots.length})</div>
@@ -182,7 +224,6 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
         </div>
       )}
 
-      {/* Conversation Thread */}
       {replies.length > 0 && (
         <div className="mb-6">
           <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/40">Conversation ({replies.length})</div>
@@ -207,64 +248,62 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
           />
           <div className="mt-3 flex items-center justify-between">
             <p className="font-mono text-[10px] text-white/25">{replyText.length}/5000</p>
-            <button
-              type="submit"
-              disabled={saving || !replyText.trim()}
-              className="rounded-lg px-5 py-2 text-xs font-semibold text-[#08080f] disabled:opacity-60"
-              style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-            >
+            <button type="submit" disabled={saving || !replyText.trim()} className="rounded-lg px-5 py-2 text-xs font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
               {saving ? 'Sending...' : 'Send Reply'}
             </button>
           </div>
         </form>
       </div>
 
-      {/* Close Confirmation */}
-      <ConfirmDialog
-        open={showCloseConfirm}
-        onClose={() => setShowCloseConfirm(false)}
-        onConfirm={handleClose}
-        title="Close this ticket?"
-        message="The ticket and all replies will be permanently deleted. A transcript will be sent to the user's email before deletion."
-        confirmLabel="Close & Send Transcript"
-        variant="danger"
-      />
+      <CloseTicketModal open={showCloseModal} onClose={() => setShowCloseModal(false)} onConfirm={handleClose} closing={closing} />
     </div>
   );
 }
 
 /* ─── Ticket List Card ───────────────────────────────────────── */
 
-function TicketListCard({ ticket, onClick }) {
+function TicketListCard({ ticket, onClick, selectMode, selected, onToggle }) {
   const cat = CATEGORIES[ticket.category] || CATEGORIES.general_support;
   const replies = ticket.replies || [];
   const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
 
   return (
-    <button onClick={onClick} className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-cyan-400/20 hover:bg-white/[0.05]">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-sm font-semibold">{ticket.subject}</h3>
-            <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
-            <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (STATUS_STYLES[ticket.status] || '')}>{STATUS_LABELS[ticket.status] || ticket.status}</span>
+    <div className="flex items-start gap-3">
+      {selectMode && (
+        <label className="mt-5 flex cursor-pointer items-center">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={() => onToggle(ticket.id)}
+            className="h-4 w-4 rounded border-white/20 bg-black/30 accent-cyan-400"
+          />
+        </label>
+      )}
+      <button onClick={selectMode ? () => onToggle(ticket.id) : onClick} className="w-full rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-cyan-400/20 hover:bg-white/[0.05]">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-display text-sm font-semibold">{ticket.subject}</h3>
+              <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
+              <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (STATUS_STYLES[ticket.status] || '')}>{STATUS_LABELS[ticket.status] || ticket.status}</span>
+            </div>
+            <div className="mt-1 font-mono text-[11px] text-white/35">{ticket.user_email}</div>
+            <p className="mt-1 text-xs text-white/40 line-clamp-1">{ticket.description}</p>
+            <div className="mt-2 flex items-center gap-3">
+              {replies.length > 0 && (
+                <span className="font-mono text-[10px] text-white/30">💬 {replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
+              )}
+              {lastReply && (
+                <span className={`font-mono text-[10px] ${lastReply.sender_role === 'user' ? 'text-amber-400/60' : 'text-cyan-400/50'}`}>
+                  {lastReply.sender_role === 'user' ? '⚠ User replied' : 'Admin replied'}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="mt-1 font-mono text-[11px] text-white/35">{ticket.user_email}</div>
-          <p className="mt-1 text-xs text-white/40 line-clamp-1">{ticket.description}</p>
-          <div className="mt-2 flex items-center gap-3">
-            {replies.length > 0 && (
-              <span className="font-mono text-[10px] text-white/30">💬 {replies.length} {replies.length === 1 ? 'reply' : 'replies'}</span>
-            )}
-            {lastReply && (
-              <span className={`font-mono text-[10px] ${lastReply.sender_role === 'user' ? 'text-amber-400/60' : 'text-cyan-400/50'}`}>
-                {lastReply.sender_role === 'user' ? '⚠ User replied' : 'Admin replied'}
-              </span>
-            )}
-          </div>
+          <div className="font-mono text-[11px] text-white/30">{fmtDate(ticket.updated_at || ticket.created_at)}</div>
         </div>
-        <div className="font-mono text-[11px] text-white/30">{fmtDate(ticket.updated_at || ticket.created_at)}</div>
-      </div>
-    </button>
+      </button>
+    </div>
   );
 }
 
@@ -276,6 +315,12 @@ export default function AdminTickets({ tickets }) {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedTicketId, setSelectedTicketId] = useState(null);
 
+  // Multi-select state
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
   const filtered = tickets.filter((t) => {
     if (statusFilter !== 'all' && t.status !== statusFilter) return false;
     if (categoryFilter !== 'all' && t.category !== categoryFilter) return false;
@@ -284,6 +329,26 @@ export default function AdminTickets({ tickets }) {
 
   const openCount = tickets.filter((t) => t.status === 'open').length;
   const inProgressCount = tickets.filter((t) => t.status === 'in_progress').length;
+
+  function toggleSelect(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    const filteredIds = filtered.map((t) => t.id);
+    if (filteredIds.every((id) => selectedIds.has(id))) setSelectedIds(new Set());
+    else setSelectedIds(new Set(filteredIds));
+  }
+
+  function exitSelectMode() {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }
 
   async function handleStatusChange(id, status) {
     const res = await updateTicketStatus(id, status);
@@ -297,13 +362,25 @@ export default function AdminTickets({ tickets }) {
     else router.refresh();
   }
 
-  async function handleClose(id) {
-    const res = await closeTicket(id);
+  async function handleClose(id, sendTranscript) {
+    const res = await closeTicket(id, sendTranscript);
     if (res.error) alert(res.error);
     else {
       setSelectedTicketId(null);
       router.refresh();
     }
+  }
+
+  async function handleBulkDelete() {
+    setBulkDeleting(true);
+    const res = await bulkDeleteTickets([...selectedIds]);
+    if (res.error) alert(res.error);
+    else {
+      exitSelectMode();
+      router.refresh();
+    }
+    setBulkDeleting(false);
+    setShowBulkConfirm(false);
   }
 
   // Detail view
@@ -333,7 +410,34 @@ export default function AdminTickets({ tickets }) {
             {tickets.length} total &middot; <span className="text-amber-300">{openCount} open</span> &middot; <span className="text-cyan-300">{inProgressCount} in progress</span>
           </p>
         </div>
+        {tickets.length > 0 && (
+          <button
+            onClick={selectMode ? exitSelectMode : () => setSelectMode(true)}
+            className={`rounded-xl border px-4 py-2 text-sm font-semibold transition-colors ${selectMode ? 'border-cyan-400/30 bg-cyan-500/10 text-cyan-300' : 'border-white/15 bg-white/5 text-white/70'}`}
+          >
+            {selectMode ? 'Cancel' : 'Select'}
+          </button>
+        )}
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectMode && selectedIds.size > 0 && (
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-4">
+          <div className="flex items-center gap-3">
+            <button onClick={toggleSelectAll} className="text-xs font-semibold text-white/60 hover:text-white/80">
+              {filtered.every((t) => selectedIds.has(t.id)) ? 'Deselect All' : 'Select All'}
+            </button>
+            <span className="font-mono text-xs text-white/40">{selectedIds.size} selected</span>
+          </div>
+          <button
+            onClick={() => setShowBulkConfirm(true)}
+            disabled={bulkDeleting}
+            className="rounded-lg border border-red-400/30 bg-red-500/15 px-4 py-2 text-xs font-semibold text-red-300 transition-colors hover:bg-red-500/25 disabled:opacity-50"
+          >
+            {bulkDeleting ? 'Deleting...' : `Delete ${selectedIds.size} Ticket${selectedIds.size === 1 ? '' : 's'}`}
+          </button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap items-center gap-4">
@@ -369,10 +473,28 @@ export default function AdminTickets({ tickets }) {
       ) : (
         <div className="space-y-3">
           {filtered.map((t) => (
-            <TicketListCard key={t.id} ticket={t} onClick={() => setSelectedTicketId(t.id)} />
+            <TicketListCard
+              key={t.id}
+              ticket={t}
+              onClick={() => setSelectedTicketId(t.id)}
+              selectMode={selectMode}
+              selected={selectedIds.has(t.id)}
+              onToggle={toggleSelect}
+            />
           ))}
         </div>
       )}
+
+      {/* Bulk Delete Confirmation */}
+      <ConfirmDialog
+        open={showBulkConfirm}
+        onClose={() => setShowBulkConfirm(false)}
+        onConfirm={handleBulkDelete}
+        title={`Delete ${selectedIds.size} ticket${selectedIds.size === 1 ? '' : 's'}?`}
+        message="Selected tickets and all their replies will be permanently deleted. No transcript emails will be sent."
+        confirmLabel="Delete All"
+        variant="danger"
+      />
     </div>
   );
 }
