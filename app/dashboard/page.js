@@ -14,6 +14,8 @@ import DisciplineCards from '@/components/dashboard/DisciplineCards';
 import ReferralCapture from '@/components/referrals/ReferralCapture';
 import BetaNotice from '@/components/ui/BetaNotice';
 import { notify, TYPES } from '@/lib/notifications';
+import DailyCoachingCard from '@/components/coach/DailyCoachingCard';
+import { computePersona } from '@/lib/persona';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,6 +140,15 @@ export default async function DashboardPage() {
   if (coachError) console.error('coach insight error', coachError);
   const report = coach && coach.mistakes ? coach.mistakes : null;
   const topMistake = report && Array.isArray(report.recurring_mistakes) ? report.recurring_mistakes[0] : null;
+
+  // Persona for daily coaching card
+  const journalMap = {};
+  list.forEach((t) => {
+    if (t._journal) {
+      journalMap[t.id] = { emotions: t._journal.emotions || [], confidence: t._journal.confidence };
+    }
+  });
+  const persona = computePersona(list, journalMap);
 
   // Journal entries for discipline
   const tradeIds = list.map((t) => t.id);
@@ -264,6 +275,9 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* Daily Coaching Card */}
+      {list.length >= 5 && <div className="mb-4"><DailyCoachingCard persona={persona} report={coach} /></div>}
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <HeroStat label="Net P&amp;L" value={fmtMoney(s.net)} tone={s.net >= 0 ? 'pos' : 'neg'} />
