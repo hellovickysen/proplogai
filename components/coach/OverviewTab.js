@@ -1,5 +1,9 @@
 "use client";
 
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { toggleHabitLog, createHabit, deleteHabit } from '@/app/dashboard/coach/habit-actions';
+
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 const SCORE_KEYS = [
@@ -40,8 +44,7 @@ function Sparkline({ data }) {
   const max = Math.max(...data);
   const min = Math.min(...data);
   const range = max - min || 1;
-  const w = 100;
-  const h = 24;
+  const w = 100, h = 24;
   const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="h-6 w-full" preserveAspectRatio="none">
@@ -51,12 +54,66 @@ function Sparkline({ data }) {
   );
 }
 
-export default function OverviewTab({ reports, tradeAnalyses }) {
+/* ── Streak badge ─────────────────────────────────────────── */
+function StreakBadge({ icon, label, current, best }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5">
+      <span className="text-lg">{icon}</span>
+      <div className="flex-1">
+        <div className="text-xs text-white/50">{label}</div>
+        <div className="flex items-baseline gap-2">
+          <span className={'font-display text-lg font-bold ' + (current > 0 ? 'text-amber-400' : 'text-white/30')}>{current}d</span>
+          <span className="font-mono text-[10px] text-white/25">best {best}d</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Persona metric ───────────────────────────────────────── */
+function PersonaMetric({ label, value, sub, color }) {
+  return (
+    <div className="rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">{label}</div>
+      <div className={'mt-0.5 text-sm font-semibold ' + (color || 'text-white/70')}>{value || '—'}</div>
+      {sub && <div className="font-mono text-[10px] text-white/25">{sub}</div>}
+    </div>
+  );
+}
+
+/* ── Habit row ────────────────────────────────────────────── */
+function HabitRow({ habit, completed, autoCompleted, todayDate, onToggle }) {
+  const isAuto = !habit.is_custom;
+  const done = isAuto ? autoCompleted : completed;
+
+  return (
+    <div className="flex items-center gap-3 py-1.5">
+      <button
+        onClick={() => !isAuto && onToggle(habit.id, !done)}
+        disabled={isAuto}
+        className={'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ' +
+          (done
+            ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-400'
+            : 'border-white/15 bg-white/[0.03] text-transparent hover:border-white/25')
+        }
+      >
+        {done && <span className="text-xs">✓</span>}
+      </button>
+      <span className={'flex-1 text-sm ' + (done ? 'text-white/50 line-through' : 'text-white/70')}>{habit.name}</span>
+      {isAuto && <span className="font-mono text-[9px] text-white/20">auto</span>}
+    </div>
+  );
+}
+
+export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, habits, habitLogs, autoHabitStatus, todayDate }) {
+  const router = useRouter();
+  const [newHabit, setNewHabit] = useState('');
+  const [adding, setAdding] = useState(false);
+
   const latest = reports?.[0] || null;
   const previous = reports?.[1] || null;
   const latestScores = latest?.mistakes?.scores || {};
   const previousScores = previous?.mistakes?.scores || {};
-  const improvements = latest?.mistakes?.improvements || [];
 
   const scoreHistory = {};
   SCORE_KEYS.forEach(({ key }) => { scoreHistory[key] = []; });
@@ -64,6 +121,23 @@ export default function OverviewTab({ reports, tradeAnalyses }) {
     const s = r?.mistakes?.scores;
     if (s) SCORE_KEYS.forEach(({ key }) => { if (s[key] != null) scoreHistory[key].push(s[key]); });
   });
+
+  // Habit log lookup for today
+  const todayLogs = {};
+  (habitLogs || []).forEach((l) => { if (l.log_date === todayDate) todayLogs[l.habit_id] = l.completed; });
+
+  async function handleToggle(habitId, completed) {
+    await toggleHabitLog(habitId, todayDate, completed);
+    router.refresh();
+  }
+
+  async function handleAddHabit() {
+    if (!newHabit.trim()) return;
+    setAdding(true);
+    const res = await createHabit(newHabit.trim());
+    if (res.ok) { setNewHabit(''); router.refresh(); }
+    setAdding(false);
+  }
 
   return (
     <div className="space-y-5">
@@ -94,37 +168,76 @@ export default function OverviewTab({ reports, tradeAnalyses }) {
         </div>
       )}
 
-      {/* Progress */}
-      {improvements.length > 0 && (
-        <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.03] p-4">
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-emerald-400/60">Progress</div>
-          <div className="space-y-1.5">
-            {improvements.slice(0, 3).map((imp, i) => (
-              <div key={i} className="flex items-start gap-2 text-xs text-white/60">
-                <span className="text-emerald-400">✔</span>
-                <span>{imp}</span>
-              </div>
-            ))}
+      {/* Streaks */}
+      {streaks && (
+        <div className="grid grid-cols-3 gap-2.5">
+          <StreakBadge icon="🔥" label="Logging" current={streaks.logging?.current || 0} best={streaks.logging?.best || 0} />
+          <StreakBadge icon="💰" label="Profit" current={streaks.profit?.current || 0} best={streaks.profit?.best || 0} />
+          <StreakBadge icon="🎯" label="Discipline" current={streaks.discipline?.current || 0} best={streaks.discipline?.best || 0} />
+        </div>
+      )}
+
+      {/* Persona Profile */}
+      {persona && (
+        <div>
+          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-white/30">Trader Profile</div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            <PersonaMetric label="Main emotion" value={persona.mainEmotion} color="text-violet-300" />
+            <PersonaMetric label="Common mistake" value={persona.commonMistake} color="text-red-300" />
+            <PersonaMetric label="Best session" value={persona.bestSession?.name} sub={persona.bestSession ? `${persona.bestSession.winRate}% WR` : null} color="text-emerald-300" />
+            <PersonaMetric label="Worst session" value={persona.worstSession?.name} sub={persona.worstSession ? `${persona.worstSession.winRate}% WR` : null} color="text-red-300" />
+            <PersonaMetric label="Confidence" value={persona.confidenceLevel} sub={persona.avgConfidence ? `avg ${persona.avgConfidence}/5` : null} />
+            <PersonaMetric label="Setup adherence" value={persona.adherencePct != null ? persona.adherencePct + '%' : '—'} color={persona.adherencePct >= 70 ? 'text-emerald-300' : 'text-amber-300'} />
+            <PersonaMetric label="Revenge days" value={persona.revengeDays + ' of ' + persona.totalDays} color={persona.revengeDays > 0 ? 'text-red-300' : 'text-emerald-300'} />
+            <PersonaMetric label="Trades" value={persona.tradeCount} />
           </div>
         </div>
       )}
 
-      {/* Quick Stats — compact row */}
-      {tradeAnalyses && tradeAnalyses.length > 0 && (
-        <div className="grid grid-cols-4 gap-2">
-          {[
-            { label: 'Analyzed', val: tradeAnalyses.length },
-            { label: 'Avg Score', val: Math.round(tradeAnalyses.reduce((a, t) => a + (t.mistakes?.trade_score || t.mistakes?.execution_score || 0), 0) / tradeAnalyses.length), color: true },
-            { label: 'Reviews', val: reports?.length || 0 },
-            { label: 'Grade', val: tradeAnalyses[0]?.mistakes?.grade || '—', gradient: true },
-          ].map((s, i) => (
-            <div key={i} className="rounded-xl border border-white/8 bg-white/[0.02] p-3 text-center">
-              <div className={'font-display text-lg font-bold ' + (s.gradient ? '' : s.color ? scoreColor(s.val) : '')} style={s.gradient ? gradientText : undefined}>
-                {s.val}
-              </div>
-              <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">{s.label}</div>
-            </div>
-          ))}
+      {/* Daily Habits */}
+      {habits && habits.length > 0 && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">Today&apos;s Habits</div>
+            <span className="font-mono text-[10px] text-white/20">{todayDate}</span>
+          </div>
+          <div className="space-y-0.5">
+            {habits.map((h) => (
+              <HabitRow
+                key={h.id}
+                habit={h}
+                completed={!!todayLogs[h.id]}
+                autoCompleted={!h.is_custom && autoHabitStatus ? autoHabitStatus[
+                  h.name === 'Log trades daily' ? 'log_daily'
+                  : h.name === 'Tag emotions' ? 'tag_emotions'
+                  : h.name === 'Record lessons' ? 'record_lessons'
+                  : h.name === 'Follow setups' ? 'follow_setups'
+                  : ''
+                ] : false}
+                todayDate={todayDate}
+                onToggle={handleToggle}
+              />
+            ))}
+          </div>
+          {/* Add custom habit */}
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              type="text"
+              value={newHabit}
+              onChange={(e) => setNewHabit(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()}
+              placeholder="Add a habit..."
+              maxLength={60}
+              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-sm outline-none placeholder:text-white/20 focus:border-cyan-400/40"
+            />
+            <button
+              onClick={handleAddHabit}
+              disabled={adding || !newHabit.trim()}
+              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white/80 disabled:opacity-30"
+            >
+              + Add
+            </button>
+          </div>
         </div>
       )}
     </div>

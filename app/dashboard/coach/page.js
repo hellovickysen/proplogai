@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import PropolCoachHub from '@/components/coach/PropolCoachHub';
 import { isEmailConfigured } from '@/lib/email';
 import { getUserAccess } from '@/lib/plans';
+import { computePersona, computeStreaks, checkAutoHabits } from '@/lib/persona';
+import { getTradingDate } from '@/lib/stats';
 import BetaFeatureWarning from '@/components/ui/BetaFeatureWarning';
 import UpgradeCard from '@/components/ui/UpgradeCard';
 
@@ -64,6 +66,64 @@ export default async function CoachPage() {
     .eq('type', 'trade_analysis')
     .gte('created_at', monthStart.toISOString());
 
+  // ── Persona + Streaks ──
+  const { data: allTrades } = await supabase
+    .from('trades')
+    .select('id, pair, direction, pnl, r_multiple, setup, setup_followed, no_setup_reason, session, trade_date, created_at')
+    .eq('user_id', user.id)
+    .order('trade_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  const tradeList = allTrades || [];
+  const tradeIds = tradeList.map((t) => t.id);
+  let jmap = {};
+  if (tradeIds.length > 0) {
+    const { data: journals } = await supabase
+      .from('journal_entries')
+      .select('trade_id, emotions, confidence, note, lesson, tags')
+      .in('trade_id', tradeIds);
+    (journals || []).forEach((j) => { jmap[j.trade_id] = j; });
+  }
+
+  const persona = computePersona(tradeList, jmap);
+  const streaks = computeStreaks(tradeList);
+
+  // ── Habits ──
+  let habits = [];
+  let habitLogs = [];
+  let autoHabitStatus = {};
+  const todayDate = getTradingDate(new Date().toISOString());
+
+  try {
+    const { data: h } = await supabase
+      .from('habits')
+      .select('id, name, is_custom, is_active, sort_order')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .order('sort_order');
+    habits = h || [];
+
+    // Fetch today's logs
+    if (habits.length > 0) {
+      const { data: logs } = await supabase
+        .from('habit_logs')
+        .select('habit_id, log_date, completed')
+        .eq('user_id', user.id)
+        .eq('log_date', todayDate);
+      habitLogs = logs || [];
+    }
+
+    // Auto-habit status for today
+    const todayTrades = tradeList.filter((t) => (t.trade_date || getTradingDate(t.created_at)) === todayDate);
+    const todayJmap = {};
+    todayTrades.forEach((t) => { if (jmap[t.id]) todayJmap[t.id] = jmap[t.id]; });
+    autoHabitStatus = checkAutoHabits(todayTrades, todayJmap);
+  } catch (e) {
+    // habits table might not exist yet (migration not run)
+    console.log('Habits not available yet (migration 0028 may not be run):', e?.message);
+  }
+
   // Plan access
   const access = await getUserAccess(supabase, user);
   const coachLimit = access.limit('coach_report');
@@ -89,6 +149,12 @@ export default async function CoachPage() {
         analysisUsed={analysisUsed || 0}
         analysisLimit={analysisLimit === Infinity ? -1 : analysisLimit}
         emailEnabled={emailEnabled}
+        persona={persona}
+        streaks={streaks}
+        habits={habits}
+        habitLogs={habitLogs}
+        autoHabitStatus={autoHabitStatus}
+        todayDate={todayDate}
       />
     </div>
   );
