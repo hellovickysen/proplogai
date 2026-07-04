@@ -116,10 +116,30 @@ export default async function AdminOverviewPage() {
     const journalsRes = await sb.from('journal_entries').select('id', { count: 'exact', head: true });
     const insightsRes = await sb.from('ai_insights').select('id', { count: 'exact', head: true });
 
+    // AI usage breakdown by type
+    const tradeAnalysesRes = await sb.from('ai_insights').select('id', { count: 'exact', head: true }).eq('type', 'trade_analysis');
+    const coachReportsRes = await sb.from('ai_insights').select('id', { count: 'exact', head: true }).eq('type', 'coach_report');
+
     const totalTrades = tradesRes.count || 0;
     const totalJournals = journalsRes.count || 0;
     const totalInsights = insightsRes.count || 0;
-    const estAiCost = (totalInsights * 0.025).toFixed(2);
+    const totalTradeAnalyses = tradeAnalysesRes.count || 0;
+    const totalCoachReports = coachReportsRes.count || 0;
+
+    // Cost estimates: Haiku 4.5 ~$0.002/trade analysis, ~$0.005/coach report
+    const estAnalysisCost = totalTradeAnalyses * 0.002;
+    const estCoachCost = totalCoachReports * 0.005;
+    const estAiCost = (estAnalysisCost + estCoachCost).toFixed(2);
+
+    // This month's AI costs
+    const monthStartUTC = new Date();
+    monthStartUTC.setUTCDate(1);
+    monthStartUTC.setUTCHours(0, 0, 0, 0);
+    const monthAnalysesRes = await sb.from('ai_insights').select('id', { count: 'exact', head: true }).eq('type', 'trade_analysis').gte('created_at', monthStartUTC.toISOString());
+    const monthCoachRes = await sb.from('ai_insights').select('id', { count: 'exact', head: true }).eq('type', 'coach_report').gte('created_at', monthStartUTC.toISOString());
+    const monthAnalyses = monthAnalysesRes.count || 0;
+    const monthCoach = monthCoachRes.count || 0;
+    const monthAiCost = (monthAnalyses * 0.002 + monthCoach * 0.005).toFixed(3);
 
     // ── Active users (traded in last 7 days) ──
     let activeUsers = 0;
@@ -187,7 +207,7 @@ export default async function AdminOverviewPage() {
           <Stat label="Active (7d)" value={activeUsers} accent="green" />
           <Stat label="Total Trades" value={totalTrades} />
           <Stat label="Journal Entries" value={totalJournals} />
-          <Stat label="AI Analyses" value={totalInsights} sub={`Est. cost: $${estAiCost}`} />
+          <Stat label="AI Calls" value={totalInsights} sub={`Est. cost: $${estAiCost}`} />
         </div>
 
         {/* ── Today's activity + Open tickets ── */}
@@ -231,6 +251,40 @@ export default async function AdminOverviewPage() {
               <div><div className="font-mono text-xs text-white/45">Trades/user</div><div className="mt-1 font-display text-2xl font-bold">{totalUsers ? (totalTrades / totalUsers).toFixed(1) : '0'}</div></div>
               <div><div className="font-mono text-xs text-white/45">Journal rate</div><div className="mt-1 font-display text-2xl font-bold">{totalTrades ? Math.round((totalJournals / totalTrades) * 100) + '%' : '0%'}</div></div>
               <div><div className="font-mono text-xs text-white/45">AI rate</div><div className="mt-1 font-display text-2xl font-bold">{totalTrades ? Math.round((totalInsights / totalTrades) * 100) + '%' : '0%'}</div></div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── AI Cost Breakdown ── */}
+        <div className="mb-6 rounded-2xl border border-cyan-400/15 bg-cyan-500/[0.03] p-5">
+          <h2 className="mb-4 font-display text-sm font-semibold" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>AI Cost Breakdown (Claude Haiku 4.5)</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+            <div>
+              <div className="font-mono text-xs text-white/45">Trade Analyses</div>
+              <div className="mt-1 font-display text-xl font-bold">{totalTradeAnalyses}</div>
+              <div className="font-mono text-[11px] text-white/35">× $0.002 = ${estAnalysisCost.toFixed(2)}</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs text-white/45">Coach Reports</div>
+              <div className="mt-1 font-display text-xl font-bold">{totalCoachReports}</div>
+              <div className="font-mono text-[11px] text-white/35">× $0.005 = ${estCoachCost.toFixed(2)}</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs text-white/45">Total (all time)</div>
+              <div className="mt-1 font-display text-xl font-bold text-cyan-400">${estAiCost}</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs text-white/45">This Month</div>
+              <div className="mt-1 font-display text-xl font-bold text-amber-400">${monthAiCost}</div>
+              <div className="font-mono text-[11px] text-white/35">{monthAnalyses} analyses + {monthCoach} reports</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs text-white/45">Avg/User</div>
+              <div className="mt-1 font-display text-xl font-bold">{totalUsers ? '$' + (parseFloat(estAiCost) / totalUsers).toFixed(3) : '$0'}</div>
+            </div>
+            <div>
+              <div className="font-mono text-xs text-white/45">Cost/Trade</div>
+              <div className="mt-1 font-display text-xl font-bold">{totalInsights ? '$' + (parseFloat(estAiCost) / totalInsights).toFixed(3) : '$0'}</div>
             </div>
           </div>
         </div>
