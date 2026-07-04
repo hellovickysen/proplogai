@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from 'react';
 import HeroCard from './HeroCard';
 
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };

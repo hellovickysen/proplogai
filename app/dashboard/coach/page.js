@@ -3,7 +3,6 @@ import PropolCoachHub from '@/components/coach/PropolCoachHub';
 import { isEmailConfigured } from '@/lib/email';
 import { getUserAccess } from '@/lib/plans';
 import { computePersona, computeStreaks } from '@/lib/persona';
-import { getTradingDate } from '@/lib/stats';
 import BetaFeatureWarning from '@/components/ui/BetaFeatureWarning';
 import UpgradeCard from '@/components/ui/UpgradeCard';
 
