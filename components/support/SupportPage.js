@@ -213,7 +213,7 @@ function TicketDetail({ ticket, onBack }) {
               <p className="text-sm font-semibold text-emerald-300">Your ticket has been resolved</p>
               <p className="mt-2 text-sm text-white/55 leading-relaxed">
                 If you still need help, reply below to <strong className="text-white/70">re-open</strong> this ticket.
-                Otherwise, you can close it now or it will be <strong className="text-white/70">automatically deleted in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</strong>.
+                Otherwise, you can close it now or it will be <strong className="text-white/70">automatically deleted</strong> after some time.
               </p>
             </div>
           </div>
@@ -310,7 +310,7 @@ function TicketCard({ ticket, onClick, selectMode, selected, onToggle }) {
                 <span className="font-mono text-[10px] text-cyan-400/50">Support replied</span>
               )}
               {ticket.status === 'resolved' && (
-                <span className="font-mono text-[10px] text-emerald-400/60">✔ Resolved — {daysRemaining(ticket.resolved_at)}d left</span>
+                <span className="font-mono text-[10px] text-emerald-400/60">✔ Resolved</span>
               )}
             </div>
           </div>

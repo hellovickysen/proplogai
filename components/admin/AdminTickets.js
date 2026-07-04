@@ -257,7 +257,7 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
           <div>
             <p className="text-sm font-medium text-emerald-300">Ticket marked as resolved</p>
             <p className="mt-1 text-xs text-white/40">
-              Resolution email sent to user. Auto-deletes in {Math.max(0, Math.ceil((new Date(ticket.resolved_at).getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000)))} days if not re-opened.
+              Resolution email sent to user. Will auto-delete after 7 days if not re-opened.
             </p>
           </div>
         </div>
