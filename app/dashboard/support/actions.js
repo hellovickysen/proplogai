@@ -170,9 +170,6 @@ export async function closeTicket(ticketId) {
 
   if (error) return { error: error.message };
 
-  // Notify admin that user closed a ticket
-  await notifyAdmin(TYPES.TICKET_CLOSED, 'Ticket Closed', `User closed ticket: ${ticket.subject}`, { email: user.email });
-
   revalidatePath('/dashboard/support');
   return { ok: true };
 }
