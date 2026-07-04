@@ -291,7 +291,7 @@ export async function analyzeTrade(tradeId) {
 
   const { data: trade } = await supabase.from('trades').select('*').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
   if (!trade) return { error: 'Trade not found.' };
-  const { data: journal } = await supabase.from('journal_entries').select('*').eq('trade_id', tradeId).maybeSingle();
+  const { data: journal } = await supabase.from('journal_entries').select('*').eq('trade_id', tradeId).eq('user_id', user.id).maybeSingle();
 
   // Build user context for personalized AI analysis
   const depth = access.effectivePlan === 'elite' ? 90 : 30;

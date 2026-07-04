@@ -145,9 +145,9 @@ export default async function CoachPage() {
         tradeCount={tradeCount || 0}
         access={access.toJSON()}
         coachUsed={coachUsed || 0}
-        coachLimit={coachLimit === Infinity ? -1 : coachLimit}
+        coachLimit={coachLimit}
         analysisUsed={analysisUsed || 0}
-        analysisLimit={analysisLimit === Infinity ? -1 : analysisLimit}
+        analysisLimit={analysisLimit}
         emailEnabled={emailEnabled}
         persona={persona}
         streaks={streaks}
