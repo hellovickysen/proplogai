@@ -270,35 +270,47 @@ export default function ConsistencyCalculator() {
         {hasValidInputs && calc && (
           <div className="animate-[fadeIn_0.3s_ease-out] space-y-6">
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
-              {/* Hero status */}
-              <div className="text-center md:text-left">
-                <p
-                  className="text-2xl font-bold md:text-3xl"
-                  style={{
-                    color: calc.isEligible ? '#34d399' : '#f87171',
-                  }}
+              {/* Hero — big percentage + status */}
+              <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
+                <div>
+                  <p className="font-mono text-xs uppercase tracking-wider text-white/55">
+                    Consistency
+                  </p>
+                  <p
+                    className="mt-1 font-mono text-4xl font-bold md:text-5xl"
+                    style={{ color: zoneColor[calc.zone] }}
+                  >
+                    {fmtPct(calc.consistencyPct)}
+                  </p>
+                  <p className="mt-1 text-xs text-white/40">
+                    Limit: {fmtPct(limit, 0)}
+                  </p>
+                </div>
+
+                <div
+                  className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 font-display text-sm font-semibold ${
+                    calc.isEligible
+                      ? 'border-[#34d399]/30 bg-[#34d399]/10 text-[#34d399]'
+                      : 'border-[#f87171]/30 bg-[#f87171]/10 text-[#f87171]'
+                  }`}
                 >
                   {calc.isEligible
                     ? '✅ Ready for Payout'
                     : '❌ More Profit Required'}
-                </p>
-                <p
-                  className="mt-2 font-mono text-lg"
-                  style={{ color: zoneColor[calc.zone] }}
-                >
-                  Current Consistency: {fmtPct(calc.consistencyPct)}
-                </p>
-                <p className="mt-1 text-sm text-white/55">
-                  {calc.isEligible ? (
-                    <>You satisfy the {fmtPct(limit, 0)} consistency rule.</>
-                  ) : (
-                    <>
-                      Need another {fmtCurrency(calc.additionalNeeded)}{' '}
-                      profit to meet the {fmtPct(limit, 0)} rule.
-                    </>
-                  )}
-                </p>
+                </div>
               </div>
+
+              {/* One-line summary */}
+              <p className="mt-4 text-sm text-white/55">
+                {calc.isEligible ? (
+                  <>You satisfy the {fmtPct(limit, 0)} consistency rule.</>
+                ) : (
+                  <>
+                    Need another {fmtCurrency(calc.additionalNeeded)}{' '}
+                    profit to meet the {fmtPct(limit, 0)} rule.
+                  </>
+                )}
+              </p>
 
               {/* Required / Remaining */}
               <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
