@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import { NOTIFICATION_META } from '@/lib/notifications';
 import {
   getNotifications,
@@ -44,6 +45,39 @@ function BellIcon({ className }) {
   );
 }
 
+/* -- Inline toast for real-time notifications -------------------- */
+function RealtimeToast({ notification, onDismiss }) {
+  const m = NOTIFICATION_META[notification.type] || { icon: '🔔', color: 'text-white/70' };
+
+  useEffect(() => {
+    const timer = setTimeout(onDismiss, 5000);
+    return () => clearTimeout(timer);
+  }, [onDismiss]);
+
+  return (
+    <div className="fixed bottom-4 right-4 z-[100] animate-[slideUp_0.3s_ease-out] rounded-2xl border border-white/10 bg-[#12121a] p-4 shadow-2xl sm:max-w-sm">
+      <div className="flex items-start gap-3">
+        <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-white/[0.06] text-base">
+          {m.icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-white">{notification.title}</p>
+          {notification.message && (
+            <p className="mt-0.5 truncate text-xs text-white/40">{notification.message}</p>
+          )}
+        </div>
+        <button onClick={onDismiss} className="flex-shrink-0 text-white/30 hover:text-white/60 text-xs">✕</button>
+      </div>
+      <style jsx>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(16px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 /* -- Main component ----------------------------------------------- */
 export default function NotificationBell({ initialCount = 0, typeFilter = null, excludeTypes = null }) {
   const [open, setOpen] = useState(false);
@@ -51,6 +85,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  const [realtimeToast, setRealtimeToast] = useState(null);
   const ref = useRef(null);
   const router = useRouter();
 
@@ -70,7 +105,60 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
     return () => document.removeEventListener('keydown', handler);
   }, [open]);
 
-  /* Poll unread count every 60s */
+  /* ── Supabase Realtime subscription ────────────────────────── */
+  useEffect(() => {
+    const supabase = createClient();
+    let userId = null;
+
+    // Get current user for filtering
+    supabase.auth.getUser().then(({ data }) => {
+      userId = data?.user?.id;
+    });
+
+    const channel = supabase
+      .channel('notifications-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+        },
+        (payload) => {
+          const newNotif = payload.new;
+
+          // Filter: only process notifications for this user
+          if (userId && newNotif.user_id !== userId) return;
+
+          // Filter by typeFilter (if set, only show matching types)
+          if (typeFilter && !typeFilter.includes(newNotif.type)) return;
+
+          // Filter by excludeTypes (if set, skip excluded types)
+          if (excludeTypes && excludeTypes.includes(newNotif.type)) return;
+
+          // Increment unread count
+          setCount((c) => c + 1);
+
+          // Prepend to items if dropdown is open
+          setItems((prev) => {
+            if (prev.length === 0) return prev; // Not loaded yet
+            // Avoid duplicate
+            if (prev.some((n) => n.id === newNotif.id)) return prev;
+            return [newNotif, ...prev].slice(0, 20);
+          });
+
+          // Show toast
+          setRealtimeToast(newNotif);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [typeFilter, excludeTypes]);
+
+  /* Poll unread count every 60s (fallback if Realtime drops) */
   useEffect(() => {
     const id = setInterval(async () => {
       const res = await getUnreadCount(typeFilter, excludeTypes);
@@ -248,6 +336,14 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
             </div>
           )}
         </div>
+      )}
+
+      {/* -- Realtime toast notification -- */}
+      {realtimeToast && (
+        <RealtimeToast
+          notification={realtimeToast}
+          onDismiss={() => setRealtimeToast(null)}
+        />
       )}
     </div>
   );
