@@ -293,6 +293,8 @@ export default function SupportPage({ tickets }) {
   const fileInputRef = useRef(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [showForm, setShowForm] = useState(false);
+
+  const hasOpenTicket = tickets.some((t) => t.status === 'open' || t.status === 'in_progress');
   const [category, setCategory] = useState('general_support');
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
@@ -405,12 +407,31 @@ export default function SupportPage({ tickets }) {
             </button>
           )}
           {!selectMode && (
-            <button onClick={() => setShowForm(!showForm)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            <button
+              onClick={() => {
+                if (hasOpenTicket && !showForm) {
+                  if (toast) toast.error('You already have an open ticket. Close or resolve it first.');
+                  return;
+                }
+                setShowForm(!showForm);
+              }}
+              disabled={hasOpenTicket && !showForm}
+              className={'rounded-xl px-4 py-2 text-sm font-semibold ' + (hasOpenTicket && !showForm ? 'opacity-50 cursor-not-allowed text-[#08080f]' : 'text-[#08080f]')}
+              style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+            >
               {showForm ? 'Cancel' : '+ New Ticket'}
             </button>
           )}
         </div>
       </div>
+
+      {/* Open ticket warning */}
+      {hasOpenTicket && !selectMode && !selectedTicket && (
+        <div className="mb-4 rounded-2xl border border-amber-400/20 bg-amber-500/[0.05] p-4 flex items-center gap-3">
+          <span className="text-amber-400 text-lg">⚠️</span>
+          <p className="text-sm text-amber-300/80">You have an open ticket. Please wait until it&apos;s resolved or close it before creating a new one.</p>
+        </div>
+      )}
 
       {/* Bulk Action Bar */}
       {selectMode && selectedIds.size > 0 && (

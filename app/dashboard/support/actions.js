@@ -43,6 +43,17 @@ export async function createTicket(payload) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: 'Not signed in.' };
 
+  // Check for existing open ticket
+  const { count: openCount } = await supabase
+    .from('support_tickets')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .in('status', ['open', 'in_progress']);
+
+  if (openCount > 0) {
+    return { error: 'You already have an open ticket. Please wait until it is resolved or close it before creating a new one.' };
+  }
+
   const subject = sanitize(payload.subject, 200);
   if (!subject) return { error: 'Subject is required.' };
 
