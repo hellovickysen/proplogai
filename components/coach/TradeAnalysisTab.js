@@ -82,8 +82,8 @@ function TradeAnalysisCard({ analysis }) {
                 { k: 'reflection', icon: '💭', color: 'text-amber-300' },
               ].filter(({ k }) => coaching[k]).map(({ k, icon, color }) => (
                 <div key={k} className="rounded-lg border border-white/5 bg-black/20 px-3 py-2">
-                  <span className={`font-mono text-[9px] uppercase ${color}`}>{icon} {k}</span>
-                  <p className="mt-0.5 text-[11px] text-white/50 line-clamp-2">{coaching[k]}</p>
+                  <span className={`font-mono text-xs uppercase ${color}`}>{icon} {k}</span>
+                  <p className="mt-0.5 text-xs text-white/50 line-clamp-2">{coaching[k]}</p>
                 </div>
               ))}
             </div>

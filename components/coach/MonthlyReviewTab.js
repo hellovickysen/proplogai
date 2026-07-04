@@ -46,7 +46,7 @@ function ReviewCard({ report }) {
               {Object.entries(scores).map(([key, val]) => (
                 <div key={key} className="flex-1 rounded-lg border border-white/5 bg-black/20 py-1.5 text-center">
                   <div className={'font-display text-base font-bold ' + scoreColor(val)}>{val}</div>
-                  <div className="font-mono text-[7px] uppercase tracking-wider text-white/25">{key.replace(/_/g, ' ')}</div>
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-white/25">{key.replace(/_/g, ' ')}</div>
                 </div>
               ))}
             </div>

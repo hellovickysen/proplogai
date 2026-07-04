@@ -81,7 +81,7 @@ export default function OverviewTab({ reports, tradeAnalyses }) {
                 <div className={'mt-1.5 font-display text-2xl font-bold ' + scoreColor(val)}>
                   {latestScores[key] != null ? latestScores[key] : '—'}
                 </div>
-                <div className="mt-0.5 font-mono text-[9px] uppercase tracking-wider text-white/35">{label}</div>
+                <div className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-white/35">{label}</div>
                 {scoreHistory[key].length > 1 && <div className="mt-1.5"><Sparkline data={scoreHistory[key]} /></div>}
               </div>
             );
@@ -122,7 +122,7 @@ export default function OverviewTab({ reports, tradeAnalyses }) {
               <div className={'font-display text-lg font-bold ' + (s.gradient ? '' : s.color ? scoreColor(s.val) : '')} style={s.gradient ? gradientText : undefined}>
                 {s.val}
               </div>
-              <div className="font-mono text-[8px] uppercase tracking-wider text-white/30">{s.label}</div>
+              <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">{s.label}</div>
             </div>
           ))}
         </div>

@@ -10,14 +10,14 @@ function InsightCard({ icon, title, items, emptyText }) {
       {items && items.length > 0 ? (
         <div className="space-y-1">
           {items.map((item, i) => (
-            <div key={i} className="flex items-start justify-between gap-2 text-[11px]">
+            <div key={i} className="flex items-start justify-between gap-2 text-xs">
               <span className="text-white/55">{typeof item === 'string' ? item : item.text}</span>
-              {item.stat && <span className="shrink-0 font-mono text-[9px] text-white/25">{item.stat}</span>}
+              {item.stat && <span className="shrink-0 font-mono text-xs text-white/25">{item.stat}</span>}
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-[11px] text-white/20">{emptyText || 'Not enough data'}</p>
+        <p className="text-xs text-white/20">{emptyText || 'Not enough data'}</p>
       )}
     </div>
   );
@@ -74,7 +74,7 @@ export default function InsightsTab({ reports, analyses }) {
           <div className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-emerald-400/60">Improvements</div>
           <div className="space-y-1">
             {improvements.map((imp, i) => (
-              <div key={i} className="flex items-start gap-1.5 text-[11px] text-emerald-300/60">
+              <div key={i} className="flex items-start gap-1.5 text-xs text-emerald-300/60">
                 <span className="text-emerald-400">✔</span><span>{imp}</span>
               </div>
             ))}
