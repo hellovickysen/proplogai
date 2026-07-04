@@ -25,7 +25,9 @@ function OneHabitCard({ report }) {
         <div className="flex h-6 w-6 items-center justify-center rounded-lg text-xs" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>P</div>
         <span className="font-mono text-[10px] uppercase tracking-wider text-amber-400/60">If you fix one thing</span>
       </div>
-      <div className="text-base font-semibold text-white/90 mb-3">{oneHabit.habit}</div>
+      <div className="text-base font-semibold text-white/90">{oneHabit.habit}</div>
+      {oneHabit.reason && <p className="mt-1 mb-3 text-sm text-white/50">{oneHabit.reason}</p>}
+      {!oneHabit.reason && <div className="mb-3" />}
       <div className="flex flex-wrap gap-4">
         {oneHabit.estimated_pnl_impact != null && (
           <div>

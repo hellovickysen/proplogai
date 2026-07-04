@@ -55,9 +55,8 @@ export default function HeroCard({ report, persona, userName }) {
       {oneHabit && (
         <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-4">
           <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400/70 mb-2">If you fix one thing</div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-base font-semibold text-white/90">{oneHabit.habit}</span>
-          </div>
+          <div className="text-base font-semibold text-white/90">{oneHabit.habit}</div>
+          {oneHabit.reason && <p className="mt-1 text-sm text-white/50">{oneHabit.reason}</p>}
           <div className="mt-2 flex flex-wrap items-center gap-4">
             {oneHabit.estimated_pnl_impact != null && (
               <div>
