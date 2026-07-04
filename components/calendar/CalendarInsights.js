@@ -17,7 +17,7 @@ function Tooltip({ text }) {
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
         onClick={() => setShow((s) => !s)}
-        className="grid h-4 w-4 place-items-center rounded-full border border-white/15 text-[9px] text-white/30 hover:text-white/50"
+        className="grid h-4 w-4 place-items-center rounded-full border border-white/15 text-[11px] text-white/30 hover:text-white/50"
         aria-label="Info"
       >
         i

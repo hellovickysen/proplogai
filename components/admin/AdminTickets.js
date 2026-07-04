@@ -117,7 +117,7 @@ function MessageBubble({ reply }) {
           <span className={`font-mono text-[10px] uppercase tracking-wider ${isAdmin ? 'text-cyan-400/70' : 'text-violet-400/70'}`}>
             {isAdmin ? 'You (Admin)' : 'User'}
           </span>
-          <span className="font-mono text-[10px] text-white/25">{fmtDate(reply.created_at)}</span>
+          <span className="font-mono text-[10px] text-white/40">{fmtDate(reply.created_at)}</span>
         </div>
         <p className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed">{reply.message}</p>
         {screenshots.length > 0 && (
@@ -268,7 +268,7 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
         <div className="mb-2 flex items-center gap-2">
           <span className="grid h-5 w-5 place-items-center rounded bg-violet-500/20 text-[10px] text-violet-300">U</span>
           <span className="font-mono text-[10px] uppercase tracking-wider text-violet-400/70">User</span>
-          <span className="font-mono text-[10px] text-white/25">{fmtDate(ticket.created_at)}</span>
+          <span className="font-mono text-[10px] text-white/40">{fmtDate(ticket.created_at)}</span>
         </div>
         <p className="text-sm text-white/70 whitespace-pre-wrap leading-relaxed">{ticket.description}</p>
       </div>
@@ -309,7 +309,7 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
             maxLength={5000}
           />
           <div className="mt-3 flex items-center justify-between">
-            <p className="font-mono text-[10px] text-white/25">{replyText.length}/5000</p>
+            <p className="font-mono text-[10px] text-white/40">{replyText.length}/5000</p>
             <button type="submit" disabled={saving || !replyText.trim()} className="rounded-lg px-5 py-2 text-xs font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
               {saving ? 'Sending...' : 'Send Reply'}
             </button>
@@ -346,7 +346,7 @@ function TicketListCard({ ticket, onClick, selectMode, selected, onToggle }) {
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              {ticketNum && <span className="font-mono text-[10px] text-white/25">{ticketNum}</span>}
+              {ticketNum && <span className="font-mono text-[10px] text-white/40">{ticketNum}</span>}
               <h3 className="font-display text-sm font-semibold">{ticket.subject}</h3>
               <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
               <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (STATUS_STYLES[ticket.status] || '')}>{STATUS_LABELS[ticket.status] || ticket.status}</span>

@@ -167,7 +167,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                             </div>
                             <div className="flex flex-1 flex-col items-center justify-center overflow-hidden px-0.5">
                               <span className="text-xs font-semibold text-white/50">Week {wi + 1}</span>
-                              <span className={'truncate max-w-full font-mono text-lg font-extrabold ' + (ws.count === 0 ? 'text-white/25' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                              <span className={'truncate max-w-full font-mono text-lg font-extrabold ' + (ws.count === 0 ? 'text-white/40' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                                 {fmtPnl(ws.net)}
                               </span>
                               <span className="text-[10px] text-white/45">{ws.count} trades</span>
@@ -328,7 +328,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
             {weekSummaries.map((ws) => (
               <div key={ws.weekNum} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-2 py-2.5 text-center">
                 <div className="text-[10px] font-medium text-white/40">Week {ws.weekNum}</div>
-                <div className={'mt-1 font-mono text-sm font-bold ' + (ws.count === 0 ? 'text-white/20' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                <div className={'mt-1 font-mono text-sm font-bold ' + (ws.count === 0 ? 'text-white/35' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                   {ws.count === 0 ? '$0' : fmtPnlShort(ws.net)}
                 </div>
                 <div className="text-[10px] text-white/35">{ws.days} day{ws.days !== 1 ? 's' : ''}</div>

@@ -120,7 +120,7 @@ export default function AdminTradeList({ trades, jmap }) {
                       {j.confidence > 0 && (
                         <div className="mb-2 flex gap-0.5 text-sm">
                           {[1, 2, 3, 4, 5].map((i) => (
-                            <span key={i} className={i <= j.confidence ? 'text-amber-400' : 'text-white/20'}>★</span>
+                            <span key={i} className={i <= j.confidence ? 'text-amber-400' : 'text-white/35'}>★</span>
                           ))}
                         </div>
                       )}
@@ -138,7 +138,7 @@ export default function AdminTradeList({ trades, jmap }) {
                       )}
                     </div>
                   ) : (
-                    <div className="text-xs text-white/25">No journal entry</div>
+                    <div className="text-xs text-white/40">No journal entry</div>
                   )}
                 </div>
               )}

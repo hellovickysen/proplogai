@@ -118,7 +118,7 @@ export default function NotificationList({ initial, total }) {
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] py-16 text-center">
           <span className="text-4xl opacity-40">🔕</span>
           <p className="text-sm font-medium text-white/40">{showUnreadOnly ? 'No unread notifications' : 'No notifications'}</p>
-          <p className="text-xs text-white/25">{showUnreadOnly ? 'All caught up!' : 'Your activity will show up here as you use PropLogAI.'}</p>
+          <p className="text-xs text-white/40">{showUnreadOnly ? 'All caught up!' : 'Your activity will show up here as you use PropLogAI.'}</p>
         </div>
       ) : (
         <div className="flex flex-col gap-1">
@@ -151,7 +151,7 @@ export default function NotificationList({ initial, total }) {
                   </div>
                   {item.message && <p className="mt-0.5 text-xs text-white/40">{item.message}</p>}
                   <div className="mt-1.5 flex items-center gap-3">
-                    <span className="font-mono text-[10px] text-white/25">{timeAgo(item.created_at)}</span>
+                    <span className="font-mono text-[10px] text-white/40">{timeAgo(item.created_at)}</span>
                     {!item.is_read && (
                       <button onClick={() => handleRead(item.id)} className="text-[10px] font-medium text-cyan-400/70 hover:text-cyan-400">
                         Mark read

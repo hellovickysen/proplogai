@@ -122,9 +122,9 @@ export default function PnlCalendar({ trades, monthPnl }) {
                   <span
                     className={
                       isToday
-                        ? 'grid h-5 w-5 place-items-center rounded-full bg-cyan-500 font-mono text-[9px] font-bold text-white'
+                        ? 'grid h-5 w-5 place-items-center rounded-full bg-cyan-500 font-mono text-[11px] font-bold text-white'
                         : isOverflow
-                        ? 'font-mono text-[10px] text-white/20'
+                        ? 'font-mono text-[10px] text-white/35'
                         : 'font-mono text-[10px] text-white/45'
                     }
                   >
@@ -205,7 +205,7 @@ export default function PnlCalendar({ trades, monthPnl }) {
                       isToday
                         ? 'grid h-5 w-5 place-items-center rounded-full bg-cyan-500 font-mono text-[10px] font-bold text-white'
                         : isOverflow
-                        ? 'font-mono text-[11px] text-white/20'
+                        ? 'font-mono text-[11px] text-white/35'
                         : 'font-mono text-[11px] text-white/50'
                     }
                   >
@@ -217,7 +217,7 @@ export default function PnlCalendar({ trades, monthPnl }) {
                     <div className={'truncate font-mono text-xs font-bold leading-tight ' + (win ? 'text-emerald-300' : 'text-red-300')}>
                       {(pnl >= 0 ? '+' : '-') + '$' + Math.abs(Math.round(pnl))}
                     </div>
-                    <div className="truncate font-mono text-[9px] leading-tight text-white/35">
+                    <div className="truncate font-mono text-[11px] leading-tight text-white/35">
                       {entry.count} trade{entry.count !== 1 ? 's' : ''}
                     </div>
                   </div>

@@ -63,7 +63,7 @@ function TrendChart({ data, label, color = '#a78bfa' }) {
           );
         })}
       </svg>
-      <div className="mt-2 flex justify-between font-mono text-[9px] text-white/30">
+      <div className="mt-2 flex justify-between font-mono text-[11px] text-white/30">
         <span>{data[0]?.date?.slice(5) || ''}</span>
         <span>{data[data.length - 1]?.date?.slice(5) || ''}</span>
       </div>

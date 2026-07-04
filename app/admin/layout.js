@@ -57,7 +57,7 @@ export default async function AdminLayout({ children }) {
             <span className="grid h-8 w-8 place-items-center rounded-lg text-sm" style={{ background: 'linear-gradient(135deg,#f87171,#fbbf24)' }}>&#9881;</span>
             <div>
               <span className="font-display text-sm font-bold">Admin Panel</span>
-              <p className="font-mono text-[9px] text-white/40">PropLogAI</p>
+              <p className="font-mono text-[11px] text-white/40">PropLogAI</p>
             </div>
           </Link>
         </div>
@@ -109,7 +109,7 @@ export default async function AdminLayout({ children }) {
               <span>{item.label}</span>
               {item.label === 'Tickets' && ticketCount > 0 && (
                 <span
-                  className="flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-[#08080f]"
+                  className="flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[11px] font-bold text-[#08080f]"
                   style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
                 >
                   {ticketCount}

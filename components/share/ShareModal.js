@@ -196,7 +196,7 @@ export default function ShareModal({ type, data, onClose }) {
           </button>
         </div>
 
-        <p className="text-[10px] text-white/25">HD export &middot; Share on Twitter, Instagram Stories, or TikTok</p>
+        <p className="text-[10px] text-white/40">HD export &middot; Share on Twitter, Instagram Stories, or TikTok</p>
       </div>
     </div>
   );

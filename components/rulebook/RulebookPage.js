@@ -292,7 +292,7 @@ export default function RulebookPage({ setups }) {
         >
           {resetting ? 'Restoring...' : 'Restore default setups'}
         </button>
-        <p className="mt-1 text-[10px] text-white/25">Replaces all your current setups with the 7 default setups.</p>
+        <p className="mt-1 text-[10px] text-white/40">Replaces all your current setups with the 7 default setups.</p>
       </div>
 
       {/* Delete confirmation */}

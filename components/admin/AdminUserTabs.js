@@ -105,7 +105,7 @@ export default function AdminUserTabs({ users, search }) {
                 </td>
                 {tab === 'banned' && (
                   <td className="max-w-[200px] px-4 py-3 text-xs text-white/50">
-                    {u.banReason || <span className="text-white/25">No reason</span>}
+                    {u.banReason || <span className="text-white/40">No reason</span>}
                   </td>
                 )}
                 <td className="px-4 py-3">

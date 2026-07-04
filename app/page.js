@@ -231,7 +231,7 @@ export default async function Home() {
                     { label: 'Payouts', value: '$1.2k' },
                   ].map((stat) => (
                     <div key={stat.label} className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                      <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/32">{stat.label}</div>
+                      <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-white/32">{stat.label}</div>
                       <div className="mt-1 font-display text-lg font-bold text-white">{stat.value}</div>
                     </div>
                   ))}
@@ -331,14 +331,14 @@ export default async function Home() {
                 { label: 'Total P&L', val: '+$2,847', color: 'text-emerald-400' },
               ].map((s) => (
                 <div key={s.label} className="rounded-xl border border-white/8 bg-black/30 p-3">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-white/30">{s.label}</div>
+                  <div className="font-mono text-[11px] uppercase tracking-wider text-white/30">{s.label}</div>
                   <div className={`mt-1 font-display text-sm font-bold ${s.color}`}>{s.val}</div>
                 </div>
               ))}
             </div>
             {/* Fake equity curve */}
             <div className="rounded-xl border border-white/8 bg-black/20 p-4">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-white/30 mb-3">Equity curve</div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-white/30 mb-3">Equity curve</div>
               <svg viewBox="0 0 400 80" className="w-full h-16" preserveAspectRatio="none">
                 <defs>
                   <linearGradient id="eq" x1="0" y1="0" x2="0" y2="1">
@@ -430,7 +430,7 @@ export default async function Home() {
             </div>
             <div className="grid grid-cols-7 gap-1 mb-2">
               {['M','T','W','T','F','S','S'].map((d, i) => (
-                <div key={i} className="text-center font-mono text-[9px] text-white/25 pb-1">{d}</div>
+                <div key={i} className="text-center font-mono text-[11px] text-white/40 pb-1">{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 gap-1.5">
@@ -494,14 +494,14 @@ export default async function Home() {
                 { label: 'Net ROI', val: '+84.3%', color: 'text-emerald-400' },
               ].map((s) => (
                 <div key={s.label} className="rounded-xl border border-white/8 bg-black/30 p-3">
-                  <div className="font-mono text-[9px] uppercase tracking-wider text-white/30">{s.label}</div>
+                  <div className="font-mono text-[11px] uppercase tracking-wider text-white/30">{s.label}</div>
                   <div className={`mt-1 font-display text-sm font-bold ${s.color}`}>{s.val}</div>
                 </div>
               ))}
             </div>
             {/* Accounts list */}
             <div className="rounded-xl border border-white/8 bg-black/20 p-4">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-white/30 mb-3">Accounts</div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-white/30 mb-3">Accounts</div>
               <div className="space-y-2.5">
                 {[
                   { firm: 'FTMO', size: '$200K', cost: '$1,080', status: 'Funded', sc: 'text-emerald-300 bg-emerald-400/12 border-emerald-400/20' },
@@ -516,7 +516,7 @@ export default async function Home() {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="font-mono text-[10px] text-white/40">{acc.cost}</span>
-                      <span className={`rounded-full border px-2 py-0.5 text-[9px] font-semibold ${acc.sc}`}>{acc.status}</span>
+                      <span className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold ${acc.sc}`}>{acc.status}</span>
                     </div>
                   </div>
                 ))}
@@ -525,7 +525,7 @@ export default async function Home() {
             {/* Latest payout */}
             <div className="mt-4 flex items-center justify-between rounded-xl border border-emerald-300/15 bg-emerald-300/8 p-3">
               <div>
-                <div className="font-mono text-[9px] uppercase tracking-wider text-emerald-300/60">Latest payout</div>
+                <div className="font-mono text-[11px] uppercase tracking-wider text-emerald-300/60">Latest payout</div>
                 <div className="mt-0.5 text-sm font-bold text-emerald-300">$3,420 from FTMO</div>
               </div>
               <span className="text-xs text-emerald-300/50">Jun 15</span>
@@ -588,7 +588,7 @@ export default async function Home() {
                 { label: 'Payouts', val: '$8.2K' },
               ].map((s) => (
                 <div key={s.label} className="rounded-lg border border-white/8 bg-black/30 p-2 text-center">
-                  <div className="font-mono text-[8px] uppercase tracking-wider text-white/25">{s.label}</div>
+                  <div className="font-mono text-[8px] uppercase tracking-wider text-white/40">{s.label}</div>
                   <div className="mt-0.5 font-display text-[11px] font-bold text-emerald-300">{s.val}</div>
                 </div>
               ))}
@@ -596,8 +596,8 @@ export default async function Home() {
             {/* Mini calendar */}
             <div className="rounded-xl border border-white/8 bg-black/20 p-3 mb-3">
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-mono text-[9px] uppercase tracking-wider text-white/30">P&L Calendar</span>
-                <span className="font-mono text-[9px] text-emerald-300">+$2,847</span>
+                <span className="font-mono text-[11px] uppercase tracking-wider text-white/30">P&L Calendar</span>
+                <span className="font-mono text-[11px] text-emerald-300">+$2,847</span>
               </div>
               <div className="grid grid-cols-7 gap-1">
                 {[
@@ -611,20 +611,20 @@ export default async function Home() {
             </div>
             {/* Trophies */}
             <div className="rounded-xl border border-white/8 bg-black/20 p-3 mb-3">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-white/30 mb-2">Trophies</div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-white/30 mb-2">Trophies</div>
               <div className="flex flex-wrap gap-1.5">
                 {[
                   { icon: '🏆', label: 'FTMO Funded' },
                   { icon: '💰', label: '$3.4K Payout' },
                   { icon: '🏆', label: 'TFT Phase 2' },
                 ].map((t, i) => (
-                  <span key={i} className="rounded-lg border border-amber-400/15 bg-amber-400/8 px-2 py-1 text-[9px] text-amber-200">{t.icon} {t.label}</span>
+                  <span key={i} className="rounded-lg border border-amber-400/15 bg-amber-400/8 px-2 py-1 text-[11px] text-amber-200">{t.icon} {t.label}</span>
                 ))}
               </div>
             </div>
             {/* Verified payouts */}
             <div className="rounded-xl border border-emerald-300/12 bg-emerald-300/6 p-3">
-              <div className="font-mono text-[9px] uppercase tracking-wider text-emerald-300/50 mb-2">Verified Payouts</div>
+              <div className="font-mono text-[11px] uppercase tracking-wider text-emerald-300/50 mb-2">Verified Payouts</div>
               <div className="space-y-1.5">
                 {[
                   { firm: 'FTMO', amount: '+$3,420', date: 'Jun 15' },
@@ -635,7 +635,7 @@ export default async function Home() {
                     <span className="text-white/50">{p.firm}</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-semibold text-emerald-300">{p.amount}</span>
-                      <span className="text-white/25">{p.date}</span>
+                      <span className="text-white/40">{p.date}</span>
                     </div>
                   </div>
                 ))}

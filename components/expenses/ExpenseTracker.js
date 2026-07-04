@@ -1021,10 +1021,10 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                             </div>
                             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-xs text-white/45">
                               <span>{firm.accounts} acct{firm.accounts !== 1 ? 's' : ''}</span>
-                              <span className="text-white/20">&middot;</span>
+                              <span className="text-white/35">&middot;</span>
                               <span>{firm.expenseCount} expense{firm.expenseCount !== 1 ? 's' : ''}</span>
-                              {firm.payoutCount > 0 && <><span className="text-white/20">&middot;</span><span className="text-emerald-400/60">{firm.payoutCount} payout{firm.payoutCount !== 1 ? 's' : ''}</span></>}
-                              {firm.trophyCount > 0 && <><span className="text-white/20">&middot;</span><span className="text-amber-400/60">{firm.trophyCount} troph{firm.trophyCount !== 1 ? 'ies' : 'y'}</span></>}
+                              {firm.payoutCount > 0 && <><span className="text-white/35">&middot;</span><span className="text-emerald-400/60">{firm.payoutCount} payout{firm.payoutCount !== 1 ? 's' : ''}</span></>}
+                              {firm.trophyCount > 0 && <><span className="text-white/35">&middot;</span><span className="text-amber-400/60">{firm.trophyCount} troph{firm.trophyCount !== 1 ? 'ies' : 'y'}</span></>}
                             </div>
                           </div>
                           <div className="text-right">

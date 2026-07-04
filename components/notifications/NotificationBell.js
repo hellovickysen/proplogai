@@ -281,7 +281,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
               <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
                 <span className="text-2xl opacity-40">🔕</span>
                 <p className="text-sm font-medium text-white/40">No notifications yet</p>
-                <p className="text-xs text-white/25">Your activity will show up here.</p>
+                <p className="text-xs text-white/40">Your activity will show up here.</p>
               </div>
             ) : (
               items.map((item) => {
@@ -307,7 +307,7 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
                       {item.message && (
                         <p className="mt-0.5 truncate text-xs text-white/40">{item.message}</p>
                       )}
-                      <p className="mt-1 font-mono text-[10px] text-white/25">{timeAgo(item.created_at)}</p>
+                      <p className="mt-1 font-mono text-[10px] text-white/40">{timeAgo(item.created_at)}</p>
                     </div>
                     {/* Unread dot */}
                     {!item.is_read && (

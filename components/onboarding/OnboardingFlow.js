@@ -138,7 +138,7 @@ export default function OnboardingFlow({ userEmail }) {
                   i === 0 ? (
                     <button key={i} type="button" onClick={() => setDefaultConfidence(0)} className={'rounded-lg border px-2 py-1 text-xs ' + (defaultConfidence === 0 ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 text-white/30')}>None</button>
                   ) : (
-                    <button key={i} type="button" onClick={() => setDefaultConfidence(i)} className={i <= defaultConfidence ? 'text-amber-400' : 'text-white/20'}>&#9733;</button>
+                    <button key={i} type="button" onClick={() => setDefaultConfidence(i)} className={i <= defaultConfidence ? 'text-amber-400' : 'text-white/35'}>&#9733;</button>
                   )
                 )}
               </div>
