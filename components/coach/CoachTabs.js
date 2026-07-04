@@ -6,7 +6,7 @@ const TABS = [
   { id: 'overview', label: 'Overview', icon: '◎' },
   { id: 'analysis', label: 'Trade Analysis', icon: '✦' },
   { id: 'review', label: 'Monthly Review', icon: '📊' },
-  { id: 'insights', label: 'Insights', icon: '💡' },
+  { id: 'playbook', label: 'Playbook', icon: '📋' },
 ];
 
 export default function CoachTabs({ active, onChange }) {

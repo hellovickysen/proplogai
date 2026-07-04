@@ -2,17 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toggleHabitLog, createHabit, deleteHabit } from '@/app/dashboard/coach/habit-actions';
+import HeroCard from './HeroCard';
+import { toggleHabitLog, createHabit } from '@/app/dashboard/coach/habit-actions';
 
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
-
-const SCORE_KEYS = [
-  { key: 'discipline', label: 'Discipline', icon: '🎯' },
-  { key: 'psychology', label: 'Psychology', icon: '🧠' },
-  { key: 'consistency', label: 'Consistency', icon: '📈' },
-  { key: 'risk_management', label: 'Risk Mgmt', icon: '🛡️' },
-  { key: 'execution', label: 'Execution', icon: '⚡' },
-];
 
 function scoreColor(val) {
   if (val >= 80) return 'text-emerald-400';
@@ -21,91 +14,171 @@ function scoreColor(val) {
   return 'text-red-400';
 }
 
-function scoreBg(val) {
-  if (val >= 80) return 'border-emerald-400/20 bg-emerald-500/[0.06]';
-  if (val >= 60) return 'border-amber-400/20 bg-amber-500/[0.06]';
-  if (val >= 40) return 'border-orange-400/20 bg-orange-500/[0.06]';
-  return 'border-red-400/20 bg-red-500/[0.06]';
-}
-
-function TrendArrow({ current, previous }) {
+function trendLabel(current, previous) {
   if (previous == null || current == null) return null;
   const diff = current - previous;
-  if (diff === 0) return null;
+  if (diff === 0) return { text: 'Stable', color: 'text-white/30', arrow: '' };
+  if (diff > 0) return { text: `↑${diff} this month`, color: 'text-emerald-400', arrow: '↑' };
+  return { text: `↓${Math.abs(diff)} this month`, color: 'text-red-400', arrow: '↓' };
+}
+
+function stars(score) {
+  const s = Math.round(score / 20);
+  return '★'.repeat(s) + '☆'.repeat(5 - s);
+}
+
+/* ── Trader Score ──────────────────────────────────────────── */
+function TraderScore({ reports }) {
+  const latest = reports?.[0]?.mistakes;
+  const previous = reports?.[1]?.mistakes;
+  const overallScore = latest?.overall_score ?? (latest?.scores
+    ? Math.round(Object.values(latest.scores).reduce((a, b) => a + b, 0) / Object.values(latest.scores).length)
+    : null);
+  const prevScore = previous?.overall_score ?? (previous?.scores
+    ? Math.round(Object.values(previous.scores).reduce((a, b) => a + b, 0) / Object.values(previous.scores).length)
+    : null);
+
+  if (overallScore == null) return null;
+
+  const trend = trendLabel(overallScore, prevScore);
+  const trendWord = overallScore > (prevScore || 0) ? 'Improving' : overallScore === prevScore ? 'Stable' : 'Needs work';
+
+  // Progress timeline from reports
+  const timeline = [...(reports || [])].reverse()
+    .map((r) => r?.mistakes?.overall_score ?? (r?.mistakes?.scores ? Math.round(Object.values(r.mistakes.scores).reduce((a, b) => a + b, 0) / Object.values(r.mistakes.scores).length) : null))
+    .filter((v) => v != null);
+
   return (
-    <span className={'font-mono text-[10px] ' + (diff > 0 ? 'text-emerald-400' : 'text-red-400')}>
-      {diff > 0 ? '▲' : '▼'}{Math.abs(diff)}
-    </span>
+    <div className="flex flex-col items-center text-center py-2">
+      <div className="font-mono text-[10px] uppercase tracking-wider text-white/30 mb-1">Trader Score</div>
+      <div className={'font-display text-5xl font-bold ' + scoreColor(overallScore)}>{overallScore}</div>
+      <div className="mt-1 text-lg tracking-wider" style={{ color: 'rgba(251,191,36,0.7)' }}>{stars(overallScore)}</div>
+      <div className={'mt-1 text-xs font-medium ' + (trend ? trend.color : 'text-white/30')}>
+        {trendWord} {trend && trend.text !== 'Stable' ? `· ${trend.text}` : ''}
+      </div>
+      {/* Mini timeline */}
+      {timeline.length > 1 && (
+        <div className="mt-3 flex items-end gap-1">
+          {timeline.map((v, i) => (
+            <div key={i} className="flex flex-col items-center gap-0.5">
+              <div className={'rounded-sm transition-all ' + scoreColor(v)} style={{ width: 12, height: Math.max(4, (v / 100) * 32), background: i === timeline.length - 1 ? 'linear-gradient(120deg,#a78bfa,#22d3ee)' : 'rgba(255,255,255,0.15)' }} />
+              <span className="font-mono text-[7px] text-white/20">{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-function Sparkline({ data }) {
-  if (!data || data.length < 2) return null;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  const w = 100, h = 24;
-  const points = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ');
+/* ── Trader DNA ───────────────────────────────────────────── */
+function TraderDNA({ persona, scores }) {
+  const traits = [
+    { label: 'Execution', value: scores?.execution || 0 },
+    { label: 'Discipline', value: scores?.discipline || 0 },
+    { label: 'Psychology', value: scores?.psychology || 0 },
+    { label: 'Consistency', value: scores?.consistency || 0 },
+    { label: 'Risk Mgmt', value: scores?.risk_management || 0 },
+    { label: 'Confidence', value: persona?.avgConfidence ? Math.round(persona.avgConfidence * 20) : 0 },
+  ];
+
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="h-6 w-full" preserveAspectRatio="none">
-      <polyline points={points} fill="none" stroke="url(#sg)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-      <defs><linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stopColor="#a78bfa" /><stop offset="100%" stopColor="#22d3ee" /></linearGradient></defs>
-    </svg>
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/30">Trader DNA</div>
+      <div className="space-y-2.5">
+        {traits.map((t, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <span className="w-20 shrink-0 text-xs text-white/50">{t.label}</span>
+            <div className="h-2.5 flex-1 rounded-full bg-white/[0.06]">
+              <div className="h-full rounded-full transition-all" style={{ width: t.value + '%', background: t.value >= 70 ? '#34d399' : t.value >= 40 ? '#fbbf24' : '#f87171' }} />
+            </div>
+            <span className={'w-8 text-right font-mono text-xs ' + scoreColor(t.value)}>{t.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── Score Detail Cards (collapsible) ─────────────────────── */
+function ScoreDetails({ scores, previousScores }) {
+  const [open, setOpen] = useState(false);
+  if (!scores || Object.keys(scores).length === 0) return null;
+
+  const KEYS = [
+    { key: 'discipline', icon: '🎯' },
+    { key: 'psychology', icon: '🧠' },
+    { key: 'consistency', icon: '📈' },
+    { key: 'risk_management', icon: '🛡️' },
+    { key: 'execution', icon: '⚡' },
+  ];
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03]">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-3.5 text-left hover:bg-white/[0.02]">
+        <span className="font-mono text-[10px] uppercase tracking-wider text-white/30">Detailed Scores</span>
+        <span className={'text-white/20 text-xs transition-transform ' + (open ? 'rotate-180' : '')}>▾</span>
+      </button>
+      {open && (
+        <div className="border-t border-white/5 p-3.5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+          {KEYS.map(({ key, icon }) => {
+            const val = scores[key] || 0;
+            const prev = previousScores?.[key];
+            const trend = trendLabel(val, prev);
+            const needsAttention = val < 60;
+            return (
+              <div key={key} className="rounded-xl border border-white/8 bg-white/[0.02] p-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <span className="text-xs">{icon}</span>
+                  <span className="font-mono text-[10px] uppercase text-white/35">{key.replace(/_/g, ' ')}</span>
+                </div>
+                <div className={'font-display text-xl font-bold ' + scoreColor(val)}>{val}</div>
+                {trend && <div className={'font-mono text-[10px] ' + trend.color}>{trend.text}</div>}
+                {needsAttention && <div className="mt-1 font-mono text-[9px] text-red-400/60">Needs attention</div>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
 /* ── Streak badge ─────────────────────────────────────────── */
 function StreakBadge({ icon, label, current, best }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5">
-      <span className="text-lg">{icon}</span>
+    <div className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2">
+      <span className="text-base">{icon}</span>
       <div className="flex-1">
-        <div className="text-xs text-white/50">{label}</div>
-        <div className="flex items-baseline gap-2">
-          <span className={'font-display text-lg font-bold ' + (current > 0 ? 'text-amber-400' : 'text-white/30')}>{current}d</span>
-          <span className="font-mono text-[10px] text-white/25">best {best}d</span>
+        <div className="text-[10px] text-white/35">{label}</div>
+        <div className="flex items-baseline gap-1.5">
+          <span className={'font-display text-base font-bold ' + (current > 0 ? 'text-amber-400' : 'text-white/25')}>{current}d</span>
+          <span className="font-mono text-[9px] text-white/20">best {best}d</span>
         </div>
       </div>
     </div>
   );
 }
 
-/* ── Persona metric ───────────────────────────────────────── */
-function PersonaMetric({ label, value, sub, color }) {
-  return (
-    <div className="rounded-xl border border-white/8 bg-white/[0.02] px-3 py-2.5">
-      <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">{label}</div>
-      <div className={'mt-0.5 text-sm font-semibold ' + (color || 'text-white/70')}>{value || '—'}</div>
-      {sub && <div className="font-mono text-[10px] text-white/25">{sub}</div>}
-    </div>
-  );
-}
-
 /* ── Habit row ────────────────────────────────────────────── */
-function HabitRow({ habit, completed, autoCompleted, todayDate, onToggle }) {
+function HabitRow({ habit, completed, autoCompleted, onToggle }) {
   const isAuto = !habit.is_custom;
   const done = isAuto ? autoCompleted : completed;
-
   return (
-    <div className="flex items-center gap-3 py-1.5">
-      <button
-        onClick={() => !isAuto && onToggle(habit.id, !done)}
-        disabled={isAuto}
-        className={'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors ' +
-          (done
-            ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-400'
-            : 'border-white/15 bg-white/[0.03] text-transparent hover:border-white/25')
-        }
-      >
-        {done && <span className="text-xs">✓</span>}
+    <div className="flex items-center gap-2.5 py-1">
+      <button onClick={() => !isAuto && onToggle(habit.id, !done)} disabled={isAuto}
+        className={'flex h-4.5 w-4.5 shrink-0 items-center justify-center rounded border transition-colors ' +
+          (done ? 'border-emerald-400/40 bg-emerald-500/20 text-emerald-400' : 'border-white/15 bg-white/[0.03] text-transparent hover:border-white/25')}>
+        {done && <span className="text-[10px]">✓</span>}
       </button>
-      <span className={'flex-1 text-sm ' + (done ? 'text-white/50 line-through' : 'text-white/70')}>{habit.name}</span>
-      {isAuto && <span className="font-mono text-[9px] text-white/20">auto</span>}
+      <span className={'flex-1 text-xs ' + (done ? 'text-white/40 line-through' : 'text-white/60')}>{habit.name}</span>
+      {isAuto && <span className="font-mono text-[8px] text-white/15">auto</span>}
     </div>
   );
 }
 
-export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, habits, habitLogs, autoHabitStatus, todayDate }) {
+/* ── Main Overview ────────────────────────────────────────── */
+export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, habits, habitLogs, autoHabitStatus, todayDate, userName }) {
   const router = useRouter();
   const [newHabit, setNewHabit] = useState('');
   const [adding, setAdding] = useState(false);
@@ -115,14 +188,6 @@ export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, 
   const latestScores = latest?.mistakes?.scores || {};
   const previousScores = previous?.mistakes?.scores || {};
 
-  const scoreHistory = {};
-  SCORE_KEYS.forEach(({ key }) => { scoreHistory[key] = []; });
-  [...(reports || [])].reverse().forEach((r) => {
-    const s = r?.mistakes?.scores;
-    if (s) SCORE_KEYS.forEach(({ key }) => { if (s[key] != null) scoreHistory[key].push(s[key]); });
-  });
-
-  // Habit log lookup for today
   const todayLogs = {};
   (habitLogs || []).forEach((l) => { if (l.log_date === todayDate) todayLogs[l.habit_id] = l.completed; });
 
@@ -140,103 +205,51 @@ export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, 
   }
 
   return (
-    <div className="space-y-5">
-      {/* Score Cards */}
-      {latest ? (
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-5">
-          {SCORE_KEYS.map(({ key, label, icon }) => {
-            const val = latestScores[key] || 0;
-            return (
-              <div key={key} className={'rounded-2xl border p-3.5 ' + scoreBg(val)}>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs">{icon}</span>
-                  <TrendArrow current={latestScores[key]} previous={previousScores[key]} />
-                </div>
-                <div className={'mt-1.5 font-display text-2xl font-bold ' + scoreColor(val)}>
-                  {latestScores[key] != null ? latestScores[key] : '—'}
-                </div>
-                <div className="mt-0.5 font-mono text-[11px] uppercase tracking-wider text-white/35">{label}</div>
-                {scoreHistory[key].length > 1 && <div className="mt-1.5"><Sparkline data={scoreHistory[key]} /></div>}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
-          <div className="text-3xl mb-2">◎</div>
-          <p className="text-xs text-white/35">Generate a review to see scores</p>
-        </div>
-      )}
+    <div className="space-y-4">
+      {/* 1. Hero Card */}
+      <HeroCard report={latest} persona={persona} userName={userName} />
 
-      {/* Streaks */}
+      {/* 2. Trader Score + Timeline */}
+      <TraderScore reports={reports} />
+
+      {/* 3. Streaks */}
       {streaks && (
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-3 gap-2">
           <StreakBadge icon="🔥" label="Logging" current={streaks.logging?.current || 0} best={streaks.logging?.best || 0} />
           <StreakBadge icon="💰" label="Profit" current={streaks.profit?.current || 0} best={streaks.profit?.best || 0} />
           <StreakBadge icon="🎯" label="Discipline" current={streaks.discipline?.current || 0} best={streaks.discipline?.best || 0} />
         </div>
       )}
 
-      {/* Persona Profile */}
-      {persona && (
-        <div>
-          <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-white/30">Trader Profile</div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            <PersonaMetric label="Main emotion" value={persona.mainEmotion} color="text-violet-300" />
-            <PersonaMetric label="Common mistake" value={persona.commonMistake} color="text-red-300" />
-            <PersonaMetric label="Best session" value={persona.bestSession?.name} sub={persona.bestSession ? `${persona.bestSession.winRate}% WR` : null} color="text-emerald-300" />
-            <PersonaMetric label="Worst session" value={persona.worstSession?.name} sub={persona.worstSession ? `${persona.worstSession.winRate}% WR` : null} color="text-red-300" />
-            <PersonaMetric label="Confidence" value={persona.confidenceLevel} sub={persona.avgConfidence ? `avg ${persona.avgConfidence}/5` : null} />
-            <PersonaMetric label="Setup adherence" value={persona.adherencePct != null ? persona.adherencePct + '%' : '—'} color={persona.adherencePct >= 70 ? 'text-emerald-300' : 'text-amber-300'} />
-            <PersonaMetric label="Revenge days" value={persona.revengeDays + ' of ' + persona.totalDays} color={persona.revengeDays > 0 ? 'text-red-300' : 'text-emerald-300'} />
-            <PersonaMetric label="Trades" value={persona.tradeCount} />
-          </div>
-        </div>
+      {/* 4. Trader DNA */}
+      {(Object.keys(latestScores).length > 0 || persona) && (
+        <TraderDNA persona={persona} scores={latestScores} />
       )}
 
-      {/* Daily Habits */}
+      {/* 5. Detailed Scores (collapsible) */}
+      <ScoreDetails scores={latestScores} previousScores={previousScores} />
+
+      {/* 6. Daily Habits */}
       {habits && habits.length > 0 && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <div className="mb-2 flex items-center justify-between">
-            <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">Today&apos;s Habits</div>
-            <span className="font-mono text-[10px] text-white/20">{todayDate}</span>
+            <span className="font-mono text-[10px] uppercase tracking-wider text-white/30">Today&apos;s Habits</span>
+            <span className="font-mono text-[9px] text-white/15">{todayDate}</span>
           </div>
           <div className="space-y-0.5">
             {habits.map((h) => (
-              <HabitRow
-                key={h.id}
-                habit={h}
+              <HabitRow key={h.id} habit={h}
                 completed={!!todayLogs[h.id]}
                 autoCompleted={!h.is_custom && autoHabitStatus ? autoHabitStatus[
-                  h.name === 'Log trades daily' ? 'log_daily'
-                  : h.name === 'Tag emotions' ? 'tag_emotions'
-                  : h.name === 'Record lessons' ? 'record_lessons'
-                  : h.name === 'Follow setups' ? 'follow_setups'
-                  : ''
+                  h.name === 'Log trades daily' ? 'log_daily' : h.name === 'Tag emotions' ? 'tag_emotions' : h.name === 'Record lessons' ? 'record_lessons' : h.name === 'Follow setups' ? 'follow_setups' : ''
                 ] : false}
-                todayDate={todayDate}
-                onToggle={handleToggle}
-              />
+                onToggle={handleToggle} />
             ))}
           </div>
-          {/* Add custom habit */}
-          <div className="mt-3 flex items-center gap-2">
-            <input
-              type="text"
-              value={newHabit}
-              onChange={(e) => setNewHabit(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()}
-              placeholder="Add a habit..."
-              maxLength={60}
-              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-sm outline-none placeholder:text-white/20 focus:border-cyan-400/40"
-            />
-            <button
-              onClick={handleAddHabit}
-              disabled={adding || !newHabit.trim()}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white/50 hover:text-white/80 disabled:opacity-30"
-            >
-              + Add
-            </button>
+          <div className="mt-2 flex items-center gap-2">
+            <input type="text" value={newHabit} onChange={(e) => setNewHabit(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()} placeholder="Add a habit..." maxLength={60}
+              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs outline-none placeholder:text-white/20 focus:border-cyan-400/40" />
+            <button onClick={handleAddHabit} disabled={adding || !newHabit.trim()} className="rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white/40 hover:text-white/70 disabled:opacity-30">+Add</button>
           </div>
         </div>
       )}

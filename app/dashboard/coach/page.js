@@ -89,6 +89,14 @@ export default async function CoachPage() {
   const persona = computePersona(tradeList, jmap);
   const streaks = computeStreaks(tradeList);
 
+  // Fetch user name for Hero Card greeting
+  const { data: prefs } = await supabase
+    .from('user_preferences')
+    .select('full_name')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const userName = prefs?.full_name || user?.user_metadata?.full_name || null;
+
   // ── Habits ──
   let habits = [];
   let habitLogs = [];
@@ -155,6 +163,7 @@ export default async function CoachPage() {
         habitLogs={habitLogs}
         autoHabitStatus={autoHabitStatus}
         todayDate={todayDate}
+        userName={userName}
       />
     </div>
   );

@@ -14,7 +14,7 @@ const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', We
 export default function PropolCoachHub({
   reports, tradeAnalyses, tradeCount, access,
   coachUsed, coachLimit, analysisUsed, analysisLimit, emailEnabled,
-  persona, streaks, habits, habitLogs, autoHabitStatus, todayDate,
+  persona, streaks, habits, habitLogs, autoHabitStatus, todayDate, userName,
 }) {
   const [tab, setTab] = useState('overview');
   const [generating, setGenerating] = useState(false);
@@ -46,10 +46,10 @@ export default function PropolCoachHub({
         </div>
       )}
 
-      {tab === 'overview' && <OverviewTab reports={reports} tradeAnalyses={tradeAnalyses} persona={persona} streaks={streaks} habits={habits} habitLogs={habitLogs} autoHabitStatus={autoHabitStatus} todayDate={todayDate} />}
+      {tab === 'overview' && <OverviewTab reports={reports} tradeAnalyses={tradeAnalyses} persona={persona} streaks={streaks} habits={habits} habitLogs={habitLogs} autoHabitStatus={autoHabitStatus} todayDate={todayDate} userName={userName} />}
       {tab === 'analysis' && <TradeAnalysisTab analyses={tradeAnalyses} usedThisMonth={analysisUsed} limit={analysisLimit} />}
       {tab === 'review' && <MonthlyReviewTab reports={reports} usedThisMonth={coachUsed} limit={coachLimit} onGenerate={handleGenerate} generating={generating} hasEnough={hasEnough} tradeCount={tradeCount} access={access} />}
-      {tab === 'insights' && <InsightsTab reports={reports} analyses={tradeAnalyses} />}
+      {tab === 'playbook' && <InsightsTab reports={reports} analyses={tradeAnalyses} />}
     </div>
   );
 }
