@@ -31,7 +31,7 @@ function Tooltip({ text }) {
   );
 }
 
-/* ─── Trade Win Gauge (SVG semi-circle) ────────────────────── */
+/* ─── Win Rate Gauge (SVG semi-circle) ────────────────────── */
 
 function TradeWinGauge({ wins, losses, breakeven, total, winPct }) {
   const R = 60;
@@ -276,7 +276,7 @@ function computeInsights(trades, mode) {
   const winPct = total > 0 ? Math.round((wins / total) * 100) : 0;
 
   return {
-    // Trade Win gauge
+    // Win Rate gauge
     wins, losses, breakeven, total, winPct,
     // Day patterns
     mostActive: mostActive ? {
@@ -419,12 +419,12 @@ export default function CalendarInsights({ monthTrades, allTrades }) {
         ))}
       </div>
 
-      {/* Row 1-2: Trade Win gauge + 6 cards */}
+      {/* Row 1-2: Win Rate gauge + 6 cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
-        {/* Trade Win gauge — spans 2 rows on desktop */}
+        {/* Win Rate gauge — spans 2 rows on desktop */}
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:row-span-2 flex flex-col items-center justify-center">
           <div className="flex w-full items-center">
-            <span className="font-mono text-xs uppercase tracking-wider text-white/55">Trade Win</span>
+            <span className="font-mono text-xs uppercase tracking-wider text-white/55">Win Rate</span>
             <Tooltip text="Win rate breakdown: wins, breakeven (P&L = 0), and losses" />
           </div>
           <div className="mt-3">
