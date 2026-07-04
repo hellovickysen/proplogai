@@ -57,26 +57,16 @@ export default function HeroCard({ report, persona, userName }) {
           <div className="font-mono text-[10px] uppercase tracking-wider text-amber-400/70 mb-2">If you fix one thing</div>
           <div className="text-base font-semibold text-white/90">{oneHabit.habit}</div>
           {oneHabit.reason && <p className="mt-1 text-sm text-white/50">{oneHabit.reason}</p>}
-          <div className="mt-3 flex flex-wrap items-center gap-4">
-            {oneHabit.improvement && (
-              <div>
-                <div className="text-sm font-semibold text-emerald-400">{oneHabit.improvement}</div>
-                <div className="font-mono text-[11px] text-white/40">historical opportunity</div>
-              </div>
-            )}
-            {(oneHabit.evidence_strength ?? oneHabit.confidence_pct) != null && (
-              <div>
-                <div className="font-display text-lg font-bold text-cyan-400">{oneHabit.evidence_strength ?? oneHabit.confidence_pct}%</div>
-                <div className="font-mono text-[11px] text-white/40">evidence strength</div>
-              </div>
-            )}
-            {oneHabit.trade_count != null && (
-              <div>
-                <div className="font-display text-lg font-bold text-white/50">{oneHabit.trade_count}</div>
-                <div className="font-mono text-[11px] text-white/40">similar trades</div>
-              </div>
-            )}
-          </div>
+          {oneHabit.improvement && (
+            <p className="mt-2 text-sm text-emerald-400">→ {oneHabit.improvement}</p>
+          )}
+          {(oneHabit.trade_count || oneHabit.evidence_strength || oneHabit.confidence_pct) && (
+            <p className="mt-1.5 font-mono text-xs text-white/35">
+              {oneHabit.trade_count ? `Based on ${oneHabit.trade_count} trade${oneHabit.trade_count !== 1 ? 's' : ''}` : ''}
+              {oneHabit.trade_count && (oneHabit.evidence_strength ?? oneHabit.confidence_pct) ? ' · ' : ''}
+              {(oneHabit.evidence_strength ?? oneHabit.confidence_pct) ? `${oneHabit.evidence_strength ?? oneHabit.confidence_pct}% confident` : ''}
+            </p>
+          )}
         </div>
       )}
 

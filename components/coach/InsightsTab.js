@@ -21,28 +21,17 @@ function OneHabitCard({ report }) {
         <span className="font-mono text-[10px] uppercase tracking-wider text-amber-400/60">If you fix one thing</span>
       </div>
       <div className="text-base font-semibold text-white/90">{oneHabit.habit}</div>
-      {oneHabit.reason && <p className="mt-1 mb-3 text-sm text-white/50">{oneHabit.reason}</p>}
-      {!oneHabit.reason && <div className="mb-3" />}
-      <div className="flex flex-wrap gap-4">
-        {oneHabit.improvement && (
-          <div>
-            <div className="text-sm font-semibold text-emerald-400">{oneHabit.improvement}</div>
-            <div className="font-mono text-[11px] text-white/40">historical opportunity</div>
-          </div>
-        )}
-        {(oneHabit.evidence_strength ?? oneHabit.confidence_pct) != null && (
-          <div>
-            <div className="font-display text-lg font-bold text-cyan-400">{oneHabit.evidence_strength ?? oneHabit.confidence_pct}%</div>
-            <div className="font-mono text-[11px] text-white/40">evidence strength</div>
-          </div>
-        )}
-        {oneHabit.trade_count != null && (
-          <div>
-            <div className="font-display text-lg font-bold text-white/50">{oneHabit.trade_count}</div>
-            <div className="font-mono text-[11px] text-white/40">similar trades</div>
-          </div>
-        )}
-      </div>
+      {oneHabit.reason && <p className="mt-1 text-sm text-white/50">{oneHabit.reason}</p>}
+      {oneHabit.improvement && (
+        <p className="mt-2 text-sm text-emerald-400">→ {oneHabit.improvement}</p>
+      )}
+      {(oneHabit.trade_count || oneHabit.evidence_strength || oneHabit.confidence_pct) && (
+        <p className="mt-1.5 font-mono text-xs text-white/35">
+          {oneHabit.trade_count ? `Based on ${oneHabit.trade_count} trade${oneHabit.trade_count !== 1 ? 's' : ''}` : ''}
+          {oneHabit.trade_count && (oneHabit.evidence_strength ?? oneHabit.confidence_pct) ? ' · ' : ''}
+          {(oneHabit.evidence_strength ?? oneHabit.confidence_pct) ? `${oneHabit.evidence_strength ?? oneHabit.confidence_pct}% confident` : ''}
+        </p>
+      )}
     </div>
   );
 }
@@ -59,20 +48,13 @@ function BestHabitCard({ report }) {
       </div>
       <div className="text-base font-semibold text-white/90">{bestHabit.habit}</div>
       {bestHabit.message && <p className="mt-1 text-sm text-emerald-300/60">{bestHabit.message}</p>}
-      <div className="mt-3 flex flex-wrap gap-4">
-        {bestHabit.win_rate != null && (
-          <div>
-            <div className="font-display text-lg font-bold text-emerald-400">{bestHabit.win_rate}%</div>
-            <div className="font-mono text-[11px] text-white/40">win rate</div>
-          </div>
-        )}
-        {bestHabit.trade_count != null && (
-          <div>
-            <div className="font-display text-lg font-bold text-white/50">{bestHabit.trade_count}</div>
-            <div className="font-mono text-[11px] text-white/40">trades</div>
-          </div>
-        )}
-      </div>
+      {(bestHabit.win_rate != null || bestHabit.trade_count != null) && (
+        <p className="mt-2 font-mono text-xs text-white/35">
+          {bestHabit.win_rate != null ? `${bestHabit.win_rate}% win rate` : ''}
+          {bestHabit.win_rate != null && bestHabit.trade_count != null ? ' · ' : ''}
+          {bestHabit.trade_count != null ? `across ${bestHabit.trade_count} trades` : ''}
+        </p>
+      )}
     </div>
   );
 }
