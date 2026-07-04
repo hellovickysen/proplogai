@@ -85,9 +85,9 @@ export default async function CoachPage() {
         tradeCount={tradeCount || 0}
         access={access.toJSON()}
         coachUsed={coachUsed || 0}
-        coachLimit={coachLimit === Infinity ? Infinity : coachLimit}
+        coachLimit={coachLimit === Infinity ? -1 : coachLimit}
         analysisUsed={analysisUsed || 0}
-        analysisLimit={analysisLimit === Infinity ? Infinity : analysisLimit}
+        analysisLimit={analysisLimit === Infinity ? -1 : analysisLimit}
         emailEnabled={emailEnabled}
       />
     </div>

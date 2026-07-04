@@ -162,7 +162,7 @@ export default function TradeAnalysisTab({ analyses, usedThisMonth, limit, onAna
         <div className="font-mono text-[10px] uppercase tracking-wider text-white/40">
           {analyses.length} analyses
         </div>
-        {limit !== Infinity && (
+        {limit > 0 && (
           <div className="font-mono text-[10px] text-white/30">
             {usedThisMonth}/{limit} this month
           </div>

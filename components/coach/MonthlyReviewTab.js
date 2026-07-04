@@ -82,7 +82,7 @@ export default function MonthlyReviewTab({ reports, usedThisMonth, limit, onGene
           {reports?.length || 0} review{(reports?.length || 0) !== 1 ? 's' : ''}
         </div>
         <div className="flex items-center gap-3">
-          {limit !== Infinity && (
+          {limit > 0 && (
             <span className="font-mono text-[10px] text-white/30">{usedThisMonth}/{limit} this month</span>
           )}
           {canGenerate && (
