@@ -14,7 +14,32 @@ export default async function AdminTicketsPage() {
   const { data: tickets } = await sb
     .from('support_tickets')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('updated_at', { ascending: false });
 
-  return <AdminTickets tickets={tickets || []} />;
+  // Fetch replies for all tickets
+  const ticketIds = (tickets || []).map((t) => t.id);
+  let repliesByTicket = {};
+
+  if (ticketIds.length > 0) {
+    const { data: replies } = await sb
+      .from('ticket_replies')
+      .select('id, ticket_id, user_id, sender_role, message, screenshot_urls, created_at')
+      .in('ticket_id', ticketIds)
+      .order('created_at', { ascending: true });
+
+    if (replies) {
+      for (const r of replies) {
+        if (!repliesByTicket[r.ticket_id]) repliesByTicket[r.ticket_id] = [];
+        repliesByTicket[r.ticket_id].push(r);
+      }
+    }
+  }
+
+  // Attach replies to tickets
+  const ticketsWithReplies = (tickets || []).map((t) => ({
+    ...t,
+    replies: repliesByTicket[t.id] || [],
+  }));
+
+  return <AdminTickets tickets={ticketsWithReplies} />;
 }
