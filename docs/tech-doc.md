@@ -85,7 +85,7 @@ proplogai/
 │   └── Logo.js                # Logo + LogoMark components
 ├── lib/
 │   ├── ai.js                  # OpenRouter integration (callOpenRouter, analyzeTradeWithAI, analyzeCoachReport, tradeToText, datasetToText)
-│   ├── email.js               # Resend integration (sendCoachReportEmail, sendTicketTranscript, isEmailConfigured, escHtml)
+│   ├── email.js               # Resend integration (sendCoachReportEmail, sendTicketTranscript, sendTicketResolvedEmail, isEmailConfigured, escHtml)
 │   ├── stats.js               # computeStats, equitySeries, equityChartData, fmtMoney, fmtR, fmtMoneyCompact, num, getTradingDate, getTradingMonth
 │   ├── discipline.js          # computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak, calculateWeekScore
 │   ├── achievements.js        # ACHIEVEMENT_DEFS, computeAchievements
@@ -105,7 +105,7 @@ proplogai/
 │   └── cleanup-orphans.js     # Storage orphan cleanup script
 ├── next.config.mjs            # CSP headers, HSTS, image remotePatterns, optimizePackageImports
 ├── tailwind.config.js         # Custom colors (ink, mint, loss), content glob includes .ts/.tsx
-└── supabase/migrations/       # SQL files 0001-0027
+└── supabase/migrations/       # SQL files 0001-0029
 ```
 
 ## 4. Database Schema
@@ -152,7 +152,7 @@ proplogai/
 - id, key (unique), value (jsonb), updated_at
 
 **support_tickets** — User support tickets
-- id, user_id, user_email, category, subject, description, screenshot_url, screenshot_urls (jsonb), status (open/in_progress), reply_count (int), created_at, updated_at
+- id, user_id, user_email, category, subject, description, screenshot_url, screenshot_urls (jsonb), status (open/in_progress/resolved), reply_count (int), ticket_number (serial via ticket_number_seq), resolved_at (timestamptz), created_at, updated_at
 
 **ticket_replies** — Conversation thread for support tickets (migration 0027)
 - id, ticket_id (CASCADE), user_id, sender_role (user/admin), message, screenshot_urls (jsonb), created_at
@@ -442,15 +442,69 @@ CREATE TABLE ticket_replies (
 - `bulkDeleteTickets` server action (both user and admin) — cleans up all storage then deletes
 - Admin: Select All applies to currently filtered tickets only
 
-**Notifications (3 new types):**
+**Notifications (4 new types):**
 - `TICKET_USER_REPLIED` — notifies admin when user replies
 - `TICKET_CLOSED` — notifies the other party when ticket is closed
 - `TICKET_STATUS` — notifies user on status changes
+- `TICKET_RESOLVED` — notifies user when admin marks ticket as resolved
 - Admin notification types list (`ADMIN_TYPES`) updated in both `app/dashboard/layout.js` and `app/admin/layout.js` to include new types
 - `notifyAdmin` calls skipped when user IS admin (`user.email !== ADMIN_EMAIL`) to prevent duplicate notifications
+- All ticket notifications include `metadata.link` for click-to-navigate (admin→`/admin/tickets`, user→`/dashboard/support`)
 
 **Transcript email (`lib/email.js`):**
 - `sendTicketTranscript(toEmail, ticket, replies)` — dark-themed HTML email with original message + chronological conversation thread, sender role labels, timestamps
+
+### Resolved Status + Ticket Numbers (Migration 0029)
+
+```sql
+-- supabase/migrations/0029_ticket_resolved.sql
+ALTER TABLE support_tickets ADD COLUMN resolved_at timestamptz;
+CREATE SEQUENCE ticket_number_seq START 1;
+ALTER TABLE support_tickets ADD COLUMN ticket_number int DEFAULT nextval('ticket_number_seq');
+ALTER TABLE support_tickets DROP CONSTRAINT support_tickets_status_check;
+ALTER TABLE support_tickets ADD CONSTRAINT support_tickets_status_check
+  CHECK (status IN ('open', 'in_progress', 'resolved'));
+```
+
+**Resolved status flow:**
+- Admin sets status to "resolved" via custom dropdown → sets `resolved_at` timestamp
+- User receives notification + resolution email (`sendTicketResolvedEmail`) with ticket number, re-open instructions, 7-day auto-delete notice
+- User sees emerald resolved banner on ticket detail with re-open instructions
+- User can re-open by replying → status resets to `open`, `resolved_at` cleared
+- Resolved tickets auto-delete after 7 days (cleanup runs on page load in both user and admin server pages)
+- Resolved tickets do NOT block new ticket creation (`hasOpenTicket` checks only `open`/`in_progress`)
+
+**Ticket numbers:**
+- Sequential `ticket_number` via Postgres sequence (`ticket_number_seq`)
+- Displayed as `#001`, `#002` on list cards and detail views (both user and admin)
+- Used in email subject lines and notifications
+
+**Custom status dropdown (admin):**
+- Replaces native `<select>` with dark-themed dropdown matching app style
+- Colored status dots (amber=open, cyan=in progress, emerald=resolved)
+- Click-outside-close behavior
+
+**One open ticket limit:**
+- Server action checks for existing `open`/`in_progress` tickets before creating new one
+- UI: disabled "+ New Ticket" button + amber warning banner when user has an open ticket
+- Resolved tickets don't count toward this limit
+
+### Real-Time Notifications (Migration 0028)
+
+```sql
+-- supabase/migrations/0028_realtime_notifications.sql
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+```
+
+- `NotificationBell` subscribes to Supabase Realtime `postgres_changes` INSERT events on `notifications` table
+- Bell count increments instantly when new notification arrives (no page refresh needed)
+- Dropdown items prepend in real-time if panel is open
+- Inline toast notification slides up from bottom-right for 5s on new notification (`RealtimeToast` component)
+- Type filtering preserved via `typeFilter`/`excludeTypes` props
+- 60s polling kept as fallback if Realtime WebSocket drops
+- Channel cleaned up on component unmount
+- RLS ensures each user only receives events for their own rows
+- Files: `components/notifications/NotificationBell.js`, `supabase/migrations/0028_realtime_notifications.sql`
 
 ### WebP Compression Consistency
 - `processImageFile()` from `lib/imageUtils.js` (WebP at 0.85 quality, max 2048px) now wired into ALL upload points:
