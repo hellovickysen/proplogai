@@ -7,7 +7,7 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 export const dynamic = 'force-dynamic';
 
 /* Admin notification types — only these show in the admin bell */
-const ADMIN_TYPES = ['new_support_ticket', 'new_user_signup'];
+const ADMIN_TYPES = ['new_support_ticket', 'new_user_signup', 'ticket_user_replied', 'ticket_closed'];
 
 const ADMIN_NAV = [
   { label: 'Overview', href: '/admin', icon: '▦' },

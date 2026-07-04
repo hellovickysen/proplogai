@@ -14,7 +14,7 @@ import GuidedTour from '@/components/ui/GuidedTour';
 import { buildAccess } from '@/lib/plans';
 
 /* Admin notification types — excluded from user dashboard bell */
-const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup'];
+const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup', 'ticket_user_replied', 'ticket_closed'];
 
 export const dynamic = 'force-dynamic';
 
@@ -119,7 +119,7 @@ export default async function DashboardLayout({ children }) {
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('is_read', false)
-        .in('type', ['new_support_ticket', 'new_user_signup']);
+        .in('type', ADMIN_NOTIF_TYPES);
       adminNotifCount = count || 0;
     } catch (e) {}
   }

@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { notifyAdmin, TYPES } from '@/lib/notifications';
+import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 
 function sanitize(str, maxLen) {
   if (!str) return null;
@@ -72,7 +73,10 @@ export async function createTicket(payload) {
 
   if (error) return { error: error.message };
 
-  await notifyAdmin(TYPES.NEW_TICKET, 'New Support Ticket', `${category}: ${subject}`, { email: user.email });
+  // Skip admin notification if user IS the admin (avoids duplicate)
+  if (user.email !== ADMIN_EMAIL) {
+    await notifyAdmin(TYPES.NEW_TICKET, 'New Support Ticket', `${category}: ${subject}`, { email: user.email });
+  }
 
   revalidatePath('/dashboard/support');
   revalidatePath('/dashboard');
@@ -121,7 +125,10 @@ export async function replyToTicket(ticketId, message, screenshotUrls = []) {
     .eq('id', ticketId)
     .eq('user_id', user.id);
 
-  await notifyAdmin(TYPES.TICKET_USER_REPLIED, 'New Reply on Ticket', `User replied: ${ticket.subject}`, { ticketId });
+  // Skip admin notification if user IS the admin (avoids duplicate)
+  if (user.email !== ADMIN_EMAIL) {
+    await notifyAdmin(TYPES.TICKET_USER_REPLIED, 'New Reply on Ticket', `User replied: ${ticket.subject}`, { ticketId });
+  }
 
   revalidatePath('/dashboard/support');
   return { ok: true };
