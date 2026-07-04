@@ -1,6 +1,6 @@
 # PropLogAI — Technical Documentation
 
-Comprehensive technical reference for the PropLogAI codebase. Last updated: July 4, 2026 (Phase M).
+Comprehensive technical reference for the PropLogAI codebase. Last updated: July 4, 2026 (Phase N).
 
 ## 1. Architecture Overview
 
@@ -80,12 +80,12 @@ proplogai/
 │   ├── onboarding/            # OnboardingFlow
 │   ├── landing/               # LandingMotion (IntersectionObserver animations), CursorGlow, CardGlow, LandingNav, CookieBanner
 │   ├── share/                 # ShareButton, ShareCard, ShareModal, ShareJournalButton, SharedScreenshots
-│   ├── support/               # SupportPage, AdminTickets
+│   ├── support/               # SupportPage (conversation thread, reply form, close with transcript opt-out, multi-select bulk delete)
 │   ├── notifications/         # NotificationBell, NotificationList
 │   └── Logo.js                # Logo + LogoMark components
 ├── lib/
 │   ├── ai.js                  # OpenRouter integration (callOpenRouter, analyzeTradeWithAI, analyzeCoachReport, tradeToText, datasetToText)
-│   ├── email.js               # Resend integration (sendCoachReportEmail, isEmailConfigured, escHtml)
+│   ├── email.js               # Resend integration (sendCoachReportEmail, sendTicketTranscript, isEmailConfigured, escHtml)
 │   ├── stats.js               # computeStats, equitySeries, equityChartData, fmtMoney, fmtR, fmtMoneyCompact, num, getTradingDate, getTradingMonth
 │   ├── discipline.js          # computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak, calculateWeekScore
 │   ├── achievements.js        # ACHIEVEMENT_DEFS, computeAchievements
@@ -105,12 +105,12 @@ proplogai/
 │   └── cleanup-orphans.js     # Storage orphan cleanup script
 ├── next.config.mjs            # CSP headers, HSTS, image remotePatterns, optimizePackageImports
 ├── tailwind.config.js         # Custom colors (ink, mint, loss), content glob includes .ts/.tsx
-└── supabase/migrations/       # SQL files 0001-0026
+└── supabase/migrations/       # SQL files 0001-0027
 ```
 
 ## 4. Database Schema
 
-### Tables (14 total)
+### Tables (15 total)
 
 **trades** — Core trade log entries
 - id, user_id, account_id, pair, direction, entry_price, exit_price, stop_loss, take_profit, lot_size, pnl, r_multiple, setup (text), setup_id (uuid FK), setup_ids (jsonb array), setup_followed (yes/partial/no), no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, share_id (uuid nullable), shared_until (timestamptz nullable), external_id, source, created_at
@@ -152,7 +152,11 @@ proplogai/
 - id, key (unique), value (jsonb), updated_at
 
 **support_tickets** — User support tickets
-- id, user_id, user_email, category, subject, description, screenshot_url, screenshot_urls (jsonb), status, admin_reply, created_at, updated_at
+- id, user_id, user_email, category, subject, description, screenshot_url, screenshot_urls (jsonb), status (open/in_progress), reply_count (int), created_at, updated_at
+
+**ticket_replies** — Conversation thread for support tickets (migration 0027)
+- id, ticket_id (CASCADE), user_id, sender_role (user/admin), message, screenshot_urls (jsonb), created_at
+- RLS: users can read/insert replies on their own tickets only
 
 ### Functions & Triggers
 - `increment_referral_balance(target_user_id, amount)` — SECURITY DEFINER, atomic balance update
@@ -397,3 +401,61 @@ ALTER TABLE journal_entries ADD COLUMN lesson text;
 - Dashboard: Avg R stat replaced with Expectancy (average P&L per trade)
 - Expense tracker: fixed sort order to flow correctly down columns in the 2-column grid (previously flowed row-first)
 - Files: `lib/plans.js` (new), `lib/tags.js` (new), `components/ui/PlanBadge.js` (new), `components/ui/BetaFeatureWarning.js` (new), `components/ui/UpgradeCard.js` (new), `components/calendar/CalendarInsights.js` (new), `app/admin/actions.js` (new), `scripts/cleanup-orphans.js` (new), `supabase/migrations/0024_plans_beta.sql`, `supabase/migrations/0025_lesson.sql`, `supabase/migrations/0026_tags.sql`, modified `lib/stats.js`, `components/trades/TradeForm.js`, `components/trades/TradeFilters.js`, `components/trades/TradeTable.js`, `components/journal/JournalForm.js`, `app/dashboard/page.js`, `app/page.js` (landing), `components/expenses/ExpenseTracker.js`
+
+## 11. Phase N Changes (July 4, 2026 — post-M)
+
+### Ticket System Restructure (Migration 0027)
+Complete rewrite of the support ticket system from single `admin_reply` to a full conversation thread:
+
+```sql
+-- supabase/migrations/0027_ticket_replies.sql
+CREATE TABLE ticket_replies (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  ticket_id uuid NOT NULL REFERENCES support_tickets(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  sender_role text NOT NULL CHECK (sender_role IN ('user', 'admin')),
+  message text NOT NULL,
+  screenshot_urls jsonb DEFAULT '[]'::jsonb,
+  created_at timestamptz DEFAULT now()
+);
+-- RLS: users read/insert replies on own tickets only
+-- Dropped admin_reply column from support_tickets
+-- Added reply_count (int) to support_tickets
+-- Added user UPDATE and DELETE policies on support_tickets
+```
+
+**Multi-reply conversations:**
+- Both user and admin can send unlimited replies in a threaded conversation
+- Message bubbles styled by sender: violet for user, cyan for admin/support
+- Reply count and last-replier indicator on ticket list cards
+- Server pages (support/page.js, admin/tickets/page.js) fetch replies via `.in('ticket_id', ticketIds)` and attach to tickets
+
+**Close ticket (both parties):**
+- Custom close modal replaces ConfirmDialog — includes "Send transcript to email" checkbox (unchecked by default)
+- On close: optionally builds full transcript → emails via Resend → cleans up all screenshots from storage → deletes ticket (CASCADE deletes replies)
+- Statuses simplified to `open` and `in_progress` only (close = permanent delete)
+
+**Multi-select bulk delete:**
+- "Select" button toggles selection mode with checkboxes on ticket cards
+- Bulk action bar with Select All/Deselect All + "Delete X Tickets" button
+- ConfirmDialog warns "No transcript emails will be sent"
+- `bulkDeleteTickets` server action (both user and admin) — cleans up all storage then deletes
+- Admin: Select All applies to currently filtered tickets only
+
+**Notifications (3 new types):**
+- `TICKET_USER_REPLIED` — notifies admin when user replies
+- `TICKET_CLOSED` — notifies the other party when ticket is closed
+- `TICKET_STATUS` — notifies user on status changes
+- Admin notification types list (`ADMIN_TYPES`) updated in both `app/dashboard/layout.js` and `app/admin/layout.js` to include new types
+- `notifyAdmin` calls skipped when user IS admin (`user.email !== ADMIN_EMAIL`) to prevent duplicate notifications
+
+**Transcript email (`lib/email.js`):**
+- `sendTicketTranscript(toEmail, ticket, replies)` — dark-themed HTML email with original message + chronological conversation thread, sender role labels, timestamps
+
+### WebP Compression Consistency
+- `processImageFile()` from `lib/imageUtils.js` (WebP at 0.85 quality, max 2048px) now wired into ALL upload points:
+  - Journal screenshots ✅ (already had it)
+  - Trophy uploads ✅ (already had it)
+  - Support ticket screenshots ✅ (added in Phase N)
+  - Avatar uploads ✅ (added in Phase N)
+- Files modified: `components/support/SupportPage.js`, `components/settings/SettingsTabs.js`
