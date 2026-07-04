@@ -25,12 +25,15 @@ function toNumber(v) {
 }
 
 export default function ConsistencyCalculator() {
+  const [method, setMethod] = useState('day'); // 'day' or 'trade'
   const [totalProfit, setTotalProfit] = useState('');
   const [largestWin, setLargestWin] = useState('');
   const [limitChoice, setLimitChoice] = useState('20');
   const [customLimit, setCustomLimit] = useState('');
   const [nextWin, setNextWin] = useState('');
   const [copied, setCopied] = useState(false);
+
+  const methodLabel = method === 'day' ? 'Largest Winning Day' : 'Largest Winning Trade';
 
   const resultsRef = useRef(null);
 
@@ -112,7 +115,7 @@ export default function ConsistencyCalculator() {
     const lines = [
       'Consistency Calculator Result',
       `Total Profit: ${fmtCurrency(totalProfitNum)}`,
-      `Largest Winner: ${fmtCurrency(largestWinNum)}`,
+      `${methodLabel}: ${fmtCurrency(largestWinNum)}`,
       `Consistency: ${fmtPct(calc.consistencyPct)}`,
       `Status: ${
         calc.isEligible ? 'Ready for Payout ✅' : 'More Profit Required ❌'
@@ -144,6 +147,52 @@ export default function ConsistencyCalculator() {
 
       {/* Inputs Card */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        {/* Calculation Method Toggle */}
+        <div className="mb-5">
+          <label className="font-mono text-xs uppercase tracking-wider text-white/55">
+            My firm checks
+          </label>
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              onClick={() => setMethod('day')}
+              className={`rounded-xl border px-4 py-2.5 text-sm transition-all ${
+                method === 'day'
+                  ? 'border-transparent font-semibold text-[#08080f]'
+                  : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
+              }`}
+              style={
+                method === 'day'
+                  ? { background: 'linear-gradient(120deg, #a78bfa, #22d3ee)' }
+                  : undefined
+              }
+            >
+              Largest Day
+            </button>
+            <button
+              type="button"
+              onClick={() => setMethod('trade')}
+              className={`rounded-xl border px-4 py-2.5 text-sm transition-all ${
+                method === 'trade'
+                  ? 'border-transparent font-semibold text-[#08080f]'
+                  : 'border-white/10 bg-white/5 text-white/70 hover:bg-white/10'
+              }`}
+              style={
+                method === 'trade'
+                  ? { background: 'linear-gradient(120deg, #a78bfa, #22d3ee)' }
+                  : undefined
+              }
+            >
+              Largest Trade
+            </button>
+          </div>
+          <p className="mt-1.5 text-xs text-white/35">
+            {method === 'day'
+              ? 'Most prop firms use this — your highest single-day P&L cannot exceed the limit.'
+              : 'Some firms use this — your single biggest winning trade cannot exceed the limit.'}
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Total Closed Profit */}
           <div>
@@ -166,10 +215,10 @@ export default function ConsistencyCalculator() {
             <p className="mt-1.5 text-xs text-white/40">Example: $1,365</p>
           </div>
 
-          {/* Largest Winning Trade */}
+          {/* Largest Winning Day / Trade */}
           <div>
             <label className="font-mono text-xs uppercase tracking-wider text-white/55">
-              Largest Winning Trade
+              {methodLabel}
             </label>
             <div className="relative mt-2">
               <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-mono text-white/40">
@@ -185,8 +234,9 @@ export default function ConsistencyCalculator() {
               />
             </div>
             <p className="mt-1.5 text-xs leading-snug text-white/40">
-              Your single largest winning trade, not largest day or position.
-              Example: $265
+              {method === 'day'
+                ? 'Your highest single-day total P&L (sum of all trades that day). Example: $265'
+                : 'Your single largest winning trade, not largest day or position. Example: $265'}
             </p>
           </div>
         </div>
@@ -408,7 +458,7 @@ export default function ConsistencyCalculator() {
 
                 <div className="mt-4">
                   <label className="font-mono text-xs uppercase tracking-wider text-white/55">
-                    Next Winning Trade
+                    {method === 'day' ? 'Next Winning Day' : 'Next Winning Trade'}
                   </label>
                   <div className="relative mt-2 max-w-xs">
                     <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 font-mono text-white/40">
@@ -465,7 +515,7 @@ export default function ConsistencyCalculator() {
                       <span className="font-mono text-white">
                         {fmtCurrency(whatIf.futureProfit)}
                       </span>{' '}
-                      with a largest win of{' '}
+                      with a {method === 'day' ? 'largest day' : 'largest win'} of{' '}
                       <span className="font-mono text-white">
                         {fmtCurrency(whatIf.futureLargestWin)}
                       </span>
@@ -489,10 +539,10 @@ export default function ConsistencyCalculator() {
 
       {/* Disclaimer */}
       <p className="text-xs text-white/35 leading-relaxed px-1">
-        Note: This calculator uses the largest single winning trade method.
-        Some prop firms may calculate consistency differently (e.g., largest
-        trading day, largest position). Always verify your firm's specific
-        payout rules before requesting a withdrawal.
+        Note: This calculator supports both largest trading day and largest
+        single trade methods. Some firms may use other variations (e.g.,
+        largest position or rolling window). Always verify your firm's
+        specific payout rules before requesting a withdrawal.
       </p>
 
       {/* FAQ Section */}
