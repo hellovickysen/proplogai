@@ -10,7 +10,7 @@ function fmtDate(d) {
   }
 }
 
-export default function TradeTable({ rows, showFilters = false, compact = false }) {
+export default function TradeTable({ rows, showFilters = false, compact = false, totalCount = 0 }) {
   if (!rows || rows.length === 0) {
     return <div className="py-6 text-center text-sm text-white/40">No trades to show yet.</div>;
   }
@@ -18,12 +18,13 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
     <>
       {/* Mobile card list — visible only below sm breakpoint */}
       <div className="space-y-2 sm:hidden">
-        {rows.map((t) => {
+        {rows.map((t, idx) => {
           const win = num(t.pnl) >= 0;
           const hasNote = t._journal && t._journal.hasNote;
           const hasImages = t._journal && t._journal.hasImages;
           const hasJournal = hasNote || hasImages;
           const leftBorderColor = win ? 'border-l-emerald-400/50' : 'border-l-red-400/50';
+          const tradeNum = totalCount > 0 ? totalCount - idx : rows.length - idx;
           return (
             <Link
               key={t.id}
@@ -31,6 +32,8 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
               className={'flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 border-l-[3px] ' + leftBorderColor}
             >
               <div className="flex items-center gap-3 min-w-0">
+                {/* Trade number */}
+                <span className="shrink-0 flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.06] font-mono text-[10px] text-white/30">#{tradeNum}</span>
                 {/* Direction badge */}
                 <span className={'shrink-0 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold ' + (t.direction === 'long' ? 'border-blue-400/30 bg-blue-500/15 text-blue-300' : 'border-red-400/30 bg-red-500/15 text-red-300')}>
                   <svg width="14" height="10" viewBox="0 0 14 10" fill="none" className="shrink-0">{t.direction === 'long' ? <path d="M1 9L4.5 4L7.5 6.5L13 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M1 1L4.5 6L7.5 3.5L13 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}</svg>
@@ -66,6 +69,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
         <caption className="sr-only">Trade history</caption>
         <thead>
           <tr className="text-left font-mono text-xs uppercase tracking-wider text-white/55">
+            <th scope="col" className="px-2 pb-3 w-10">#</th>
             <th scope="col" className="px-3 pb-3">Pair</th>
             <th scope="col" className="px-3 pb-3">Dir</th>
             <th scope="col" className="px-3 pb-3">Date</th>
@@ -104,6 +108,13 @@ export default function TradeTable({ rows, showFilters = false, compact = false 
                   zebra + ' ' + leftBorder
                 }
               >
+                {/* Trade number */}
+                <td className="px-2 py-3.5">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.06] font-mono text-[10px] text-white/30">
+                    {totalCount > 0 ? totalCount - idx : rows.length - idx}
+                  </span>
+                </td>
+
                 {/* Pair + journal icon */}
                 <td className="px-3 py-3.5 font-display font-semibold">
                   <Link href={'/dashboard/trades/' + t.id} className="hover:text-cyan-400">

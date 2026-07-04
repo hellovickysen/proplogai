@@ -203,7 +203,7 @@ export default function TradeFilters({ trades, prefs }) {
         </p>
       )}
 
-      <TradeTable rows={filtered} />
+      <TradeTable rows={filtered} totalCount={trades ? trades.length : 0} />
     </div>
   );
 }
