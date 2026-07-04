@@ -179,20 +179,21 @@ export default function InsightsTab({ reports, analyses }) {
       {/* One Habit — killer feature */}
       <OneHabitCard report={latestReport} />
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {/* AI Insights with confidence */}
-        {emotions.slice(0, 3).map((e, i) => (
-          <InsightCard key={i} icon="💡" title="Insight"
-            value={e.observation || `${e.emotion}: ${e.stat || ''}`}
-            detail={e.observation ? `Emotion: ${e.emotion}` : null}
-            confidence={e.confidence_pct || null}
-            tradeCount={e.trade_count || null} />
-        ))}
+      {/* 2x2 Grid */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {/* Recurring Mistakes */}
+        <MistakesCard items={mistakes} />
 
-        {/* Your Rules with Propol prefix */}
+        {/* Emotion Heatmap */}
+        <EmotionHeatmap items={emotions} />
+
+        {/* Action Plan */}
+        <ActionPlanCard items={actionPlan} />
+
+        {/* Rules */}
         {guardrails.length > 0 && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-            <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/35">Propol&apos;s Rules for You</div>
+            <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/35">Propol&apos;s Rules</div>
             <div className="space-y-2">
               {guardrails.map((g, i) => (
                 <div key={i} className="flex items-start gap-2 text-xs text-white/55">
@@ -205,16 +206,7 @@ export default function InsightsTab({ reports, analyses }) {
         )}
       </div>
 
-      {/* Mistakes with PnL */}
-      <MistakesCard items={mistakes} />
-
-      {/* Emotion Heatmap */}
-      <EmotionHeatmap items={emotions} />
-
-      {/* Action Plan with impact stars */}
-      <ActionPlanCard items={actionPlan} />
-
-      {/* Improvements */}
+      {/* Progress — full width below grid */}
       {improvements.length > 0 && (
         <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/[0.03] p-4">
           <div className="mb-2 font-mono text-[10px] uppercase tracking-wider text-emerald-400/50">Progress</div>
