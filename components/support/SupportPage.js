@@ -82,7 +82,7 @@ function MessageBubble({ reply }) {
 /* ─── Close Ticket Modal ─────────────────────────────────────── */
 
 function CloseTicketModal({ open, onClose, onConfirm, closing }) {
-  const [sendTranscript, setSendTranscript] = useState(true);
+  const [sendTranscript, setSendTranscript] = useState(false);
 
   if (!open) return null;
 
