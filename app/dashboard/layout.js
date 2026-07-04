@@ -131,17 +131,6 @@ export default async function DashboardLayout({ children }) {
     tradeCount = count || 0;
   } catch (e) {}
 
-  /* ── Open ticket count for Feedback badge ── */
-  let openTicketCount = 0;
-  try {
-    const { count } = await supabase
-      .from('support_tickets')
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .in('status', ['open', 'in_progress']);
-    openTicketCount = count || 0;
-  } catch (e) {}
-
   const isAdmin = user.email === ADMIN_EMAIL;
   const initial = user.email ? user.email.charAt(0).toUpperCase() : '?';
 
@@ -151,11 +140,11 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} fullName={prefs?.full_name || ''} planAccess={planAccess} openTicketCount={openTicketCount} />
+      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} fullName={prefs?.full_name || ''} planAccess={planAccess} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
-            <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} planAccess={planAccess} openTicketCount={openTicketCount} />
+            <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} planAccess={planAccess} />
             <Link href="/dashboard" className="sm:hidden">
               <Logo size={28} wordmarkClassName="font-display text-base font-bold" />
             </Link>

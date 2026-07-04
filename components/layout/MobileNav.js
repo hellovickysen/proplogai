@@ -19,7 +19,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits, fullName = '', planAccess = null, openTicketCount = 0 }) {
+export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits, fullName = '', planAccess = null }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
@@ -108,15 +108,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
                 >
                   <span className="w-5 text-center text-sm">{item.icon}</span>
                   <span>{item.label}</span>
-                  {item.href === '/dashboard/support' && openTicketCount > 0 && (
-                    <span
-                      className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-[#08080f]"
-                      style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
-                    >
-                      {openTicketCount}
-                    </span>
-                  )}
-                  {active && !(item.href === '/dashboard/support' && openTicketCount > 0) && (
+                  {active && (
                     <span
                       className="ml-auto h-1.5 w-1.5 rounded-full"
                       style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}

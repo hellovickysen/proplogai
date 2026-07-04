@@ -19,7 +19,7 @@ const NAV = [
   { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotifCount = 0, fullName = '', planAccess = null, openTicketCount = 0 }) {
+export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotifCount = 0, fullName = '', planAccess = null }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -98,7 +98,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
                 title={item.label}
                 {...(item.tourId ? { 'data-tour': item.tourId } : {})}
                 className={
-                  'relative flex items-center gap-2.5 rounded-xl whitespace-nowrap text-sm transition-all ' +
+                  'flex items-center gap-2.5 rounded-xl whitespace-nowrap text-sm transition-all ' +
                   (collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5') + ' ' +
                   (active
                     ? 'bg-white/[0.08] font-semibold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]'
@@ -107,20 +107,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
               >
                 <span className={collapsed ? 'text-center text-sm' : 'w-5 text-center text-sm'}>{item.icon}</span>
                 {!collapsed && <span>{item.label}</span>}
-                {!collapsed && item.href === '/dashboard/support' && openTicketCount > 0 && (
-                  <span
-                    className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-[#08080f]"
-                    style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
-                  >
-                    {openTicketCount}
-                  </span>
-                )}
-                {collapsed && item.href === '/dashboard/support' && openTicketCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}>
-                    {openTicketCount}
-                  </span>
-                )}
-                {!collapsed && active && !openTicketCount && (
+                {!collapsed && active && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full" style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }} />
                 )}
               </Link>
