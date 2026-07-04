@@ -1,7 +1,7 @@
 'use client';
 import { useMemo, useRef, useState } from 'react';
 
-const LIMIT_PRESETS = [20, 25, 30];
+const LIMIT_PRESETS = [15, 20, 30];
 
 function fmtCurrency(n) {
   if (!Number.isFinite(n)) return '$0.00';
@@ -508,6 +508,15 @@ export default function ConsistencyCalculator() {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+        /* Hide native number input spinners */
+        input[type='number']::-webkit-outer-spin-button,
+        input[type='number']::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type='number'] {
+          -moz-appearance: textfield;
         }
       `}</style>
     </div>
