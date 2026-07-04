@@ -110,7 +110,6 @@ export async function replyToTicket(ticketId, message, screenshotUrls = []) {
     .single();
 
   if (!ticket) return { error: 'Ticket not found.' };
-  if (ticket.status === 'closed') return { error: 'This ticket is closed.' };
 
   let urls = [];
   if (Array.isArray(screenshotUrls)) {
@@ -127,9 +126,13 @@ export async function replyToTicket(ticketId, message, screenshotUrls = []) {
 
   if (error) return { error: error.message };
 
+  // Re-open ticket if it was resolved (user reply = re-open)
+  const isReopen = ticket.status === 'resolved';
   await supabase
     .from('support_tickets')
     .update({
+      status: isReopen ? 'open' : ticket.status,
+      resolved_at: isReopen ? null : undefined,
       updated_at: new Date().toISOString(),
       reply_count: (ticket.reply_count || 0) + 1,
     })

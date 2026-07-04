@@ -7,9 +7,48 @@ export default async function SupportRoute() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Auto-delete resolved tickets older than 7 days (no transcript)
+  try {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: expired } = await supabase
+      .from('support_tickets')
+      .select('id, screenshot_urls')
+      .eq('user_id', user.id)
+      .eq('status', 'resolved')
+      .lt('resolved_at', sevenDaysAgo);
+
+    if (expired && expired.length > 0) {
+      // Clean up screenshots
+      const allUrls = [];
+      for (const t of expired) {
+        if (t.screenshot_urls && Array.isArray(t.screenshot_urls)) allUrls.push(...t.screenshot_urls);
+      }
+      // Also get reply screenshots
+      const expiredIds = expired.map((t) => t.id);
+      const { data: replies } = await supabase
+        .from('ticket_replies')
+        .select('screenshot_urls')
+        .in('ticket_id', expiredIds);
+      for (const r of (replies || [])) {
+        if (r.screenshot_urls && Array.isArray(r.screenshot_urls)) allUrls.push(...r.screenshot_urls);
+      }
+      if (allUrls.length > 0) {
+        const paths = allUrls
+          .filter((u) => typeof u === 'string' && u.includes('/screenshots/'))
+          .map((u) => { const idx = u.indexOf('/screenshots/'); return idx >= 0 ? u.slice(idx + '/screenshots/'.length) : null; })
+          .filter(Boolean);
+        if (paths.length > 0) await supabase.storage.from('screenshots').remove(paths);
+      }
+      // Delete expired tickets (CASCADE deletes replies)
+      await supabase.from('support_tickets').delete().eq('user_id', user.id).in('id', expiredIds);
+    }
+  } catch (e) {
+    console.error('[support] Auto-delete cleanup failed:', e?.message);
+  }
+
   const { data: tickets, error: ticketsError } = await supabase
     .from('support_tickets')
-    .select('id, category, subject, description, status, screenshot_urls, reply_count, created_at, updated_at')
+    .select('id, category, subject, description, status, screenshot_urls, reply_count, ticket_number, resolved_at, created_at, updated_at')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
 
@@ -43,7 +82,6 @@ export default async function SupportRoute() {
     }
   }
 
-  // Attach replies to tickets
   const ticketsWithReplies = (tickets || []).map((t) => ({
     ...t,
     replies: repliesByTicket[t.id] || [],

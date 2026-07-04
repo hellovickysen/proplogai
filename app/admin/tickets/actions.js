@@ -67,18 +67,51 @@ export async function updateTicketStatus(ticketId, status) {
   const sb = createAdminClient();
   if (!sb) return { error: 'Admin client not configured.' };
 
-  const validStatuses = ['open', 'in_progress'];
+  const validStatuses = ['open', 'in_progress', 'resolved'];
   if (!validStatuses.includes(status)) return { error: 'Invalid status. Use close action to close tickets.' };
+
+  const updateData = { status, updated_at: new Date().toISOString() };
+
+  // Set or clear resolved_at
+  if (status === 'resolved') {
+    updateData.resolved_at = new Date().toISOString();
+  } else {
+    updateData.resolved_at = null;
+  }
 
   const { error } = await sb
     .from('support_tickets')
-    .update({ status, updated_at: new Date().toISOString() })
+    .update(updateData)
     .eq('id', ticketId);
 
   if (error) return { error: error.message };
 
-  const label = status.replace('_', ' ');
-  await notifyTicketOwner(sb, ticketId, TYPES.TICKET_STATUS, 'Ticket Status Updated', `Your ticket status changed to ${label}`);
+  if (status === 'resolved') {
+    // Fetch ticket for email
+    const { data: ticket } = await sb
+      .from('support_tickets')
+      .select('user_id, user_email, subject, ticket_number')
+      .eq('id', ticketId)
+      .single();
+
+    if (ticket) {
+      // Notify user
+      const ticketNum = ticket.ticket_number ? `#${String(ticket.ticket_number).padStart(3, '0')}` : '';
+      await notifyTicketOwner(sb, ticketId, TYPES.TICKET_RESOLVED, 'Ticket Resolved',
+        `Your ticket ${ticketNum} has been resolved. Reply to re-open or it will auto-delete in 7 days.`);
+
+      // Send resolution email
+      try {
+        const { sendTicketResolvedEmail } = await import('@/lib/email');
+        await sendTicketResolvedEmail(ticket.user_email, ticket);
+      } catch (e) {
+        console.error('[updateTicketStatus] Resolution email failed:', e?.message);
+      }
+    }
+  } else {
+    const label = status.replace('_', ' ');
+    await notifyTicketOwner(sb, ticketId, TYPES.TICKET_STATUS, 'Ticket Status Updated', `Your ticket status changed to ${label}`);
+  }
 
   revalidatePath('/admin/tickets');
   return { ok: true };

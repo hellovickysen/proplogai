@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateTicketStatus, replyToTicket, closeTicket, bulkDeleteTickets } from '@/app/admin/tickets/actions';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -13,17 +13,25 @@ const CATEGORIES = {
   account_billing: { label: 'Account / Billing', icon: '💳', color: 'border-emerald-400/30 bg-emerald-500/15 text-emerald-300' },
 };
 
-const STATUSES = [
+const FILTER_STATUSES = [
   { value: 'all', label: 'All' },
   { value: 'open', label: 'Open' },
   { value: 'in_progress', label: 'In Progress' },
+  { value: 'resolved', label: 'Resolved' },
+];
+
+const STATUS_OPTIONS = [
+  { value: 'open', label: 'Open', dot: '#fbbf24' },
+  { value: 'in_progress', label: 'In Progress', dot: '#22d3ee' },
+  { value: 'resolved', label: 'Resolved', dot: '#34d399' },
 ];
 
 const STATUS_STYLES = {
   open: 'border-amber-400/30 bg-amber-500/15 text-amber-300',
   in_progress: 'border-cyan-400/30 bg-cyan-500/15 text-cyan-300',
+  resolved: 'border-emerald-400/30 bg-emerald-500/15 text-emerald-300',
 };
-const STATUS_LABELS = { open: 'Open', in_progress: 'In Progress' };
+const STATUS_LABELS = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved' };
 
 function fmtDate(d) {
   if (!d) return '';
@@ -31,11 +39,60 @@ function fmtDate(d) {
   catch { return ''; }
 }
 
+function fmtTicketNum(n) {
+  return n ? `#${String(n).padStart(3, '0')}` : '';
+}
+
 function getScreenshots(ticket) {
   const urls = [];
   if (ticket.screenshot_urls && Array.isArray(ticket.screenshot_urls)) urls.push(...ticket.screenshot_urls);
   if (ticket.screenshot_url && !urls.includes(ticket.screenshot_url)) urls.push(ticket.screenshot_url);
   return urls;
+}
+
+/* ─── Custom Status Dropdown ─────────────────────────────────── */
+
+function StatusDropdown({ value, onChange, disabled }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  const current = STATUS_OPTIONS.find((s) => s.value === value) || STATUS_OPTIONS[0];
+
+  useEffect(() => {
+    function handler(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    if (open) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => !disabled && setOpen(!open)}
+        disabled={disabled}
+        className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/70 transition-colors hover:border-white/20 disabled:opacity-50"
+      >
+        <span className="h-2 w-2 rounded-full" style={{ background: current.dot }} />
+        <span>{current.label}</span>
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className={'ml-1 transition-transform ' + (open ? 'rotate-180' : '')}>
+          <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl">
+          {STATUS_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={'flex w-full items-center gap-2 px-3 py-2 text-xs transition-colors hover:bg-white/[0.06] ' + (opt.value === value ? 'text-white font-semibold' : 'text-white/60')}
+            >
+              <span className="h-2 w-2 rounded-full" style={{ background: opt.dot }} />
+              <span>{opt.label}</span>
+              {opt.value === value && <span className="ml-auto text-[10px] text-white/30">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /* ─── Conversation Message Bubble ───────────────────────────── */
@@ -132,6 +189,7 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
   const [statusSaving, setStatusSaving] = useState(false);
   const [closing, setClosing] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const ticketNum = fmtTicketNum(ticket.ticket_number);
 
   async function handleReply(e) {
     e.preventDefault();
@@ -165,6 +223,7 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
+            {ticketNum && <span className="font-mono text-xs text-white/30">{ticketNum}</span>}
             <span className={'rounded-full border px-2.5 py-1 text-xs font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
             <span className={'rounded-full border px-2.5 py-1 text-xs font-semibold ' + (STATUS_STYLES[ticket.status] || '')}>{STATUS_LABELS[ticket.status] || ticket.status}</span>
           </div>
@@ -179,17 +238,7 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="font-mono text-[10px] uppercase tracking-wider text-white/35">Status</span>
-            <select
-              value={ticket.status}
-              onChange={(e) => handleStatus(e.target.value)}
-              disabled={statusSaving}
-              className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-xs text-white/70 outline-none disabled:opacity-50"
-              style={{ colorScheme: 'dark' }}
-            >
-              {STATUSES.filter((s) => s.value !== 'all').map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
-              ))}
-            </select>
+            <StatusDropdown value={ticket.status} onChange={handleStatus} disabled={statusSaving} />
           </div>
           <button
             onClick={() => setShowCloseModal(true)}
@@ -200,6 +249,19 @@ function AdminTicketDetail({ ticket, onBack, onStatusChange, onReply, onClose })
           </button>
         </div>
       </div>
+
+      {/* Resolved info */}
+      {ticket.status === 'resolved' && ticket.resolved_at && (
+        <div className="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.05] p-4 flex items-start gap-3">
+          <span className="text-emerald-400 text-lg mt-0.5">✔️</span>
+          <div>
+            <p className="text-sm font-medium text-emerald-300">Ticket marked as resolved</p>
+            <p className="mt-1 text-xs text-white/40">
+              Resolution email sent to user. Auto-deletes in {Math.max(0, Math.ceil((new Date(ticket.resolved_at).getTime() + 7 * 24 * 60 * 60 * 1000 - Date.now()) / (24 * 60 * 60 * 1000)))} days if not re-opened.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Original Description */}
       <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -266,6 +328,7 @@ function TicketListCard({ ticket, onClick, selectMode, selected, onToggle }) {
   const cat = CATEGORIES[ticket.category] || CATEGORIES.general_support;
   const replies = ticket.replies || [];
   const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
+  const ticketNum = fmtTicketNum(ticket.ticket_number);
 
   return (
     <div className="flex items-start gap-3">
@@ -283,6 +346,7 @@ function TicketListCard({ ticket, onClick, selectMode, selected, onToggle }) {
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
+              {ticketNum && <span className="font-mono text-[10px] text-white/25">{ticketNum}</span>}
               <h3 className="font-display text-sm font-semibold">{ticket.subject}</h3>
               <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
               <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (STATUS_STYLES[ticket.status] || '')}>{STATUS_LABELS[ticket.status] || ticket.status}</span>
@@ -329,6 +393,7 @@ export default function AdminTickets({ tickets }) {
 
   const openCount = tickets.filter((t) => t.status === 'open').length;
   const inProgressCount = tickets.filter((t) => t.status === 'in_progress').length;
+  const resolvedCount = tickets.filter((t) => t.status === 'resolved').length;
 
   function toggleSelect(id) {
     setSelectedIds((prev) => {
@@ -407,7 +472,7 @@ export default function AdminTickets({ tickets }) {
         <div>
           <h1 className="font-display text-2xl font-bold">Support Tickets</h1>
           <p className="mt-1 text-sm text-white/50">
-            {tickets.length} total &middot; <span className="text-amber-300">{openCount} open</span> &middot; <span className="text-cyan-300">{inProgressCount} in progress</span>
+            {tickets.length} total &middot; <span className="text-amber-300">{openCount} open</span> &middot; <span className="text-cyan-300">{inProgressCount} in progress</span>{resolvedCount > 0 && <> &middot; <span className="text-emerald-300">{resolvedCount} resolved</span></>}
           </p>
         </div>
         {tickets.length > 0 && (
@@ -443,7 +508,7 @@ export default function AdminTickets({ tickets }) {
       <div className="mb-6 flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-1">
           <span className="mr-1 font-mono text-[10px] uppercase tracking-wider text-white/35">Status</span>
-          {STATUSES.map((s) => (
+          {FILTER_STATUSES.map((s) => (
             <button key={s.value} onClick={() => setStatusFilter(s.value)}
               className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (statusFilter === s.value ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}>
               {s.label}

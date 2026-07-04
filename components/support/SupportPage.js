@@ -22,8 +22,19 @@ const CATEGORIES = [
 const STATUS_STYLES = {
   open: 'border-amber-400/30 bg-amber-500/15 text-amber-300',
   in_progress: 'border-cyan-400/30 bg-cyan-500/15 text-cyan-300',
+  resolved: 'border-emerald-400/30 bg-emerald-500/15 text-emerald-300',
 };
-const STATUS_LABELS = { open: 'Open', in_progress: 'In Progress' };
+const STATUS_LABELS = { open: 'Open', in_progress: 'In Progress', resolved: 'Resolved' };
+
+function fmtTicketNum(n) {
+  return n ? `#${String(n).padStart(3, '0')}` : '';
+}
+
+function daysRemaining(resolvedAt) {
+  if (!resolvedAt) return 0;
+  const expiresAt = new Date(resolvedAt).getTime() + 7 * 24 * 60 * 60 * 1000;
+  return Math.max(0, Math.ceil((expiresAt - Date.now()) / (24 * 60 * 60 * 1000)));
+}
 
 function getCat(val) { return CATEGORIES.find((c) => c.value === val) || CATEGORIES[3]; }
 
@@ -135,6 +146,9 @@ function TicketDetail({ ticket, onBack }) {
   const [sending, setSending] = useState(false);
   const [closing, setClosing] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const ticketNum = fmtTicketNum(ticket.ticket_number);
+  const isResolved = ticket.status === 'resolved';
+  const daysLeft = isResolved ? daysRemaining(ticket.resolved_at) : 0;
 
   async function handleReply(e) {
     e.preventDefault();
@@ -143,7 +157,7 @@ function TicketDetail({ ticket, onBack }) {
     const res = await replyToTicket(ticket.id, replyText);
     if (res.error) { if (toast) toast.error(res.error); }
     else {
-      if (toast) toast.success('Reply sent!');
+      if (toast) toast.success(isResolved ? 'Reply sent — ticket re-opened!' : 'Reply sent!');
       setReplyText('');
       router.refresh();
     }
@@ -174,6 +188,7 @@ function TicketDetail({ ticket, onBack }) {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
+            {ticketNum && <span className="font-mono text-xs text-white/30">{ticketNum}</span>}
             <span className={'rounded-full border px-2.5 py-1 text-xs font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
             <span className={'rounded-full border px-2.5 py-1 text-xs font-semibold ' + (STATUS_STYLES[ticket.status] || STATUS_STYLES.open)}>{STATUS_LABELS[ticket.status] || ticket.status}</span>
           </div>
@@ -188,6 +203,22 @@ function TicketDetail({ ticket, onBack }) {
           Close Ticket
         </button>
       </div>
+
+      {/* Resolved banner */}
+      {isResolved && (
+        <div className="mb-6 rounded-2xl border border-emerald-400/20 bg-emerald-500/[0.05] p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-emerald-400 text-xl mt-0.5">✔️</span>
+            <div>
+              <p className="text-sm font-semibold text-emerald-300">Your ticket has been resolved</p>
+              <p className="mt-2 text-sm text-white/55 leading-relaxed">
+                If you still need help, reply below to <strong className="text-white/70">re-open</strong> this ticket.
+                Otherwise, you can close it now or it will be <strong className="text-white/70">automatically deleted in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</strong>.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Original Description */}
       <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -226,7 +257,7 @@ function TicketDetail({ ticket, onBack }) {
       {/* Reply Form */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <form onSubmit={handleReply}>
-          <textarea className={field} rows={3} value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Write a reply..." maxLength={5000} />
+          <textarea className={field} rows={3} value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder={isResolved ? 'Reply to re-open this ticket...' : 'Write a reply...'} maxLength={5000} />
           <div className="mt-3 flex items-center justify-between">
             <p className="font-mono text-[10px] text-white/25">{replyText.length}/5000</p>
             <button type="submit" disabled={sending || !replyText.trim()} className="rounded-lg px-5 py-2 text-xs font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
@@ -247,6 +278,7 @@ function TicketCard({ ticket, onClick, selectMode, selected, onToggle }) {
   const cat = getCat(ticket.category);
   const replies = ticket.replies || [];
   const lastReply = replies.length > 0 ? replies[replies.length - 1] : null;
+  const ticketNum = fmtTicketNum(ticket.ticket_number);
 
   return (
     <div className="flex items-start gap-3">
@@ -264,6 +296,7 @@ function TicketCard({ ticket, onClick, selectMode, selected, onToggle }) {
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
+              {ticketNum && <span className="font-mono text-[10px] text-white/25">{ticketNum}</span>}
               <h3 className="font-display text-sm font-semibold">{ticket.subject}</h3>
               <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>{cat.icon} {cat.label}</span>
               <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (STATUS_STYLES[ticket.status] || STATUS_STYLES.open)}>{STATUS_LABELS[ticket.status] || ticket.status}</span>
@@ -275,6 +308,9 @@ function TicketCard({ ticket, onClick, selectMode, selected, onToggle }) {
               )}
               {lastReply && lastReply.sender_role === 'admin' && (
                 <span className="font-mono text-[10px] text-cyan-400/50">Support replied</span>
+              )}
+              {ticket.status === 'resolved' && (
+                <span className="font-mono text-[10px] text-emerald-400/60">✔ Resolved — {daysRemaining(ticket.resolved_at)}d left</span>
               )}
             </div>
           </div>
