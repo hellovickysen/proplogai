@@ -27,19 +27,19 @@ function OneHabitCard({ report }) {
         {oneHabit.improvement && (
           <div>
             <div className="text-sm font-semibold text-emerald-400">{oneHabit.improvement}</div>
-            <div className="font-mono text-[9px] text-white/25">historical opportunity</div>
+            <div className="font-mono text-[11px] text-white/40">historical opportunity</div>
           </div>
         )}
         {(oneHabit.evidence_strength ?? oneHabit.confidence_pct) != null && (
           <div>
             <div className="font-display text-lg font-bold text-cyan-400">{oneHabit.evidence_strength ?? oneHabit.confidence_pct}%</div>
-            <div className="font-mono text-[9px] text-white/25">evidence strength</div>
+            <div className="font-mono text-[11px] text-white/40">evidence strength</div>
           </div>
         )}
         {oneHabit.trade_count != null && (
           <div>
             <div className="font-display text-lg font-bold text-white/50">{oneHabit.trade_count}</div>
-            <div className="font-mono text-[9px] text-white/25">similar trades</div>
+            <div className="font-mono text-[11px] text-white/40">similar trades</div>
           </div>
         )}
       </div>
@@ -63,13 +63,13 @@ function BestHabitCard({ report }) {
         {bestHabit.win_rate != null && (
           <div>
             <div className="font-display text-lg font-bold text-emerald-400">{bestHabit.win_rate}%</div>
-            <div className="font-mono text-[9px] text-white/25">win rate</div>
+            <div className="font-mono text-[11px] text-white/40">win rate</div>
           </div>
         )}
         {bestHabit.trade_count != null && (
           <div>
             <div className="font-display text-lg font-bold text-white/50">{bestHabit.trade_count}</div>
-            <div className="font-mono text-[9px] text-white/25">trades</div>
+            <div className="font-mono text-[11px] text-white/40">trades</div>
           </div>
         )}
       </div>
@@ -116,7 +116,7 @@ function EmotionHeatmap({ items }) {
                 <span className="text-xs text-white/55">{e.emotion || e.label}</span>
                 <div className="flex items-center gap-3">
                   {e.win_rate != null && <span className="font-mono text-[10px] text-white/40">{e.win_rate}% WR</span>}
-                  <span className="font-mono text-[10px] text-white/25">{count} trades</span>
+                  <span className="font-mono text-[10px] text-white/40">{count} trades</span>
                 </div>
               </div>
               <div className="h-2.5 rounded-full bg-white/[0.06]">
@@ -150,7 +150,7 @@ function ActionPlanCard({ items }) {
                   <div className="text-sm text-white/70">{action}</div>
                   <div className="mt-1 flex items-center gap-3">
                     {impact != null && <span className="text-[10px] text-white/30">Impact <span style={{ color: 'rgba(251,191,36,0.6)' }}>{impactStars(impact)}</span></span>}
-                    {difficulty != null && <span className="text-[10px] text-white/30">Difficulty <span className="text-white/25">{impactStars(difficulty)}</span></span>}
+                    {difficulty != null && <span className="text-[10px] text-white/30">Difficulty <span className="text-white/40">{impactStars(difficulty)}</span></span>}
                   </div>
                 </div>
               </div>

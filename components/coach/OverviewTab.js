@@ -56,14 +56,14 @@ function TraderScore({ reports }) {
       <div className={'mt-1 text-xs font-medium ' + (trend ? trend.color : 'text-white/30')}>
         {trendWord} {trend && trend.text !== 'Stable' ? `· ${trend.text}` : ''}
       </div>
-      <div className="mt-1 font-mono text-[9px] text-white/20">Based on Discipline · Execution · Psychology · Risk · Consistency</div>
+      <div className="mt-1 font-mono text-[11px] text-white/35">Based on Discipline · Execution · Psychology · Risk · Consistency</div>
       {/* Mini timeline */}
       {timeline.length > 1 && (
         <div className="mt-3 flex items-end gap-1">
           {timeline.map((v, i) => (
             <div key={i} className="flex flex-col items-center gap-0.5">
               <div className={'rounded-sm transition-all ' + scoreColor(v)} style={{ width: 12, height: Math.max(4, (v / 100) * 32), background: i === timeline.length - 1 ? 'linear-gradient(120deg,#a78bfa,#22d3ee)' : 'rgba(255,255,255,0.15)' }} />
-              <span className="font-mono text-[7px] text-white/20">{v}</span>
+              <span className="font-mono text-[7px] text-white/35">{v}</span>
             </div>
           ))}
         </div>
@@ -118,7 +118,7 @@ function ScoreDetails({ scores, previousScores }) {
     <div className="rounded-2xl border border-white/10 bg-white/[0.03]">
       <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-3.5 text-left hover:bg-white/[0.02]">
         <span className="font-mono text-[10px] uppercase tracking-wider text-white/30">Detailed Scores</span>
-        <span className={'text-white/20 text-xs transition-transform ' + (open ? 'rotate-180' : '')}>▾</span>
+        <span className={'text-white/35 text-xs transition-transform ' + (open ? 'rotate-180' : '')}>▾</span>
       </button>
       {open && (
         <div className="border-t border-white/5 p-3.5 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -135,7 +135,7 @@ function ScoreDetails({ scores, previousScores }) {
                 </div>
                 <div className={'font-display text-xl font-bold ' + scoreColor(val)}>{val}</div>
                 {trend && <div className={'font-mono text-[10px] ' + trend.color}>{trend.text}</div>}
-                {needsAttention && <div className="mt-1 font-mono text-[9px] text-red-400/60">Needs attention</div>}
+                {needsAttention && <div className="mt-1 font-mono text-[11px] text-red-400/60">Needs attention</div>}
               </div>
             );
           })}
@@ -153,8 +153,8 @@ function StreakBadge({ icon, label, current, best }) {
       <div className="flex-1">
         <div className="text-[10px] text-white/35">{label}</div>
         <div className="flex items-baseline gap-1.5">
-          <span className={'font-display text-base font-bold ' + (current > 0 ? 'text-amber-400' : 'text-white/25')}>{current}d</span>
-          <span className="font-mono text-[9px] text-white/20">best {best}d</span>
+          <span className={'font-display text-base font-bold ' + (current > 0 ? 'text-amber-400' : 'text-white/40')}>{current}d</span>
+          <span className="font-mono text-[11px] text-white/35">best {best}d</span>
         </div>
       </div>
     </div>
@@ -173,7 +173,7 @@ function HabitRow({ habit, completed, autoCompleted, onToggle }) {
         {done && <span className="text-[10px]">✓</span>}
       </button>
       <span className={'flex-1 text-xs ' + (done ? 'text-white/40 line-through' : 'text-white/60')}>{habit.name}</span>
-      {isAuto && <span className="font-mono text-[8px] text-white/15">auto</span>}
+      {isAuto && <span className="font-mono text-[8px] text-white/30">auto</span>}
     </div>
   );
 }
@@ -279,7 +279,7 @@ export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, 
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <div className="mb-2 flex items-center justify-between">
             <span className="font-mono text-[10px] uppercase tracking-wider text-white/30">Today&apos;s Habits</span>
-            <span className="font-mono text-[9px] text-white/15">{todayDate}</span>
+            <span className="font-mono text-[11px] text-white/30">{todayDate}</span>
           </div>
           <div className="space-y-0.5">
             {habits.map((h) => (
@@ -293,7 +293,7 @@ export default function OverviewTab({ reports, tradeAnalyses, persona, streaks, 
           </div>
           <div className="mt-2 flex items-center gap-2">
             <input type="text" value={newHabit} onChange={(e) => setNewHabit(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleAddHabit()} placeholder="Add a habit..." maxLength={60}
-              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs outline-none placeholder:text-white/20 focus:border-cyan-400/40" />
+              className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs outline-none placeholder:text-white/35 focus:border-cyan-400/40" />
             <button onClick={handleAddHabit} disabled={adding || !newHabit.trim()} className="rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-white/40 hover:text-white/70 disabled:opacity-30">+Add</button>
           </div>
         </div>

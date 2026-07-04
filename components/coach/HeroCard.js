@@ -61,19 +61,19 @@ export default function HeroCard({ report, persona, userName }) {
             {oneHabit.improvement && (
               <div>
                 <div className="text-sm font-semibold text-emerald-400">{oneHabit.improvement}</div>
-                <div className="font-mono text-[9px] text-white/25">historical opportunity</div>
+                <div className="font-mono text-[11px] text-white/40">historical opportunity</div>
               </div>
             )}
             {(oneHabit.evidence_strength ?? oneHabit.confidence_pct) != null && (
               <div>
                 <div className="font-display text-lg font-bold text-cyan-400">{oneHabit.evidence_strength ?? oneHabit.confidence_pct}%</div>
-                <div className="font-mono text-[9px] text-white/25">evidence strength</div>
+                <div className="font-mono text-[11px] text-white/40">evidence strength</div>
               </div>
             )}
             {oneHabit.trade_count != null && (
               <div>
                 <div className="font-display text-lg font-bold text-white/50">{oneHabit.trade_count}</div>
-                <div className="font-mono text-[9px] text-white/25">similar trades</div>
+                <div className="font-mono text-[11px] text-white/40">similar trades</div>
               </div>
             )}
           </div>

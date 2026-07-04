@@ -27,7 +27,7 @@ function Section({ title, icon, score, defaultOpen, children }) {
           <span className="text-sm font-medium text-white/70">{title}</span>
           {score != null && <span className={'font-mono text-xs font-bold ' + scoreColor(score)}>{score}</span>}
         </div>
-        <span className={'text-white/20 text-xs transition-transform ' + (open ? 'rotate-180' : '')}>▾</span>
+        <span className={'text-white/35 text-xs transition-transform ' + (open ? 'rotate-180' : '')}>▾</span>
       </button>
       {open && <div className="pb-3 px-1">{children}</div>}
     </div>
@@ -59,14 +59,14 @@ function ReviewCard({ report }) {
           )}
           <div>
             <div className="text-sm font-medium text-white/80 line-clamp-1">{data.headline || 'Propol Review'}</div>
-            <div className="flex items-center gap-1.5 font-mono text-[10px] text-white/25">
+            <div className="flex items-center gap-1.5 font-mono text-[10px] text-white/40">
               <span>{new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
               <span>·</span>
               <span>{report.severity || '?'} trades</span>
             </div>
           </div>
         </div>
-        <span className={'text-white/20 text-xs transition-transform ' + (expanded ? 'rotate-180' : '')}>▾</span>
+        <span className={'text-white/35 text-xs transition-transform ' + (expanded ? 'rotate-180' : '')}>▾</span>
       </button>
 
       {expanded && (
@@ -100,13 +100,13 @@ function ReviewCard({ report }) {
               {disc.setup_adherence_pct != null && (
                 <div className="rounded-lg border border-white/5 bg-black/20 px-3 py-1.5">
                   <div className={'font-display text-base font-bold ' + scoreColor(disc.setup_adherence_pct)}>{disc.setup_adherence_pct}%</div>
-                  <div className="font-mono text-[9px] text-white/25">adherence</div>
+                  <div className="font-mono text-[11px] text-white/40">adherence</div>
                 </div>
               )}
               {disc.no_setup_count != null && (
                 <div className="rounded-lg border border-white/5 bg-black/20 px-3 py-1.5">
                   <div className="font-display text-base font-bold text-white/50">{disc.no_setup_count}</div>
-                  <div className="font-mono text-[9px] text-white/25">no setup</div>
+                  <div className="font-mono text-[11px] text-white/40">no setup</div>
                 </div>
               )}
             </div>
@@ -134,9 +134,9 @@ function ReviewCard({ report }) {
               <div className="space-y-1.5">
                 {mistakes.map((m, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
-                    <span className={'rounded px-1.5 py-0.5 font-mono text-[9px] ' + (SEV[m.severity] || SEV.medium)}>{m.severity}</span>
+                    <span className={'rounded px-1.5 py-0.5 font-mono text-[11px] ' + (SEV[m.severity] || SEV.medium)}>{m.severity}</span>
                     <span className="text-white/55">{m.pattern}</span>
-                    <span className="ml-auto font-mono text-white/25">{m.frequency}</span>
+                    <span className="ml-auto font-mono text-white/40">{m.frequency}</span>
                   </div>
                 ))}
               </div>
@@ -151,7 +151,7 @@ function ReviewCard({ report }) {
                   const action = typeof item === 'string' ? item : item.action;
                   return (
                     <div key={i} className="flex items-start gap-2 text-xs text-white/55">
-                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/[0.08] font-mono text-[9px] text-white/35">{i + 1}</span>
+                      <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/[0.08] font-mono text-[11px] text-white/35">{i + 1}</span>
                       <span>{action}</span>
                     </div>
                   );
@@ -186,9 +186,9 @@ export default function MonthlyReviewTab({ reports, usedThisMonth, limit, onGene
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="font-mono text-[10px] text-white/25">{reports?.length || 0} review{(reports?.length || 0) !== 1 ? 's' : ''}</span>
+        <span className="font-mono text-[10px] text-white/40">{reports?.length || 0} review{(reports?.length || 0) !== 1 ? 's' : ''}</span>
         <div className="flex items-center gap-3">
-          {limit > 0 && <span className="font-mono text-[10px] text-white/25">{usedThisMonth}/{limit}/mo</span>}
+          {limit > 0 && <span className="font-mono text-[10px] text-white/40">{usedThisMonth}/{limit}/mo</span>}
           {canGenerate && (
             <button onClick={onGenerate} disabled={generating} className="rounded-xl px-4 py-2 text-xs font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
               {generating ? 'Generating…' : '✦ New Review'}

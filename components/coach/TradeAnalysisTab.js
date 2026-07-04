@@ -40,12 +40,12 @@ function TradeAnalysisCard({ analysis }) {
               <span className="text-sm font-medium text-white/80 line-clamp-1">{analysis.summary || 'Trade Analysis'}</span>
               <span className={'rounded px-1.5 py-0.5 font-mono text-[10px] font-bold ' + scoreColor(score || 0)}>{grade}</span>
             </div>
-            <div className="font-mono text-[10px] text-white/25">
+            <div className="font-mono text-[10px] text-white/40">
               {new Date(analysis.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </div>
           </div>
         </div>
-        <span className={'text-white/20 text-xs transition-transform ' + (expanded ? 'rotate-180' : '')}>▾</span>
+        <span className={'text-white/35 text-xs transition-transform ' + (expanded ? 'rotate-180' : '')}>▾</span>
       </button>
 
       {expanded && (
@@ -114,8 +114,8 @@ export default function TradeAnalysisTab({ analyses, usedThisMonth, limit }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
-        <span className="font-mono text-[10px] text-white/25">{analyses.length} analyses</span>
-        {limit > 0 && <span className="font-mono text-[10px] text-white/25">{usedThisMonth}/{limit} this month</span>}
+        <span className="font-mono text-[10px] text-white/40">{analyses.length} analyses</span>
+        {limit > 0 && <span className="font-mono text-[10px] text-white/40">{usedThisMonth}/{limit} this month</span>}
       </div>
       {analyses.map((a) => <TradeAnalysisCard key={a.id} analysis={a} />)}
     </div>
