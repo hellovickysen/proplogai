@@ -40,33 +40,25 @@ function MistakesCard({ items }) {
 /* ── Emotions bar chart ─────────────────────────────────────── */
 function EmotionsCard({ items }) {
   if (!items.length) return <EmptyMini icon="🧠" text="Log emotions to see patterns" />;
-  // Normalize: if no percentages, distribute evenly
-  const hasPct = items.some((e) => e.pct > 0);
-  const total = items.length;
-  const normalized = hasPct
-    ? items
-    : items.map((e, i) => ({ ...e, pct: Math.round(100 / total) }));
-  const maxPct = Math.max(...normalized.map((e) => e.pct), 1);
+  const colors = ['bg-violet-400', 'bg-cyan-400', 'bg-amber-400', 'bg-emerald-400', 'bg-red-400'];
+  const dotColors = ['bg-violet-400', 'bg-cyan-400', 'bg-amber-400', 'bg-emerald-400', 'bg-red-400'];
+  // Use count if available, otherwise equal weight
+  const maxCount = Math.max(...items.map((e) => e.count || 1), 1);
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
       <div className="mb-3 font-mono text-[10px] uppercase tracking-wider text-white/35">Emotions</div>
-      <div className="space-y-2.5">
-        {normalized.map((e, i) => {
-          const colors = ['bg-violet-400', 'bg-cyan-400', 'bg-amber-400', 'bg-emerald-400', 'bg-red-400'];
-          return (
-            <div key={i}>
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-xs text-white/55">{e.label}</span>
-                {e.detail && <span className="text-[10px] text-white/25">{e.detail}</span>}
-              </div>
-              <div className="flex items-center gap-2">
-                <Bar pct={(e.pct / maxPct) * 100} color={colors[i % colors.length]} />
-                <span className="w-8 text-right font-mono text-xs text-white/40">{e.pct}%</span>
-              </div>
-            </div>
-          );
-        })}
+      <div className="space-y-3">
+        {items.map((e, i) => (
+          <div key={i} className="flex items-center gap-3">
+            <span className={'shrink-0 h-2 w-2 rounded-full ' + dotColors[i % dotColors.length]} />
+            <span className="w-24 shrink-0 text-sm font-medium text-white/70">{e.label}</span>
+            <Bar pct={((e.count || 1) / maxCount) * 100} color={colors[i % colors.length]} />
+            <span className="w-16 shrink-0 text-right font-mono text-xs text-white/50">
+              {e.count ? e.count + ' trade' + (e.count !== 1 ? 's' : '') : '—'}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -126,18 +118,23 @@ export default function InsightsTab({ reports, analyses }) {
   });
   const topMistakes = Object.values(allMistakes).sort((a, b) => b.count - a.count).slice(0, 5);
 
-  // Emotion distribution — handle both formats (percentage-based and text-based)
+  // Emotion distribution — extract clean names and trade counts
   const latestReport = reports?.[0]?.mistakes;
   const rawEmotions = latestReport?.emotional_analysis?.distribution || latestReport?.psychology?.insights || [];
   const emotionItems = rawEmotions.slice(0, 5).map((e) => {
-    const pct = e.percentage != null ? e.percentage : 0;
-    // Extract just the emotion name (before any parenthetical)
-    const emotionName = (e.emotion || '').split('(')[0].split('+')[0].trim();
-    const shortLabel = emotionName.length > 15 ? emotionName.slice(0, 15) + '…' : emotionName;
-    // Use stat or observation as detail
-    const detail = e.stat || e.observation || '';
-    const shortDetail = detail.length > 30 ? detail.slice(0, 30) + '…' : detail;
-    return { label: shortLabel || e.emotion, pct, detail: shortDetail };
+    // Extract just the first emotion name, clean up compound labels
+    const raw = e.emotion || '';
+    const name = raw.split('+')[0].split('(')[0].trim();
+    const label = name.length > 12 ? name.slice(0, 12) + '…' : name;
+    // Try to extract trade count from stat text (e.g. "2 trades" or "6 trades with...")
+    let count = null;
+    if (e.percentage != null && e.percentage > 0) count = e.percentage;
+    const statMatch = (e.stat || e.observation || '').match(/(\d+)\s*trade/i);
+    if (statMatch) count = parseInt(statMatch[1], 10);
+    // Fallback: check if emotion text has count in parens like "FOMO (2 trades)"
+    const parenMatch = raw.match(/\((\d+)/);
+    if (!count && parenMatch) count = parseInt(parenMatch[1], 10);
+    return { label: label || raw, count };
   });
 
   const actionPlan = (latestReport?.action_plan || []).slice(0, 4);
