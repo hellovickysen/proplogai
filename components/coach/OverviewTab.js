@@ -90,9 +90,9 @@ function TraderDNA({ persona, scores }) {
           <div key={i} className="flex items-center gap-3">
             <span className="w-20 shrink-0 text-xs text-white/50">{t.label}</span>
             <div className="h-2.5 flex-1 rounded-full bg-white/[0.06]">
-              <div className="h-full rounded-full transition-all" style={{ width: t.value + '%', background: t.value >= 70 ? '#34d399' : t.value >= 40 ? '#fbbf24' : '#f87171' }} />
+              <div className="h-full rounded-full transition-all" style={{ width: t.value + '%', background: t.value >= 70 ? 'rgba(52,211,153,0.45)' : t.value >= 40 ? 'rgba(251,191,36,0.35)' : 'rgba(248,113,113,0.4)' }} />
             </div>
-            <span className={'w-8 text-right font-mono text-xs ' + scoreColor(t.value)}>{t.value}</span>
+            <span className={'w-8 text-right font-mono text-xs text-white/40'}>{t.value}</span>
           </div>
         ))}
       </div>
