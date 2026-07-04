@@ -19,6 +19,14 @@ export const metadata = {
     url: 'https://proplogai.com/tools',
     siteName: 'PropLogAI',
     type: 'website',
+    images: [
+      {
+        url: 'https://proplogai.com/og-consistency-calculator.png',
+        width: 1344,
+        height: 768,
+        alt: 'PropLogAI — Free Prop Trading Tools',
+      },
+    ],
   },
   alternates: {
     canonical: 'https://proplogai.com/tools',

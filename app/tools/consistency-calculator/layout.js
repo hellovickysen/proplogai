@@ -20,12 +20,21 @@ export const metadata = {
     url: 'https://proplogai.com/tools/consistency-calculator',
     siteName: 'PropLogAI',
     type: 'website',
+    images: [
+      {
+        url: 'https://proplogai.com/og-consistency-calculator.png',
+        width: 1344,
+        height: 768,
+        alt: 'PropLogAI Consistency Calculator — Check your payout eligibility',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Prop Firm Consistency Calculator — Free',
     description:
       'Check your payout eligibility under the 20% consistency rule. Includes a What-If simulator.',
+    images: ['https://proplogai.com/og-consistency-calculator.png'],
   },
   alternates: {
     canonical: 'https://proplogai.com/tools/consistency-calculator',
