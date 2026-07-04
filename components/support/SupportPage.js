@@ -213,7 +213,7 @@ function TicketDetail({ ticket, onBack }) {
               <p className="text-sm font-semibold text-emerald-300">Your ticket has been resolved</p>
               <p className="mt-2 text-sm text-white/55 leading-relaxed">
                 If you still need help, reply below to <strong className="text-white/70">re-open</strong> this ticket.
-                Otherwise, you can close it now or it will be <strong className="text-white/70">automatically deleted</strong> after some time.
+                Otherwise, you can close it now or it will be <strong className="text-white/70">automatically deleted</strong>.
               </p>
             </div>
           </div>
