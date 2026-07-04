@@ -1,6 +1,6 @@
 # PropLogAI — Technical Documentation
 
-Comprehensive technical reference for the PropLogAI codebase. Last updated: July 3, 2026 (Phase L).
+Comprehensive technical reference for the PropLogAI codebase. Last updated: July 4, 2026 (Phase M).
 
 ## 1. Architecture Overview
 
@@ -53,7 +53,7 @@ proplogai/
 │   │   ├── settings/          # User settings + actions
 │   │   ├── support/           # Support tickets + actions
 │   │   └── notifications/     # Notification list + actions
-│   ├── admin/                 # Admin panel (overview, users, tickets, AI, revenue)
+│   ├── admin/                 # Admin panel (overview, users, tickets, AI, revenue) + actions.js (toggleBeta())
 │   ├── profile/[code]/        # Public trader profile
 │   ├── trade/[shareId]/       # Shared trade journal (24h expiry)
 │   ├── trophy/[id]/           # Public trophy page
@@ -63,12 +63,12 @@ proplogai/
 │   ├── terms/                 # Terms of service (ISR daily)
 │   └── api/logo/              # PNG logo for email templates
 ├── components/
-│   ├── ui/                    # Skeleton, Toast, EmptyStates, Fab, ConfirmDialog, BetaNotice, GuidedTour
+│   ├── ui/                    # Skeleton, Toast, EmptyStates, Fab, ConfirmDialog, BetaNotice, GuidedTour, PlanBadge, BetaFeatureWarning, UpgradeCard
 │   ├── layout/                # Sidebar, MobileNav, RiskFooter, PostHogProvider
 │   ├── trades/                # TradeForm, TradeTable, TradeFilters, DeleteTradeButton, ExportButton
 │   ├── journal/               # JournalForm, JournalSection, JournalView
 │   ├── coach/                 # CoachReport, GenerateReportButton, EmailReportButton, AnalyzeButton
-│   ├── calendar/              # CalendarMonth, PnlCalendar
+│   ├── calendar/              # CalendarMonth, PnlCalendar, CalendarInsights (10 insight cards + Trade Win gauge)
 │   ├── dashboard/             # DisciplineCards, WeeklyScoreRing, AchievementBadges, EquityChart, DashboardShareButton
 │   ├── expenses/              # ExpenseTracker
 │   ├── trophies/              # TrophyWall
@@ -86,7 +86,7 @@ proplogai/
 ├── lib/
 │   ├── ai.js                  # OpenRouter integration (callOpenRouter, analyzeTradeWithAI, analyzeCoachReport, tradeToText, datasetToText)
 │   ├── email.js               # Resend integration (sendCoachReportEmail, isEmailConfigured, escHtml)
-│   ├── stats.js               # computeStats, equitySeries, equityChartData, fmtMoney, fmtR, fmtMoneyCompact, num
+│   ├── stats.js               # computeStats, equitySeries, equityChartData, fmtMoney, fmtR, fmtMoneyCompact, num, getTradingDate, getTradingMonth
 │   ├── discipline.js          # computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak, calculateWeekScore
 │   ├── achievements.js        # ACHIEVEMENT_DEFS, computeAchievements
 │   ├── notifications.js       # notify, notifyAdmin, TYPES, NOTIFICATION_META
@@ -94,14 +94,18 @@ proplogai/
 │   ├── emotions.js            # DEFAULT_EMOTIONS, resolveEmotions
 │   ├── security.js            # isDisposableEmail (200+ domains + subdomain check), validatePassword
 │   ├── imageUtils.js          # processImageFile (WebP conversion, pdf.js with retry)
+│   ├── plans.js               # PLANS config, FEATURES limits, getUserAccess(), buildAccess()
+│   ├── tags.js                # DEFAULT_TAGS, resolveTags(), MAX_CUSTOM_TAGS
 │   └── supabase/
 │       ├── client.js          # Browser Supabase client (with env var guard)
 │       ├── server.js          # Server Supabase client (with env var guard)
 │       └── admin.js           # Service role client + ADMIN_EMAIL from env
 ├── middleware.js               # Auth refresh + route protection (/dashboard, /admin)
+├── scripts/
+│   └── cleanup-orphans.js     # Storage orphan cleanup script
 ├── next.config.mjs            # CSP headers, HSTS, image remotePatterns, optimizePackageImports
 ├── tailwind.config.js         # Custom colors (ink, mint, loss), content glob includes .ts/.tsx
-└── supabase/migrations/       # SQL files 0001-0023
+└── supabase/migrations/       # SQL files 0001-0026
 ```
 
 ## 4. Database Schema
@@ -112,13 +116,13 @@ proplogai/
 - id, user_id, account_id, pair, direction, entry_price, exit_price, stop_loss, take_profit, lot_size, pnl, r_multiple, setup (text), setup_id (uuid FK), setup_ids (jsonb array), setup_followed (yes/partial/no), no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, share_id (uuid nullable), shared_until (timestamptz nullable), external_id, source, created_at
 
 **journal_entries** — Trade journals (1:1 with trades via trade_id CASCADE)
-- id, user_id, trade_id, note, emotions[], confidence, screenshot_url, screenshot_urls (jsonb), created_at
+- id, user_id, trade_id, note, emotions[], confidence, screenshot_url, screenshot_urls (jsonb), lesson (text, migration 0025), tags (text[], migration 0026), created_at
 
 **ai_insights** — AI analysis results (cached)
 - id, user_id, trade_id, type ('trade_analysis'|'coach_report'), summary, mistakes (jsonb), severity, created_at
 
 **user_preferences** — Per-user settings
-- id, user_id (UNIQUE), avatar_url, full_name (text, migration 0023), custom_emotions[], custom_setups[], default_confidence, onboarding_complete, share_code, show_calendar, show_trades, show_payouts, show_trophies, calendar_mode, calendar_start, calendar_end, calendar_rolling_days, referral_balance, referred_by, created_at, updated_at
+- id, user_id (UNIQUE), avatar_url, full_name (text, migration 0023), custom_emotions[], custom_setups[], default_confidence, onboarding_complete, share_code, show_calendar, show_trades, show_payouts, show_trophies, calendar_mode, calendar_start, calendar_end, calendar_rolling_days, referral_balance, referred_by, is_beta (boolean, default true, migration 0024), custom_tags (text[], migration 0026), created_at, updated_at
 
 **setups** — Trading rulebook setups
 - id, user_id, name, direction, description, is_default, is_active, sort_order, created_at, updated_at
@@ -142,7 +146,7 @@ proplogai/
 - id, referrer_id, referred_user_id (unique), referred_email, status, reward_given, created_at
 
 **subscriptions** — Plan management (Stripe planned)
-- id, user_id, plan, status, stripe_id, renews_at, created_at
+- id, user_id, plan ('basic'/'elite', renamed from 'free'/'pro' in migration 0024), status, stripe_id, renews_at, created_at
 
 **site_settings** — Global settings (beta_count, etc.)
 - id, key (unique), value (jsonb), updated_at
@@ -265,6 +269,12 @@ setup_followed: 'partial'  // Auto-computed overall for DB storage
 
 13. **Trading day boundary is midnight UTC (= 5:30 AM IST).** Always use `getTradingDate()` or `getTradingMonth()` from `lib/stats.js` for "today" logic. Never use `toLocaleDateString` with a timezone — that was the old IST approach. A trade at 3:00 AM IST belongs to the previous trading day; a trade at 6:00 AM IST starts the new day.
 
+14. **All trade queries need a secondary sort by `created_at`.** Sorting only by `trade_date`/`opened_at` produces unstable ordering for same-day trades — add `.order('created_at', { ascending: true/false })` as a tiebreaker everywhere trades are listed.
+
+15. **subscriptions.plan values are 'basic'/'elite'**, not 'free'/'pro' (renamed in migration 0024). Update any hardcoded plan checks across gating logic, landing page copy, and admin views.
+
+16. **Feature gating must be server-side, not just UI-hidden.** `lib/plans.js`'s `getUserAccess()`/`buildAccess()` must be checked inside server actions (AI analysis, coach report, uploads, exports, etc.) — a hidden button is not a security boundary. Always honor `is_beta` as a bypass for Elite-only gates during the beta period.
+
 ## 9. Phase L Changes (June 30, 2026 — post-K)
 
 ### Landing Nav Redesign (LandingNav.js + CookieBanner.js)
@@ -317,3 +327,73 @@ Features:
 - `data-tour` attributes on key UI elements (new-trade, share-btn, recent-trades, nav-expenses, nav-coach)
 - Mobile responsive tooltip positioning
 - Files: `components/ui/GuidedTour.js` (new), modified `app/dashboard/layout.js`, `app/dashboard/page.js`, `components/layout/Sidebar.js`, `components/settings/SettingsTabs.js`
+
+## 10. Phase M Changes (July 4, 2026 — post-L)
+
+### Trading Day Boundary Fix + Trade Ordering
+- Confirmed/hardened trading day boundary: midnight UTC = 5:30 AM IST via `getTradingDate()` / `getTradingMonth()` in `lib/stats.js` (see Pitfall #13)
+- Added secondary sort by `created_at` to all trade queries (dashboard, trades list, calendar, export) to stabilize ordering for same-day trades (see Pitfall #14)
+
+### Plan System (Migration 0024 + lib/plans.js)
+```sql
+-- supabase/migrations/0024_plans_beta.sql
+ALTER TABLE user_preferences ADD COLUMN is_beta boolean DEFAULT true;
+-- subscriptions.plan values updated: 'free'→'basic', 'pro'→'elite'
+```
+- Two plans: **Basic** ($0) and **Elite** ($9.99/mo)
+- `lib/plans.js`: `PLANS` config object, `FEATURES` limits map, `getUserAccess(user)` resolves a user's effective access, `buildAccess()` composes the access object used by gates
+- `is_beta` flag (default true) lets beta users bypass Elite-only gates entirely; toggled per-user via new `app/admin/actions.js` → `toggleBeta()` server action, surfaced in admin panel (BetaCountControl / AdminUserTabs)
+- New UI components: `components/ui/PlanBadge.js` (plan indicator), `components/ui/BetaFeatureWarning.js` (inline notice when a beta feature will be gated post-beta), `components/ui/UpgradeCard.js` (upsell CTA shown when a Basic user hits a limit)
+- Landing page copy renamed: Free → Basic, Pro → Elite
+
+### Server-Side Feature Gating
+All gates enforced inside server actions (never just hidden in the UI), with `is_beta` as a universal bypass:
+- AI trade analysis: 3/month on Basic
+- AI coach report: 1/month on Basic
+- Trophy uploads: 5 on Basic
+- Screenshots: 1 per trade on Basic
+- Custom setups: 3 on Basic
+- CSV export: Elite-only
+- Shareable P&L cards: Elite-only
+- Email coach report: Elite-only
+
+### Storage Cleanup + Orphan Script
+- Deleting a trade, screenshot, or avatar now also removes the associated Supabase Storage object (previously left orphaned files in `screenshots`/`avatars`/`trophies` buckets)
+- New `scripts/cleanup-orphans.js` — standalone script to sweep storage buckets for files with no matching DB row and delete them (run manually / via cron, not part of the request path)
+
+### Calendar Insights (components/calendar/CalendarInsights.js)
+New insights panel on the P&L calendar:
+- **Trade Win gauge**: SVG semi-circle gauge showing win rate
+- **10 stat cards** laid out in a 4x2 + 4 grid
+- **Month / All-Time toggle** with smart averages that adjust denominator based on the selected range
+
+### Tags System (Migration 0026 + lib/tags.js)
+```sql
+-- supabase/migrations/0026_tags.sql
+ALTER TABLE journal_entries ADD COLUMN tags text[];
+ALTER TABLE user_preferences ADD COLUMN custom_tags text[];
+```
+- `lib/tags.js`: `DEFAULT_TAGS` (news, high impact, low volume, scalp, swing), `resolveTags()` merges default + custom tags for a user, `MAX_CUSTOM_TAGS` = 10
+- Tags editable on journal entries, filterable and shown as a column on the Trades page
+- Custom tags managed per-user via `user_preferences.custom_tags`, capped at 10
+
+### Journal Entry: Lesson Learned (Migration 0025)
+```sql
+-- supabase/migrations/0025_lesson.sql
+ALTER TABLE journal_entries ADD COLUMN lesson text;
+```
+- New "Lesson learned" free-text field on journal entries, alongside note/emotions/confidence
+
+### Trade Form & UI Polish
+- Removed Take Profit field; Stop Loss marked optional (not required to save)
+- "Lot Size" relabeled "Lot / Contract size"
+- Risk:Reward ratio now auto-calculated and displayed from entry/stop/exit prices
+- M1 timeframe option added
+- Custom dark-themed dropdowns replace native `<select>` elements: Timeframe in TradeForm, all filters in TradeFilters
+- Styled Long/Short direction badges: SVG trend-line icons in blue (long) / red (short) pill badges
+- Portrait screenshots capped at `max-h-80` to prevent oversized previews
+- 5MB upload limit standardized across all upload surfaces (screenshots, avatars, trophies)
+- Trade count pill badge added to Trades page header
+- Dashboard: Avg R stat replaced with Expectancy (average P&L per trade)
+- Expense tracker: fixed sort order to flow correctly down columns in the 2-column grid (previously flowed row-first)
+- Files: `lib/plans.js` (new), `lib/tags.js` (new), `components/ui/PlanBadge.js` (new), `components/ui/BetaFeatureWarning.js` (new), `components/ui/UpgradeCard.js` (new), `components/calendar/CalendarInsights.js` (new), `app/admin/actions.js` (new), `scripts/cleanup-orphans.js` (new), `supabase/migrations/0024_plans_beta.sql`, `supabase/migrations/0025_lesson.sql`, `supabase/migrations/0026_tags.sql`, modified `lib/stats.js`, `components/trades/TradeForm.js`, `components/trades/TradeFilters.js`, `components/trades/TradeTable.js`, `components/journal/JournalForm.js`, `app/dashboard/page.js`, `app/page.js` (landing), `components/expenses/ExpenseTracker.js`
