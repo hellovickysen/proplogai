@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { createTicket, replyToTicket, closeTicket } from '@/app/dashboard/support/actions';
 import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { processImageFile } from '@/lib/imageUtils';
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -274,9 +275,12 @@ export default function SupportPage({ tickets }) {
       const tempId = Date.now() + Math.random();
       setScreenshots((prev) => [...prev, { id: tempId, url: null, uploading: true }]);
       try {
-        const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const processed = await processImageFile(file);
+        if (processed.error) { if (toast) toast.error(processed.error); setScreenshots((prev) => prev.filter((s) => s.id !== tempId)); continue; }
+        const uploadFile = processed.file;
+        const safe = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const path = user.id + '/support_' + Date.now() + '_' + safe;
-        const { error } = await supabase.storage.from('screenshots').upload(path, file, { cacheControl: '3600', upsert: true });
+        const { error } = await supabase.storage.from('screenshots').upload(path, uploadFile, { cacheControl: '3600', upsert: true });
         if (error) { if (toast) toast.error('Upload failed: ' + error.message); setScreenshots((prev) => prev.filter((s) => s.id !== tempId)); continue; }
         const { data: { publicUrl } } = supabase.storage.from('screenshots').getPublicUrl(path);
         setScreenshots((prev) => prev.map((s) => s.id === tempId ? { ...s, url: publicUrl, uploading: false } : s));
