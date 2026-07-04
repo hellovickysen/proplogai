@@ -6,6 +6,7 @@ import { changePassword, savePreferences } from '@/app/dashboard/settings/action
 import { useToast } from '@/components/ui/Toast';
 import { validatePassword } from '@/lib/security';
 import { replayTour } from '@/components/ui/GuidedTour';
+import { processImageFile } from '@/lib/imageUtils';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
 const DEFAULT_TAGS = ['news', 'high impact', 'low volume', 'scalp', 'swing'];
@@ -99,10 +100,18 @@ function ProfileTab({ user, prefs }) {
     setUploading(true);
     setAvatarErr(null);
     setAvatarMsg(null);
+    const processed = await processImageFile(file);
+    if (processed.error) {
+      setAvatarErr(processed.error);
+      if (toast) toast.error(processed.error);
+      setUploading(false);
+      return;
+    }
+    const uploadFile = processed.file;
     const supabase = createClient();
-    const safe = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const safe = uploadFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const path = user.id + '/avatar_' + Date.now() + '_' + safe;
-    const up = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+    const up = await supabase.storage.from('avatars').upload(path, uploadFile, { upsert: true });
     if (up.error) {
       setAvatarErr('Upload failed: ' + up.error.message);
       setUploading(false);
