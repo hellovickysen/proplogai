@@ -75,7 +75,7 @@ export async function createTicket(payload) {
 
   // Skip admin notification if user IS the admin (avoids duplicate)
   if (user.email !== ADMIN_EMAIL) {
-    await notifyAdmin(TYPES.NEW_TICKET, 'New Support Ticket', `${category}: ${subject}`, { email: user.email });
+    await notifyAdmin(TYPES.NEW_TICKET, 'New Support Ticket', `${category}: ${subject}`, { email: user.email, link: '/admin/tickets' });
   }
 
   revalidatePath('/dashboard/support');
@@ -127,7 +127,7 @@ export async function replyToTicket(ticketId, message, screenshotUrls = []) {
 
   // Skip admin notification if user IS the admin (avoids duplicate)
   if (user.email !== ADMIN_EMAIL) {
-    await notifyAdmin(TYPES.TICKET_USER_REPLIED, 'New Reply on Ticket', `User replied: ${ticket.subject}`, { ticketId });
+    await notifyAdmin(TYPES.TICKET_USER_REPLIED, 'New Reply on Ticket', `User replied: ${ticket.subject}`, { ticketId, link: '/admin/tickets' });
   }
 
   revalidatePath('/dashboard/support');
