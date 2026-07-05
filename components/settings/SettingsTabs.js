@@ -7,6 +7,8 @@ import { useToast } from '@/components/ui/Toast';
 import { validatePassword } from '@/lib/security';
 import { replayTour } from '@/components/ui/GuidedTour';
 import { processImageFile } from '@/lib/imageUtils';
+import BillingTab from '@/components/settings/BillingTab';
+import PublicProfileSettings from '@/components/profile/PublicProfileSettings';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
 const DEFAULT_TAGS = ['news', 'high impact', 'low volume', 'scalp', 'swing'];
@@ -238,26 +240,6 @@ function ProfileTab({ user, prefs }) {
         </button>
       </div>
 
-      {/* Plan info */}
-      <div className={card}>
-        <div className="mb-2 font-display text-base font-semibold">Your Plan</div>
-        <div className="flex items-center gap-3">
-          <span className={'rounded-full border px-3 py-1 text-xs font-semibold ' +
-            (prefs?.is_beta ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300' :
-             'border-white/15 bg-white/5 text-white/60')}>
-            {prefs?.is_beta ? 'Beta Access' : 'Basic'}
-          </span>
-          {prefs?.is_beta && (
-            <span className="text-xs text-white/40">All Elite features unlocked free during beta</span>
-          )}
-        </div>
-        {!prefs?.is_beta && (
-          <a href="/#pricing" className="mt-3 inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-            Upgrade to Elite
-          </a>
-        )}
-      </div>
-
       {/* Replay walkthrough */}
       <div className={card}>
         <div className="mb-2 font-display text-base font-semibold">Walkthrough</div>
@@ -394,26 +376,30 @@ function JournalSettingsTab({ prefs, onSaved }) {
   );
 }
 
-export default function SettingsTabs({ user, prefs: initialPrefs }) {
-  const [tab, setTab] = useState('profile');
+export default function SettingsTabs({ user, prefs: initialPrefs, planAccess, subscription, paymentStatus, initialTab }) {
+  const [tab, setTab] = useState(initialTab || 'profile');
   const [prefs, setPrefs] = useState(initialPrefs);
 
   const tabs = [
     { id: 'profile', label: 'Profile' },
-    { id: 'journal', label: 'Journal settings' },
+    { id: 'public', label: 'Public Share' },
+    { id: 'journal', label: 'Journal Settings' },
+    { id: 'billing', label: 'Billing' },
   ];
 
   return (
     <div>
-      <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+      <div className="mb-6 flex gap-1 rounded-xl border border-white/10 bg-white/[0.03] p-1 overflow-x-auto">
         {tabs.map((t) => (
-          <button key={t.id} onClick={() => setTab(t.id)} className={'flex-1 rounded-lg px-4 py-2 text-xs sm:text-sm font-semibold transition-colors ' + (tab === t.id ? 'bg-white/10 text-white' : 'text-white/55 hover:text-white/70')}>
+          <button key={t.id} onClick={() => setTab(t.id)} className={'flex-1 whitespace-nowrap rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold transition-colors ' + (tab === t.id ? 'bg-white/10 text-white' : 'text-white/55 hover:text-white/70')}>
             {t.label}
           </button>
         ))}
       </div>
       {tab === 'profile' && <ProfileTab user={user} prefs={prefs} />}
+      {tab === 'public' && <PublicProfileSettings user={user} prefs={prefs} />}
       {tab === 'journal' && <JournalSettingsTab prefs={prefs} onSaved={(updated) => setPrefs((p) => ({ ...p, ...updated }))} />}
+      {tab === 'billing' && <BillingTab planAccess={planAccess} subscription={subscription} paymentStatus={paymentStatus} />}
     </div>
   );
 }
