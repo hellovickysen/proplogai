@@ -12,14 +12,31 @@ const NAV_LINKS = [
   { label: 'About', href: '/about' },
 ];
 
+function DefaultLogo() {
+  return (
+    <a href="/" className="flex items-center gap-2.5">
+      <span className="grid flex-shrink-0 place-items-center rounded-lg" style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}>
+        <svg width="32" height="32" viewBox="0 0 100 100" aria-hidden="true">
+          <polygon points="22,42 50,49 50,75 22,69" fill="#08080f" />
+          <polygon points="78,42 50,49 50,75 78,69" fill="#08080f" />
+          <polyline points="50,49 63,39 74,27" fill="none" stroke="#08080f" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="74" cy="27" r="4.5" fill="#08080f" />
+        </svg>
+      </span>
+      <span className="font-display text-lg font-bold tracking-tight">PropLog<span style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>AI</span></span>
+    </a>
+  );
+}
+
 export default function LandingNav({ logo }) {
+  const navLogo = logo || <DefaultLogo />;
   const [open, setOpen] = useState(false);
 
   return (
     <nav className="relative z-20 px-4 py-4 sm:px-10 sm:py-5">
       {/* ─── Desktop Nav ─── */}
       <div className="hidden items-center justify-between sm:flex">
-        {logo}
+        {navLogo}
         <div className="flex items-center gap-1.5">
           {NAV_LINKS.map((link) => {
             if (link.external) {
@@ -84,7 +101,7 @@ export default function LandingNav({ logo }) {
 
       {/* ─── Mobile Nav Bar ─── */}
       <div className="flex items-center justify-between sm:hidden">
-        {logo}
+        {navLogo}
         <div className="flex items-center gap-1">
           <Link
             href="/login"

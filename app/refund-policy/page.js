@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import LandingFooter from '@/components/landing/LandingFooter';
+import LandingNav from '@/components/landing/LandingNav';
 
 export const metadata = {
   title: 'Refund Policy — PropLogAI',
@@ -19,10 +20,11 @@ function Section({ title, children }) {
 
 export default function RefundPolicyPage() {
   return (
+    <>
+    <LandingNav />
     <div className="min-h-screen bg-[#07070b] text-white">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <Link href="/" className="mb-8 inline-block font-display text-lg font-bold" style={gradientText}>PropLogAI</Link>
-        <h1 className="mb-2 text-3xl font-bold">Refund & Cancellation Policy</h1>
+<h1 className="mb-2 text-3xl font-bold">Refund & Cancellation Policy</h1>
         <p className="mb-10 text-sm text-white/40">Last updated: July 2026</p>
 
         <div className="text-sm leading-relaxed text-white/70 space-y-1">

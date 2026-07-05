@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { PLANS, FEATURES, ELITE_FEATURES } from '@/lib/plans';
 import LandingFooter from '@/components/landing/LandingFooter';
+import LandingNav from '@/components/landing/LandingNav';
 
 export const metadata = {
   title: 'Pricing — PropLogAI',
@@ -67,6 +68,8 @@ const FAQ = [
 
 export default function PricingPage() {
   return (
+    <>
+    <LandingNav />
     <div className="min-h-screen bg-[#07070b] text-white">
       {/* Header */}
       <div className="border-b border-white/10">

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import LandingFooter from '@/components/landing/LandingFooter';
+import LandingNav from '@/components/landing/LandingNav';
 
 export const metadata = {
   title: 'Contact Us — PropLogAI',
@@ -11,10 +12,11 @@ const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 
 export default function ContactPage() {
   return (
+    <>
+    <LandingNav />
     <div className="min-h-screen bg-[#07070b] text-white">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <Link href="/" className="mb-8 inline-block font-display text-lg font-bold" style={gradientText}>PropLogAI</Link>
-        <h1 className="mb-2 text-3xl font-bold">Contact Us</h1>
+<h1 className="mb-2 text-3xl font-bold">Contact Us</h1>
         <p className="mb-10 text-sm text-white/50">
           Have a question, feedback, or need help? We're here for you.
         </p>

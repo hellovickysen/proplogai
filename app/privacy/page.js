@@ -2,6 +2,7 @@ export const revalidate = 86400; // Revalidate daily (for copyright year)
 
 import Link from 'next/link';
 import LandingFooter from '@/components/landing/LandingFooter';
+import LandingNav from '@/components/landing/LandingNav';
 
 const gradientText = {
   background: 'linear-gradient(120deg,#a78bfa,#22d3ee)',
@@ -41,6 +42,7 @@ function Ul({ items }) {
 export default function PrivacyPage() {
   return (
     <>
+    <LandingNav />
     <div
       className="min-h-screen px-4 py-16 text-white"
       style={{ background: '#07070b', fontFamily: 'Poppins, sans-serif' }}
