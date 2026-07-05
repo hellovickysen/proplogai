@@ -35,7 +35,8 @@ export default function LandingNav({ logo }) {
   return (
     <nav className="relative z-20 px-4 py-4 sm:px-10 sm:py-5">
       {/* ─── Desktop Nav ─── */}
-      <div className="hidden items-center justify-between sm:flex">
+      <div className="hidden sm:flex justify-center">
+        <div className="flex items-center justify-between gap-2 rounded-full border border-white/[0.08] bg-[#0a0a14]/90 backdrop-blur-md px-5 py-2 shadow-[0_2px_24px_rgba(0,0,0,0.3)]">
         {navLogo}
         <div className="flex items-center gap-1.5">
           {NAV_LINKS.map((link) => {
@@ -96,6 +97,7 @@ export default function LandingNav({ logo }) {
           >
             Start Free Trial
           </Link>
+        </div>
         </div>
       </div>
 
