@@ -101,7 +101,19 @@ function TradeAnalysisCard({ analysis }) {
   );
 }
 
-export default function TradeAnalysisTab({ analyses, usedThisMonth, limit }) {
+function LimitUpgrade({ feature }) {
+  const [show, setShow] = useState(false);
+  return (
+    <>
+      <button onClick={() => setShow(true)} className="text-[10px] text-violet-400 hover:text-violet-300 font-medium">
+        Upgrade for more
+      </button>
+      {show && <UpgradeModal onClose={() => setShow(false)} feature={feature} />}
+    </>
+  );
+}
+
+export default function TradeAnalysisTab({ analyses, usedThisMonth, limit, planAccess }) {
   if (!analyses || analyses.length === 0) {
     return (
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
@@ -115,7 +127,14 @@ export default function TradeAnalysisTab({ analyses, usedThisMonth, limit }) {
     <div className="space-y-2">
       <div className="flex items-center justify-between px-1">
         <span className="font-mono text-[10px] text-white/40">{analyses.length} analyses</span>
-        {limit > 0 && <span className="font-mono text-[10px] text-white/40">{usedThisMonth}/{limit} this month</span>}
+        {limit > 0 && (
+          <span className="flex items-center gap-2">
+            <span className="font-mono text-[10px] text-white/40">{usedThisMonth}/{limit} this month</span>
+            {usedThisMonth >= limit && planAccess && !planAccess.isAdmin && !planAccess.isBeta && planAccess.effectivePlan !== 'elite' && (
+              <LimitUpgrade feature="ai_analysis" />
+            )}
+          </span>
+        )}
       </div>
       {analyses.map((a) => <TradeAnalysisCard key={a.id} analysis={a} />)}
     </div>

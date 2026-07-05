@@ -9,6 +9,8 @@ import NotificationBell from '@/components/notifications/NotificationBell';
 import Logo from '@/components/Logo';
 import Link from 'next/link';
 import { num, fmtMoney, fmtMoneyCompact, getTradingDate } from '@/lib/stats';
+import { getUserAccess } from '@/lib/plans';
+import SubscriptionBanner from '@/components/ui/SubscriptionBanner';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import GuidedTour from '@/components/ui/GuidedTour';
 import { buildAccess } from '@/lib/plans';
@@ -80,6 +82,15 @@ export default async function DashboardLayout({ children }) {
       }
     }
   } catch (e) {}
+
+  // Plan access + subscription for banners
+  const access = await getUserAccess(supabase, user);
+  const planAccess = access.toJSON();
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('status, trial_ends_at, renews_at, cancelled_at, billing_cycle')
+    .eq('user_id', user.id)
+    .maybeSingle();
 
   const today = getTradingDate(); // UTC midnight = 5:30 AM IST trading day boundary
   const { data: todayTrades } = await supabase
@@ -159,7 +170,7 @@ export default async function DashboardLayout({ children }) {
             <span className="hidden font-mono text-xs text-white/55 sm:block">{user.email}</span>
           </div>
         </header>
-        <main className="flex-1">{children}</main>
+        <main className="flex-1"><SubscriptionBanner subscription={subscription} planAccess={planAccess} />{children}</main>
         <RiskFooter />
       </div>
       <QuickLog />

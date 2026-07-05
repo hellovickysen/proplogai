@@ -180,6 +180,18 @@ function ReviewCard({ report }) {
   );
 }
 
+function LimitUpgradeReview() {
+  const [show, setShow] = useState(false);
+  return (
+    <>
+      <button onClick={() => setShow(true)} className="text-[10px] text-violet-400 hover:text-violet-300 font-medium">
+        Upgrade for more
+      </button>
+      {show && <UpgradeModal onClose={() => setShow(false)} feature="coach_report" />}
+    </>
+  );
+}
+
 export default function MonthlyReviewTab({ reports, usedThisMonth, limit, onGenerate, generating, hasEnough, tradeCount, access }) {
   const canGenerate = hasEnough && access?.canUse?.('coach_report') !== false;
 
@@ -188,7 +200,12 @@ export default function MonthlyReviewTab({ reports, usedThisMonth, limit, onGene
       <div className="flex items-center justify-between">
         <span className="font-mono text-[10px] text-white/40">{reports?.length || 0} review{(reports?.length || 0) !== 1 ? 's' : ''}</span>
         <div className="flex items-center gap-3">
-          {limit > 0 && <span className="font-mono text-[10px] text-white/40">{usedThisMonth}/{limit}/mo</span>}
+          {limit > 0 && (
+          <span className="flex items-center gap-2">
+            <span className="font-mono text-[10px] text-white/40">{usedThisMonth}/{limit}/mo</span>
+            {usedThisMonth >= limit && access && access.canUse && !access.canUse('coach_report') !== false && <LimitUpgradeReview />}
+          </span>
+        )}
           {canGenerate && (
             <button onClick={onGenerate} disabled={generating} className="rounded-xl px-4 py-2 text-xs font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
               {generating ? 'Generating…' : '✦ New Review'}

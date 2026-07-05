@@ -8,6 +8,7 @@ import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 import { TrophyEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { UpgradeModal } from '@/components/ui/BlurGate';
 
 
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
@@ -123,6 +124,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
   const [fileUrl, setFileUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [preview, setPreview] = useState(null);
 
   async function handleFile(e) {
@@ -386,9 +388,9 @@ export default function TrophyWall({ trophies, firmNames, planAccess }) {
           </p>
         </div>
         {atLimit ? (
-          <span className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300">
+          <button onClick={() => setShowUpgradeModal(true)} className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors">
             Limit reached — Upgrade to Elite
-          </span>
+          </button>
         ) : (
           <button onClick={() => setShowUpload(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
             + Upload Trophy
@@ -469,5 +471,6 @@ export default function TrophyWall({ trophies, firmNames, planAccess }) {
         message="This action can't be undone. The trophy will be permanently removed."
       />
     </div>
-  );
+      {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} feature="trophy_uploads" />}
+      );
 }
