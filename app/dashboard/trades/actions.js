@@ -286,7 +286,7 @@ export async function analyzeTrade(tradeId) {
   const { remaining } = await access.remaining('ai_analysis', supabase, user.id);
   if (!access.canUse('ai_analysis')) return { error: 'AI trade analysis requires the Elite plan.' };
   if (remaining <= 0 && access.plan === 'basic' && !access.isBeta && !access.isAdmin) {
-    return { error: 'You\'ve used all 5 AI analyses this month. Upgrade to Elite for more.' };
+    return { error: 'You\'ve used all 3 AI analyses this month. Upgrade to Elite for more.' };
   }
 
   const { data: trade } = await supabase.from('trades').select('*').eq('id', tradeId).eq('user_id', user.id).maybeSingle();

@@ -10,6 +10,7 @@ import { computeAchievements } from '@/lib/achievements';
 import TradeTable from '@/components/trades/TradeTable';
 import PnlCalendar from '@/components/calendar/PnlCalendar';
 import DashboardShareButton from '@/components/dashboard/DashboardShareButton';
+import BlurGate from '@/components/ui/BlurGate';
 import DisciplineCards from '@/components/dashboard/DisciplineCards';
 import ReferralCapture from '@/components/referrals/ReferralCapture';
 import BetaNotice from '@/components/ui/BetaNotice';
@@ -127,6 +128,7 @@ export default async function DashboardPage() {
 
   // Plan access for conditional feature display
   const access = await getUserAccess(supabase, user);
+  const planAccess = access.toJSON();
   const series = equitySeries(list);
   const chartData = equityChartData(list);
   const { data: coach, error: coachError } = await supabase
@@ -267,8 +269,12 @@ export default async function DashboardPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
-          {access.canUse('shareable_cards') && (
+          {access.canUse('shareable_cards') ? (
             <span data-tour="share-btn"><DashboardShareButton data={dailyShareData} type={todayTrades.length > 0 ? 'daily' : 'total'} /></span>
+          ) : (
+            <BlurGate feature="shareable_cards" access={planAccess} compact>
+              <DashboardShareButton data={dailyShareData} type="total" />
+            </BlurGate>
           )}
           <Link data-tour="new-trade" href="/dashboard/trades/new" className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
             + New Trade
