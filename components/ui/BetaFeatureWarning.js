@@ -19,7 +19,7 @@ export default function BetaFeatureWarning({ feature, featureLabel, remaining })
             Beta access — {featureLabel || feature}
           </p>
           <p className="text-xs text-white/50 mt-1">
-            You're using this feature free during beta. After beta, it will require the Elite plan (₹799/mo).
+            You're using this feature free during beta. After beta, it will require the Elite plan ($9.99/mo).
           </p>
           {remaining && remaining.limit > 0 && remaining.limit !== -1 && (
             <p className="text-xs text-white/40 mt-1 font-mono">

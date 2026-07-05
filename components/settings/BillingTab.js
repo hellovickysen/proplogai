@@ -33,6 +33,11 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
     ? Math.max(0, Math.ceil((new Date(subscription.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24)))
     : 0;
 
+  function fmtDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
   async function handleCancel() {
     setCancelling(true);
     setCancelError(null);
@@ -114,7 +119,7 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
                   Free trial · {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
                 </p>
                 <p className="text-xs text-white/40 mt-1">
-                  First charge on {new Date(subscription.trial_ends_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  First charge on {fmtDate(subscription.trial_ends_at)}
                 </p>
               </div>
             )}
@@ -122,14 +127,14 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-white/40 mb-1">Billing</p>
                 <p className="text-sm text-white/80">
-                  {subscription?.billing_cycle === 'yearly' ? '₹599/mo (yearly)' : '₹799/mo'}
+                  {subscription?.billing_cycle === 'yearly' ? '$7.99/mo (yearly)' : '$9.99/mo'}
                 </p>
               </div>
               {subscription?.renews_at && !isCancelled && (
                 <div>
                   <p className="text-xs font-mono uppercase tracking-wider text-white/40 mb-1">Next billing</p>
                   <p className="text-sm text-white/80">
-                    {new Date(subscription.renews_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {fmtDate(subscription.renews_at)}
                   </p>
                 </div>
               )}
@@ -138,7 +143,7 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
               <div className="rounded-xl border border-amber-400/20 bg-amber-500/5 px-4 py-3 mt-2">
                 <p className="text-sm text-amber-300">Subscription cancelled</p>
                 <p className="text-xs text-white/40 mt-1">
-                  You'll keep Elite access until {subscription?.renews_at ? new Date(subscription.renews_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'the end of your billing period'}.
+                  You'll keep Elite access until {subscription?.renews_at ? fmtDate(subscription.renews_at) : 'the end of your billing period'}.
                 </p>
               </div>
             ) : (

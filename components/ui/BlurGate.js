@@ -98,9 +98,6 @@ function UpgradeModal({ onClose, feature }) {
   const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'yearly'
 
   const price = billingCycle === 'yearly' ? PLANS.elite.priceYearly : PLANS.elite.priceMonthly;
-  const priceLabel = billingCycle === 'yearly'
-    ? `₹${PLANS.elite.priceYearly}/mo billed annually`
-    : `₹${PLANS.elite.priceMonthly}/mo`;
   const savings = billingCycle === 'yearly'
     ? Math.round((1 - PLANS.elite.priceYearly / PLANS.elite.priceMonthly) * 100)
     : 0;
@@ -182,10 +179,10 @@ function UpgradeModal({ onClose, feature }) {
         {/* Price */}
         <div className="text-center mb-5">
           <div className="text-3xl font-bold text-white">
-            ₹{price}<span className="text-base font-normal text-white/40">/mo</span>
+            ${price}<span className="text-base font-normal text-white/40">/mo</span>
           </div>
           {billingCycle === 'yearly' && (
-            <p className="text-white/40 text-xs mt-1">₹{PLANS.elite.priceYearly * 12}/year</p>
+            <p className="text-white/40 text-xs mt-1">${(PLANS.elite.priceYearly * 12).toFixed(2)}/year</p>
           )}
         </div>
 

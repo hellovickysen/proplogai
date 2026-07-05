@@ -50,7 +50,7 @@ export default function UpgradeCard({ feature, featureLabel, compact = false }) 
           className="inline-block rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f]"
           style={gradientBtn}
         >
-          View Elite plan — ₹799/mo
+          View Elite plan — $9.99/mo
         </button>
       </div>
       {showModal && <UpgradeModal onClose={() => setShowModal(false)} feature={feature} />}
