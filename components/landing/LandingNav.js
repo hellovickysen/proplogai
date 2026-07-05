@@ -32,6 +32,15 @@ function CloseIcon() {
   );
 }
 
+function BlogIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  );
+}
+
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 
 export default function LandingNav({ logo }) {
@@ -43,6 +52,12 @@ export default function LandingNav({ logo }) {
       <div className="hidden items-center justify-between sm:flex">
         {logo}
         <div className="flex items-center gap-2">
+          <a
+            href="/blogs"
+            className="flex items-center gap-1.5 rounded-full px-4 py-2 text-sm text-white/50 transition-colors hover:text-white"
+          >
+            Blog
+          </a>
           <Link
             href="/login"
             className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/70 transition-colors hover:border-white/20 hover:text-white"
@@ -93,6 +108,14 @@ export default function LandingNav({ logo }) {
             aria-label="Navigation menu"
           >
             <div className="space-y-3">
+              <a
+                href="/blogs"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/80 transition-colors hover:border-white/20"
+              >
+                <BlogIcon />
+                Blog
+              </a>
               <Link
                 href="/login"
                 onClick={() => setOpen(false)}
