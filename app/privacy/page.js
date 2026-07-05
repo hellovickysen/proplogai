@@ -1,6 +1,7 @@
 export const revalidate = 86400; // Revalidate daily (for copyright year)
 
 import Link from 'next/link';
+import LandingFooter from '@/components/landing/LandingFooter';
 
 const gradientText = {
   background: 'linear-gradient(120deg,#a78bfa,#22d3ee)',
@@ -437,5 +438,6 @@ export default function PrivacyPage() {
         </div>
       </div>
     </div>
+    <LandingFooter />
   );
 }

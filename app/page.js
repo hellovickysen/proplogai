@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import Logo from '@/components/Logo';
 import LandingNav from '@/components/landing/LandingNav';
 import CookieBanner from '@/components/landing/CookieBanner';
+import LandingFooter from '@/components/landing/LandingFooter';
 
 export const revalidate = 300; // Revalidate every 5 minutes
 
@@ -858,20 +859,7 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-white/[0.06] px-4 py-8 sm:px-10">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
-          <Logo size={24} rounded="rounded-md" wordmarkClassName="font-display text-sm font-semibold" />
-          <div className="flex items-center gap-4 text-xs text-white/30">
-            <Link href="/privacy" className="hover:text-white/50">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/50">Terms</Link>
-            <Link href="/refund-policy" className="hover:text-white/50">Refunds</Link>
-            <Link href="/pricing" className="hover:text-white/50">Pricing</Link>
-            <Link href="/contact" className="hover:text-white/50">Contact</Link>
-            <span>Trading involves substantial risk of loss. PropLogAI does not provide financial advice.</span>
-          </div>
-        </div>
-      </footer>
+<LandingFooter />
 
       <CookieBanner />
     </main>

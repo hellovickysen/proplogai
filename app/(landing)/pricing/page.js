@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { PLANS, FEATURES, ELITE_FEATURES } from '@/lib/plans';
+import LandingFooter from '@/components/landing/LandingFooter';
 
 export const metadata = {
   title: 'Pricing — PropLogAI',
@@ -194,16 +195,7 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="border-t border-white/10 px-4 py-8 text-center text-xs text-white/30">
-        <p>© {new Date().getFullYear()} PropLogAI. All rights reserved.</p>
-        <div className="mt-2 flex items-center justify-center gap-4">
-          <Link href="/privacy" className="hover:text-white/50">Privacy</Link>
-          <Link href="/terms" className="hover:text-white/50">Terms</Link>
-          <Link href="/refund-policy" className="hover:text-white/50">Refunds</Link>
-          <Link href="/contact" className="hover:text-white/50">Contact</Link>
-        </div>
-      </div>
+<LandingFooter />
     </div>
   );
 }

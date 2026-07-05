@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import LandingFooter from '@/components/landing/LandingFooter';
 
 export const metadata = {
   title: 'Refund Policy — PropLogAI',
@@ -106,15 +107,7 @@ export default function RefundPolicyPage() {
           </Section>
         </div>
 
-        {/* Footer */}
-        <div className="mt-16 border-t border-white/10 pt-8 text-center text-xs text-white/30">
-          <div className="flex items-center justify-center gap-4">
-            <Link href="/privacy" className="hover:text-white/50">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/50">Terms</Link>
-            <Link href="/pricing" className="hover:text-white/50">Pricing</Link>
-            <Link href="/contact" className="hover:text-white/50">Contact</Link>
-          </div>
-        </div>
+<LandingFooter />
       </div>
     </div>
   );
