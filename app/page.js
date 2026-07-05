@@ -865,6 +865,9 @@ export default async function Home() {
           <div className="flex items-center gap-4 text-xs text-white/30">
             <Link href="/privacy" className="hover:text-white/50">Privacy</Link>
             <Link href="/terms" className="hover:text-white/50">Terms</Link>
+            <Link href="/refund-policy" className="hover:text-white/50">Refunds</Link>
+            <Link href="/pricing" className="hover:text-white/50">Pricing</Link>
+            <Link href="/contact" className="hover:text-white/50">Contact</Link>
             <span>Trading involves substantial risk of loss. PropLogAI does not provide financial advice.</span>
           </div>
         </div>

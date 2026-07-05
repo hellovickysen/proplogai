@@ -312,7 +312,38 @@ export default function TermsPage() {
           />
         </Section>
 
-        <Section title="11. Changes to Terms">
+
+        <Section title="11. Subscriptions and Billing">
+          <p className="mb-3 text-sm text-white/70">
+            PropLogAI offers two plans: Basic (free) and Elite (paid subscription). Elite subscriptions are billed on a recurring monthly or annual basis.
+          </p>
+          <ul className="list-disc pl-5 space-y-2 text-sm text-white/70 mb-3">
+            <li>All new Elite subscriptions include a 14-day free trial.</li>
+            <li>After the trial, your payment method is charged automatically at the start of each billing cycle.</li>
+            <li>Subscription prices are listed on our <a href="/pricing" className="text-cyan-400 hover:underline">pricing page</a> and may change with notice.</li>
+            <li>You can cancel at any time from Settings. Cancellation takes effect at the end of the current billing period.</li>
+          </ul>
+        </Section>
+
+        <Section title="12. Payment Processing">
+          <p className="mb-3 text-sm text-white/70">
+            All payments are processed by <strong className="text-white">Razorpay</strong>, a third-party payment gateway. PropLogAI does not store your credit card number, bank account details, or other sensitive payment information.
+          </p>
+          <p className="text-sm text-white/70">
+            By subscribing, you agree to Razorpay's terms of service and authorize recurring charges to your chosen payment method. You are responsible for keeping your payment information current.
+          </p>
+        </Section>
+
+        <Section title="13. Refunds and Cancellations">
+          <p className="mb-3 text-sm text-white/70">
+            Please refer to our <a href="/refund-policy" className="text-cyan-400 hover:underline">Refund Policy</a> for full details on cancellations, refunds, and billing disputes.
+          </p>
+          <p className="text-sm text-white/70">
+            In summary: a 14-day free trial is provided; refunds after the trial are considered on a case-by-case basis for billing errors or extended service unavailability; no partial refunds are given for unused subscription time.
+          </p>
+        </Section>
+
+        <Section title="14. Changes to Terms">
           <p>
             We may revise these Terms at any time. When we make material changes we will update
             the &quot;Last updated&quot; date at the top of this page and notify you via email or
@@ -325,7 +356,7 @@ export default function TermsPage() {
           </p>
         </Section>
 
-        <Section title="12. Governing Law and Disputes">
+        <Section title="15. Governing Law and Disputes">
           <p>
             These Terms are governed by and construed in accordance with applicable law. Any
             disputes arising out of or relating to these Terms or the Service shall be resolved
@@ -339,7 +370,7 @@ export default function TermsPage() {
           </p>
         </Section>
 
-        <Section title="13. Contact Us">
+        <Section title="16. Contact Us">
           <p>
             If you have questions about these Terms or need to report a violation, please contact
             us at:

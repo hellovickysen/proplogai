@@ -200,6 +200,8 @@ export default function PricingPage() {
         <div className="mt-2 flex items-center justify-center gap-4">
           <Link href="/privacy" className="hover:text-white/50">Privacy</Link>
           <Link href="/terms" className="hover:text-white/50">Terms</Link>
+          <Link href="/refund-policy" className="hover:text-white/50">Refunds</Link>
+          <Link href="/contact" className="hover:text-white/50">Contact</Link>
         </div>
       </div>
     </div>

@@ -295,6 +295,22 @@ export default function PrivacyPage() {
               </a>
             </p>
           </SubSection>
+
+          <SubSection title="Razorpay (Payments)">
+            <p>
+              Payment processing is handled by <strong className="text-white">Razorpay</strong>, a PCI-DSS Level 1
+              compliant payment gateway. When you subscribe to the Elite plan, your payment details
+              (card number, UPI, bank info) are collected and stored exclusively by Razorpay —
+              PropLogAI never receives or stores this information. Razorpay provides us with a
+              subscription ID and payment status for account management. We store your subscription
+              plan, billing cycle, and payment dates in our database for feature access and billing display.
+            </p>
+            <p className="mt-2">
+              <a href="https://razorpay.com/privacy/" className="text-cyan-400 hover:opacity-80" target="_blank" rel="noopener noreferrer">
+                Razorpay Privacy Policy
+              </a>
+            </p>
+          </SubSection>
         </Section>
 
         <Section title="5. Cookies and Tracking Technologies">
