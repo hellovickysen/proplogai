@@ -31,6 +31,7 @@ function Ul({ items }) {
 
 export default function TermsPage() {
   return (
+    <>
     <div
       className="min-h-screen px-4 py-16 text-white"
       style={{ background: '#07070b', fontFamily: 'Poppins, sans-serif' }}
@@ -401,5 +402,6 @@ export default function TermsPage() {
       </div>
     </div>
     <LandingFooter />
+    </>
   );
 }

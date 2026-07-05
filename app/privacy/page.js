@@ -21,6 +21,7 @@ function Section({ title, children }) {
 
 function SubSection({ title, children }) {
   return (
+    <>
     <div className="mt-4">
       <h3 className="mb-2 text-sm font-semibold text-white/90">{title}</h3>
       <div className="space-y-2 text-sm leading-relaxed text-white/70">{children}</div>
@@ -439,5 +440,6 @@ export default function PrivacyPage() {
       </div>
     </div>
     <LandingFooter />
+    </>
   );
 }
