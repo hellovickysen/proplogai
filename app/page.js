@@ -103,7 +103,7 @@ export default async function Home() {
       <LandingMotion />
 
       {/* Nav */}
-      <LandingNav logo={<Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />} />
+      <LandingNav />
 
       {/* ═══════════════ HERO — NEGATIVE HOOK ═══════════════ */}
       <section className="hero-product-stage relative overflow-hidden px-4 pb-20 pt-16 sm:px-10 sm:pt-20">
