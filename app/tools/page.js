@@ -1,5 +1,7 @@
 import ToolCard from '@/components/tools/ToolCard';
 import Link from 'next/link';
+import LandingNav from '@/components/landing/LandingNav';
+import LandingFooter from '@/components/landing/LandingFooter';
 
 export const metadata = {
   title: 'Free Prop Trading Tools | PropLogAI',
@@ -46,30 +48,9 @@ const TOOLS = [
 
 export default function PublicToolsPage() {
   return (
+    <>
+    <LandingNav />
     <div className="min-h-screen bg-[#07070b]">
-      {/* Nav bar */}
-      <nav className="border-b border-white/10 bg-[#0b0b14]">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 md:px-8">
-          <Link href="/" className="font-display text-lg font-bold text-white">
-            PropLogAI
-          </Link>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/login"
-              className="rounded-lg px-4 py-2 text-sm text-white/70 transition-colors hover:text-white"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/login"
-              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#08080f] transition-transform active:scale-[0.98]"
-              style={{ background: 'linear-gradient(120deg, #a78bfa, #22d3ee)' }}
-            >
-              Sign up free
-            </Link>
-          </div>
-        </div>
-      </nav>
 
       <div className="mx-auto max-w-6xl p-4 md:p-8">
         <header className="mb-8">
@@ -107,5 +88,7 @@ export default function PublicToolsPage() {
         </div>
       </div>
     </div>
+    <LandingFooter />
+    </>
   );
 }
