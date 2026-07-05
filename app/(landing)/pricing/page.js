@@ -200,5 +200,6 @@ export default function PricingPage() {
 
 <LandingFooter />
     </div>
+    </>
   );
 }
