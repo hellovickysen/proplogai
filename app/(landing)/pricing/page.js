@@ -74,7 +74,6 @@ export default function PricingPage() {
       {/* Header */}
       <div className="border-b border-white/10">
         <div className="mx-auto max-w-5xl px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="font-display text-lg font-bold" style={gradientText}>PropLogAI</Link>
           <Link href="/login" className="rounded-lg px-4 py-2 text-sm font-medium text-white/70 border border-white/15 hover:bg-white/5 transition-colors">
             Sign in
           </Link>

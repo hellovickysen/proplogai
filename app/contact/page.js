@@ -7,7 +7,6 @@ export const metadata = {
   description: 'Get in touch with the PropLogAI team. Support, feedback, and general inquiries.',
 };
 
-const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 
 export default function ContactPage() {
@@ -16,7 +15,6 @@ export default function ContactPage() {
     <LandingNav />
     <div className="min-h-screen bg-[#07070b] text-white">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
-        <Link href="/" className="mb-8 inline-block font-display text-lg font-bold" style={gradientText}>PropLogAI</Link>
         <h1 className="mb-2 text-3xl font-bold">Contact Us</h1>
         <p className="mb-10 text-sm text-white/50">
           Have a question, feedback, or need help? We're here for you.
