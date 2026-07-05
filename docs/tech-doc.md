@@ -1,6 +1,6 @@
 # PropLogAI — Technical Documentation
 
-Comprehensive technical reference for the PropLogAI codebase. Last updated: July 4, 2026 (Phase N).
+Comprehensive technical reference for the PropLogAI codebase. Last updated: July 5, 2026 (Phase R).
 
 ## 1. Architecture Overview
 
@@ -15,6 +15,7 @@ PropLogAI is a fully serverless Next.js 14 application using the App Router patt
 ```
 User → Vercel Edge (middleware: auth refresh) → Server Component (Supabase queries) → HTML + RSC payload → Client hydration
 User action → Server Action (Supabase mutation) → revalidatePath → fresh Server Component render
+User → Razorpay hosted checkout (redirect) → Razorpay webhook → /api/razorpay/webhook → Supabase (subscriptions) → subscription-emails
 ```
 
 ## 2. Tech Stack
@@ -27,7 +28,8 @@ User action → Server Action (Supabase mutation) → revalidatePath → fresh S
 | Auth | Supabase Auth (@supabase/ssr) | Cookie-based, email+password + Google OAuth |
 | Storage | Supabase Storage | 3 public buckets: screenshots, avatars, trophies |
 | AI | OpenRouter → Claude 3.5 Haiku | 25s timeout, prompt injection defense |
-| Email | Resend (fetch-based) | Coach report emails, HTML-escaped AI content |
+| Email | Resend (fetch-based) | Coach report + subscription lifecycle emails, HTML-escaped AI content |
+| Payments | Razorpay | Hosted checkout (redirect flow), webhooks, subscription lifecycle (Phase R) |
 | Analytics | PostHog | CDN snippet, free tier |
 | Hosting | Vercel (free tier) | Custom domain: proplogai.com |
 
@@ -37,20 +39,25 @@ User action → Server Action (Supabase mutation) → revalidatePath → fresh S
 proplogai/
 ├── app/
 │   ├── layout.js              # Root layout (fonts, PostHog, Toast)
-│   ├── page.js                # Landing page (ISR revalidate=300)
+│   ├── page.js                # Landing page (ISR revalidate=300, LandingNav + LandingFooter)
 │   ├── login/page.js          # Auth page (email+password, Google OAuth)
 │   ├── onboarding/            # New user onboarding flow
+│   ├── about/page.js          # Product-focused About page (Phase R)
+│   ├── contact/page.js        # Contact page with email support (Phase R)
+│   ├── refund-policy/page.js  # 7-section refund policy (Phase R)
+│   ├── (landing)/
+│   │   └── pricing/page.js    # Standalone pricing comparison page (Phase R)
 │   ├── dashboard/
-│   │   ├── layout.js          # Dashboard shell (sidebar, header, nav)
-│   │   ├── page.js            # Main dashboard (stats, charts, discipline)
-│   │   ├── trades/            # Trade list, detail, new, edit + actions
-│   │   ├── calendar/          # P&L calendar (dual desktop/mobile render)
-│   │   ├── coach/             # AI coach report + actions
-│   │   ├── rulebook/          # Setup CRUD (8 defaults) + actions
+│   │   ├── layout.js          # Dashboard shell (sidebar, header, nav, subscription fetch + SubscriptionBanner + trial email trigger)
+│   │   ├── page.js            # Main dashboard (stats, charts, discipline, BlurGate on share button)
+│   │   ├── trades/            # Trade list, detail, new, edit + actions (BlurGate on CSV export)
+│   │   ├── calendar/          # P&L calendar (dual desktop/mobile render, BlurGate on CalendarInsights)
+│   │   ├── coach/             # AI coach report + actions (planAccess passed to PropolCoachHub)
+│   │   ├── rulebook/          # Setup CRUD (8 defaults) + actions (planAccess + customSetupLimit)
 │   │   ├── expenses/          # Expense tracker (3-tab) + actions
 │   │   ├── trophies/          # Trophy wall + actions
 │   │   ├── referrals/         # Referral dashboard + actions
-│   │   ├── settings/          # User settings + actions
+│   │   ├── settings/          # User settings + actions (BillingTab + subscription data)
 │   │   ├── support/           # Support tickets + actions
 │   │   ├── notifications/     # Notification list + actions
 │   │   └── tools/             # Tool card grid; tools/consistency-calculator/ (Consistency Calculator)
@@ -60,55 +67,63 @@ proplogai/
 │   ├── trophy/[id]/           # Public trophy page
 │   ├── r/[code]/              # Referral redirect
 │   ├── auth/callback/         # OAuth + email verification handler
-│   ├── privacy/               # Privacy policy (ISR daily)
-│   ├── terms/                 # Terms of service (ISR daily)
-│   ├── tools/                 # Public tools landing (SEO); tools/consistency-calculator/ (public Consistency Calculator page)
-│   └── api/logo/              # PNG logo for email templates
+│   ├── privacy/               # Privacy policy (ISR daily, Razorpay data-handling subsection + LandingNav/Footer)
+│   ├── terms/                 # Terms of service (ISR daily, sections 11-13 billing/payments/refunds + LandingNav/Footer)
+│   ├── tools/                 # Public tools landing (SEO, LandingNav + LandingFooter); tools/consistency-calculator/ (public Consistency Calculator page, LandingNav + LandingFooter)
+│   └── api/
+│       ├── logo/               # PNG logo for email templates
+│       └── razorpay/           # Razorpay API routes (Phase R)
+│           ├── create-subscription/route.js   # Creates Razorpay subscription, returns hosted checkout short_url
+│           ├── webhook/route.js                # Verifies + handles Razorpay webhook events
+│           ├── callback/route.js               # Post-checkout redirect handler, verifies payment signature
+│           └── cancel-subscription/route.js    # Cancels a user's Razorpay subscription
 ├── components/
-│   ├── ui/                    # Skeleton, Toast, EmptyStates, Fab, ConfirmDialog, BetaNotice, GuidedTour, PlanBadge, BetaFeatureWarning, UpgradeCard
+│   ├── ui/                    # Skeleton, Toast, EmptyStates, Fab, ConfirmDialog, BetaNotice, GuidedTour, PlanBadge, BetaFeatureWarning, UpgradeCard, BlurGate (Phase R), SubscriptionBanner (Phase R)
 │   ├── layout/                # Sidebar, MobileNav, RiskFooter, PostHogProvider
 │   ├── trades/                # TradeForm, TradeTable, TradeFilters, DeleteTradeButton, ExportButton
-│   ├── journal/               # JournalForm, JournalSection, JournalView
-│   ├── coach/                 # CoachReport, GenerateReportButton, EmailReportButton, AnalyzeButton
-│   ├── calendar/              # CalendarMonth, PnlCalendar, CalendarInsights (10 insight cards + Trade Win gauge)
-│   ├── dashboard/             # DisciplineCards, WeeklyScoreRing, AchievementBadges, EquityChart, DashboardShareButton
-│   ├── expenses/              # ExpenseTracker
-│   ├── trophies/              # TrophyWall
-│   ├── referrals/             # ReferralDashboard, ReferralCapture
-│   ├── profile/               # ProfileTradeList, PublicProfileSettings
-│   ├── rulebook/              # RulebookPage
-│   ├── settings/              # SettingsTabs
-│   ├── admin/                 # AdminBanButton, AdminTradeList, AdminUserTabs, BetaCountControl
-│   ├── onboarding/            # OnboardingFlow
-│   ├── landing/               # LandingMotion (IntersectionObserver animations), CursorGlow, CardGlow, LandingNav, CookieBanner
-│   ├── share/                 # ShareButton, ShareCard, ShareModal, ShareJournalButton, SharedScreenshots
-│   ├── support/               # SupportPage (conversation thread, reply form, close with transcript opt-out, multi-select bulk delete)
-│   ├── notifications/         # NotificationBell, NotificationList
-│   ├── tools/                 # ToolCard, ConsistencyCalculator
-│   └── Logo.js                # Logo + LogoMark components
+│   ├── journal/                # JournalForm (screenshot limit notice), JournalSection (passes screenshotLimit), JournalView
+│   ├── coach/                  # CoachReport, GenerateReportButton, EmailReportButton, AnalyzeButton, TradeAnalysisTab (upgrade CTA at limit), MonthlyReviewTab (upgrade CTA at limit)
+│   ├── calendar/                # CalendarMonth, PnlCalendar, CalendarInsights (10 insight cards + Trade Win gauge, Elite-only via BlurGate)
+│   ├── dashboard/               # DisciplineCards, WeeklyScoreRing, AchievementBadges, EquityChart, DashboardShareButton
+│   ├── expenses/                # ExpenseTracker
+│   ├── trophies/                # TrophyWall (limit reached opens UpgradeModal)
+│   ├── referrals/               # ReferralDashboard, ReferralCapture
+│   ├── profile/                 # ProfileTradeList, PublicProfileSettings
+│   ├── rulebook/                # RulebookPage (X/3 custom setup badge + limit state)
+│   ├── settings/                # SettingsTabs, BillingTab (billing management UI, Phase R)
+│   ├── admin/                   # AdminBanButton, AdminTradeList, AdminUserTabs, BetaCountControl
+│   ├── onboarding/              # OnboardingFlow
+│   ├── landing/                 # LandingMotion (IntersectionObserver animations), CursorGlow, CardGlow, LandingNav (Tools/Blog/Pricing/About links, 14-Day Trial badge, DefaultLogo, centered pill container), CookieBanner, LandingFooter (Lyrafin-style multi-column footer, Phase R)
+│   ├── share/                   # ShareButton, ShareCard, ShareModal, ShareJournalButton, SharedScreenshots
+│   ├── support/                 # SupportPage (conversation thread, reply form, close with transcript opt-out, multi-select bulk delete)
+│   ├── notifications/           # NotificationBell, NotificationList
+│   ├── tools/                   # ToolCard, ConsistencyCalculator
+│   └── Logo.js                  # Logo + LogoMark components
 ├── lib/
-│   ├── ai.js                  # OpenRouter integration (callOpenRouter, analyzeTradeWithAI, analyzeCoachReport, tradeToText, datasetToText)
-│   ├── email.js               # Resend integration (sendCoachReportEmail, sendTicketTranscript, sendTicketResolvedEmail, isEmailConfigured, escHtml)
-│   ├── stats.js               # computeStats, equitySeries, equityChartData, fmtMoney, fmtR, fmtMoneyCompact, num, getTradingDate, getTradingMonth
-│   ├── discipline.js          # computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak, calculateWeekScore
-│   ├── achievements.js        # ACHIEVEMENT_DEFS, computeAchievements
-│   ├── notifications.js       # notify, notifyAdmin, TYPES, NOTIFICATION_META
-│   ├── quotes.js              # Random motivational/neutral quotes by P&L range
-│   ├── emotions.js            # DEFAULT_EMOTIONS, resolveEmotions
-│   ├── security.js            # isDisposableEmail (200+ domains + subdomain check), validatePassword
-│   ├── imageUtils.js          # processImageFile (WebP conversion, pdf.js with retry)
-│   ├── plans.js               # PLANS config, FEATURES limits, getUserAccess(), buildAccess()
-│   ├── tags.js                # DEFAULT_TAGS, resolveTags(), MAX_CUSTOM_TAGS
+│   ├── ai.js                   # OpenRouter integration (callOpenRouter, analyzeTradeWithAI, analyzeCoachReport, tradeToText, datasetToText)
+│   ├── email.js                # Resend integration (sendCoachReportEmail, sendTicketTranscript, sendTicketResolvedEmail, isEmailConfigured, escHtml)
+│   ├── subscription-emails.js  # Razorpay lifecycle emails: trial ending, payment receipt, cancellation, payment failed (Phase R)
+│   ├── razorpay.js             # Razorpay SDK wrapper: createSubscription, cancelSubscription, fetchSubscription, verifyWebhookSignature, verifyPaymentSignature (Phase R)
+│   ├── stats.js                # computeStats, equitySeries, equityChartData, fmtMoney, fmtR, fmtMoneyCompact, num, getTradingDate, getTradingMonth
+│   ├── discipline.js           # computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak, calculateWeekScore
+│   ├── achievements.js          # ACHIEVEMENT_DEFS, computeAchievements
+│   ├── notifications.js         # notify, notifyAdmin, TYPES, NOTIFICATION_META
+│   ├── quotes.js                 # Random motivational/neutral quotes by P&L range
+│   ├── emotions.js               # DEFAULT_EMOTIONS, resolveEmotions
+│   ├── security.js               # isDisposableEmail (200+ domains + subdomain check), validatePassword
+│   ├── imageUtils.js             # processImageFile (WebP conversion, pdf.js with retry)
+│   ├── plans.js                  # PLANS config, FEATURES limits, getUserAccess() (now also returns subscription status), buildAccess(), ELITE_FEATURES list (Phase R)
+│   ├── tags.js                   # DEFAULT_TAGS, resolveTags(), MAX_CUSTOM_TAGS
 │   └── supabase/
-│       ├── client.js          # Browser Supabase client (with env var guard)
-│       ├── server.js          # Server Supabase client (with env var guard)
-│       └── admin.js           # Service role client + ADMIN_EMAIL from env
-├── middleware.js               # Auth refresh + route protection (/dashboard, /admin)
+│       ├── client.js            # Browser Supabase client (with env var guard)
+│       ├── server.js            # Server Supabase client (with env var guard)
+│       └── admin.js             # Service role client + ADMIN_EMAIL from env
+├── middleware.js                 # Auth refresh + route protection (/dashboard, /admin)
 ├── scripts/
-│   └── cleanup-orphans.js     # Storage orphan cleanup script
-├── next.config.mjs            # CSP headers, HSTS, image remotePatterns, optimizePackageImports
-├── tailwind.config.js         # Custom colors (ink, mint, loss), content glob includes .ts/.tsx
-└── supabase/migrations/       # SQL files 0001-0029
+│   └── cleanup-orphans.js       # Storage orphan cleanup script
+├── next.config.mjs               # CSP headers, HSTS, image remotePatterns, optimizePackageImports
+├── tailwind.config.js            # Custom colors (ink, mint, loss), content glob includes .ts/.tsx
+└── supabase/migrations/          # SQL files 0001-0031
 ```
 
 ## 4. Database Schema
@@ -148,8 +163,11 @@ proplogai/
 **referrals** — Referral tracking
 - id, referrer_id, referred_user_id (unique), referred_email, status, reward_given, created_at
 
-**subscriptions** — Plan management (Stripe planned)
+**subscriptions** — Plan + billing management (Razorpay, Phase R)
 - id, user_id, plan ('basic'/'elite', renamed from 'free'/'pro' in migration 0024), status, stripe_id, renews_at, created_at
+- Migration 0031 additions: razorpay_subscription_id, razorpay_payment_id, billing_cycle, trial_ends_at, cancelled_at, last_payment_id, last_payment_at
+- Index on razorpay_subscription_id (migration 0031)
+- status CHECK constraint (migration 0031) updated to include: created, authenticated, pending, halted, cancelled, completed, expired, paused (in addition to prior active/trialing values)
 
 **site_settings** — Global settings (beta_count, etc.)
 - id, key (unique), value (jsonb), updated_at
@@ -228,6 +246,8 @@ setup_followed: 'partial'  // Auto-computed overall for DB storage
 12. Referral cookie: encodeURIComponent + SameSite=Lax
 13. Code generation: crypto.randomUUID() (not Math.random)
 14. Error boundary: hides raw error messages in production
+15. Razorpay webhooks: always verify signature via `verifyWebhookSignature` (HMAC SHA256, `RAZORPAY_WEBHOOK_SECRET`) before trusting payload or mutating `subscriptions`
+16. Razorpay checkout callback: always verify payment signature via `verifyPaymentSignature` before marking a subscription as paid
 
 ## 7. Environment Variables
 
@@ -247,6 +267,15 @@ setup_followed: 'partial'  // Auto-computed overall for DB storage
 | RESEND_API_KEY | Resend email API key |
 | RESEND_FROM | Resend sender address |
 | SUPABASE_SERVICE_ROLE_KEY | Service role key (admin operations, notifications) |
+
+### Payments (Razorpay — required for billing to function, not yet set as of this writing)
+| Variable | Description |
+|----------|-------------|
+| RAZORPAY_KEY_ID | Razorpay API key ID |
+| RAZORPAY_KEY_SECRET | Razorpay API key secret |
+| RAZORPAY_WEBHOOK_SECRET | Secret used to verify incoming webhook signatures (HMAC SHA256) |
+| RAZORPAY_PLAN_ID_MONTHLY | Razorpay Plan ID for the $9.99/mo Elite monthly plan |
+| RAZORPAY_PLAN_ID_YEARLY | Razorpay Plan ID for the $7.99/mo ($95.88/yr) Elite yearly plan |
 
 ## 8. Common Pitfalls (Learned the Hard Way)
 
@@ -281,6 +310,10 @@ setup_followed: 'partial'  // Auto-computed overall for DB storage
 15. **subscriptions.plan values are 'basic'/'elite'**, not 'free'/'pro' (renamed in migration 0024). Update any hardcoded plan checks across gating logic, landing page copy, and admin views.
 
 16. **Feature gating must be server-side, not just UI-hidden.** `lib/plans.js`'s `getUserAccess()`/`buildAccess()` must be checked inside server actions (AI analysis, coach report, uploads, exports, etc.) — a hidden button is not a security boundary. Always honor `is_beta` as a bypass for Elite-only gates during the beta period.
+
+17. **Never trust a Razorpay webhook payload without verifying its signature first.** `verifyWebhookSignature(body, signature, secret)` (HMAC SHA256 against `RAZORPAY_WEBHOOK_SECRET`) must pass before any `subscriptions` row is updated from `/api/razorpay/webhook`.
+
+18. **The Razorpay checkout callback route must verify the payment signature** (`verifyPaymentSignature(orderId, paymentId, signature)`) before marking a subscription active — the redirect query params alone are not proof of payment.
 
 ## 9. Phase L Changes (June 30, 2026 — post-K)
 
@@ -524,3 +557,120 @@ ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
 ### Components
 - `tools/ToolCard.js` — reusable tool card for tools menu
 - `tools/ConsistencyCalculator.js` — consistency rule calculator with method toggle, What If simulator, Copy Result, SEO FAQ
+
+## 13. Phase R Changes (July 5, 2026 — post-Q)
+
+Phase R adds full Razorpay payment processing and an end-to-end feature-gating system, replacing the "Stripe planned" placeholder in the tech stack.
+
+### Razorpay Integration Architecture (lib/razorpay.js)
+`lib/razorpay.js` wraps the Razorpay Node SDK with the following functions:
+- `createSubscription(planId, customerNotify)` — creates a Razorpay subscription against `RAZORPAY_PLAN_ID_MONTHLY` or `RAZORPAY_PLAN_ID_YEARLY`, with a 14-day trial applied via a `start_at` offset
+- `cancelSubscription(subscriptionId, cancelAtCycleEnd)` — cancels a subscription (defaults to cancel-at-cycle-end)
+- `fetchSubscription(subscriptionId)` — fetches current subscription state from Razorpay
+- `verifyWebhookSignature(body, signature, secret)` — HMAC SHA256 verification of incoming webhook payloads against `RAZORPAY_WEBHOOK_SECRET`
+- `verifyPaymentSignature(orderId, paymentId, signature)` — verifies payment authenticity on the checkout callback
+
+### Subscription Creation Flow
+1. User clicks upgrade in `BillingTab` (Settings) or the `UpgradeModal` (opened from `BlurGate`/limit CTAs)
+2. Client calls `POST /api/razorpay/create-subscription`
+3. Server creates a Razorpay subscription via `lib/razorpay.js`, applying the 14-day trial and selecting `RAZORPAY_PLAN_ID_MONTHLY` or `RAZORPAY_PLAN_ID_YEARLY` based on billing cycle
+4. Route returns the subscription's `short_url` (Razorpay-hosted checkout page)
+5. Client redirects the browser to `short_url`
+
+### Callback Flow (app/api/razorpay/callback/route.js)
+- After payment on the Razorpay hosted page, Razorpay redirects to `/api/razorpay/callback` with subscription/payment query params
+- Route verifies the payment signature via `verifyPaymentSignature` before trusting the params
+- Updates the corresponding `subscriptions` row
+- Redirects the user back to `/dashboard/settings` with a success/failure query param
+
+### Webhook Flow (app/api/razorpay/webhook/route.js)
+- Razorpay POSTs events to `/api/razorpay/webhook`: `subscription.activated`, `subscription.charged`, `subscription.cancelled`, `subscription.halted`, `payment.failed`, etc.
+- Route verifies the signature via `verifyWebhookSignature` against `RAZORPAY_WEBHOOK_SECRET` before processing
+- Updates the `subscriptions` table (status, `last_payment_id`, `last_payment_at`, `cancelled_at` as applicable)
+- Triggers `lib/subscription-emails.js`: payment receipt on `subscription.charged`, cancellation email on `subscription.cancelled`, payment failed email on `payment.failed`
+
+### Cancellation Flow (app/api/razorpay/cancel-subscription/route.js)
+- `BillingTab` calls `POST /api/razorpay/cancel-subscription`
+- Route calls `lib/razorpay.js`'s `cancelSubscription()` (cancels at cycle end by default)
+- Razorpay's `subscription.cancelled` webhook confirms the cancellation, updates the DB, and sends the cancellation email
+
+### Trial Lifecycle
+- `trial_ends_at` is set at subscription creation time (+14 days)
+- `app/dashboard/layout.js` checks `trial_ends_at` on each load; when within N days of expiry it renders `SubscriptionBanner` in its "trial expiring" state and triggers the trial-ending email via `lib/subscription-emails.js`
+- When `trial_ends_at` has passed without a successful payment, subscription status transitions accordingly and `SubscriptionBanner` shows the "expired" state; `BlurGate` reverts Elite-only features back to locked
+
+### BlurGate Feature-Gating System (components/ui/BlurGate.js)
+- Wraps any Elite-only UI element/section
+- If the user's plan lacks the feature (per the access map in `lib/plans.js`), renders a blurred/overlaid version of the children plus a click target that opens the co-located `UpgradeModal` (pricing + CTA to start checkout)
+- Used on: dashboard share button, CSV export (trades page), `CalendarInsights` (calendar page)
+- Limit-reached CTAs in `TradeAnalysisTab`, `MonthlyReviewTab`, `TrophyWall`, and `RulebookPage` open `UpgradeModal` directly instead of blurring, since those are "limit hit" states rather than fully locked features
+
+### Subscription Lifecycle Emails (lib/subscription-emails.js)
+Four templates, following the same Resend-based pattern as the existing coach-report/ticket emails in `lib/email.js`:
+1. **Trial ending** — sent roughly 2-3 days before `trial_ends_at`
+2. **Payment receipt** — sent on successful charge (`subscription.charged` webhook)
+3. **Cancellation confirmation** — sent on cancel (`subscription.cancelled` webhook)
+4. **Payment failed** — sent on `payment.failed` webhook
+
+### lib/plans.js Updates
+- Pricing repriced from INR to USD: Elite $9.99/mo or $7.99/mo billed yearly ($95.88/yr); launch pricing $4.99/mo for the first 100 users; Basic remains $0 forever
+- `ai_analysis` limit for Basic reduced from 5/month to 3/month
+- New `calendar_insights` gate added (Elite-only)
+- New `ELITE_FEATURES` list added, consolidating all Elite-gated feature keys
+- `getUserAccess(user)` now also returns subscription status (e.g. `trialing`/`active`/`cancelled`/`expired`) alongside the feature-access flags, so dashboard pages can drive `BlurGate`/limit UI directly off subscription state rather than just plan tier
+
+### Database Migration 0031 (supabase/migrations/0031_razorpay_subscriptions.sql)
+```sql
+-- supabase/migrations/0031_razorpay_subscriptions.sql
+ALTER TABLE subscriptions ADD COLUMN razorpay_subscription_id text;
+ALTER TABLE subscriptions ADD COLUMN razorpay_payment_id text;
+ALTER TABLE subscriptions ADD COLUMN billing_cycle text;
+ALTER TABLE subscriptions ADD COLUMN trial_ends_at timestamptz;
+ALTER TABLE subscriptions ADD COLUMN cancelled_at timestamptz;
+ALTER TABLE subscriptions ADD COLUMN last_payment_id text;
+ALTER TABLE subscriptions ADD COLUMN last_payment_at timestamptz;
+CREATE INDEX idx_subscriptions_razorpay_subscription_id ON subscriptions(razorpay_subscription_id);
+ALTER TABLE subscriptions DROP CONSTRAINT IF EXISTS subscriptions_status_check;
+ALTER TABLE subscriptions ADD CONSTRAINT subscriptions_status_check
+  CHECK (status IN ('active', 'trialing', 'created', 'authenticated', 'pending', 'halted', 'cancelled', 'completed', 'expired', 'paused'));
+```
+
+### Pricing & Plan Limits Summary
+
+| Feature | Basic | Elite |
+|---------|-------|-------|
+| AI trade analysis | 3/mo | 100/mo |
+| Propol AI review | 1/mo | 4/mo |
+| Trophy uploads | 5 | Unlimited |
+| Screenshots/trade | 1 | 10 |
+| Custom setups | 3 | Unlimited |
+| CSV export | Locked | Full |
+| Shareable cards | Locked | Full |
+| Email coach | Locked | Full |
+| Calendar insights | Locked | Full |
+| Price | $0 forever | $9.99/mo or $7.99/mo billed yearly ($95.88/yr) |
+
+- 14-day free trial on all Elite subscriptions
+- Launch pricing: $4.99/mo for the first 100 users
+- Checkout: Razorpay hosted page (redirect flow)
+
+### New Files
+- `lib/razorpay.js`, `lib/subscription-emails.js`
+- `components/ui/BlurGate.js`, `components/ui/SubscriptionBanner.js`
+- `components/settings/BillingTab.js`, `components/landing/LandingFooter.js`
+- `app/api/razorpay/create-subscription/route.js`, `app/api/razorpay/webhook/route.js`, `app/api/razorpay/callback/route.js`, `app/api/razorpay/cancel-subscription/route.js`
+- `app/about/page.js`, `app/contact/page.js`, `app/refund-policy/page.js`, `app/(landing)/pricing/page.js`
+- `supabase/migrations/0031_razorpay_subscriptions.sql`
+
+### Modified Files
+- `lib/plans.js`, `components/ui/BetaFeatureWarning.js`, `components/ui/UpgradeCard.js`, `components/landing/LandingNav.js`
+- `components/coach/TradeAnalysisTab.js`, `components/coach/MonthlyReviewTab.js`, `components/trophies/TrophyWall.js`, `components/rulebook/RulebookPage.js`
+- `components/journal/JournalForm.js`, `components/journal/JournalSection.js`
+- `app/dashboard/layout.js`, `app/dashboard/page.js`, `app/dashboard/trades/page.js`, `app/dashboard/trades/actions.js`, `app/dashboard/trades/[id]/page.js`, `app/dashboard/coach/page.js`, `app/dashboard/calendar/page.js`, `app/dashboard/settings/page.js`, `app/dashboard/rulebook/page.js`
+- `app/tools/page.js`, `app/tools/consistency-calculator/page.js`, `app/page.js`, `app/privacy/page.js`, `app/terms/page.js` (3 new sections 11-13 for billing/payments/refunds)
+
+### Related Repos Note
+The separate `proplogai-blog` repository (not touched by this change) had its `Header.astro` updated to match the main site nav (Tools, Blog, Pricing, About links + 14-Day Trial badge + centered pill container) and its `Footer.astro` updated to match the new `LandingFooter` (Lyrafin-style). Tracked in that repo's own history, not here.
+
+### Environment Variables (required, not yet configured)
+- `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RAZORPAY_PLAN_ID_MONTHLY`, `RAZORPAY_PLAN_ID_YEARLY`
