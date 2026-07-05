@@ -331,7 +331,7 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
         message="This will remove all your current setups and replace them with the 7 defaults. This action can't be undone."
         confirmLabel="Restore"
       />
-    </div>
       {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} feature="custom_setups" />}
-      );
+    </div>
+  );
 }

@@ -16,7 +16,6 @@ import { buildTrialEndingEmail } from '@/lib/subscription-emails';
 import { notify, TYPES } from '@/lib/notifications';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import GuidedTour from '@/components/ui/GuidedTour';
-import { buildAccess } from '@/lib/plans';
 
 /* Admin notification types — excluded from user dashboard bell */
 const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup', 'ticket_user_replied', 'ticket_closed'];
@@ -173,9 +172,6 @@ export default async function DashboardLayout({ children }) {
   const isAdmin = user.email === ADMIN_EMAIL;
   const initial = user.email ? user.email.charAt(0).toUpperCase() : '?';
 
-  /* ── Plan access ── */
-  const isBeta = prefs?.is_beta === true;
-  const planAccess = buildAccess('basic', isBeta, isAdmin).toJSON();
 
   return (
     <div className="flex min-h-screen">

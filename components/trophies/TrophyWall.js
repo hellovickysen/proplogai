@@ -470,7 +470,7 @@ export default function TrophyWall({ trophies, firmNames, planAccess }) {
         title="Delete this trophy?"
         message="This action can't be undone. The trophy will be permanently removed."
       />
-    </div>
       {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} feature="trophy_uploads" />}
-      );
+    </div>
+  );
 }
