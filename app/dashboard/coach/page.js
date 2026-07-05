@@ -20,11 +20,11 @@ export default async function CoachPage() {
 
   if (countError) {
     return (
-      <div className="px-4 py-8 sm:px-6">
-        <h1 className="font-display text-2xl font-bold">Propol AI Coach</h1>
-        <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-6 text-center">
-          <p className="text-sm text-red-400">Something went wrong loading your data. Please try refreshing the page.</p>
-        </div>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Propol AI Coach</h1>
+        <p className="text-white/50">
+          Something went wrong loading your data. Please try refreshing the page.
+        </p>
       </div>
     );
   }
@@ -102,28 +102,32 @@ export default async function CoachPage() {
   const analysisLimit = access.limit('ai_analysis');
   const emailEnabled = isEmailConfigured();
 
+  // Serialize limits for client (Infinity → -1)
+  const safeCoachLimit = coachLimit === Infinity ? -1 : coachLimit;
+  const safeAnalysisLimit = analysisLimit === Infinity ? -1 : analysisLimit;
+
   return (
-    <div className="px-4 py-6 sm:px-6 sm:py-8">
+    <div className="p-6 max-w-5xl mx-auto">
       {access.showWarning('coach_report') && (
-        <div className="mb-4"><BetaFeatureWarning feature="coach_report" featureLabel="Propol AI Coach" /></div>
+        <BetaFeatureWarning feature="coach_report" featureLabel="Propol AI Coach" remaining={{ used: coachUsed || 0, limit: safeCoachLimit, remaining: safeCoachLimit > 0 ? Math.max(0, safeCoachLimit - (coachUsed || 0)) : 0 }} />
       )}
       {!access.canUse('coach_report') && (
-        <div className="mb-4"><UpgradeCard feature="coach_report" featureLabel="Propol AI Coach" /></div>
+        <UpgradeCard feature="coach_report" featureLabel="Propol AI Coach" />
       )}
 
       <PropolCoachHub
-        reports={coachReports || []}
-        tradeAnalyses={tradeAnalyses || []}
         tradeCount={tradeCount || 0}
-        access={access.toJSON()}
+        coachReports={coachReports || []}
+        tradeAnalyses={tradeAnalyses || []}
         coachUsed={coachUsed || 0}
-        coachLimit={coachLimit}
         analysisUsed={analysisUsed || 0}
-        analysisLimit={analysisLimit}
+        coachLimit={safeCoachLimit}
+        analysisLimit={safeAnalysisLimit}
         emailEnabled={emailEnabled}
         persona={persona}
         streaks={streaks}
         userName={userName}
+        planAccess={access.toJSON()}
       />
     </div>
   );

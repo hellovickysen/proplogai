@@ -4,6 +4,8 @@ import CalendarMonth from '@/components/calendar/CalendarMonth';
 import TradeTable from '@/components/trades/TradeTable';
 import { num, fmtMoney } from '@/lib/stats';
 import CalendarInsights from '@/components/calendar/CalendarInsights';
+import BlurGate from '@/components/ui/BlurGate';
+import { getUserAccess } from '@/lib/plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +33,10 @@ export default async function CalendarPage({ searchParams }) {
 
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  // Plan access for feature gating
+  const access = await getUserAccess(supabase, user);
+  const planAccess = access.toJSON();
 
   // Calculate the start and end of the displayed month for date-range filtering
   const monthStartDate = `${year}-${pad2(month + 1)}-01`;
@@ -61,11 +67,11 @@ export default async function CalendarPage({ searchParams }) {
 
   if (tradesError) {
     return (
-      <div className="px-4 py-8 sm:px-6">
-        <h1 className="font-display text-2xl font-bold">Calendar</h1>
-        <div className="mt-6 rounded-2xl border border-red-400/20 bg-red-500/[0.05] p-6 text-center">
-          <p className="text-sm text-red-400">Something went wrong loading your data. Please try refreshing the page.</p>
-        </div>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-4">Calendar</h1>
+        <p className="text-white/50">
+          Something went wrong loading your data. Please try refreshing the page.
+        </p>
       </div>
     );
   }
@@ -75,24 +81,24 @@ export default async function CalendarPage({ searchParams }) {
   // Empty state — user has no trades at all
   if (totalTradeCount === 0) {
     return (
-      <div className="px-4 py-8 sm:px-6">
-        <h1 className="font-display text-2xl font-bold">Calendar</h1>
-        <div className="mt-12 flex flex-col items-center justify-center text-center">
-          <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-            </svg>
+      <div className="p-6 max-w-4xl mx-auto">
+        <h1 className="text-2xl font-bold mb-6">Calendar</h1>
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10">
+            <div className="text-5xl mb-4 opacity-40">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-white/30">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <path d="M16 2v4M8 2v4M3 10h18" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-white/80 mb-2">No trades yet</h2>
+            <p className="text-sm text-white/40 max-w-xs mb-6">
+              Once you log your first trade, your calendar will light up with daily P&L and trade history.
+            </p>
+            <Link href="/dashboard/trades/new" className="inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+              Log Your First Trade
+            </Link>
           </div>
-          <h2 className="font-display text-lg font-semibold text-white/70">No trades yet</h2>
-          <p className="mt-2 max-w-sm text-sm text-white/45">
-            Once you log your first trade, your calendar will light up with daily P&L and trade history.
-          </p>
-          <Link
-            href="/dashboard/trades/new"
-            className="mt-6 rounded-xl bg-cyan-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/20 transition-colors hover:bg-cyan-400"
-          >
-            Log Your First Trade
-          </Link>
         </div>
       </div>
     );
@@ -135,18 +141,12 @@ export default async function CalendarPage({ searchParams }) {
   for (const t of enrichedTrades) {
     if (t._journal) {
       const raw = t.trade_date || t.closed_at || t.created_at;
-      if (!raw) continue;
-      const d = new Date(raw);
-      if (d.getUTCFullYear() === year && d.getUTCMonth() === month) {
-        journalDays[d.getUTCDate()] = true;
-      }
+      const d = raw ? new Date(raw).getUTCDate() : null;
+      if (d) journalDays[d] = true;
     }
   }
 
-  // The monthParam string that CalendarMonth uses for building links
-  const monthParam = `${year}-${pad2(month + 1)}`;
-
-  // Build day map for selected-date trades lookup
+  // Build day/selected-date trades lookup
   const dayMap = {};
   for (const t of enrichedTrades) {
     const key = t.trade_date ? t.trade_date.slice(0, 10) : null;
@@ -164,62 +164,52 @@ export default async function CalendarPage({ searchParams }) {
   const nextMonth = month === 11 ? new Date(year + 1, 0, 1) : new Date(year, month + 1, 1);
   const prevParam = `${prevMonth.getFullYear()}-${pad2(prevMonth.getMonth() + 1)}`;
   const nextParam = `${nextMonth.getFullYear()}-${pad2(nextMonth.getMonth() + 1)}`;
+  const monthParam = `${year}-${pad2(month + 1)}`;
 
   return (
-    <div className="px-4 py-8 sm:px-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="font-display text-2xl font-bold">Calendar</h1>
-      </div>
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Calendar</h1>
 
-      {list.length > 0 && <CalendarInsights monthTrades={list} allTrades={allTrades || []} />}
+      {/* Calendar Insights — blurred for Basic users */}
+      {list.length > 0 && (
+        <BlurGate feature="calendar_insights" access={planAccess}>
+          <CalendarInsights trades={list} allTrades={allTrades || []} />
+        </BlurGate>
+      )}
 
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+      <div className="rounded-2xl border border-white/10 bg-[#12121a] overflow-hidden">
         {/* Month navigation in the calendar card header */}
-        <div className="mb-4 flex items-center justify-between">
-          <Link
-            href={`?month=${prevParam}`}
-            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm hover:bg-white/[0.06]"
-          >
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <Link href={`/dashboard/calendar?month=${prevParam}`} className="text-xs text-white/40 hover:text-white/70 transition-colors">
             &#8592; {MONTHS_SHORT[prevMonth.getMonth()]}
           </Link>
-          <span className="font-display text-base font-semibold">
+          <span className="font-semibold text-white">
             {MONTHS_SHORT[month]} {year}
           </span>
-          <Link
-            href={`?month=${nextParam}`}
-            className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm hover:bg-white/[0.06]"
-          >
-            {MONTHS_SHORT[nextMonth.getMonth()]} &#8594;
+          <Link href={`/dashboard/calendar?month=${nextParam}`} className="text-xs text-white/40 hover:text-white/70 transition-colors">
+            {MONTHS_SHORT[nextMonth.getMonth()]} &rarr;
           </Link>
         </div>
 
         {/* CalendarMonth with the correct props it expects */}
-        <CalendarMonth
-          trades={enrichedTrades}
-          year={year}
-          month={month}
-          selected={selected}
-          monthParam={monthParam}
-          monthlyPnl={monthlyPnl}
-          journalDays={journalDays}
-        />
+        <CalendarMonth trades={enrichedTrades} year={year} month={month} journalDays={journalDays} monthParam={monthParam} />
       </div>
 
       {/* Day trades section below the calendar */}
       {selected && (
         <div className="mt-6">
-          <div className="mb-3 font-display text-lg font-bold">
-            Trades on {selected}
+          <div className="flex items-center gap-3 mb-4">
+            <h2 className="text-lg font-semibold">Trades on {selected}</h2>
             {dayMap[selected] && (
-              <span className={' ml-3 text-base font-semibold ' + (dayMap[selected].pnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+              <span className={`text-sm font-mono ${dayMap[selected].pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                 {fmtMoney(dayMap[selected].pnl)}
               </span>
             )}
           </div>
           {selectedTrades.length === 0 ? (
-            <p className="text-sm text-white/55">No trades on this date.</p>
+            <p className="text-white/40 text-sm">No trades on this date.</p>
           ) : (
-            <TradeTable rows={selectedTrades} compact />
+            <TradeTable trades={selectedTrades} />
           )}
         </div>
       )}

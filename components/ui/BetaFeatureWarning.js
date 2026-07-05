@@ -5,24 +5,24 @@
  * "You're using this feature free during beta. After beta, it requires the Elite plan."
  *
  * Props:
- *   feature - feature key from FEATURES config (e.g. 'ai_analysis')
- *   featureLabel - human-readable label (optional, falls back to feature key)
- *   remaining - { used, limit, remaining } for rate-limited features (optional)
+ * feature - feature key from FEATURES config (e.g. 'ai_analysis')
+ * featureLabel - human-readable label (optional, falls back to feature key)
+ * remaining - { used, limit, remaining } for rate-limited features (optional)
  */
 export default function BetaFeatureWarning({ feature, featureLabel, remaining }) {
   return (
-    <div className="rounded-xl border border-amber-400/15 bg-amber-400/[0.04] px-4 py-3">
-      <div className="flex items-start gap-2.5">
-        <span className="mt-0.5 text-sm text-amber-400">⚡</span>
-        <div className="min-w-0">
-          <p className="text-xs font-semibold text-amber-300">
+    <div className="mb-5 rounded-2xl border border-violet-400/20 bg-violet-500/5 p-4">
+      <div className="flex items-start gap-3">
+        <span className="text-lg mt-0.5">⚡</span>
+        <div>
+          <p className="text-sm font-semibold text-violet-300">
             Beta access — {featureLabel || feature}
           </p>
-          <p className="mt-0.5 text-xs text-white/50">
-            You&apos;re using this feature free during beta. After beta, it will require the Elite plan ($9.99/mo).
+          <p className="text-xs text-white/50 mt-1">
+            You're using this feature free during beta. After beta, it will require the Elite plan (₹799/mo).
           </p>
-          {remaining && remaining.limit !== Infinity && (
-            <p className="mt-1 font-mono text-[10px] text-white/35">
+          {remaining && remaining.limit > 0 && remaining.limit !== -1 && (
+            <p className="text-xs text-white/40 mt-1 font-mono">
               {remaining.used} / {remaining.limit} used this month
             </p>
           )}
