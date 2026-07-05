@@ -80,9 +80,9 @@ export default function ContactPage() {
           </p>
         </div>
 
-<LandingFooter />
       </div>
     </div>
+    <LandingFooter />
     </>
   );
 }
