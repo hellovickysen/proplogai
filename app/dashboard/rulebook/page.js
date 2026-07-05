@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import RulebookPage from '@/components/rulebook/RulebookPage';
+import { getUserAccess } from '@/lib/plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,5 +25,9 @@ export default async function RulebookRoute() {
     );
   }
 
-  return <RulebookPage setups={setups || []} />;
+  const access = await getUserAccess(supabase, user);
+  const customLimit = access.limit('custom_setups');
+  const safeLimit = customLimit === Infinity ? -1 : customLimit;
+
+  return <RulebookPage setups={setups || []} customSetupLimit={safeLimit} planAccess={access.toJSON()} />;
 }

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { cancelSubscription } from '@/lib/razorpay';
+import { sendEmail, isEmailConfigured } from '@/lib/email';
+import { buildCancellationEmail } from '@/lib/subscription-emails';
 
 /**
  * POST /api/razorpay/cancel-subscription
@@ -18,7 +20,7 @@ export async function POST() {
     // Get the user's active subscription
     const { data: sub } = await supabase
       .from('subscriptions')
-      .select('id, razorpay_subscription_id, status')
+      .select('id, razorpay_subscription_id, status, renews_at')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -42,6 +44,14 @@ export async function POST() {
       })
       .eq('id', sub.id)
       .eq('user_id', user.id);
+
+    // Send cancellation email
+    if (isEmailConfigured()) {
+      try {
+        const cancelEmail = buildCancellationEmail({ accessUntil: sub.renews_at || null });
+        await sendEmail({ to: user.email, subject: cancelEmail.subject, html: cancelEmail.html });
+      } catch (e) { console.error('Cancellation email error:', e); }
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

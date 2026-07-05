@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookSignature } from '@/lib/razorpay';
+import { sendEmail, isEmailConfigured } from '@/lib/email';
+import { buildPaymentReceiptEmail, buildPaymentFailedEmail } from '@/lib/subscription-emails';
 
 /**
  * POST /api/razorpay/webhook
@@ -59,12 +61,27 @@ export async function POST(request) {
         const sub = event.payload.subscription.entity;
         const payment = event.payload.payment?.entity;
         const currentEnd = sub.current_end ? new Date(sub.current_end * 1000).toISOString() : null;
-        await updateSubscription(supabase, sub.id, {
+        const updatedSub = await updateSubscription(supabase, sub.id, {
           status: 'active',
           renews_at: currentEnd,
           last_payment_id: payment?.id || null,
           last_payment_at: new Date().toISOString(),
         });
+        // Send payment receipt email
+        if (isEmailConfigured() && updatedSub?.user_id && payment) {
+          try {
+            const { data: u } = await supabase.auth.admin.getUserById(updatedSub.user_id);
+            if (u?.user?.email) {
+              const { data: subRow } = await supabase.from('subscriptions').select('billing_cycle').eq('user_id', updatedSub.user_id).maybeSingle();
+              const receipt = buildPaymentReceiptEmail({
+                amount: payment.amount,
+                billingCycle: subRow?.billing_cycle || 'monthly',
+                nextBillingDate: currentEnd,
+              });
+              await sendEmail({ to: u.user.email, subject: receipt.subject, html: receipt.html });
+            }
+          } catch (e) { console.error('Receipt email error:', e); }
+        }
         break;
       }
 
@@ -112,10 +129,26 @@ export async function POST(request) {
       }
 
       case 'payment.failed': {
-        // Individual payment failed (subscription.pending handles the sub side)
+        // Individual payment failed
         const payment = event.payload.payment?.entity;
         if (payment) {
           console.log(`Payment failed: ${payment.id}, error: ${payment.error_code} - ${payment.error_description}`);
+          // Send payment failed email
+          if (isEmailConfigured()) {
+            try {
+              const subEntity = event.payload.subscription?.entity;
+              if (subEntity) {
+                const failedSub = await supabase.from('subscriptions').select('user_id').eq('razorpay_subscription_id', subEntity.id).maybeSingle();
+                if (failedSub?.data?.user_id) {
+                  const { data: u } = await supabase.auth.admin.getUserById(failedSub.data.user_id);
+                  if (u?.user?.email) {
+                    const failedEmail = buildPaymentFailedEmail({ errorMessage: payment.error_description });
+                    await sendEmail({ to: u.user.email, subject: failedEmail.subject, html: failedEmail.html });
+                  }
+                }
+              }
+            } catch (e) { console.error('Failed payment email error:', e); }
+          }
         }
         break;
       }
