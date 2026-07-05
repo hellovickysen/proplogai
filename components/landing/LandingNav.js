@@ -6,7 +6,7 @@ import Link from 'next/link';
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 
 const NAV_LINKS = [
-  { label: 'Tools', href: '/tools/consistency-calculator' },
+  { label: 'Tools', href: '/tools' },
   { label: 'Blog', href: '/blogs', external: true },
   { label: 'Pricing', href: '#pricing', scroll: true },
   { label: 'About', href: '/about' },
