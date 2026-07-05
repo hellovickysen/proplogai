@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { getUserAccess } from '@/lib/plans';
 import { fmtMoney, fmtR, num } from '@/lib/stats';
 import JournalSection from '@/components/journal/JournalSection';
 import DeleteTradeButton from '@/components/trades/DeleteTradeButton';
@@ -61,6 +62,10 @@ export default async function TradeDetailPage({ params }) {
   }
 
   if (!trade) notFound();
+  const access = await getUserAccess(supabase, user);
+  const screenshotLimit = access.limit('screenshots_per_trade');
+  const safeScreenshotLimit = screenshotLimit === Infinity ? 10 : screenshotLimit;
+
   const { data: journal } = await supabase.from('journal_entries').select('*').eq('trade_id', id).maybeSingle();
   const { data: insight } = await supabase
     .from('ai_insights')
@@ -209,7 +214,7 @@ export default async function TradeDetailPage({ params }) {
         </div>
 
         {/* Right column — journal */}
-        <JournalSection tradeId={id} userId={user.id} journal={journal} prefs={prefs} />
+        <JournalSection tradeId={id} userId={user.id} journal={journal} prefs={prefs} screenshotLimit={safeScreenshotLimit} />
       </div>
     </div>
   );

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import JournalView from '@/components/journal/JournalView';
 import JournalForm from '@/components/journal/JournalForm';
 
-export default function JournalSection({ tradeId, userId, journal, prefs }) {
+export default function JournalSection({ tradeId, userId, journal, prefs, screenshotLimit = 10 }) {
   const [editing, setEditing] = useState(false);
   const hasJournal = journal && (journal.note || (journal.emotions && journal.emotions.length) || journal.confidence || journal.screenshot_url || (journal.screenshot_urls && journal.screenshot_urls.length));
 
@@ -31,7 +31,7 @@ export default function JournalSection({ tradeId, userId, journal, prefs }) {
       </div>
 
       {editing ? (
-        <JournalForm tradeId={tradeId} userId={userId} initial={journal} prefs={prefs} onSaved={() => setEditing(false)} />
+        <JournalForm tradeId={tradeId} userId={userId} initial={journal} prefs={prefs} screenshotLimit={screenshotLimit} onSaved={() => setEditing(false)} />
       ) : hasJournal ? (
         <JournalView journal={journal} />
       ) : (

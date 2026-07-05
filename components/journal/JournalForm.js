@@ -19,7 +19,7 @@ function mergeUrls(initial) {
   return [];
 }
 
-export default function JournalForm({ tradeId, userId, initial, prefs = null, onSaved = null }) {
+export default function JournalForm({ tradeId, userId, initial, prefs = null, onSaved = null, screenshotLimit = 10 }) {
   const EMOTIONS = resolveEmotions(prefs);
   const TAGS = resolveTags(prefs);
   const toast = useToast();
@@ -49,7 +49,7 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
     if (!files || files.length === 0) return;
     // Validate file sizes (max 5MB per file, 10 files max)
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
-    const MAX_FILES = 10;
+    const MAX_FILES = screenshotLimit || 10;
     if (screenshotUrls.length + files.length > MAX_FILES) {
       setError('Maximum ' + MAX_FILES + ' screenshots per trade.');
       return;
@@ -179,7 +179,17 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
         placeholder="What will you do differently next time?"
       />
 
-      <label className="mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55">Chart screenshots</label>
+      <div className="mb-1.5 flex items-center gap-2">
+        <label className="block font-mono text-xs uppercase tracking-wider text-white/55">Chart screenshots</label>
+        {screenshotLimit === 1 && (
+          <span className="rounded-full border border-amber-400/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-300">
+            Basic: 1 per trade
+          </span>
+        )}
+        {screenshotLimit > 1 && screenshotLimit < 10 && (
+          <span className="font-mono text-[10px] text-white/30">max {screenshotLimit}</span>
+        )}
+      </div>
       {screenshotUrls.length > 0 && (
         <div className="mb-3 flex flex-wrap gap-2">
           {screenshotUrls.map((url, i) => (

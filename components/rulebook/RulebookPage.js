@@ -6,6 +6,7 @@ import { createSetup, updateSetup, deleteSetup, seedDefaultSetups, resetToDefaul
 import { useToast } from '@/components/ui/Toast';
 import { RulebookEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { UpgradeModal } from '@/components/ui/BlurGate';
 
 
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -106,10 +107,11 @@ function SetupForm({ initial, onSave, onCancel }) {
   );
 }
 
-export default function RulebookPage({ setups }) {
+export default function RulebookPage({ setups, customSetupLimit = -1, planAccess = null }) {
   const router = useRouter();
   const toast = useToast();
   const [editing, setEditing] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -117,6 +119,10 @@ export default function RulebookPage({ setups }) {
 
   const activeSetups = setups.filter((s) => s.is_active);
   const inactiveSetups = setups.filter((s) => !s.is_active);
+  const customSetups = setups.filter((s) => !s.is_default);
+  const hasLimit = customSetupLimit > 0;
+  const atLimit = hasLimit && customSetups.length >= customSetupLimit;
+  const isElite = planAccess && (planAccess.isAdmin || planAccess.isBeta || planAccess.effectivePlan === 'elite');
 
   async function handleSeed() {
     setSeeding(true);
@@ -239,16 +245,28 @@ export default function RulebookPage({ setups }) {
         <div>
           <h1 className="font-display text-2xl font-bold">Rulebook</h1>
           <p className="mt-1 text-sm text-white/55">
-            {activeSetups.length} active setup{activeSetups.length !== 1 ? 's' : ''} in your rulebook
+{activeSetups.length} active setup{activeSetups.length !== 1 ? 's' : ''} in your rulebook
+            {hasLimit && !isElite && (
+              <span className="ml-2 font-mono text-[10px] text-white/40">({customSetups.length}/{customSetupLimit} custom)</span>
+            )}
           </p>
         </div>
-        <button
-          onClick={() => setEditing('new')}
-          className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#08080f]"
-          style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-        >
-          + New setup
-        </button>
+        {atLimit && !isElite ? (
+          <button
+            onClick={() => setShowUpgradeModal(true)}
+            className="rounded-xl border border-amber-400/30 bg-amber-500/10 px-4 py-2.5 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition-colors"
+          >
+            Limit reached — Upgrade to Elite
+          </button>
+        ) : (
+          <button
+            onClick={() => setEditing('new')}
+            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-[#08080f]"
+            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+          >
+            + New setup
+          </button>
+        )}
       </div>
 
       {/* Active setups */}
@@ -314,5 +332,6 @@ export default function RulebookPage({ setups }) {
         confirmLabel="Restore"
       />
     </div>
-  );
+      {showUpgradeModal && <UpgradeModal onClose={() => setShowUpgradeModal(false)} feature="custom_setups" />}
+      );
 }

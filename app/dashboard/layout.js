@@ -11,6 +11,9 @@ import Link from 'next/link';
 import { num, fmtMoney, fmtMoneyCompact, getTradingDate } from '@/lib/stats';
 import { getUserAccess } from '@/lib/plans';
 import SubscriptionBanner from '@/components/ui/SubscriptionBanner';
+import { sendEmail, isEmailConfigured } from '@/lib/email';
+import { buildTrialEndingEmail } from '@/lib/subscription-emails';
+import { notify, TYPES } from '@/lib/notifications';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import GuidedTour from '@/components/ui/GuidedTour';
 import { buildAccess } from '@/lib/plans';
@@ -91,6 +94,31 @@ export default async function DashboardLayout({ children }) {
     .select('status, trial_ends_at, renews_at, cancelled_at, billing_cycle')
     .eq('user_id', user.id)
     .maybeSingle();
+
+  // Trial ending email: send once when 3 days or less remain
+  if (isEmailConfigured() && subscription?.trial_ends_at && subscription?.status !== 'cancelled') {
+    const trialEnd = new Date(subscription.trial_ends_at);
+    const daysLeft = Math.ceil((trialEnd - new Date()) / (1000 * 60 * 60 * 24));
+    if (daysLeft > 0 && daysLeft <= 3) {
+      try {
+        const { data: alreadySent } = await supabase
+          .from('notifications')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('type', 'trial_ending')
+          .maybeSingle();
+        if (!alreadySent) {
+          const trialEmail = buildTrialEndingEmail({ trialEndsAt: subscription.trial_ends_at });
+          await sendEmail({ to: user.email, subject: trialEmail.subject, html: trialEmail.html });
+          await notify(supabase, user.id, TYPES.TRIAL_ENDING || 'trial_ending',
+            'Trial ending soon',
+            `Your free trial ends in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}. Subscribe to keep Elite features.`,
+            { link: '/dashboard/settings?tab=billing' }
+          );
+        }
+      } catch (e) { /* Non-critical — don't break dashboard */ }
+    }
+  }
 
   const today = getTradingDate(); // UTC midnight = 5:30 AM IST trading day boundary
   const { data: todayTrades } = await supabase
