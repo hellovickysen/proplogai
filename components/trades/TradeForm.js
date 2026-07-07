@@ -786,9 +786,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                       <button type="button" onClick={() => setShowAddEmotion(true)} className="rounded-full border border-dashed border-white/20 px-3 py-2 text-xs text-white/40 hover:text-white/70 hover:border-white/40 transition-colors" title="Add custom emotion">+</button>
                     </div>
                     {showAddEmotion && (
-                      <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-3">
-                        <input type="text" value={newEmotionName} onChange={e => setNewEmotionName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddEmotion())} placeholder="Emotion name" className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-white outline-none focus:border-violet-400/40" autoFocus />
-                        <button type="button" onClick={handleAddEmotion} disabled={quickSaving || !newEmotionName.trim()} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-50" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? '...' : 'Add'}</button>
+                      <div className="mt-2 inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-2">
+                        <input type="text" value={newEmotionName} onChange={e => setNewEmotionName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddEmotion())} placeholder="Emotion name" className="w-32 rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5 text-xs text-white outline-none focus:border-violet-400/40" autoFocus />
+                        <button type="button" onClick={handleAddEmotion} disabled={quickSaving || !newEmotionName.trim()} className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-50" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? '...' : 'Add'}</button>
                         <button type="button" onClick={() => { setShowAddEmotion(false); setNewEmotionName(''); }} className="text-xs text-white/40 hover:text-white/70">✕</button>
                       </div>
                     )}
@@ -822,9 +822,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                       <button type="button" onClick={() => setShowAddTag(true)} className="rounded-full border border-dashed border-white/20 px-3 py-2 text-xs text-white/40 hover:text-white/70 hover:border-white/40 transition-colors" title="Add custom tag">+</button>
                     </div>
                     {showAddTag && (
-                      <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-3">
-                        <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddTag())} placeholder="Tag name" className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-white outline-none focus:border-violet-400/40" autoFocus />
-                        <button type="button" onClick={handleAddTag} disabled={quickSaving || !newTagName.trim()} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-50" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? '...' : 'Add'}</button>
+                      <div className="mt-2 inline-flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-2">
+                        <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddTag())} placeholder="Tag name" className="w-32 rounded-lg border border-white/10 bg-black/30 px-2.5 py-1.5 text-xs text-white outline-none focus:border-violet-400/40" autoFocus />
+                        <button type="button" onClick={handleAddTag} disabled={quickSaving || !newTagName.trim()} className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-50" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? '...' : 'Add'}</button>
                         <button type="button" onClick={() => { setShowAddTag(false); setNewTagName(''); }} className="text-xs text-white/40 hover:text-white/70">✕</button>
                       </div>
                     )}
