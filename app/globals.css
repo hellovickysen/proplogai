@@ -2,21 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
+html, body {
   background: #07070b;
   color: #ececf4;
   -webkit-font-smoothing: antialiased;
   font-size: 16px;
   overflow-x: hidden;
-  overflow-x: clip; /* modern browsers — stronger than hidden on mobile */
+  overscroll-behavior-x: none;
 }
 body {
   font-family: 'Poppins', system-ui, sans-serif;
-  overflow-x: hidden;
-  overflow-x: clip;
   position: relative;
   width: 100%;
-  max-width: 100vw;
 }
 
 /* Toast slide-in animation */

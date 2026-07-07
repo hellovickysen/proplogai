@@ -174,9 +174,9 @@ export default async function DashboardLayout({ children }) {
 
 
   return (
-    <div className="flex min-h-screen max-w-[100vw] overflow-x-hidden">
+    <div className="flex min-h-screen overflow-hidden">
       <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} fullName={prefs?.full_name || ''} planAccess={planAccess} />
-      <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} planAccess={planAccess} />
@@ -194,7 +194,7 @@ export default async function DashboardLayout({ children }) {
             <span className="hidden font-mono text-xs text-white/55 sm:block">{user.email}</span>
           </div>
         </header>
-        <main className="flex-1 overflow-x-hidden"><SubscriptionBanner subscription={subscription} planAccess={planAccess} />{children}</main>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden"><SubscriptionBanner subscription={subscription} planAccess={planAccess} />{children}</main>
         <RiskFooter />
       </div>
       <QuickLog />

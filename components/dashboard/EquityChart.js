@@ -128,12 +128,12 @@ export default function EquityChart({ data }) {
       {/* Header */}
       <div className="mb-3 flex items-center justify-between gap-2">
         <div className="min-w-0 truncate font-display text-base font-semibold">P&amp;L Performance</div>
-        <div className="flex gap-0.5 rounded-lg border border-white/10 bg-black/30 p-0.5">
+        <div className="flex shrink-0 gap-0.5 rounded-lg border border-white/10 bg-black/30 p-0.5">
           {[{ key: 'cumulative', label: 'Cumulative' }, { key: 'daily', label: 'Daily' }].map((m) => (
             <button
               key={m.key}
               onClick={() => setMode(m.key)}
-              className={'rounded-md px-3 py-1.5 text-xs font-semibold transition-all ' + (mode === m.key ? 'bg-white/[0.1] text-white' : 'text-white/40 hover:text-white/60')}
+              className={'rounded-md px-2 py-1 text-[11px] font-semibold transition-all sm:px-3 sm:py-1.5 sm:text-xs ' + (mode === m.key ? 'bg-white/[0.1] text-white' : 'text-white/40 hover:text-white/60')}
             >
               {m.label}
             </button>
