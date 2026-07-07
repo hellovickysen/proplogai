@@ -89,13 +89,13 @@ export default async function TradeDetailPage({ params }) {
               <h1 className="text-2xl sm:text-3xl font-bold text-white">{trade.pair}</h1>
               <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold uppercase ${
                 trade.direction === 'long'
-                  ? 'bg-blue-400/[0.12] text-blue-400 border border-blue-400/20'
+                  ? 'bg-emerald-400/[0.12] text-emerald-400 border border-emerald-400/20'
                   : 'bg-red-400/[0.12] text-red-400 border border-red-400/20'
               }`}>
                 {trade.direction === 'long' ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 17l5-5 5 5M7 7l5 5 5-5"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 13l-5-5-5 5"/><path d="M12 8v10"/></svg>
                 ) : (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 7l5 5 5-5M7 17l5-5 5 5"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 11l5 5 5-5"/><path d="M12 16V6"/></svg>
                 )}
                 {trade.direction}
               </span>
