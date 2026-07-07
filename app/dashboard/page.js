@@ -276,7 +276,7 @@ export default async function DashboardPage() {
               <DashboardShareButton data={dailyShareData} type="total" />
             </BlurGate>
           )}
-          <Link data-tour="new-trade" href="/dashboard/trades/new" className="rounded-xl px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+          <Link data-tour="new-trade" href="/dashboard/trades/new" className="hidden sm:inline-block rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
             + New Trade
           </Link>
         </div>
