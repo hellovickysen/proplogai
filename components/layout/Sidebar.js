@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import Logo, { LogoMark } from '@/components/Logo';
 import PlanBadge from '@/components/ui/PlanBadge';
 
@@ -24,8 +24,9 @@ const SUPPORT_NAV = [
   { label: 'Subscription',   icon: '💎', href: '/dashboard/settings?tab=billing' },
 ];
 
-export default function Sidebar({ email = '', fullName = '', avatarUrl = '', planAccess = null }) {
+export default function Sidebar({ email = '', fullName = '', avatarUrl = '', planAccess = null, credits = null }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [collapsed, setCollapsed] = useState(true);
 
   useEffect(() => {
@@ -43,7 +44,20 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
 
   function isActive(href) {
     if (href === '/dashboard') return pathname === '/dashboard';
-    if (href.includes('?')) return pathname === href.split('?')[0];
+    // Handle query param routes like /dashboard/settings?tab=billing
+    if (href.includes('?')) {
+      const [path, qs] = href.split('?');
+      if (pathname !== path) return false;
+      const params = new URLSearchParams(qs);
+      for (const [k, v] of params) {
+        if (searchParams.get(k) !== v) return false;
+      }
+      return true;
+    }
+    // Settings path: only active when no tab param (otherwise Subscription takes it)
+    if (href === '/dashboard/settings') {
+      return (pathname === '/dashboard/settings' && !searchParams.get('tab'));
+    }
     return pathname === href || pathname.startsWith(href + '/');
   }
 
@@ -114,6 +128,21 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
           <div className="flex flex-col gap-0.5">
             {SUPPORT_NAV.map((item) => <NavItem key={item.href} item={item} />)}
           </div>
+          {/* Credits */}
+          {credits != null && Number(credits) > 0 && !collapsed && (
+            <Link
+              href="/dashboard/referrals"
+              className="mt-1.5 flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-all hover:bg-white/[0.04]"
+            >
+              <span className="flex items-center gap-2 text-white/45"><span className="w-5 text-center">💎</span> Credits</span>
+              <span className="font-mono text-xs font-semibold text-emerald-400">${Number(credits).toFixed(2)}</span>
+            </Link>
+          )}
+          {credits != null && Number(credits) > 0 && collapsed && (
+            <Link href="/dashboard/referrals" title={`Credits: $${Number(credits).toFixed(2)}`} className="mt-1 flex justify-center rounded-xl py-2 text-sm transition-all hover:bg-white/[0.04]">
+              💎
+            </Link>
+          )}
         </div>
 
         {/* -- User Avatar Card -- */}
