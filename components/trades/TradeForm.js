@@ -349,7 +349,10 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
           }
           if (newIds.length >= MAX_SETUPS) return f;
           newIds.push(setupId);
-          // New setup starts with no follow status (blank)
+          // Auto-set follow for protected setups
+          if (chosen.name === 'Good SL') newMap[setupId] = 'yes';
+          else if (chosen.name === 'Bad SL') newMap[setupId] = 'no';
+          // Regular setups start with no follow status (blank)
         }
       }
 
@@ -658,7 +661,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                 {/* Each setup: direction + follow buttons in one card */}
                 {!hasNoSetup && (
                   <div className="space-y-3">
-                    {selectedSetups.filter((s) => !s.is_default).map((s) => {
+                    {selectedSetups.filter((s) => !s.is_default && !PINNED_SETUPS.includes(s.name)).map((s) => {
                       const val = form.setup_follow_map[s.id] || '';
                       return (
                         <div key={s.id} className="rounded-lg bg-white/[0.02] px-3 py-2.5">
