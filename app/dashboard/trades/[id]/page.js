@@ -299,8 +299,8 @@ export default async function TradeDetailPage({ params }) {
         <Link href="/dashboard/trades" className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/60 hover:text-white/80 hover:bg-white/[0.06] transition-colors">
           ← All Trades
         </Link>
-        <Link href={`/dashboard/trades?tradeId=${trade.id}`} className="px-4 py-2 rounded-xl border border-violet-400/30 bg-violet-400/[0.08] text-sm font-medium text-violet-300 hover:bg-violet-400/[0.15] transition-colors">
-          ✎ Edit Journal
+        <Link href={`/dashboard/trades?tradeId=${trade.id}`} className="px-4 py-2 rounded-xl text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+          ✎ Edit Trade
         </Link>
       </div>
     </div>
