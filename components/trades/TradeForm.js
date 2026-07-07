@@ -133,6 +133,88 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   const [saving, setSaving] = useState(false);
   const toast = useToast();
 
+  // Quick-add modals
+  const [showAddSetup, setShowAddSetup] = useState(false);
+  const [showAddEmotion, setShowAddEmotion] = useState(false);
+  const [showAddTag, setShowAddTag] = useState(false);
+  const [newSetupName, setNewSetupName] = useState('');
+  const [newEmotionName, setNewEmotionName] = useState('');
+  const [newTagName, setNewTagName] = useState('');
+  const [quickSaving, setQuickSaving] = useState(false);
+  const [localSetups, setLocalSetups] = useState(null); // override for setups after quick-add
+  const [localEmotions, setLocalEmotions] = useState(EMOTIONS);
+  const [localTags, setLocalTags] = useState(TAGS);
+
+  async function handleAddSetup() {
+    const name = newSetupName.trim();
+    if (!name) return;
+    setQuickSaving(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not logged in');
+      const { data, error: err } = await supabase
+        .from('setups')
+        .insert({ user_id: user.id, name, is_default: false, is_active: true, sort_order: 999 })
+        .select('id, name, direction, is_default, is_active')
+        .single();
+      if (err) throw err;
+      setLocalSetups(prev => [...(prev || setups || []), data]);
+      setNewSetupName('');
+      setShowAddSetup(false);
+      toast.success('Setup "' + name + '" added');
+    } catch (e) {
+      toast.error(e.message || 'Failed to add setup');
+    }
+    setQuickSaving(false);
+  }
+
+  async function handleAddEmotion() {
+    const name = newEmotionName.trim();
+    if (!name) return;
+    setQuickSaving(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not logged in');
+      const existing = prefs?.custom_emotions || [];
+      if (existing.includes(name)) { toast.error('Already exists'); setQuickSaving(false); return; }
+      const updated = [...existing, name];
+      const { error: err } = await supabase.from('user_preferences').update({ custom_emotions: updated }).eq('user_id', user.id);
+      if (err) throw err;
+      setLocalEmotions(prev => [...prev, name]);
+      setNewEmotionName('');
+      setShowAddEmotion(false);
+      toast.success('Emotion "' + name + '" added');
+    } catch (e) {
+      toast.error(e.message || 'Failed to add emotion');
+    }
+    setQuickSaving(false);
+  }
+
+  async function handleAddTag() {
+    const name = newTagName.trim().toLowerCase();
+    if (!name) return;
+    setQuickSaving(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not logged in');
+      const existing = prefs?.custom_tags || [];
+      if (existing.includes(name)) { toast.error('Already exists'); setQuickSaving(false); return; }
+      const updated = [...existing, name];
+      const { error: err } = await supabase.from('user_preferences').update({ custom_tags: updated }).eq('user_id', user.id);
+      if (err) throw err;
+      setLocalTags(prev => [...prev, name]);
+      setNewTagName('');
+      setShowAddTag(false);
+      toast.success('Tag "' + name + '" added');
+    } catch (e) {
+      toast.error(e.message || 'Failed to add tag');
+    }
+    setQuickSaving(false);
+  }
+
   // Auto-calculate R multiple from entry/exit/stop_loss
   useEffect(() => {
     const entry = Number(form.entry_price);
@@ -201,8 +283,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   }
 
   // Resolve active setups from DB
-  const activeSetups = setups && setups.length > 0
-    ? setups.filter((s) => s.is_active)
+  const setupSource = localSetups || setups;
+  const activeSetups = setupSource && setupSource.length > 0
+    ? setupSource.filter((s) => s.is_active)
     : null;
 
   // Find selected setup objects (multi-select)
@@ -507,7 +590,16 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                           </button>
                         );
                       })}
+                      <button type="button" onClick={() => setShowAddSetup(true)} className="rounded-full border border-dashed border-white/20 px-3 py-1.5 text-xs text-white/40 hover:text-white/70 hover:border-white/40 transition-colors" title="Add custom setup">+</button>
                     </div>
+                    {/* Quick-add setup modal */}
+                    {showAddSetup && (
+                      <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-3">
+                        <input type="text" value={newSetupName} onChange={e => setNewSetupName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSetup())} placeholder="Setup name" className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-white outline-none focus:border-violet-400/40" autoFocus />
+                        <button type="button" onClick={handleAddSetup} disabled={quickSaving || !newSetupName.trim()} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-50" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? '...' : 'Add'}</button>
+                        <button type="button" onClick={() => { setShowAddSetup(false); setNewSetupName(''); }} className="text-xs text-white/40 hover:text-white/70">✕</button>
+                      </div>
+                    )}
                     {form.setup_ids.length > 0 && (
                       <p className="mt-1.5 font-mono text-[11px] text-white/40">
                         {form.setup_ids.length}/{MAX_SETUPS} selected
@@ -661,7 +753,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   <div>
                     <label className={labelCls}>How did you feel?</label>
                     <div className="flex flex-wrap gap-2">
-                      {EMOTIONS.map((em) => {
+                      {localEmotions.map((em) => {
                         const on = emotions.includes(em);
                         return (
                           <button
@@ -674,7 +766,15 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                           </button>
                         );
                       })}
+                      <button type="button" onClick={() => setShowAddEmotion(true)} className="rounded-full border border-dashed border-white/20 px-3 py-2 text-xs text-white/40 hover:text-white/70 hover:border-white/40 transition-colors" title="Add custom emotion">+</button>
                     </div>
+                    {showAddEmotion && (
+                      <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-3">
+                        <input type="text" value={newEmotionName} onChange={e => setNewEmotionName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddEmotion())} placeholder="Emotion name" className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-white outline-none focus:border-violet-400/40" autoFocus />
+                        <button type="button" onClick={handleAddEmotion} disabled={quickSaving || !newEmotionName.trim()} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-50" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? '...' : 'Add'}</button>
+                        <button type="button" onClick={() => { setShowAddEmotion(false); setNewEmotionName(''); }} className="text-xs text-white/40 hover:text-white/70">✕</button>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="field-confidence" className={labelCls}>Confidence at entry</label>
@@ -689,7 +789,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   <div>
                     <label className={labelCls}>Tags</label>
                     <div className="flex flex-wrap gap-2">
-                      {TAGS.map((tag) => {
+                      {localTags.map((tag) => {
                         const on = tradeTags.includes(tag);
                         return (
                           <button
@@ -702,7 +802,15 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                           </button>
                         );
                       })}
+                      <button type="button" onClick={() => setShowAddTag(true)} className="rounded-full border border-dashed border-white/20 px-3 py-2 text-xs text-white/40 hover:text-white/70 hover:border-white/40 transition-colors" title="Add custom tag">+</button>
                     </div>
+                    {showAddTag && (
+                      <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-3">
+                        <input type="text" value={newTagName} onChange={e => setNewTagName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddTag())} placeholder="Tag name" className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-white outline-none focus:border-violet-400/40" autoFocus />
+                        <button type="button" onClick={handleAddTag} disabled={quickSaving || !newTagName.trim()} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-50" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? '...' : 'Add'}</button>
+                        <button type="button" onClick={() => { setShowAddTag(false); setNewTagName(''); }} className="text-xs text-white/40 hover:text-white/70">✕</button>
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label htmlFor="field-notes" className={labelCls}>Notes — what happened & why?</label>
