@@ -102,9 +102,11 @@ function SetupForm({ initial, onSave, onCancel, imageLimit }) {
       if (file.size > 5 * 1024 * 1024) { toast.error('Max 5MB per image'); continue; }
       try {
         const processed = await processImageFile(file);
-        const ext = processed.name.endsWith('.webp') ? 'webp' : 'jpg';
+        if (processed.error || !processed.file) { toast.error(processed.error || 'Processing failed'); continue; }
+        const pFile = processed.file;
+        const ext = pFile.name.endsWith('.webp') ? 'webp' : 'jpg';
         const path = `${user.id}/setups/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('screenshots').upload(path, processed, { contentType: processed.type || 'image/webp', upsert: false });
+        const { error: upErr } = await supabase.storage.from('screenshots').upload(path, pFile, { contentType: pFile.type || 'image/webp', upsert: false });
         if (upErr) { toast.error('Upload failed: ' + upErr.message); continue; }
         const { data: pub } = supabase.storage.from('screenshots').getPublicUrl(path);
         if (pub?.publicUrl) newUrls.push(pub.publicUrl);
