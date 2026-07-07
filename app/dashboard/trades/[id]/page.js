@@ -150,7 +150,12 @@ export default async function TradeDetailPage({ params }) {
       {/* Journal Entry */}
       {journal && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
-          <h2 className="font-mono text-xs uppercase tracking-wider text-white/55 mb-4">📝 Journal Entry</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-mono text-xs uppercase tracking-wider text-white/55">📝 Journal Entry</h2>
+            <Link href={`/dashboard/trades?tradeId=${trade.id}`} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
+              ✎ Edit Journal
+            </Link>
+          </div>
 
           {/* Emotions & Tags */}
           {(emotions.length > 0 || tags.length > 0) && (
@@ -219,7 +224,10 @@ export default async function TradeDetailPage({ params }) {
       {!journal && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4 text-center">
           <div className="text-2xl mb-2 opacity-30">📝</div>
-          <p className="text-sm text-white/40">No journal entry for this trade</p>
+          <p className="text-sm text-white/40 mb-3">No journal entry for this trade</p>
+          <Link href={`/dashboard/trades?tradeId=${trade.id}`} className="text-sm text-violet-400 hover:text-violet-300 transition-colors">
+            + Add Journal Entry
+          </Link>
         </div>
       )}
 
@@ -291,8 +299,8 @@ export default async function TradeDetailPage({ params }) {
         <Link href="/dashboard/trades" className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/60 hover:text-white/80 hover:bg-white/[0.06] transition-colors">
           ← All Trades
         </Link>
-        <Link href={`/dashboard/trades/${trade.id}/edit`} className="px-4 py-2 rounded-xl text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-          Edit Trade
+        <Link href={`/dashboard/trades?tradeId=${trade.id}`} className="px-4 py-2 rounded-xl border border-violet-400/30 bg-violet-400/[0.08] text-sm font-medium text-violet-300 hover:bg-violet-400/[0.15] transition-colors">
+          ✎ Edit Journal
         </Link>
       </div>
     </div>
