@@ -183,109 +183,97 @@ export default function TradeFilters({ trades, prefs }) {
   const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter || hasLesson || dateFrom || dateTo;
   const activeFilterCount = [setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo].filter(Boolean).length;
 
+  const resultButtons = [
+    { v: 'all', l: 'All' },
+    { v: 'win', l: 'Wins' },
+    { v: 'loss', l: 'Losses' },
+  ].map((o) => (
+    <button
+      key={o.v}
+      onClick={() => setResult(o.v)}
+      className={'rounded-lg border px-3 py-2.5 text-xs font-semibold ' + (result === o.v ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-black/30 text-white/55')}
+    >
+      {o.l}
+    </button>
+  ));
+
   return (
     <div>
-      {/* Result tabs — always visible */}
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex gap-1">
-          {[
-            { v: 'all', l: 'All' },
-            { v: 'win', l: 'Wins' },
-            { v: 'loss', l: 'Losses' },
-          ].map((o) => (
-            <button
-              key={o.v}
-              onClick={() => setResult(o.v)}
-              className={'rounded-lg border px-3 py-2 text-xs font-semibold ' + (result === o.v ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-black/30 text-white/55')}
-            >
-              {o.l}
-            </button>
-          ))}
+      {/* ── Desktop: single-row flex-wrap with all filters inline ── */}
+      <div className="mb-4 hidden sm:flex sm:flex-wrap sm:items-end sm:gap-3">
+        {/* Result */}
+        <div>
+          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Result</label>
+          <div className="flex gap-1">{resultButtons}</div>
         </div>
-
-        {/* Mobile: Filters toggle button */}
-        <button
-          onClick={() => setFiltersOpen(o => !o)}
-          className={'sm:hidden flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ' +
-            (activeFilterCount > 0 || filtersOpen
-              ? 'border-violet-400/30 bg-violet-400/[0.08] text-violet-300'
-              : 'border-white/10 bg-black/30 text-white/55')}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
-          </svg>
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-400 px-1 text-[10px] font-bold text-[#08080f]">
-              {activeFilterCount}
-            </span>
-          )}
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={'transition-transform ' + (filtersOpen ? 'rotate-180' : '')}>
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-      </div>
-
-      {/* Filter fields — always visible on desktop, collapsible on mobile */}
-      <div className={'mb-4 grid-cols-2 gap-2 sm:grid sm:flex sm:flex-wrap sm:items-end sm:gap-3 ' + (filtersOpen ? 'grid' : 'hidden sm:flex')}>
-        {/* Setup */}
         <FilterDropdown label="Setup" value={setupFilter} onChange={setSetupFilter} placeholder="All setups" options={setupOptions} />
-
-        {/* Emotion */}
         <FilterDropdown label="Emotion" value={emotionFilter} onChange={setEmotionFilter} placeholder="All emotions" options={emotionOptions} />
-
-        {/* Session */}
         <FilterDropdown label="Session" value={sessionFilter} onChange={setSessionFilter} placeholder="All sessions" options={sessionOptions} />
-
-        {/* Tag */}
         {tagOptions.length > 0 && (
           <FilterDropdown label="Tag" value={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} />
         )}
-
-        {/* Has Lesson checkbox */}
         <div className="flex items-end pb-0.5">
-          <button
-            type="button"
-            onClick={() => setHasLesson(v => !v)}
-            className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' +
-              (hasLesson
-                ? 'border-violet-400/30 bg-violet-400/[0.08]'
-                : 'border-white/10 bg-black/30 hover:border-white/20')}
-          >
-            <span className={'flex h-4 w-4 items-center justify-center rounded border transition-all ' +
-              (hasLesson
-                ? 'border-violet-400 bg-violet-400'
-                : 'border-white/30 bg-transparent')}>
-              {hasLesson && (
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 6L9 17l-5-5" />
-                </svg>
-              )}
+          <button type="button" onClick={() => setHasLesson(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (hasLesson ? 'border-violet-400/30 bg-violet-400/[0.08]' : 'border-white/10 bg-black/30 hover:border-white/20')}>
+            <span className={'flex h-4 w-4 items-center justify-center rounded border transition-all ' + (hasLesson ? 'border-violet-400 bg-violet-400' : 'border-white/30 bg-transparent')}>
+              {hasLesson && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
             </span>
             <span className={'text-xs font-semibold ' + (hasLesson ? 'text-violet-300' : 'text-white/55')}>Has lesson</span>
           </button>
         </div>
-
-        {/* Date from */}
         <div>
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">From</label>
           <input type="date" className={field} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
         </div>
-
-        {/* Date to */}
         <div>
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">To</label>
           <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
-
-        {/* Clear */}
         {hasFilters && (
+          <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter(''); setHasLesson(false); setDateFrom(''); setDateTo(''); }} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white">Clear filters</button>
+        )}
+      </div>
+
+      {/* ── Mobile: tabs + collapsible filters ── */}
+      <div className="sm:hidden">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex gap-1">{resultButtons}</div>
           <button
-            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter(''); setHasLesson(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }}
-            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white"
+            onClick={() => setFiltersOpen(o => !o)}
+            className={'flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ' +
+              (activeFilterCount > 0 || filtersOpen ? 'border-violet-400/30 bg-violet-400/[0.08] text-violet-300' : 'border-white/10 bg-black/30 text-white/55')}
           >
-            Clear filters
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" /></svg>
+            Filters
+            {activeFilterCount > 0 && <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-400 px-1 text-[10px] font-bold text-[#08080f]">{activeFilterCount}</span>}
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={'transition-transform ' + (filtersOpen ? 'rotate-180' : '')}><path d="M6 9l6 6 6-6" /></svg>
           </button>
+        </div>
+        {filtersOpen && (
+          <div className="mb-4 grid grid-cols-2 gap-2">
+            <FilterDropdown label="Setup" value={setupFilter} onChange={setSetupFilter} placeholder="All setups" options={setupOptions} />
+            <FilterDropdown label="Emotion" value={emotionFilter} onChange={setEmotionFilter} placeholder="All emotions" options={emotionOptions} />
+            <FilterDropdown label="Session" value={sessionFilter} onChange={setSessionFilter} placeholder="All sessions" options={sessionOptions} />
+            {tagOptions.length > 0 && <FilterDropdown label="Tag" value={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} />}
+            <div className="flex items-end pb-0.5">
+              <button type="button" onClick={() => setHasLesson(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (hasLesson ? 'border-violet-400/30 bg-violet-400/[0.08]' : 'border-white/10 bg-black/30 hover:border-white/20')}>
+                <span className={'flex h-4 w-4 items-center justify-center rounded border transition-all ' + (hasLesson ? 'border-violet-400 bg-violet-400' : 'border-white/30 bg-transparent')}>
+                  {hasLesson && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
+                </span>
+                <span className={'text-xs font-semibold ' + (hasLesson ? 'text-violet-300' : 'text-white/55')}>Has lesson</span>
+              </button>
+            </div>
+            <div>
+              <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">From</label>
+              <input type="date" className={field} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+            </div>
+            <div>
+              <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">To</label>
+              <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+            </div>
+            {hasFilters && (
+              <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter(''); setHasLesson(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }} className="col-span-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white">Clear filters</button>
+            )}
+          </div>
         )}
       </div>
 
