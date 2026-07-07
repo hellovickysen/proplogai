@@ -335,6 +335,11 @@ export default function SearchBar({ planAccess }) {
                                     {item.emotion}
                                   </span>
                                 )}
+                                {item.tag && (
+                                  <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-cyan-400/[0.1] text-cyan-300">
+                                    #{item.tag}
+                                  </span>
+                                )}
                                 {item.pair && item.type === 'journal' && (
                                   <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-white/[0.06] text-white/40">
                                     {item.pair}
@@ -352,9 +357,18 @@ export default function SearchBar({ planAccess }) {
                           </div>
                         );
                       })}
-                      {items.length >= 3 && GROUP_HREFS[group] && (
+                      {items.length >= 2 && GROUP_HREFS[group] && (
                         <div
-                          onClick={() => { setOpen(false); setQuery(''); router.push(GROUP_HREFS[group] + (query ? `?search=${encodeURIComponent(query)}` : '')); }}
+                          onClick={() => {
+                            setOpen(false); setQuery('');
+                            // Smart param: use emotion/tag filter if detected, otherwise search text
+                            const firstItem = items[0] || {};
+                            let params = '';
+                            if (firstItem.emotion) params = `?emotion=${encodeURIComponent(firstItem.emotion)}`;
+                            else if (firstItem.tag) params = `?tag=${encodeURIComponent(firstItem.tag)}`;
+                            else if (query) params = `?search=${encodeURIComponent(query)}`;
+                            router.push(GROUP_HREFS[group] + params);
+                          }}
                           className="px-3 py-1.5 text-[11px] text-violet-400/60 hover:text-violet-400 cursor-pointer transition-colors"
                         >
                           View all {GROUP_LABELS[group]?.toLowerCase() || group} →
