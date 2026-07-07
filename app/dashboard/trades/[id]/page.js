@@ -150,12 +150,7 @@ export default async function TradeDetailPage({ params }) {
       {/* Journal Entry */}
       {journal && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-mono text-xs uppercase tracking-wider text-white/55">📝 Journal Entry</h2>
-            <Link href={`/dashboard/trades?tradeId=${trade.id}`} className="text-xs text-violet-400 hover:text-violet-300 transition-colors">
-              ✎ Edit Journal
-            </Link>
-          </div>
+          <h2 className="font-mono text-xs uppercase tracking-wider text-white/55 mb-4">📝 Journal Entry</h2>
 
           {/* Emotions & Tags */}
           {(emotions.length > 0 || tags.length > 0) && (
@@ -224,10 +219,7 @@ export default async function TradeDetailPage({ params }) {
       {!journal && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4 text-center">
           <div className="text-2xl mb-2 opacity-30">📝</div>
-          <p className="text-sm text-white/40 mb-3">No journal entry for this trade</p>
-          <Link href={`/dashboard/trades?tradeId=${trade.id}`} className="text-sm text-violet-400 hover:text-violet-300 transition-colors">
-            + Add Journal Entry
-          </Link>
+          <p className="text-sm text-white/40">No journal entry for this trade</p>
         </div>
       )}
 
@@ -295,12 +287,10 @@ export default async function TradeDetailPage({ params }) {
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-3 mt-6">
-        <Link href="/dashboard/trades" className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/60 hover:text-white/80 hover:bg-white/[0.06] transition-colors">
-          ← All Trades
-        </Link>
-        <Link href={`/dashboard/trades?tradeId=${trade.id}`} className="px-4 py-2 rounded-xl text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-          ✎ Edit Trade
+      <div className="mt-6">
+        <Link href="/dashboard/trades" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/60 hover:text-white/80 hover:bg-white/[0.06] transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+          All Trades
         </Link>
       </div>
     </div>
