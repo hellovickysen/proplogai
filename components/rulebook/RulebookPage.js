@@ -366,9 +366,11 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
       </div>
 
       {/* Active setups */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="columns-1 sm:columns-2 gap-4 space-y-4">
         {activeSetups.map((s) => (
-          <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
+          <div key={s.id} className="break-inside-avoid">
+            <SetupCard setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
+          </div>
         ))}
       </div>
 
@@ -376,9 +378,11 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
       {inactiveSetups.length > 0 && (
         <div className="mt-8">
           <h2 className="mb-3 font-mono text-xs uppercase tracking-wider text-white/40">Inactive setups</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="columns-1 sm:columns-2 gap-4 space-y-4">
             {inactiveSetups.map((s) => (
-              <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
+              <div key={s.id} className="break-inside-avoid">
+                <SetupCard setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
+              </div>
             ))}
           </div>
         </div>
