@@ -284,10 +284,21 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     setForm((f) => ({ ...f, [k]: v }));
   }
 
-  // Resolve active setups from DB
+  // Resolve active setups from DB — Good SL always included, sorted: regular A-Z → Good SL → No Setup
   const setupSource = localSetups || setups;
   const activeSetups = setupSource && setupSource.length > 0
-    ? setupSource.filter((s) => s.is_active)
+    ? setupSource
+        .filter((s) => s.is_active || s.name === 'Good SL')
+        .sort((a, b) => {
+          // No Setup always last
+          if (a.name === 'No Setup') return 1;
+          if (b.name === 'No Setup') return -1;
+          // Good SL right before No Setup
+          if (a.name === 'Good SL') return 1;
+          if (b.name === 'Good SL') return -1;
+          // Rest alphabetical
+          return a.name.localeCompare(b.name);
+        })
     : null;
 
   // Find selected setup objects (multi-select)
