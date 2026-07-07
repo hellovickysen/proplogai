@@ -17,7 +17,6 @@ import BetaNotice from '@/components/ui/BetaNotice';
 import { notify, TYPES } from '@/lib/notifications';
 import DailyCoachingCard from '@/components/coach/DailyCoachingCard';
 import { computePersona } from '@/lib/persona';
-import OverflowDebug from '@/components/ui/OverflowDebug';
 
 export const dynamic = 'force-dynamic';
 
@@ -265,7 +264,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="px-3 py-8 sm:px-4">
-      <OverflowDebug />
       <ReferralCapture />
       <BetaNotice />
       <div className="mb-6 flex items-center justify-between">
@@ -303,9 +301,9 @@ export default async function DashboardPage() {
       )}
 
       {/* ─── 2-column layout on desktop ─── */}
-      <div className="mb-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-[1.6fr_1fr]">
         {/* Left column: Equity + Recent Trades */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <EquityChart data={chartData} />
           </div>
@@ -320,7 +318,7 @@ export default async function DashboardPage() {
         </div>
 
         {/* Right column: Calendar + Expenses + AI Coach */}
-        <div className="space-y-6">
+        <div className="min-w-0 space-y-6">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <PnlCalendar trades={list} monthPnl={monthPnl} />
           </div>
