@@ -124,10 +124,10 @@ export default function EquityChart({ data }) {
   const hoverVal = hoverItem ? (mode === 'cumulative' ? hoverItem.cumulative : hoverItem.daily) : 0;
 
   return (
-    <div>
+    <div className="overflow-hidden">
       {/* Header */}
-      <div className="mb-3 flex items-center justify-between">
-        <div className="font-display text-base font-semibold">P&amp;L Performance</div>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="min-w-0 truncate font-display text-base font-semibold">P&amp;L Performance</div>
         <div className="flex gap-0.5 rounded-lg border border-white/10 bg-black/30 p-0.5">
           {[{ key: 'cumulative', label: 'Cumulative' }, { key: 'daily', label: 'Daily' }].map((m) => (
             <button

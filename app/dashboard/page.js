@@ -263,7 +263,7 @@ export default async function DashboardPage() {
     : { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null };
 
   return (
-    <div className="px-3 py-8 sm:px-4">
+    <div className="overflow-x-hidden px-3 py-8 sm:px-4">
       <ReferralCapture />
       <BetaNotice />
       <div className="mb-6 flex items-center justify-between">
@@ -304,11 +304,11 @@ export default async function DashboardPage() {
       <div className="mb-6 grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         {/* Left column: Equity + Recent Trades */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <EquityChart data={chartData} />
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <div className="mb-4 flex items-center justify-between">
               <div data-tour="recent-trades" className="font-display text-base font-semibold">Recent trades</div>
               <Link href="/dashboard/trades" className="font-mono text-xs text-cyan-400">View all &rarr;</Link>
@@ -319,7 +319,7 @@ export default async function DashboardPage() {
 
         {/* Right column: Calendar + Expenses + AI Coach */}
         <div className="space-y-6">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <PnlCalendar trades={list} monthPnl={monthPnl} />
           </div>
 
