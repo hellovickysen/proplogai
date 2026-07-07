@@ -17,7 +17,7 @@ import { notify, TYPES } from '@/lib/notifications';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import GuidedTour from '@/components/ui/GuidedTour';
 import SearchBar from '@/components/layout/SearchBar';
-import MobileSearchBar from '@/components/layout/MobileSearchBar';
+// MobileSearchBar removed — mobile uses nav drawer for navigation, search on desktop only
 import LiveClock from '@/components/layout/LiveClock';
 import QuickActions from '@/components/layout/QuickActions';
 import HeaderAvatar from '@/components/layout/HeaderAvatar';
@@ -182,26 +182,27 @@ export default async function DashboardLayout({ children }) {
     <div className="flex min-h-screen">
       <Sidebar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} planAccess={planAccess} credits={prefs.referral_balance} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-2 sm:gap-3">
+        <header className="relative flex items-center justify-between border-b border-white/10 px-3 py-3 sm:px-6 sm:py-4 overflow-hidden">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} planAccess={planAccess} />
-            <Link href="/dashboard" className="sm:hidden">
+            <Link href="/dashboard" className="sm:hidden flex-shrink-0">
               <Logo size={28} wordmarkClassName="font-display text-base font-bold" />
             </Link>
             <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 min-h-[36px]">
               <span className="font-mono text-xs uppercase tracking-wider text-white/55">Today</span>
               <span className={'font-mono text-xs font-semibold ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>
-            <div className="sm:hidden"><MobileSearchBar /></div>
           </div>
           <SearchBar planAccess={planAccess} />
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <LiveClock />
             <NotificationBell initialCount={notifCount} excludeTypes={ADMIN_NOTIF_TYPES} />
-            <div className="flex sm:hidden items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 min-h-[36px]">
+            <div className="flex sm:hidden items-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 min-h-[36px]">
               <span className={'font-mono text-xs font-semibold ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>
-            <HeaderAvatar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} credits={prefs.referral_balance} isAdmin={isAdmin} adminNotifCount={adminNotifCount} planAccess={planAccess} />
+            <div className="hidden sm:block">
+              <HeaderAvatar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} credits={prefs.referral_balance} isAdmin={isAdmin} adminNotifCount={adminNotifCount} planAccess={planAccess} />
+            </div>
           </div>
         </header>
         <main className="flex-1"><SubscriptionBanner subscription={subscription} planAccess={planAccess} />{children}</main>

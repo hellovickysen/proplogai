@@ -26,7 +26,7 @@ export default function QuickActions() {
   }, [open]);
 
   return (
-    <div ref={ref} className="fixed bottom-6 right-6 z-50">
+    <div ref={ref} className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[999]">
       {/* Popup — opens upward */}
       {open && (
         <div className="absolute bottom-full right-0 mb-3 w-52 rounded-xl border border-white/10 bg-[#12121a] py-2 shadow-2xl">
