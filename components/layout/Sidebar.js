@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo, { LogoMark } from '@/components/Logo';
-import PlanBadge from '@/components/ui/PlanBadge';
 
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
@@ -16,16 +15,18 @@ const NAV = [
   { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach', tourId: 'nav-coach' },
   { label: 'Tools',     icon: '🛠', href: '/dashboard/tools' },
   { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },
-  { label: 'Feedback',  icon: '💬', href: '/dashboard/support' },
-  { label: 'Settings',  icon: '⚙', href: '/dashboard/settings' },
 ];
 
-export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotifCount = 0, fullName = '', planAccess = null }) {
+const SUPPORT_NAV = [
+  { label: 'Settings',       icon: '⚙', href: '/dashboard/settings' },
+  { label: 'Help & Support', icon: '?', href: '/dashboard/support' },
+  { label: 'Subscription',   icon: '💎', href: '/dashboard/settings?tab=billing' },
+];
+
+export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(true);
-  const [menuOpen, setMenuOpen] = useState(false);
 
-  /* Read preference from localStorage after mount (avoids SSR hydration mismatch) */
   useEffect(() => {
     const saved = localStorage.getItem('sidebar_collapsed');
     if (saved === 'false') setCollapsed(false);
@@ -37,15 +38,38 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
       localStorage.setItem('sidebar_collapsed', String(next));
       return next;
     });
-    setMenuOpen(false);
   }
 
   function isActive(href) {
     if (href === '/dashboard') return pathname === '/dashboard';
+    if (href.includes('?')) return pathname === href.split('?')[0];
     return pathname === href || pathname.startsWith(href + '/');
   }
 
-  const initial = fullName ? fullName.charAt(0).toUpperCase() : email ? email.charAt(0).toUpperCase() : '?';
+  function NavItem({ item }) {
+    const active = isActive(item.href);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        title={item.label}
+        {...(item.tourId ? { 'data-tour': item.tourId } : {})}
+        className={
+          'flex items-center gap-2.5 rounded-xl whitespace-nowrap text-sm transition-all ' +
+          (collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5') + ' ' +
+          (active
+            ? 'bg-white/[0.08] font-semibold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]'
+            : 'text-white/55 hover:bg-white/[0.04] hover:text-white/80')
+        }
+      >
+        <span className={collapsed ? 'text-center text-sm' : 'w-5 text-center text-sm'}>{item.icon}</span>
+        {!collapsed && <span>{item.label}</span>}
+        {!collapsed && active && (
+          <span className="ml-auto h-1.5 w-1.5 rounded-full" style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }} />
+        )}
+      </Link>
+    );
+  }
 
   return (
     <aside
@@ -64,7 +88,7 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
           </Link>
         </div>
 
-        {/* -- Collapse/Expand toggle -- vertically centered on right edge -- */}
+        {/* -- Collapse/Expand toggle -- */}
         <button
           onClick={toggleCollapsed}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -76,138 +100,19 @@ export default function Sidebar({ email, credits, avatarUrl, isAdmin, adminNotif
           </svg>
         </button>
 
-        {/* -- New Trade -- */}
-        <div className={collapsed ? 'mb-4 px-2' : 'mb-5 px-3'}>
-          <Link
-            href="/dashboard/trades/new"
-            title="New Trade"
-            className={'block rounded-xl font-semibold text-[#08080f] transition-all ' + (collapsed ? 'py-2.5 text-center text-sm' : 'px-4 py-2.5 text-center text-sm')}
-            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-          >
-            {collapsed ? '+' : '+ New Trade'}
-          </Link>
-        </div>
-
-        {/* -- Nav -- */}
+        {/* -- Main Nav -- */}
         <nav className={'flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden ' + (collapsed ? 'px-1.5' : 'px-2')}>
-          {NAV.map((item) => {
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={item.label}
-                {...(item.tourId ? { 'data-tour': item.tourId } : {})}
-                className={
-                  'flex items-center gap-2.5 rounded-xl whitespace-nowrap text-sm transition-all ' +
-                  (collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5') + ' ' +
-                  (active
-                    ? 'bg-white/[0.08] font-semibold text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]'
-                    : 'text-white/55 hover:bg-white/[0.04] hover:text-white/80')
-                }
-              >
-                <span className={collapsed ? 'text-center text-sm' : 'w-5 text-center text-sm'}>{item.icon}</span>
-                {!collapsed && <span>{item.label}</span>}
-                {!collapsed && active && (
-                  <span className="ml-auto h-1.5 w-1.5 rounded-full" style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }} />
-                )}
-              </Link>
-            );
-          })}
+          {NAV.map((item) => <NavItem key={item.href} item={item} />)}
         </nav>
 
-        {/* -- Bottom section -- */}
-        <div className={'relative mt-4 border-t border-white/[0.06] pt-3 ' + (collapsed ? 'px-1.5' : 'px-2')}>
-          <button
-            onClick={() => setMenuOpen((o) => !o)}
-            title={email || 'Account'}
-            className={
-              'flex w-full items-center rounded-xl transition-all hover:bg-white/[0.04] ' +
-              (collapsed ? 'justify-center px-0 py-2' : 'gap-2.5 px-3 py-2.5 text-left')
-            }
-          >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={email || 'Account'} className="h-8 w-8 flex-shrink-0 rounded-full object-cover border border-white/10" />
-            ) : (
-              <div
-                className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-full text-sm font-bold text-[#08080f]"
-                style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
-              >
-                {initial}
-              </div>
-            )}
-            {!collapsed && (
-              <>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
-                    <PlanBadge access={planAccess} />
-                  </div>
-                  <div className="truncate text-xs text-white/55">{email || 'Account'}</div>
-                </div>
-                <span className={'text-[10px] text-white/30 transition-transform ' + (menuOpen ? 'rotate-180' : '')}>&#9650;</span>
-              </>
-            )}
-          </button>
-
-          {/* User popup */}
-          {menuOpen && (
-            <div
-              role="menu"
-              className={
-                'absolute z-50 rounded-xl border border-white/10 bg-[#12121a] p-3 shadow-xl ' +
-                (collapsed
-                  ? 'bottom-0 left-full ml-2 w-56'
-                  : 'bottom-full left-2 right-2 mb-2')
-              }
-            >
-              <div className="mb-2 truncate px-1 font-mono text-[11px] text-white/50">{email}</div>
-
-              {credits != null && (
-                <Link
-                  href="/dashboard/referrals"
-                  onClick={() => setMenuOpen(false)}
-                  className="mb-2 flex items-center justify-between rounded-lg bg-white/[0.04] px-3 py-2 transition-colors hover:bg-white/[0.08]"
-                >
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">Credits</span>
-                  <span className="font-display text-sm font-bold text-emerald-400">${Number(credits).toFixed(2)}</span>
-                </Link>
-              )}
-
-              {isAdmin && (
-                <Link
-                  href="/admin"
-                  onClick={() => setMenuOpen(false)}
-                  className="mb-2 flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors hover:bg-white/[0.08]"
-                  style={{ background: 'linear-gradient(120deg, rgba(248,113,113,0.1), rgba(251,191,36,0.1))', border: '1px solid rgba(248,113,113,0.2)' }}
-                >
-                  <span>&#9881;</span>
-                  <span className="text-amber-300">Admin Panel</span>
-                  {adminNotifCount > 0 ? (
-                    <span
-                      className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-[#08080f]"
-                      style={{ background: 'linear-gradient(135deg,#f87171,#fbbf24)' }}
-                    >
-                      {adminNotifCount}
-                    </span>
-                  ) : (
-                    <span
-                      className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full px-1 text-[10px] font-bold text-white/40"
-                      style={{ background: 'rgba(255,255,255,0.1)' }}
-                    >
-                      0
-                    </span>
-                  )}
-                </Link>
-              )}
-
-              <form action="/auth/signout" method="post">
-                <button className="w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-left text-xs text-white/60 transition-colors hover:bg-white/[0.06] hover:text-white">
-                  Sign out
-                </button>
-              </form>
-            </div>
+        {/* -- Support Section -- */}
+        <div className={'mt-2 border-t border-white/[0.06] pt-3 ' + (collapsed ? 'px-1.5' : 'px-2')}>
+          {!collapsed && (
+            <div className="mb-1.5 px-3 font-mono text-[9px] uppercase tracking-widest text-white/25">Support</div>
           )}
+          <div className="flex flex-col gap-0.5">
+            {SUPPORT_NAV.map((item) => <NavItem key={item.href} item={item} />)}
+          </div>
         </div>
       </div>
     </aside>

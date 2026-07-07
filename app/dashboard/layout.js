@@ -18,6 +18,9 @@ import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import GuidedTour from '@/components/ui/GuidedTour';
 import SearchBar from '@/components/layout/SearchBar';
 import MobileSearchBar from '@/components/layout/MobileSearchBar';
+import LiveClock from '@/components/layout/LiveClock';
+import QuickActions from '@/components/layout/QuickActions';
+import HeaderAvatar from '@/components/layout/HeaderAvatar';
 
 /* Admin notification types — excluded from user dashboard bell */
 const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup', 'ticket_user_replied', 'ticket_closed'];
@@ -177,7 +180,7 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} fullName={prefs?.full_name || ''} planAccess={planAccess} />
+      <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-2 sm:gap-3">
@@ -190,12 +193,14 @@ export default async function DashboardLayout({ children }) {
           </div>
           <SearchBar planAccess={planAccess} />
           <div className="flex items-center gap-2 sm:gap-3">
+            <QuickActions />
+            <LiveClock />
             <NotificationBell initialCount={notifCount} excludeTypes={ADMIN_NOTIF_TYPES} />
-            <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5 min-h-[44px]">
+            <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5 min-h-[36px]">
               <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:inline">Today</span>
               <span className={'font-mono text-xs font-semibold sm:text-sm ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>
-            <span className="hidden font-mono text-xs text-white/55 sm:block">{user.email}</span>
+            <HeaderAvatar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} credits={prefs.referral_balance} isAdmin={isAdmin} adminNotifCount={adminNotifCount} planAccess={planAccess} />
           </div>
         </header>
         <main className="flex-1"><SubscriptionBanner subscription={subscription} planAccess={planAccess} />{children}</main>
