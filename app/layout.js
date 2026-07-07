@@ -31,10 +31,12 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body className="overflow-x-hidden min-h-screen antialiased">
-        <PostHogProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </PostHogProvider>
+      <body className="min-h-screen antialiased" style={{ overflowX: 'clip', width: '100%', maxWidth: '100vw' }}>
+        <div style={{ overflowX: 'hidden', width: '100%', maxWidth: '100vw' }}>
+          <PostHogProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </PostHogProvider>
+        </div>
       </body>
     </html>
   );
