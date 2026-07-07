@@ -313,7 +313,7 @@ export default async function DashboardPage() {
               <div data-tour="recent-trades" className="font-display text-base font-semibold">Recent trades</div>
               <Link href="/dashboard/trades" className="font-mono text-xs text-cyan-400">View all &rarr;</Link>
             </div>
-            <TradeTable rows={recent} compact />
+            <TradeTable rows={recent} compact totalCount={list.length} />
           </div>
         </div>
 
