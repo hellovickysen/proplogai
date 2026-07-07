@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Logo, { LogoMark } from '@/components/Logo';
+import PlanBadge from '@/components/ui/PlanBadge';
 
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
@@ -23,7 +24,7 @@ const SUPPORT_NAV = [
   { label: 'Subscription',   icon: '💎', href: '/dashboard/settings?tab=billing' },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ email = '', fullName = '', avatarUrl = '', planAccess = null }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(true);
 
@@ -113,6 +114,43 @@ export default function Sidebar() {
           <div className="flex flex-col gap-0.5">
             {SUPPORT_NAV.map((item) => <NavItem key={item.href} item={item} />)}
           </div>
+        </div>
+
+        {/* -- User Avatar Card -- */}
+        <div className={'mt-3 border-t border-white/[0.06] pt-3 ' + (collapsed ? 'px-1.5' : 'px-2')}>
+          <Link
+            href="/dashboard/settings"
+            title={email || 'Profile'}
+            className={
+              'flex w-full items-center rounded-xl transition-all hover:bg-white/[0.04] ' +
+              (collapsed ? 'justify-center px-0 py-2' : 'gap-2.5 px-3 py-2.5')
+            }
+          >
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="h-8 w-8 flex-shrink-0 rounded-lg object-cover border border-white/10" />
+            ) : (
+              <div
+                className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg text-xs font-bold text-[#08080f]"
+                style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
+              >
+                {(fullName || email || '?').charAt(0).toUpperCase()}
+              </div>
+            )}
+            {!collapsed && (
+              <>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
+                    {planAccess && <PlanBadge access={planAccess} />}
+                  </div>
+                  <div className="truncate text-[11px] text-white/40">{email}</div>
+                </div>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/25 flex-shrink-0">
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+              </>
+            )}
+          </Link>
         </div>
       </div>
     </aside>

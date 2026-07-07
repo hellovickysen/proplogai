@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 const ACTIONS = [
   { label: 'Log Trade', icon: '📈', href: '/dashboard/trades/new' },
+  { label: 'Quick Log', icon: '⚡', href: '/dashboard/trades/new?quick=true' },
   { label: 'Add Expense', icon: '💳', href: '/dashboard/expenses?action=add' },
   { label: 'Add Payout', icon: '💰', href: '/dashboard/expenses?tab=payouts&action=add' },
   { label: 'Add Trophy', icon: '🏆', href: '/dashboard/trophies?action=add' },
