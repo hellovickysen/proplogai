@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/Toast';
 import { RulebookEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { UpgradeModal } from '@/components/ui/BlurGate';
+import Lightbox from '@/components/ui/Lightbox';
 import { FEATURES } from '@/lib/plans';
 
 
@@ -18,7 +19,10 @@ const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', We
 
 function SetupCard({ setup, onEdit, onToggle, onDelete }) {
   const isNoSetup = setup.is_default;
+  const [lightboxIdx, setLightboxIdx] = useState(null);
+  const refImages = Array.isArray(setup.reference_images) ? setup.reference_images : [];
   return (
+    <>
     <div className={'rounded-2xl border p-5 transition-all ' + (setup.is_active ? 'border-white/10 bg-white/[0.03]' : 'border-white/5 bg-white/[0.01] opacity-60')}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
@@ -39,13 +43,13 @@ function SetupCard({ setup, onEdit, onToggle, onDelete }) {
           )}
         </div>
       </div>
-      {/* Reference image thumbnails */}
-      {setup.reference_images && setup.reference_images.length > 0 && (
+      {/* Reference image thumbnails — click to open lightbox */}
+      {refImages.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
-          {setup.reference_images.map((url, i) => (
-            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="group relative block h-14 w-14 overflow-hidden rounded-lg border border-white/10 bg-black/30 transition-all hover:border-cyan-400/40">
-              <img src={url} alt={`${setup.name} ref ${i + 1}`} className="h-full w-full object-cover" />
-            </a>
+          {refImages.map((url, i) => (
+            <div key={i} className="cursor-pointer" onClick={() => setLightboxIdx(i)}>
+              <img src={url} alt={`${setup.name} ref ${i + 1}`} className="h-20 w-20 rounded-lg border border-white/10 object-cover transition-opacity hover:opacity-80" />
+            </div>
           ))}
         </div>
       )}
@@ -74,6 +78,10 @@ function SetupCard({ setup, onEdit, onToggle, onDelete }) {
         )}
       </div>
     </div>
+    {lightboxIdx !== null && (
+      <Lightbox images={refImages} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
+    )}
+    </>
   );
 }
 
