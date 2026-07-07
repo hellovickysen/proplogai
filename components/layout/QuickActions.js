@@ -25,18 +25,10 @@ export default function QuickActions() {
   }, [open]);
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="grid h-9 w-9 place-items-center rounded-lg text-lg font-bold text-[#08080f] transition-transform hover:scale-105"
-        style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-        title="Quick Actions"
-      >
-        <span className={'transition-transform duration-200 ' + (open ? 'rotate-45' : '')}>+</span>
-      </button>
-
+    <div ref={ref} className="fixed bottom-6 right-6 z-50">
+      {/* Popup — opens upward */}
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-52 rounded-xl border border-white/10 bg-[#12121a] py-2 shadow-xl z-50">
+        <div className="absolute bottom-full right-0 mb-3 w-52 rounded-xl border border-white/10 bg-[#12121a] py-2 shadow-2xl">
           <div className="px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-white/35">
             Quick Actions
           </div>
@@ -53,6 +45,16 @@ export default function QuickActions() {
           ))}
         </div>
       )}
+
+      {/* FAB button */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="grid h-12 w-12 place-items-center rounded-full text-xl font-bold text-[#08080f] shadow-lg shadow-violet-500/20 transition-transform hover:scale-110"
+        style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+        title="Quick Actions"
+      >
+        <span className={'transition-transform duration-200 inline-block ' + (open ? 'rotate-45' : '')}>+</span>
+      </button>
     </div>
   );
 }
