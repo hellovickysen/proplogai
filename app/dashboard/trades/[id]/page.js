@@ -219,20 +219,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
         </>
       ) : (
         <>
-          <JournalInlineEdit tradeId={trade.id} journal={journal} userId={user.id} prefs={prefs} />
-          {/* Screenshots (shown below inline edit in edit mode) */}
-          {screenshots.length > 0 && (
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
-              <h3 className="font-mono text-xs uppercase tracking-wider text-white/55 mb-3">📷 Screenshots</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {screenshots.map((url, i) => (
-                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/30 transition-colors">
-                    <img src={url} alt={`Trade screenshot ${i + 1}`} className="w-full h-auto max-h-80 object-contain bg-black/50" />
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
+          <JournalInlineEdit tradeId={trade.id} journal={journal} userId={user.id} prefs={prefs} screenshots={screenshots} />
         </>
       )}
 

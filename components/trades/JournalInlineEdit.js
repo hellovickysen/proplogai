@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 
-export default function JournalInlineEdit({ tradeId, journal, userId, prefs }) {
+export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [] }) {
   const router = useRouter();
   const toast = useToast?.() || { success: () => {}, error: () => {} };
   const [editing, setEditing] = useState(false);
@@ -27,6 +27,52 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs }) {
   const [tags, setTags] = useState(Array.isArray(journal?.tags) ? journal.tags : []);
   const [confidence, setConfidence] = useState(journal?.confidence || 0);
 
+  // Screenshot state
+  const [screenshotUrls, setScreenshotUrls] = useState(initialScreenshots);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleScreenshotUpload(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    setUploading(true);
+    const supabase = createClient();
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error?.('Max 5MB per image');
+        continue;
+      }
+      try {
+        const processed = await processImageFile(file);
+        if (processed.error || !processed.file) {
+          toast.error?.(processed.error || 'Failed to process image');
+          continue;
+        }
+        const ext = processed.file.name?.split('.').pop() || 'webp';
+        const path = `${userId}/${tradeId}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('screenshots').upload(path, processed.file);
+        if (upErr) { toast.error?.('Upload failed'); continue; }
+        const { data: { publicUrl } } = supabase.storage.from('screenshots').getPublicUrl(path);
+        setScreenshotUrls(prev => [...prev, publicUrl]);
+      } catch (err) {
+        toast.error?.('Upload failed');
+      }
+    }
+    setUploading(false);
+    e.target.value = '';
+  }
+
+  async function removeScreenshot(url, idx) {
+    // Extract path from public URL for deletion
+    try {
+      const supabase = createClient();
+      const match = url.match(/screenshots\/(.+)$/);
+      if (match) {
+        await supabase.storage.from('screenshots').remove([match[1]]);
+      }
+    } catch (e) {}
+    setScreenshotUrls(prev => prev.filter((_, i) => i !== idx));
+  }
+
   function toggleEmotion(e) {
     setEmotions(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]);
   }
@@ -44,6 +90,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs }) {
         emotions,
         tags,
         confidence: confidence || null,
+        screenshot_urls: screenshotUrls.length > 0 ? screenshotUrls : null,
       };
 
       if (journal?.id) {
@@ -131,10 +178,24 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs }) {
 
             {/* Lesson */}
             {lesson && (
-              <div>
+              <div className="mb-4">
                 <h3 className="text-xs font-semibold text-white/50 mb-2">Lesson Learned</h3>
                 <div className="rounded-xl bg-amber-400/[0.06] border border-amber-400/15 px-4 py-3">
                   <p className="text-sm text-amber-200/80 leading-relaxed whitespace-pre-wrap">{lesson}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Screenshots */}
+            {screenshotUrls.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-white/50 mb-2">Screenshots</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {screenshotUrls.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/30 transition-colors">
+                      <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-auto max-h-80 object-contain bg-black/50" />
+                    </a>
+                  ))}
                 </div>
               </div>
             )}
@@ -241,11 +302,37 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs }) {
         />
       </div>
 
+      {/* Screenshots */}
+      <div className="mb-5">
+        <label className="text-xs font-semibold text-white/50 mb-2 block">Screenshots</label>
+        {screenshotUrls.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+            {screenshotUrls.map((url, i) => (
+              <div key={i} className="relative group rounded-lg overflow-hidden border border-white/10">
+                <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-24 object-cover" />
+                <button
+                  type="button"
+                  onClick={() => removeScreenshot(url, i)}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500/80 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed border-white/15 bg-white/[0.02] text-xs text-white/40 hover:text-white/60 hover:border-white/25 cursor-pointer transition-colors">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          {uploading ? 'Uploading...' : '+ Add Screenshots'}
+          <input type="file" accept="image/*" multiple onChange={handleScreenshotUpload} className="hidden" disabled={uploading} />
+        </label>
+      </div>
+
       {/* Save */}
       <div className="flex items-center gap-3">
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || uploading}
           className="px-5 py-2 rounded-xl text-sm font-semibold text-[#08080f] disabled:opacity-50"
           style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
         >
