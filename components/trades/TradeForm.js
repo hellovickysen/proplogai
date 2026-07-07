@@ -138,6 +138,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   const [showAddEmotion, setShowAddEmotion] = useState(false);
   const [showAddTag, setShowAddTag] = useState(false);
   const [newSetupName, setNewSetupName] = useState('');
+  const [newSetupDir, setNewSetupDir] = useState('');
   const [newEmotionName, setNewEmotionName] = useState('');
   const [newTagName, setNewTagName] = useState('');
   const [quickSaving, setQuickSaving] = useState(false);
@@ -155,12 +156,13 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       if (!user) throw new Error('Not logged in');
       const { data, error: err } = await supabase
         .from('setups')
-        .insert({ user_id: user.id, name, is_default: false, is_active: true, sort_order: 999 })
+        .insert({ user_id: user.id, name, direction: newSetupDir.trim() || null, is_default: false, is_active: true, sort_order: 999 })
         .select('id, name, direction, is_default, is_active')
         .single();
       if (err) throw err;
       setLocalSetups(prev => [...(prev || setups || []), data]);
       setNewSetupName('');
+      setNewSetupDir('');
       setShowAddSetup(false);
       toast.success('Setup "' + name + '" added');
     } catch (e) {
@@ -594,10 +596,25 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     </div>
                     {/* Quick-add setup modal */}
                     {showAddSetup && (
-                      <div className="mt-2 flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-400/[0.04] p-3">
-                        <input type="text" value={newSetupName} onChange={e => setNewSetupName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSetup())} placeholder="Setup name" className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3 py-1.5 text-xs text-white outline-none focus:border-violet-400/40" autoFocus />
-                        <button type="button" onClick={handleAddSetup} disabled={quickSaving || !newSetupName.trim()} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f] disabled:opacity-50" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? '...' : 'Add'}</button>
-                        <button type="button" onClick={() => { setShowAddSetup(false); setNewSetupName(''); }} className="text-xs text-white/40 hover:text-white/70">✕</button>
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4" onClick={() => { setShowAddSetup(false); setNewSetupName(''); setNewSetupDir(''); }}>
+                        <div className="w-full max-w-md rounded-2xl border border-cyan-400/30 bg-[#12121a] p-6" onClick={e => e.stopPropagation()}>
+                          <h3 className="mb-4 font-display text-base font-semibold">New setup</h3>
+                          <div className="space-y-4">
+                            <div>
+                              <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/55">Setup name *</label>
+                              <input type="text" value={newSetupName} onChange={e => setNewSetupName(e.target.value)} onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleAddSetup())} placeholder="e.g. Breakout, Scalp, ChoCh..." className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-400/60" maxLength={60} autoFocus />
+                            </div>
+                            <div>
+                              <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/55">Rule direction</label>
+                              <textarea value={newSetupDir} onChange={e => setNewSetupDir(e.target.value)} placeholder="When should you take this setup? What conditions must be met?" className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white outline-none focus:border-cyan-400/60 min-h-[80px]" rows={3} maxLength={500} />
+                              <p className="mt-1 text-xs text-white/30">{(newSetupDir || '').length}/500 — Shows during trade logging to remind you.</p>
+                            </div>
+                          </div>
+                          <div className="mt-5 flex gap-3">
+                            <button type="button" onClick={() => { setShowAddSetup(false); setNewSetupName(''); setNewSetupDir(''); }} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
+                            <button type="button" onClick={handleAddSetup} disabled={quickSaving || !newSetupName.trim()} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{quickSaving ? 'Saving...' : 'Create setup'}</button>
+                          </div>
+                        </div>
                       </div>
                     )}
                     {form.setup_ids.length > 0 && (
