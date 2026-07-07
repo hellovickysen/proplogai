@@ -17,8 +17,11 @@ const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-w
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
+const PROTECTED_SETUPS = ['Good SL', 'Bad SL', 'No Setup'];
+
 function SetupCard({ setup, onEdit, onToggle, onDelete }) {
   const isNoSetup = setup.is_default;
+  const isProtected = PROTECTED_SETUPS.includes(setup.name);
   const [lightboxIdx, setLightboxIdx] = useState(null);
   const refImages = Array.isArray(setup.reference_images) ? setup.reference_images : [];
   return (
@@ -28,7 +31,7 @@ function SetupCard({ setup, onEdit, onToggle, onDelete }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <h3 className="font-display text-base font-semibold">{setup.name}</h3>
-            {isNoSetup && (
+            {isProtected && (
               <span className="rounded-full bg-red-500/15 px-2 py-0.5 font-mono text-[10px] uppercase text-red-300">Always on</span>
             )}
             {!setup.is_active && (
@@ -53,30 +56,28 @@ function SetupCard({ setup, onEdit, onToggle, onDelete }) {
           ))}
         </div>
       )}
-      <div className="mt-4 flex items-center gap-2">
-        <button
-          onClick={() => onEdit(setup)}
-          className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white"
-        >
-          Edit
-        </button>
-        {!isNoSetup && (
-          <>
-            <button
-              onClick={() => onToggle(setup.id, !setup.is_active)}
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white"
-            >
-              {setup.is_active ? 'Deactivate' : 'Activate'}
-            </button>
-            <button
-              onClick={() => onDelete(setup.id)}
-              className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
-            >
-              Delete
-            </button>
-          </>
-        )}
-      </div>
+      {!isProtected && (
+        <div className="mt-4 flex items-center gap-2">
+          <button
+            onClick={() => onEdit(setup)}
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => onToggle(setup.id, !setup.is_active)}
+            className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white"
+          >
+            {setup.is_active ? 'Deactivate' : 'Activate'}
+          </button>
+          <button
+            onClick={() => onDelete(setup.id)}
+            className="rounded-lg border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs text-red-300 hover:bg-red-500/20"
+          >
+            Delete
+          </button>
+        </div>
+      )}
     </div>
     {lightboxIdx !== null && (
       <Lightbox images={refImages} startIndex={lightboxIdx} onClose={() => setLightboxIdx(null)} />
