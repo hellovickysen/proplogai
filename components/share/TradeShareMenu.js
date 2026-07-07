@@ -31,6 +31,7 @@ export default function TradeShareMenu({ tradeId, tradeData, initialShareId, ini
 
   const isShared = shareId && sharedUntil && new Date(sharedUntil) > new Date();
 
+  // Close dropdown on outside click
   useEffect(() => {
     if (!open) return;
     function handleClick(e) {
@@ -39,6 +40,13 @@ export default function TradeShareMenu({ tradeId, tradeData, initialShareId, ini
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
+
+  // Hide FAB when modal is open
+  useEffect(() => {
+    const fab = document.querySelector('[data-fab-menu]');
+    if (fab) fab.style.display = showPnlModal ? 'none' : '';
+    return () => { if (fab) fab.style.display = ''; };
+  }, [showPnlModal]);
 
   async function handleShareJournal() {
     setOpen(false);
@@ -85,29 +93,49 @@ export default function TradeShareMenu({ tradeId, tradeData, initialShareId, ini
         {isShared && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
       </button>
 
+      {/* Backdrop blur */}
+      {open && (
+        <div className="fixed inset-0 z-[998] bg-black/40 backdrop-blur-sm" onClick={() => setOpen(false)} />
+      )}
+
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-52 rounded-xl border border-white/10 bg-[#12121a] py-1.5 shadow-xl z-50">
+        <div
+          className="absolute right-0 top-full mt-2 w-56 rounded-2xl py-2 z-[999]"
+          style={{
+            background: 'rgba(18, 18, 26, 0.95)',
+            border: '1px solid rgba(167, 139, 250, 0.25)',
+            boxShadow: '0 0 30px rgba(167, 139, 250, 0.15), 0 20px 60px rgba(0, 0, 0, 0.5)',
+          }}
+        >
+          <div className="px-4 py-1.5 font-mono text-[10px] uppercase tracking-wider text-white/30">Share Trade</div>
+
+          {/* P&L Card */}
           <button
             onClick={handleSharePnl}
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors text-left"
+            className="flex w-full items-center gap-3 px-4 py-3 text-sm text-white/75 hover:bg-white/[0.08] hover:text-white transition-colors text-left"
           >
-            <span className="text-base">📊</span>
+            <span className="grid w-8 h-8 place-items-center rounded-lg bg-violet-400/[0.12] text-base">📊</span>
             <div>
               <div className="font-medium">P&L Card</div>
               <div className="text-[10px] text-white/35">Image for social media</div>
             </div>
           </button>
+
+          {/* Divider */}
+          <div className="mx-4 my-1 border-t border-white/[0.06]" />
+
+          {/* Journal Link */}
           <button
             onClick={handleShareJournal}
             disabled={loading}
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-sm text-white/70 hover:bg-white/[0.06] hover:text-white transition-colors text-left disabled:opacity-50"
+            className="flex w-full items-center gap-3 px-4 py-3 text-sm text-white/75 hover:bg-white/[0.08] hover:text-white transition-colors text-left disabled:opacity-50"
           >
-            <span className="text-base">🔗</span>
+            <span className="grid w-8 h-8 place-items-center rounded-lg bg-cyan-400/[0.1] text-base">🔗</span>
             <div>
-              <div className="font-medium flex items-center gap-1.5">
+              <div className="font-medium flex items-center gap-2">
                 Journal Link
-                {isShared && <span className="text-[9px] font-mono text-emerald-400">{timeRemaining(sharedUntil)}</span>}
+                {isShared && <span className="text-[9px] font-mono text-emerald-400 bg-emerald-400/[0.1] px-1.5 py-0.5 rounded">{timeRemaining(sharedUntil)}</span>}
               </div>
               <div className="text-[10px] text-white/35">{isShared ? 'Click to unshare' : '24h shareable link'}</div>
             </div>

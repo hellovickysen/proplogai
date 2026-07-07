@@ -42,7 +42,7 @@ export default function QuickActions() {
         />
       )}
 
-      <div ref={ref} className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[999]">
+      <div ref={ref} data-fab-menu className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[999]">
         {/* Popup — opens upward */}
         {open && (
           <div

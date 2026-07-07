@@ -9,7 +9,7 @@ import UpgradeCard from '@/components/ui/UpgradeCard';
 import { computeAchievements } from '@/lib/achievements';
 import TradeTable from '@/components/trades/TradeTable';
 import PnlCalendar from '@/components/calendar/PnlCalendar';
-import DashboardShareButton from '@/components/dashboard/DashboardShareButton';
+import DashboardShareMenu from '@/components/dashboard/DashboardShareMenu';
 import BlurGate from '@/components/ui/BlurGate';
 import DisciplineCards from '@/components/dashboard/DisciplineCards';
 import ReferralCapture from '@/components/referrals/ReferralCapture';
@@ -258,9 +258,8 @@ export default async function DashboardPage() {
   const todayWinRate = todayTrades.length > 0 ? Math.round((todayWins / todayTrades.length) * 100) : 0;
   const todayBest = todayTrades.length > 0 ? Math.max(...todayTrades.map((t) => num(t.pnl))) : null;
   const todayWorst = todayTrades.length > 0 ? Math.min(...todayTrades.map((t) => num(t.pnl))) : null;
-  const dailyShareData = todayTrades.length > 0
-    ? { pnl: todayPnl, date: today, trades: todayTrades.length, winRate: todayWinRate, bestTrade: todayBest, worstTrade: todayWorst }
-    : { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null };
+  const dailyShareData = { pnl: todayPnl, date: today, trades: todayTrades.length, winRate: todayWinRate, bestTrade: todayBest, worstTrade: todayWorst };
+  const totalShareData = { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null };
 
   return (
     <div className="px-3 py-8 sm:px-4">
@@ -270,10 +269,10 @@ export default async function DashboardPage() {
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">
           {access.canUse('shareable_cards') ? (
-            <span data-tour="share-btn"><DashboardShareButton data={dailyShareData} type={todayTrades.length > 0 ? 'daily' : 'total'} /></span>
+            <span data-tour="share-btn"><DashboardShareMenu dailyData={dailyShareData} totalData={totalShareData} hasTodayTrades={todayTrades.length > 0} /></span>
           ) : (
             <BlurGate feature="shareable_cards" access={planAccess} compact>
-              <DashboardShareButton data={dailyShareData} type="total" />
+              <DashboardShareMenu dailyData={dailyShareData} totalData={totalShareData} hasTodayTrades={todayTrades.length > 0} />
             </BlurGate>
           )}
           <Link data-tour="new-trade" href="/dashboard/trades/new" className="hidden sm:inline-block rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
