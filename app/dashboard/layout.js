@@ -189,15 +189,18 @@ export default async function DashboardLayout({ children }) {
               <Logo size={28} wordmarkClassName="font-display text-base font-bold" />
             </Link>
             <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:block">PropLogAI</span>
+            <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 min-h-[36px]">
+              <span className="font-mono text-xs uppercase tracking-wider text-white/55">Today</span>
+              <span className={'font-mono text-xs font-semibold ' + tone}>{fmtMoney(todayPnl)}</span>
+            </div>
             <div className="sm:hidden"><MobileSearchBar /></div>
           </div>
           <SearchBar planAccess={planAccess} />
           <div className="flex items-center gap-2 sm:gap-3">
             <LiveClock />
             <NotificationBell initialCount={notifCount} excludeTypes={ADMIN_NOTIF_TYPES} />
-            <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5 min-h-[36px]">
-              <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:inline">Today</span>
-              <span className={'font-mono text-xs font-semibold sm:text-sm ' + tone}>{fmtMoney(todayPnl)}</span>
+            <div className="flex sm:hidden items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 min-h-[36px]">
+              <span className={'font-mono text-xs font-semibold ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>
             <HeaderAvatar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} credits={prefs.referral_balance} isAdmin={isAdmin} adminNotifCount={adminNotifCount} planAccess={planAccess} />
           </div>
