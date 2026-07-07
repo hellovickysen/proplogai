@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 
-export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [] }) {
+export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '' }) {
   const router = useRouter();
   const toast = useToast?.() || { success: () => {}, error: () => {} };
   const [editing, setEditing] = useState(false);
@@ -140,6 +140,13 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
             <button onClick={() => setEditing(true)} className="text-sm text-violet-400 hover:text-violet-300 transition-colors">
               + Add Journal Entry
             </button>
+            {editTradeHref && (
+              <div className="mt-3">
+                <a href={editTradeHref} className="text-xs text-white/40 hover:text-white/60 transition-colors">
+                  or edit trade details →
+                </a>
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -188,7 +195,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
 
             {/* Screenshots */}
             {screenshotUrls.length > 0 && (
-              <div>
+              <div className="mb-4">
                 <h3 className="text-xs font-semibold text-white/50 mb-2">Screenshots</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {screenshotUrls.map((url, i) => (
@@ -197,6 +204,15 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
                     </a>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Edit Trade button — only in view mode */}
+            {editTradeHref && (
+              <div className="pt-3 mt-3 border-t border-white/[0.06]">
+                <a href={editTradeHref} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+                  ✎ Edit Trade Details
+                </a>
               </div>
             )}
           </>
@@ -257,24 +273,21 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         </div>
       </div>
 
-      {/* Confidence */}
+      {/* Confidence — star rating */}
       <div className="mb-4">
         <label className="text-xs font-semibold text-white/50 mb-2 block">Confidence</label>
-        <div className="flex gap-1.5">
+        <div className="flex items-center gap-1">
           {[1, 2, 3, 4, 5].map(n => (
             <button
               key={n}
               type="button"
               onClick={() => setConfidence(n === confidence ? 0 : n)}
-              className={`w-10 h-6 rounded-lg text-xs font-mono transition-all ${
-                n <= confidence
-                  ? 'bg-violet-400/30 border border-violet-400/40 text-violet-300'
-                  : 'bg-white/[0.04] border border-white/[0.08] text-white/30'
-              }`}
+              className="text-xl transition-all hover:scale-110"
             >
-              {n}
+              {n <= confidence ? '★' : '☆'}
             </button>
           ))}
+          {confidence > 0 && <span className="text-xs text-white/40 ml-2">{confidence}/5</span>}
         </div>
       </div>
 
