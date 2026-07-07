@@ -81,7 +81,7 @@ export default async function TradesPage() {
           <h1 className="text-2xl font-bold">Trades</h1>
           {enriched.length > 0 && <span className="rounded-full bg-white/10 px-2.5 py-0.5 text-xs font-mono text-white/60">{enriched.length} total</span>}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="hidden sm:flex items-center gap-3">
           {enriched.length > 0 && (
             access.canUse('csv_export') ? (
               <ExportButton />

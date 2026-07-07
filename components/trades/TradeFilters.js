@@ -78,6 +78,7 @@ export default function TradeFilters({ trades, prefs }) {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [hasLesson, setHasLesson] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   /* Scroll to highlighted trade on mount */
   useEffect(() => {
@@ -180,31 +181,53 @@ export default function TradeFilters({ trades, prefs }) {
   }, [trades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo]);
 
   const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter || hasLesson || dateFrom || dateTo;
+  const activeFilterCount = [setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo].filter(Boolean).length;
 
   return (
     <div>
-      {/* Filter bar */}
-      <div className="mb-4 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-end sm:gap-3">
-        {/* Result — full width on mobile so buttons don't overlap Setup */}
-        <div className="col-span-2 sm:col-span-1">
-          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Result</label>
-          <div className="flex gap-1">
-            {[
-              { v: 'all', l: 'All' },
-              { v: 'win', l: 'Wins' },
-              { v: 'loss', l: 'Losses' },
-            ].map((o) => (
-              <button
-                key={o.v}
-                onClick={() => setResult(o.v)}
-                className={'rounded-lg border px-3 py-2.5 text-xs font-semibold ' + (result === o.v ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-black/30 text-white/55')}
-              >
-                {o.l}
-              </button>
-            ))}
-          </div>
+      {/* Result tabs — always visible */}
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex gap-1">
+          {[
+            { v: 'all', l: 'All' },
+            { v: 'win', l: 'Wins' },
+            { v: 'loss', l: 'Losses' },
+          ].map((o) => (
+            <button
+              key={o.v}
+              onClick={() => setResult(o.v)}
+              className={'rounded-lg border px-3 py-2 text-xs font-semibold ' + (result === o.v ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 bg-black/30 text-white/55')}
+            >
+              {o.l}
+            </button>
+          ))}
         </div>
 
+        {/* Mobile: Filters toggle button */}
+        <button
+          onClick={() => setFiltersOpen(o => !o)}
+          className={'sm:hidden flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all ' +
+            (activeFilterCount > 0 || filtersOpen
+              ? 'border-violet-400/30 bg-violet-400/[0.08] text-violet-300'
+              : 'border-white/10 bg-black/30 text-white/55')}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" />
+          </svg>
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-violet-400 px-1 text-[10px] font-bold text-[#08080f]">
+              {activeFilterCount}
+            </span>
+          )}
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={'transition-transform ' + (filtersOpen ? 'rotate-180' : '')}>
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+      </div>
+
+      {/* Filter fields — always visible on desktop, collapsible on mobile */}
+      <div className={'mb-4 grid-cols-2 gap-2 sm:grid sm:flex sm:flex-wrap sm:items-end sm:gap-3 ' + (filtersOpen ? 'grid' : 'hidden sm:flex')}>
         {/* Setup */}
         <FilterDropdown label="Setup" value={setupFilter} onChange={setSetupFilter} placeholder="All setups" options={setupOptions} />
 
@@ -258,7 +281,7 @@ export default function TradeFilters({ trades, prefs }) {
         {/* Clear */}
         {hasFilters && (
           <button
-            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter(''); setHasLesson(false); setDateFrom(''); setDateTo(''); }}
+            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter(''); setHasLesson(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }}
             className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white"
           >
             Clear filters
