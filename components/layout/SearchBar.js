@@ -31,6 +31,15 @@ const GROUP_LABELS = {
   trophies: 'Trophies',
 };
 
+const GROUP_HREFS = {
+  trades: '/dashboard/trades',
+  journal: '/dashboard/trades',
+  coach: '/dashboard/coach',
+  setups: '/dashboard/rulebook',
+  expenses: '/dashboard/expenses',
+  trophies: '/dashboard/trophies',
+};
+
 /** Detect if query is natural language (should use AI parse) */
 function isNaturalLanguage(q) {
   if (!q || q.length < 4) return false;
@@ -190,7 +199,7 @@ export default function SearchBar({ planAccess }) {
   const showDropdown = open && query.trim().length > 0;
 
   return (
-    <div ref={wrapRef} className="relative flex-1 max-w-[480px] mx-auto hidden sm:block">
+    <div ref={wrapRef} className="relative flex-1 max-w-[600px] mx-auto hidden sm:block">
       {/* Search input */}
       <div className="relative">
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -321,6 +330,11 @@ export default function SearchBar({ planAccess }) {
                                     {item.emotions[0]}
                                   </span>
                                 )}
+                                {item.pair && item.type === 'journal' && (
+                                  <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-white/[0.06] text-white/40">
+                                    {item.pair}
+                                  </span>
+                                )}
                               </div>
                             </div>
                             {item.pnl != null && (
@@ -333,6 +347,14 @@ export default function SearchBar({ planAccess }) {
                           </div>
                         );
                       })}
+                      {items.length >= 3 && GROUP_HREFS[group] && (
+                        <div
+                          onClick={() => { setOpen(false); setQuery(''); router.push(GROUP_HREFS[group] + (query ? `?search=${encodeURIComponent(query)}` : '')); }}
+                          className="px-3 py-1.5 text-[11px] text-violet-400/60 hover:text-violet-400 cursor-pointer transition-colors"
+                        >
+                          View all {GROUP_LABELS[group]?.toLowerCase() || group} →
+                        </div>
+                      )}
                     </div>
                   );
                 })}
