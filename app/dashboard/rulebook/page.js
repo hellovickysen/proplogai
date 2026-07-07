@@ -12,7 +12,7 @@ export default async function RulebookRoute() {
     .from('setups')
     .select('id, name, direction, description, is_default, is_active, sort_order, reference_images, created_at')
     .eq('user_id', user.id)
-    .order('sort_order', { ascending: true });
+    .order('name', { ascending: true });
 
   if (setupsError) {
     return (
