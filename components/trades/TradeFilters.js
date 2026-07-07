@@ -221,15 +221,26 @@ export default function TradeFilters({ trades, prefs }) {
 
         {/* Has Lesson checkbox */}
         <div className="flex items-end pb-0.5">
-          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5">
-            <input
-              type="checkbox"
-              checked={hasLesson}
-              onChange={(e) => setHasLesson(e.target.checked)}
-              className="h-3.5 w-3.5 rounded border-white/30 bg-transparent accent-cyan-400"
-            />
-            <span className={'text-xs font-semibold ' + (hasLesson ? 'text-cyan-300' : 'text-white/55')}>Has lesson</span>
-          </label>
+          <button
+            type="button"
+            onClick={() => setHasLesson(v => !v)}
+            className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' +
+              (hasLesson
+                ? 'border-violet-400/30 bg-violet-400/[0.08]'
+                : 'border-white/10 bg-black/30 hover:border-white/20')}
+          >
+            <span className={'flex h-4 w-4 items-center justify-center rounded border transition-all ' +
+              (hasLesson
+                ? 'border-violet-400 bg-violet-400'
+                : 'border-white/30 bg-transparent')}>
+              {hasLesson && (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
+              )}
+            </span>
+            <span className={'text-xs font-semibold ' + (hasLesson ? 'text-violet-300' : 'text-white/55')}>Has lesson</span>
+          </button>
         </div>
 
         {/* Date from */}

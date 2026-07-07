@@ -29,34 +29,34 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
             <Link
               key={t.id}
               href={'/dashboard/trades/' + t.id}
-              className={'flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3.5 border-l-[3px] ' + leftBorderColor}
+              data-trade-id={t.id}
+              className={'block rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-3 border-l-[3px] ' + leftBorderColor}
             >
-              <div className="flex items-center gap-3 min-w-0">
-                {/* Trade number */}
-                <span className="shrink-0 flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.06] font-mono text-[10px] text-white/30">#{tradeNum}</span>
-                {/* Direction badge */}
-                <span className={'shrink-0 inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[11px] font-semibold ' + (t.direction === 'long' ? 'border-blue-400/30 bg-blue-500/15 text-blue-300' : 'border-red-400/30 bg-red-500/15 text-red-300')}>
-                  <svg width="14" height="10" viewBox="0 0 14 10" fill="none" className="shrink-0">{t.direction === 'long' ? <path d="M1 9L4.5 4L7.5 6.5L13 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M1 1L4.5 6L7.5 3.5L13 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}</svg>
-                  {t.direction === 'long' ? 'Long' : 'Short'}
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-display font-semibold">{t.pair}</span>
-                    {hasJournal && (
-                      <span className="text-xs text-amber-400/70" title="Has journal entry">&#128221;</span>
-                    )}
-                  </div>
-                  <div className="font-mono text-xs text-white/50">
-                    {fmtDate(t.trade_date || t.closed_at || t.created_at)}
-                    {t.session ? <span className="ml-1.5">{t.session}</span> : null}
-                  </div>
+              {/* Row 1: Pair + P&L */}
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-base font-semibold">{t.pair}</span>
+                  <span className={'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ' + (t.direction === 'long' ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/25 bg-red-500/10 text-red-300')}>
+                    <svg width="10" height="7" viewBox="0 0 14 10" fill="none" className="shrink-0">{t.direction === 'long' ? <path d="M1 9L4.5 4L7.5 6.5L13 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M1 1L4.5 6L7.5 3.5L13 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}</svg>
+                    {t.direction === 'long' ? 'Long' : 'Short'}
+                  </span>
+                  {hasJournal && (
+                    <span className="text-xs text-amber-400/60">📝</span>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0 ml-3">
                 <span className={'font-mono text-base font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>
                   {fmtMoneyCompact(t.pnl)}
                 </span>
-                <span className="font-mono text-xs text-white/40">&rsaquo;</span>
+              </div>
+              {/* Row 2: Meta info */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-mono text-[11px] text-white/40">
+                  <span className="text-white/25">#{tradeNum}</span>
+                  <span>{fmtDate(t.trade_date || t.closed_at || t.created_at)}</span>
+                  {t.session && <><span className="text-white/20">·</span><span>{t.session}</span></>}
+                  {t.setup && <><span className="text-white/20">·</span><span className="truncate max-w-[100px]">{t.setup.split(', ')[0]}</span></>}
+                </div>
+                <span className="text-white/25 text-xs">›</span>
               </div>
             </Link>
           );
