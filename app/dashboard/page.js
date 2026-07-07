@@ -263,7 +263,7 @@ export default async function DashboardPage() {
     : { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null };
 
   return (
-    <div className="overflow-hidden px-3 py-8 sm:px-4">
+    <div className="px-3 py-8 sm:px-4">
       <ReferralCapture />
       <BetaNotice />
       <div className="mb-6 flex items-center justify-between">
