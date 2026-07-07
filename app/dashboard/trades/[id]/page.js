@@ -96,16 +96,17 @@ export default async function TradeDetailPage({ params, searchParams }) {
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-2xl sm:text-3xl font-bold text-white">{trade.pair}</h1>
-              <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold uppercase ${
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase ${
                 trade.direction === 'long'
-                  ? 'bg-emerald-400/[0.12] text-emerald-400 border border-emerald-400/20'
-                  : 'bg-red-400/[0.12] text-red-400 border border-red-400/20'
+                  ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-400/20'
+                  : 'bg-red-500/15 text-red-300 border border-red-400/20'
               }`}>
-                {trade.direction === 'long' ? (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M17 13l-5-5-5 5"/><path d="M12 8v10"/></svg>
-                ) : (
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M7 11l5 5 5-5"/><path d="M12 16V6"/></svg>
-                )}
+                <svg width="14" height="10" viewBox="0 0 14 10" fill="none" className="shrink-0">
+                  {trade.direction === 'long'
+                    ? <path d="M1 9L4.5 4L7.5 6.5L13 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                    : <path d="M1 1L4.5 6L7.5 3.5L13 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  }
+                </svg>
                 {trade.direction}
               </span>
             </div>
@@ -283,6 +284,18 @@ export default async function TradeDetailPage({ params, searchParams }) {
           {!aiData.grade && aiData.summary && (
             <p className="text-sm text-white/60 leading-relaxed whitespace-pre-wrap">{aiData.summary}</p>
           )}
+        </div>
+      )}
+
+      {/* No AI analysis — show CTA */}
+      {!aiData && (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4 text-center">
+          <div className="text-2xl mb-2 opacity-40">✦</div>
+          <h3 className="text-sm font-semibold text-white/60 mb-1">AI Analysis</h3>
+          <p className="text-xs text-white/35 mb-3">Get Propol's feedback on this trade — what went well, mistakes, and a lesson.</p>
+          <Link href="/dashboard/trades" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            ✦ Analyze on Trades Page
+          </Link>
         </div>
       )}
 
