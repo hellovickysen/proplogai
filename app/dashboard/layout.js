@@ -199,6 +199,26 @@ export default async function DashboardLayout({ children }) {
       </div>
       <QuickLog />
       <GuidedTour hasTrades={tradeCount > 0} />
+      <script dangerouslySetInnerHTML={{ __html: `
+        setTimeout(function() {
+          var dw = document.documentElement.scrollWidth;
+          var cw = document.documentElement.clientWidth;
+          if (dw > cw + 2) {
+            var all = document.querySelectorAll('*');
+            var culprits = [];
+            for (var i = 0; i < all.length; i++) {
+              var el = all[i];
+              if (el.scrollWidth > cw + 2) {
+                culprits.push(el.tagName + '.' + (el.className || '').toString().replace(/\\s+/g,'.').substring(0,60) + ' sw:' + el.scrollWidth);
+              }
+            }
+            var div = document.createElement('div');
+            div.style.cssText = 'position:fixed;bottom:60px;left:8px;right:8px;z-index:9999;background:#1a0030;border:2px solid #a78bfa;color:#22d3ee;font-size:10px;font-family:monospace;padding:8px;border-radius:8px;max-height:200px;overflow:auto;';
+            div.textContent = 'docW:'+dw+' clientW:'+cw+' | '+culprits.join(' | ');
+            document.body.appendChild(div);
+          }
+        }, 2000);
+      ` }} />
     </div>
   );
 }
