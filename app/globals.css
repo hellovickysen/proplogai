@@ -7,13 +7,9 @@ html, body {
   color: #ececf4;
   -webkit-font-smoothing: antialiased;
   font-size: 16px;
-  overflow-x: hidden;
-  overscroll-behavior-x: none;
 }
 body {
   font-family: 'Poppins', system-ui, sans-serif;
-  position: relative;
-  width: 100%;
 }
 
 /* Toast slide-in animation */

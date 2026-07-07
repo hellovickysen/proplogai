@@ -81,7 +81,7 @@ export default async function CalendarPage({ searchParams }) {
   // Empty state — user has no trades at all
   if (totalTradeCount === 0) {
     return (
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-6 mx-auto">
         <h1 className="text-2xl font-bold mb-6">Calendar</h1>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10">
@@ -167,7 +167,7 @@ export default async function CalendarPage({ searchParams }) {
   const monthParam = `${year}-${pad2(month + 1)}`;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6 mx-auto">
       <h1 className="text-2xl font-bold mb-6">Calendar</h1>
 
       {/* Calendar Insights — blurred for Basic users */}
@@ -192,7 +192,7 @@ export default async function CalendarPage({ searchParams }) {
         </div>
 
         {/* CalendarMonth with the correct props it expects */}
-        <CalendarMonth trades={enrichedTrades} year={year} month={month} journalDays={journalDays} monthParam={monthParam} />
+        <CalendarMonth trades={enrichedTrades} year={year} month={month} selected={selected} monthlyPnl={monthlyPnl} journalDays={journalDays} monthParam={monthParam} />
       </div>
 
       {/* Day trades section below the calendar */}
@@ -209,7 +209,7 @@ export default async function CalendarPage({ searchParams }) {
           {selectedTrades.length === 0 ? (
             <p className="text-white/40 text-sm">No trades on this date.</p>
           ) : (
-            <TradeTable trades={selectedTrades} />
+            <TradeTable rows={selectedTrades} />
           )}
         </div>
       )}
