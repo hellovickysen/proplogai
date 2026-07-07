@@ -30,6 +30,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   // Screenshot state
   const [screenshotUrls, setScreenshotUrls] = useState(initialScreenshots);
   const [uploading, setUploading] = useState(false);
+  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   async function handleScreenshotUpload(e) {
     const files = Array.from(e.target.files || []);
@@ -119,17 +120,25 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     setSaving(false);
   }
 
+  // Lightbox modal
+  const lightbox = lightboxUrl ? (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4" onClick={() => setLightboxUrl(null)}>
+      <button className="absolute top-4 right-4 text-white/60 hover:text-white text-2xl z-10" onClick={() => setLightboxUrl(null)}>✕</button>
+      <img src={lightboxUrl} alt="Screenshot" className="max-w-full max-h-[90vh] object-contain rounded-lg" onClick={e => e.stopPropagation()} />
+    </div>
+  ) : null;
+
   // View mode
   if (!editing) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
+      <>{lightbox}<div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-mono text-xs uppercase tracking-wider text-white/55">📝 Journal Entry</h2>
           <button
             onClick={() => setEditing(true)}
             className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
           >
-            ✎ Edit
+            ✎ Edit Journal
           </button>
         </div>
 
@@ -199,9 +208,9 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
                 <h3 className="text-xs font-semibold text-white/50 mb-2">Screenshots</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {screenshotUrls.map((url, i) => (
-                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/30 transition-colors">
+                    <div key={i} onClick={() => setLightboxUrl(url)} className="block rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/30 transition-colors cursor-pointer">
                       <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-auto max-h-80 object-contain bg-black/50" />
-                    </a>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -217,13 +226,13 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
             )}
           </>
         )}
-      </div>
+      </div></>
     );
   }
 
   // Edit mode
   return (
-    <div className="rounded-2xl border border-violet-400/20 bg-violet-400/[0.03] p-5 sm:p-6 mb-4">
+    <>{lightbox}<div className="rounded-2xl border border-violet-400/20 bg-violet-400/[0.03] p-5 sm:p-6 mb-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-mono text-xs uppercase tracking-wider text-violet-300/70">✎ Editing Journal</h2>
         <button onClick={() => setEditing(false)} className="text-xs text-white/40 hover:text-white/60 transition-colors">
@@ -273,21 +282,25 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         </div>
       </div>
 
-      {/* Confidence — star rating */}
+      {/* Confidence — pill selector */}
       <div className="mb-4">
         <label className="text-xs font-semibold text-white/50 mb-2 block">Confidence</label>
-        <div className="flex items-center gap-1">
+        <div className="flex gap-1.5">
           {[1, 2, 3, 4, 5].map(n => (
             <button
               key={n}
               type="button"
               onClick={() => setConfidence(n === confidence ? 0 : n)}
-              className="text-xl transition-all hover:scale-110"
+              className={`w-10 h-8 rounded-lg text-xs font-semibold transition-all ${
+                n <= confidence
+                  ? 'bg-violet-400/25 border border-violet-400/40 text-violet-300'
+                  : 'bg-white/[0.04] border border-white/[0.08] text-white/30 hover:text-white/50'
+              }`}
             >
-              {n <= confidence ? '★' : '☆'}
+              {n}
             </button>
           ))}
-          {confidence > 0 && <span className="text-xs text-white/40 ml-2">{confidence}/5</span>}
+          {confidence > 0 && <span className="text-xs text-white/40 ml-1 self-center">{confidence}/5</span>}
         </div>
       </div>
 
@@ -358,6 +371,6 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
           Cancel
         </button>
       </div>
-    </div>
+    </div></>
   );
 }
