@@ -98,6 +98,7 @@ export async function createSetup(payload) {
     name,
     direction: sanitize(payload.direction, MAX_DIRECTION),
     description: sanitize(payload.description, MAX_DESCRIPTION),
+    reference_images: Array.isArray(payload.reference_images) ? payload.reference_images : [],
     is_active: true,
     sort_order: payload.sort_order || 0,
   });
@@ -117,6 +118,7 @@ export async function updateSetup(id, payload) {
   if (payload.direction !== undefined) updates.direction = sanitize(payload.direction, MAX_DIRECTION);
   if (payload.description !== undefined) updates.description = sanitize(payload.description, MAX_DESCRIPTION);
   if (payload.is_active !== undefined) updates.is_active = !!payload.is_active;
+  if (payload.reference_images !== undefined) updates.reference_images = Array.isArray(payload.reference_images) ? payload.reference_images : [];
 
   const { error } = await supabase.from('setups').update(updates).eq('id', id).eq('user_id', user.id);
   if (error) return { error: error.message };

@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSetup, updateSetup, deleteSetup, seedDefaultSetups, resetToDefaultSetups } from '@/app/dashboard/rulebook/actions';
+import { createClient } from '@/lib/supabase/client';
+import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 import { RulebookEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { UpgradeModal } from '@/components/ui/BlurGate';
+import { FEATURES } from '@/lib/plans';
 
 
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -36,6 +39,16 @@ function SetupCard({ setup, onEdit, onToggle, onDelete }) {
           )}
         </div>
       </div>
+      {/* Reference image thumbnails */}
+      {setup.reference_images && setup.reference_images.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          {setup.reference_images.map((url, i) => (
+            <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="group relative block h-14 w-14 overflow-hidden rounded-lg border border-white/10 bg-black/30 transition-all hover:border-cyan-400/40">
+              <img src={url} alt={`${setup.name} ref ${i + 1}`} className="h-full w-full object-cover" />
+            </a>
+          ))}
+        </div>
+      )}
       <div className="mt-4 flex items-center gap-2">
         <button
           onClick={() => onEdit(setup)}
@@ -64,16 +77,50 @@ function SetupCard({ setup, onEdit, onToggle, onDelete }) {
   );
 }
 
-function SetupForm({ initial, onSave, onCancel }) {
+function SetupForm({ initial, onSave, onCancel, imageLimit }) {
   const [name, setName] = useState(initial ? initial.name : '');
   const [direction, setDirection] = useState(initial ? (initial.direction || '') : '');
   const [description, setDescription] = useState(initial ? (initial.description || '') : '');
+  const [images, setImages] = useState(initial && Array.isArray(initial.reference_images) ? initial.reference_images : []);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const toast = useToast();
+  const maxImages = imageLimit || 1;
+
+  async function handleImageUpload(e) {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    const remaining = maxImages - images.length;
+    if (remaining <= 0) { toast.error('Image limit reached'); return; }
+    const batch = files.slice(0, remaining);
+    setUploading(true);
+    const supabase = createClient();
+    const newUrls = [];
+    for (const file of batch) {
+      if (file.size > 5 * 1024 * 1024) { toast.error('Max 5MB per image'); continue; }
+      try {
+        const processed = await processImageFile(file);
+        const ext = processed.name.endsWith('.webp') ? 'webp' : 'jpg';
+        const path = `setups/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('screenshots').upload(path, processed, { contentType: processed.type || 'image/webp', upsert: false });
+        if (upErr) { toast.error('Upload failed'); continue; }
+        const { data: pub } = supabase.storage.from('screenshots').getPublicUrl(path);
+        if (pub?.publicUrl) newUrls.push(pub.publicUrl);
+      } catch (err) { toast.error('Upload failed'); }
+    }
+    if (newUrls.length > 0) setImages((prev) => [...prev, ...newUrls]);
+    setUploading(false);
+    e.target.value = '';
+  }
+
+  function removeImage(idx) {
+    setImages((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
-    await onSave({ name, direction, description });
+    await onSave({ name, direction, description, reference_images: images });
     setSaving(false);
   }
 
@@ -96,10 +143,31 @@ function SetupForm({ initial, onSave, onCancel }) {
           <label className={labelCls}>Description (optional)</label>
           <input className={field} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Extra notes about this setup" maxLength={1000} />
         </div>
+        {/* Reference images */}
+        <div>
+          <label className={labelCls}>Reference images <span className="text-white/30">— what does this setup look like on chart?</span></label>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {images.map((url, i) => (
+              <div key={i} className="group relative h-16 w-16 overflow-hidden rounded-lg border border-white/10 bg-black/30">
+                <img src={url} alt={`Ref ${i + 1}`} className="h-full w-full object-cover" />
+                <button type="button" onClick={() => removeImage(i)} className="absolute -right-1 -top-1 z-10 grid h-5 w-5 place-items-center rounded-full bg-red-500 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100 shadow">✕</button>
+              </div>
+            ))}
+            {images.length < maxImages && (
+              <label className={'grid h-16 w-16 cursor-pointer place-items-center rounded-lg border border-dashed border-white/15 bg-white/[0.02] text-white/30 transition-colors hover:border-cyan-400/40 hover:text-white/50' + (uploading ? ' animate-pulse pointer-events-none' : '')}>
+                <div className="text-center">
+                  <span className="text-lg">{uploading ? '...' : '+'}</span>
+                </div>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} disabled={uploading} />
+              </label>
+            )}
+          </div>
+          <p className="mt-1.5 font-mono text-[10px] text-white/30">{images.length}/{maxImages} reference images</p>
+        </div>
       </div>
       <div className="mt-5 flex gap-3">
         <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">Cancel</button>
-        <button type="submit" disabled={saving} className="rounded-xl px-5 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <button type="submit" disabled={saving || uploading} className="rounded-xl px-5 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
           {saving ? 'Saving...' : initial ? 'Save changes' : 'Create setup'}
         </button>
       </div>
@@ -116,6 +184,9 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
   const [resetting, setResetting] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  const imageLimit = planAccess && (planAccess.isAdmin || planAccess.isBeta || planAccess.effectivePlan === 'elite')
+    ? (FEATURES.reference_images_per_setup?.elite || 10)
+    : (FEATURES.reference_images_per_setup?.basic || 1);
 
   const activeSetups = setups.filter((s) => s.is_active);
   const inactiveSetups = setups.filter((s) => !s.is_active);
@@ -232,7 +303,7 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
 
         {editing === 'new' && (
           <div className="mt-6">
-            <SetupForm onSave={handleCreate} onCancel={() => setEditing(null)} />
+            <SetupForm onSave={handleCreate} onCancel={() => setEditing(null)} imageLimit={imageLimit} />
           </div>
         )}
       </div>
@@ -296,6 +367,7 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
               initial={editing === 'new' ? null : editing}
               onSave={editing === 'new' ? handleCreate : handleUpdate}
               onCancel={() => setEditing(null)}
+              imageLimit={imageLimit}
             />
           </div>
         </div>
