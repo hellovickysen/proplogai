@@ -68,6 +68,7 @@ export default function TradeFilters({ trades, prefs }) {
   const [tagFilter, setTagFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [hasLesson, setHasLesson] = useState(false);
 
   const setupOptions = useMemo(() => {
     const fromPrefs = (prefs && prefs.custom_setups) || [];
@@ -124,6 +125,11 @@ export default function TradeFilters({ trades, prefs }) {
         if (!tags.includes(tagFilter)) return false;
       }
 
+      // Has lesson filter
+      if (hasLesson) {
+        if (!t._journal || !t._journal.hasLesson) return false;
+      }
+
       // Date range
       const tDate = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
       if (dateFrom && tDate < dateFrom) return false;
@@ -131,9 +137,9 @@ export default function TradeFilters({ trades, prefs }) {
 
       return true;
     });
-  }, [trades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, dateFrom, dateTo]);
+  }, [trades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo]);
 
-  const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter || dateFrom || dateTo;
+  const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter || hasLesson || dateFrom || dateTo;
 
   return (
     <div>
@@ -173,6 +179,19 @@ export default function TradeFilters({ trades, prefs }) {
           <FilterDropdown label="Tag" value={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} />
         )}
 
+        {/* Has Lesson checkbox */}
+        <div className="flex items-end pb-0.5">
+          <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2.5">
+            <input
+              type="checkbox"
+              checked={hasLesson}
+              onChange={(e) => setHasLesson(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-white/30 bg-transparent accent-cyan-400"
+            />
+            <span className={'text-xs font-semibold ' + (hasLesson ? 'text-cyan-300' : 'text-white/55')}>Has lesson</span>
+          </label>
+        </div>
+
         {/* Date from */}
         <div>
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">From</label>
@@ -188,7 +207,7 @@ export default function TradeFilters({ trades, prefs }) {
         {/* Clear */}
         {hasFilters && (
           <button
-            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter(''); setDateFrom(''); setDateTo(''); }}
+            onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter(''); setHasLesson(false); setDateFrom(''); setDateTo(''); }}
             className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white"
           >
             Clear filters
