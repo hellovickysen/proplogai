@@ -67,7 +67,6 @@ export default async function TradeDetailPage({ params, searchParams }) {
 
   const pnl = Number(trade.pnl) || 0;
   const isProfit = pnl >= 0;
-  const rMultiple = trade.r_multiple != null ? Number(trade.r_multiple) : null;
   const emotions = journal?.emotions || [];
   const tags = Array.isArray(journal?.tags) ? journal.tags : [];
   const screenshots = Array.isArray(journal?.screenshot_urls) ? journal.screenshot_urls.filter(Boolean) : [];
@@ -85,11 +84,14 @@ export default async function TradeDetailPage({ params, searchParams }) {
 
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
-      {/* Back link */}
-      <Link href="/dashboard/trades" className="text-sm text-violet-400 hover:text-violet-300 mb-6 inline-flex items-center gap-1.5 transition-colors">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-        Back to Trades
-      </Link>
+      {/* Top bar: Back + Share */}
+      <div className="flex items-center justify-between mb-4">
+        <Link href="/dashboard/trades" className="text-sm text-violet-400 hover:text-violet-300 inline-flex items-center gap-1.5 transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
+          Back to Trades
+        </Link>
+        <ShareJournalButton tradeId={trade.id} initialShareId={trade.share_id} initialSharedUntil={trade.shared_until} />
+      </div>
 
       {/* Trade Header */}
       <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
@@ -120,14 +122,6 @@ export default async function TradeDetailPage({ params, searchParams }) {
           <div className="text-right">
             <div className={`text-3xl sm:text-4xl font-bold font-mono ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
               {fmtMoney(pnl)}
-            </div>
-            {rMultiple != null && (
-              <div className={`text-sm font-mono mt-1 ${rMultiple >= 0 ? 'text-emerald-400/70' : 'text-red-400/70'}`}>
-                {rMultiple >= 0 ? '+' : ''}{rMultiple.toFixed(2)}R
-              </div>
-            )}
-            <div className="mt-2">
-              <ShareJournalButton tradeId={trade.id} initialShareId={trade.share_id} initialSharedUntil={trade.shared_until} />
             </div>
           </div>
         </div>

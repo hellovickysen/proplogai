@@ -320,11 +320,6 @@ export default function SearchBar({ planAccess }) {
                                     item.direction === 'long' ? 'bg-blue-400/[0.12] text-blue-400' : 'bg-red-400/[0.12] text-red-400'
                                   }`}>{item.direction}</span>
                                 )}
-                                {item.r_multiple != null && (
-                                  <span className={`font-mono text-[8px] px-1.5 py-0.5 rounded ${
-                                    Number(item.r_multiple) >= 0 ? 'bg-emerald-400/[0.12] text-emerald-400' : 'bg-red-400/[0.12] text-red-400'
-                                  }`}>{Number(item.r_multiple) >= 0 ? '+' : ''}{Number(item.r_multiple).toFixed(1)}R</span>
-                                )}
                                 {item.emotions?.length > 0 && (
                                   <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-violet-400/[0.12] text-violet-300">
                                     {item.emotions[0]}
