@@ -330,6 +330,11 @@ export default function SearchBar({ planAccess }) {
                                     {item.emotions[0]}
                                   </span>
                                 )}
+                                {item.emotion && !item.emotions?.length && (
+                                  <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-violet-400/[0.12] text-violet-300">
+                                    {item.emotion}
+                                  </span>
+                                )}
                                 {item.pair && item.type === 'journal' && (
                                   <span className="font-mono text-[8px] px-1.5 py-0.5 rounded bg-white/[0.06] text-white/40">
                                     {item.pair}

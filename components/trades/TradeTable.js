@@ -103,6 +103,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
             return (
               <tr
                 key={t.id}
+                data-trade-id={t.id}
                 className={
                   'border-t border-white/5 transition-colors hover:bg-white/[0.04] ' +
                   zebra + ' ' + leftBorder

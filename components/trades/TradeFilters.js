@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import TradeTable from '@/components/trades/TradeTable';
 import { num } from '@/lib/stats';
 
@@ -61,14 +62,38 @@ function FilterDropdown({ label, value, onChange, placeholder, options }) {
 }
 
 export default function TradeFilters({ trades, prefs }) {
-  const [result, setResult] = useState('all'); // all | win | loss
-  const [setupFilter, setSetupFilter] = useState('');
-  const [emotionFilter, setEmotionFilter] = useState('');
-  const [sessionFilter, setSessionFilter] = useState('');
-  const [tagFilter, setTagFilter] = useState('');
+  const searchParams = useSearchParams();
+  const urlEmotion = searchParams.get('emotion') || '';
+  const urlSetup = searchParams.get('setup') || '';
+  const urlSession = searchParams.get('session') || '';
+  const urlTag = searchParams.get('tag') || '';
+  const urlResult = searchParams.get('result') || '';
+  const highlightTradeId = searchParams.get('tradeId') || '';
+
+  const [result, setResult] = useState(urlResult || 'all'); // all | win | loss
+  const [setupFilter, setSetupFilter] = useState(urlSetup);
+  const [emotionFilter, setEmotionFilter] = useState(urlEmotion);
+  const [sessionFilter, setSessionFilter] = useState(urlSession);
+  const [tagFilter, setTagFilter] = useState(urlTag);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [hasLesson, setHasLesson] = useState(false);
+
+  /* Scroll to highlighted trade on mount */
+  useEffect(() => {
+    if (highlightTradeId) {
+      setTimeout(() => {
+        const el = document.querySelector(`[data-trade-id="${highlightTradeId}"]`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.add('ring-2', 'ring-violet-400/50', 'bg-violet-400/[0.06]');
+          setTimeout(() => {
+            el.classList.remove('ring-2', 'ring-violet-400/50', 'bg-violet-400/[0.06]');
+          }, 3000);
+        }
+      }, 300);
+    }
+  }, [highlightTradeId]);
 
   const setupOptions = useMemo(() => {
     const fromPrefs = (prefs && prefs.custom_setups) || [];
