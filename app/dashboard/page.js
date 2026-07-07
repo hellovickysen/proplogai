@@ -17,6 +17,7 @@ import BetaNotice from '@/components/ui/BetaNotice';
 import { notify, TYPES } from '@/lib/notifications';
 import DailyCoachingCard from '@/components/coach/DailyCoachingCard';
 import { computePersona } from '@/lib/persona';
+import OverflowDebug from '@/components/ui/OverflowDebug';
 
 export const dynamic = 'force-dynamic';
 
@@ -264,6 +265,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="px-3 py-8 sm:px-4">
+      <OverflowDebug />
       <ReferralCapture />
       <BetaNotice />
       <div className="mb-6 flex items-center justify-between">
