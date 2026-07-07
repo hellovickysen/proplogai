@@ -72,9 +72,9 @@ export default function TradeFilters({ trades, prefs }) {
 
   const [result, setResult] = useState(urlResult || 'all'); // all | win | loss
   const [setupFilter, setSetupFilter] = useState(urlSetup);
-  const [emotionFilter, setEmotionFilter] = useState(urlEmotion);
+  const [emotionFilter, setEmotionFilter] = useState(''); // resolved below after options computed
   const [sessionFilter, setSessionFilter] = useState(urlSession);
-  const [tagFilter, setTagFilter] = useState(urlTag);
+  const [tagFilter, setTagFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [hasLesson, setHasLesson] = useState(false);
@@ -120,6 +120,21 @@ export default function TradeFilters({ trades, prefs }) {
     const fromTrades = trades.flatMap((t) => (t._journal && t._journal.tags) || []);
     return [...new Set(fromTrades)].sort();
   }, [trades]);
+
+  /* Resolve URL params to actual stored values (case-insensitive match) */
+  useEffect(() => {
+    if (urlEmotion && emotionOptions.length > 0 && !emotionFilter) {
+      const match = emotionOptions.find(e => e.toLowerCase() === urlEmotion.toLowerCase());
+      if (match) setEmotionFilter(match);
+    }
+  }, [urlEmotion, emotionOptions, emotionFilter]);
+
+  useEffect(() => {
+    if (urlTag && tagOptions.length > 0 && !tagFilter) {
+      const match = tagOptions.find(t => t.toLowerCase() === urlTag.toLowerCase());
+      if (match) setTagFilter(match);
+    }
+  }, [urlTag, tagOptions, tagFilter]);
 
   const filtered = useMemo(() => {
     return trades.filter((t) => {
