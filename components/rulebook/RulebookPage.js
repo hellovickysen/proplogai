@@ -201,7 +201,19 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
     ? (FEATURES.reference_images_per_setup?.elite || 10)
     : (FEATURES.reference_images_per_setup?.basic || 1);
 
-  const activeSetups = setups.filter((s) => s.is_active);
+  const activeSetups = setups
+    .filter((s) => s.is_active)
+    .sort((a, b) => {
+      const aProtected = PROTECTED_SETUPS.includes(a.name);
+      const bProtected = PROTECTED_SETUPS.includes(b.name);
+      if (aProtected && !bProtected) return 1;
+      if (!aProtected && bProtected) return -1;
+      if (aProtected && bProtected) {
+        // Good SL → Bad SL → No Setup
+        return PROTECTED_SETUPS.indexOf(a.name) - PROTECTED_SETUPS.indexOf(b.name);
+      }
+      return a.name.localeCompare(b.name);
+    });
   const inactiveSetups = setups.filter((s) => !s.is_active);
   const customSetups = setups.filter((s) => !s.is_default);
   const hasLimit = customSetupLimit > 0;
@@ -354,7 +366,7 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
       </div>
 
       {/* Active setups */}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 grid-cols-1">
         {activeSetups.map((s) => (
           <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
         ))}
@@ -364,7 +376,7 @@ export default function RulebookPage({ setups, customSetupLimit = -1, planAccess
       {inactiveSetups.length > 0 && (
         <div className="mt-8">
           <h2 className="mb-3 font-mono text-xs uppercase tracking-wider text-white/40">Inactive setups</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 grid-cols-1">
             {inactiveSetups.map((s) => (
               <SetupCard key={s.id} setup={s} onEdit={setEditing} onToggle={handleToggle} onDelete={handleDelete} />
             ))}
