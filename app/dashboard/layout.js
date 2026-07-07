@@ -16,6 +16,8 @@ import { buildTrialEndingEmail } from '@/lib/subscription-emails';
 import { notify, TYPES } from '@/lib/notifications';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import GuidedTour from '@/components/ui/GuidedTour';
+import SearchBar from '@/components/layout/SearchBar';
+import MobileSearchBar from '@/components/layout/MobileSearchBar';
 
 /* Admin notification types — excluded from user dashboard bell */
 const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup', 'ticket_user_replied', 'ticket_closed'];
@@ -178,13 +180,15 @@ export default async function DashboardLayout({ children }) {
       <Sidebar email={user.email} credits={prefs.referral_balance} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} fullName={prefs?.full_name || ''} planAccess={planAccess} />
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="relative flex items-center justify-between border-b border-white/10 px-4 py-4 sm:px-6">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} planAccess={planAccess} />
             <Link href="/dashboard" className="sm:hidden">
               <Logo size={28} wordmarkClassName="font-display text-base font-bold" />
             </Link>
             <span className="hidden font-mono text-xs uppercase tracking-wider text-white/55 sm:block">PropLogAI</span>
+            <div className="sm:hidden"><MobileSearchBar /></div>
           </div>
+          <SearchBar planAccess={planAccess} />
           <div className="flex items-center gap-2 sm:gap-3">
             <NotificationBell initialCount={notifCount} excludeTypes={ADMIN_NOTIF_TYPES} />
             <div className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1 sm:gap-2 sm:px-3 sm:py-1.5 min-h-[44px]">
