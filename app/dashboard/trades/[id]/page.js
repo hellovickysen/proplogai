@@ -108,7 +108,7 @@ export default async function TradeDetailPage({ params }) {
           </div>
           <div className="text-right">
             <div className={`text-3xl sm:text-4xl font-bold font-mono ${isProfit ? 'text-emerald-400' : 'text-red-400'}`}>
-              {isProfit ? '+' : ''}{fmtMoney(pnl)}
+              {fmtMoney(pnl)}
             </div>
             {rMultiple != null && (
               <div className={`text-sm font-mono mt-1 ${rMultiple >= 0 ? 'text-emerald-400/70' : 'text-red-400/70'}`}>
