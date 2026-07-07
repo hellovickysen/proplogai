@@ -13,6 +13,24 @@ function sanitize(str, maxLen) {
   return String(str).slice(0, maxLen).replace(/<[^>]*>/g, '').trim();
 }
 
+/** Extract storage path from a Supabase public URL for the screenshots bucket */
+function extractStoragePath(url) {
+  if (!url) return null;
+  const marker = '/screenshots/';
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  return url.substring(idx + marker.length);
+}
+
+/** Delete screenshot files from Supabase Storage */
+async function deleteStorageFiles(supabase, urls) {
+  const paths = urls.map(extractStoragePath).filter(Boolean);
+  if (paths.length === 0) return;
+  try {
+    await supabase.storage.from('screenshots').remove(paths);
+  } catch (e) { /* Non-critical — don't block the main operation */ }
+}
+
 async function getCtx() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -120,6 +138,14 @@ export async function updateSetup(id, payload) {
   if (payload.is_active !== undefined) updates.is_active = !!payload.is_active;
   if (payload.reference_images !== undefined) updates.reference_images = Array.isArray(payload.reference_images) ? payload.reference_images : [];
 
+  // Clean up removed reference images from storage
+  if (updates.reference_images !== undefined) {
+    const { data: existing } = await supabase.from('setups').select('reference_images').eq('id', id).eq('user_id', user.id).maybeSingle();
+    const oldImages = (existing && Array.isArray(existing.reference_images)) ? existing.reference_images : [];
+    const removedImages = oldImages.filter((url) => !updates.reference_images.includes(url));
+    if (removedImages.length > 0) await deleteStorageFiles(supabase, removedImages);
+  }
+
   const { error } = await supabase.from('setups').update(updates).eq('id', id).eq('user_id', user.id);
   if (error) return { error: error.message };
 
@@ -182,11 +208,16 @@ export async function deleteSetup(id) {
 
   const { data: setup } = await supabase
     .from('setups')
-    .select('is_default')
+    .select('is_default, reference_images')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle();
   if (setup && setup.is_default) return { error: 'Cannot delete the No Setup entry.' };
+
+  // Clean up reference images from storage before deleting the setup
+  if (setup && Array.isArray(setup.reference_images) && setup.reference_images.length > 0) {
+    await deleteStorageFiles(supabase, setup.reference_images);
+  }
 
   const { error } = await supabase.from('setups').delete().eq('id', id).eq('user_id', user.id);
   if (error) return { error: error.message };
