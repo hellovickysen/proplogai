@@ -12,7 +12,7 @@ import { generateCoachReport } from '@/app/dashboard/coach/actions';
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 export default function PropolCoachHub({
-  reports, tradeAnalyses, tradeCount, access,
+  coachReports: reports, tradeAnalyses, tradeCount, planAccess: access,
   coachUsed, coachLimit, analysisUsed, analysisLimit, emailEnabled,
   persona, streaks, userName,
 }) {

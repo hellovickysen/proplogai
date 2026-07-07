@@ -28,7 +28,7 @@ export async function createTrophy(payload) {
   // Plan-based trophy limit check
   const access = await getUserAccess(supabase, user);
   const { remaining } = await access.remaining('trophy_uploads', supabase, user.id);
-  if (remaining <= 0 && !access.canUse('unlimited_trophies')) {
+  if (remaining <= 0) {
     return { error: 'Basic plan is limited to 5 trophies. Upgrade to Elite for unlimited uploads.' };
   }
 

@@ -287,6 +287,7 @@ export default function TrophyWall({ trophies, firmNames, planAccess }) {
   const router = useRouter();
   const toast = useToast();
   const [showUpload, setShowUpload] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [viewing, setViewing] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const [firmFilter, setFirmFilter] = useState('');

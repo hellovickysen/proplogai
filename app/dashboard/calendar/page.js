@@ -81,7 +81,7 @@ export default async function CalendarPage({ searchParams }) {
   // Empty state — user has no trades at all
   if (totalTradeCount === 0) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
+      <div className="p-6 max-w-6xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Calendar</h1>
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-10">
@@ -167,13 +167,13 @@ export default async function CalendarPage({ searchParams }) {
   const monthParam = `${year}-${pad2(month + 1)}`;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
+    <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold mb-6">Calendar</h1>
 
       {/* Calendar Insights — blurred for Basic users */}
       {list.length > 0 && (
         <BlurGate feature="calendar_insights" access={planAccess}>
-          <CalendarInsights trades={list} allTrades={allTrades || []} />
+          <CalendarInsights monthTrades={list} allTrades={allTrades || []} />
         </BlurGate>
       )}
 
