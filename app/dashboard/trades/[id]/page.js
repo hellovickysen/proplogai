@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { fmtMoney } from '@/lib/stats';
 import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
+import ShareJournalButton from '@/components/share/ShareJournalButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -125,6 +126,9 @@ export default async function TradeDetailPage({ params, searchParams }) {
                 {rMultiple >= 0 ? '+' : ''}{rMultiple.toFixed(2)}R
               </div>
             )}
+            <div className="mt-2">
+              <ShareJournalButton tradeId={trade.id} initialShareId={trade.share_id} initialSharedUntil={trade.shared_until} />
+            </div>
           </div>
         </div>
 
