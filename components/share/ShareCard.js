@@ -100,32 +100,32 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote, avat
               fontSize: 12, color: '#08080f', fontWeight: 800,
               boxShadow: '0 0 14px rgba(139,92,246,0.5)',
             }}><img src={LOGO_MARK} width={16} height={16} alt="" /></div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>PropLogAI</span>
-              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em', lineHeight: 1.2 }}>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.04em', lineHeight: 1.2, textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
                 {fmtDate(data.date || data.trade_date)}
               </span>
             </div>
           </div>
           {(fullName || avatarUrl) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '-0.01em' }}>{fullName || ''}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
               {avatarUrl ? (
-                <img src={avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: 7, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.15)' }} />
+                <img src={avatarUrl} alt="" style={{ width: 32, height: 32, borderRadius: 8, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.2)' }} />
               ) : fullName ? (
                 <div style={{
-                  width: 28, height: 28, borderRadius: 7,
+                  width: 32, height: 32, borderRadius: 8,
                   background: 'linear-gradient(135deg,#a78bfa,#22d3ee)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 12, fontWeight: 700, color: '#08080f',
+                  fontSize: 13, fontWeight: 700, color: '#08080f',
                 }}>
                   {fullName.charAt(0).toUpperCase()}
                 </div>
               ) : null}
+              <span style={{ fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.7)', letterSpacing: '0.01em' }}>{fullName || ''}</span>
             </div>
           )}
           {!fullName && !avatarUrl && (
-            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em' }}>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em', textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>
               {fmtDate(data.date || data.trade_date)}
             </span>
           )}
