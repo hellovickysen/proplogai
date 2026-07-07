@@ -2,10 +2,12 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { fmtMoney } from '@/lib/stats';
+import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TradeDetailPage({ params }) {
+export default async function TradeDetailPage({ params, searchParams }) {
+  const isViewOnly = searchParams?.from === 'search';
   const { id } = params;
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -39,6 +41,13 @@ export default async function TradeDetailPage({ params }) {
     .from('journal_entries')
     .select('*')
     .eq('trade_id', id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  // Fetch user prefs for inline journal edit
+  const { data: prefs } = await supabase
+    .from('user_preferences')
+    .select('custom_emotions, custom_tags')
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -147,62 +156,74 @@ export default async function TradeDetailPage({ params }) {
         </div>
       </div>
 
-      {/* Journal Entry */}
-      {journal && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
-          <h2 className="font-mono text-xs uppercase tracking-wider text-white/55 mb-4">📝 Journal Entry</h2>
-
-          {/* Emotions & Tags */}
-          {(emotions.length > 0 || tags.length > 0) && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {emotions.map((e, i) => (
-                <span key={`e-${i}`} className="px-2.5 py-1 rounded-lg bg-violet-400/[0.12] border border-violet-400/20 text-violet-300 text-xs font-medium">
-                  {e}
-                </span>
-              ))}
-              {tags.map((t, i) => (
-                <span key={`t-${i}`} className="px-2.5 py-1 rounded-lg bg-cyan-400/[0.1] border border-cyan-400/20 text-cyan-300 text-xs font-medium">
-                  #{t}
-                </span>
-              ))}
+      {/* Journal — inline edit (from trades list) or view-only (from search) */}
+      {isViewOnly ? (
+        <>
+          {journal ? (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
+              <h2 className="font-mono text-xs uppercase tracking-wider text-white/55 mb-4">📝 Journal Entry</h2>
+              {(emotions.length > 0 || tags.length > 0) && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {emotions.map((e, i) => (
+                    <span key={`e-${i}`} className="px-2.5 py-1 rounded-lg bg-violet-400/[0.12] border border-violet-400/20 text-violet-300 text-xs font-medium">{e}</span>
+                  ))}
+                  {tags.map((t, i) => (
+                    <span key={`t-${i}`} className="px-2.5 py-1 rounded-lg bg-cyan-400/[0.1] border border-cyan-400/20 text-cyan-300 text-xs font-medium">#{t}</span>
+                  ))}
+                </div>
+              )}
+              {journal.confidence != null && (
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="font-mono text-xs uppercase tracking-wider text-white/40">Confidence</span>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <div key={n} className={`w-5 h-2 rounded-full ${n <= journal.confidence ? 'bg-violet-400' : 'bg-white/10'}`} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-white/40">{journal.confidence}/5</span>
+                </div>
+              )}
+              {journal.note && (
+                <div className="mb-4">
+                  <h3 className="text-xs font-semibold text-white/50 mb-2">Notes</h3>
+                  <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{journal.note}</p>
+                </div>
+              )}
+              {journal.lesson && (
+                <div className="mb-4">
+                  <h3 className="text-xs font-semibold text-white/50 mb-2">Lesson Learned</h3>
+                  <div className="rounded-xl bg-amber-400/[0.06] border border-amber-400/15 px-4 py-3">
+                    <p className="text-sm text-amber-200/80 leading-relaxed whitespace-pre-wrap">{journal.lesson}</p>
+                  </div>
+                </div>
+              )}
+              {screenshots.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold text-white/50 mb-2">Screenshots</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {screenshots.map((url, i) => (
+                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/30 transition-colors">
+                        <img src={url} alt={`Trade screenshot ${i + 1}`} className="w-full h-auto max-h-80 object-contain bg-black/50" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4 text-center">
+              <div className="text-2xl mb-2 opacity-30">📝</div>
+              <p className="text-sm text-white/40">No journal entry for this trade</p>
             </div>
           )}
-
-          {/* Confidence */}
-          {journal.confidence != null && (
-            <div className="flex items-center gap-2 mb-4">
-              <span className="font-mono text-xs uppercase tracking-wider text-white/40">Confidence</span>
-              <div className="flex gap-0.5">
-                {[1, 2, 3, 4, 5].map(n => (
-                  <div key={n} className={`w-5 h-2 rounded-full ${n <= journal.confidence ? 'bg-violet-400' : 'bg-white/10'}`} />
-                ))}
-              </div>
-              <span className="text-xs text-white/40">{journal.confidence}/5</span>
-            </div>
-          )}
-
-          {/* Note */}
-          {journal.note && (
-            <div className="mb-4">
-              <h3 className="text-xs font-semibold text-white/50 mb-2">Notes</h3>
-              <p className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{journal.note}</p>
-            </div>
-          )}
-
-          {/* Lesson */}
-          {journal.lesson && (
-            <div className="mb-4">
-              <h3 className="text-xs font-semibold text-white/50 mb-2">Lesson Learned</h3>
-              <div className="rounded-xl bg-amber-400/[0.06] border border-amber-400/15 px-4 py-3">
-                <p className="text-sm text-amber-200/80 leading-relaxed whitespace-pre-wrap">{journal.lesson}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Screenshots */}
+        </>
+      ) : (
+        <>
+          <JournalInlineEdit tradeId={trade.id} journal={journal} userId={user.id} prefs={prefs} />
+          {/* Screenshots (shown below inline edit in edit mode) */}
           {screenshots.length > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold text-white/50 mb-2">Screenshots</h3>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
+              <h3 className="font-mono text-xs uppercase tracking-wider text-white/55 mb-3">📷 Screenshots</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {screenshots.map((url, i) => (
                   <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/30 transition-colors">
@@ -212,15 +233,7 @@ export default async function TradeDetailPage({ params }) {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* No journal */}
-      {!journal && (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4 text-center">
-          <div className="text-2xl mb-2 opacity-30">📝</div>
-          <p className="text-sm text-white/40">No journal entry for this trade</p>
-        </div>
+        </>
       )}
 
       {/* AI Analysis */}
@@ -292,9 +305,11 @@ export default async function TradeDetailPage({ params }) {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
           All Trades
         </Link>
-        <Link href={`/dashboard/trades/${trade.id}/edit`} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-          ✎ Edit Trade
-        </Link>
+        {!isViewOnly && (
+          <Link href={`/dashboard/trades/${trade.id}/edit`} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+            ✎ Edit Trade
+          </Link>
+        )}
       </div>
     </div>
   );
