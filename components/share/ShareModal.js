@@ -144,7 +144,7 @@ export default function ShareModal({ type, data, onClose }) {
         </div>
 
         <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-          <ShareCard ref={cardRef} type={type} ratio={ratio} data={data} quote={quote} />
+          <ShareCard ref={cardRef} type={type} ratio={ratio} data={data} quote={quote} avatarUrl={data.avatarUrl} fullName={data.fullName} />
         </div>
 
         <div className="w-fit max-w-full overflow-hidden rounded-xl border border-white/10 shadow-2xl">

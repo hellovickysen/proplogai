@@ -129,6 +129,13 @@ export default async function DashboardPage() {
   // Plan access for conditional feature display
   const access = await getUserAccess(supabase, user);
   const planAccess = access.toJSON();
+
+  // User profile for share cards
+  const { data: userProfile } = await supabase
+    .from('user_preferences')
+    .select('avatar_url, full_name')
+    .eq('user_id', user.id)
+    .maybeSingle();
   const series = equitySeries(list);
   const chartData = equityChartData(list);
   const { data: coach, error: coachError } = await supabase
@@ -258,8 +265,10 @@ export default async function DashboardPage() {
   const todayWinRate = todayTrades.length > 0 ? Math.round((todayWins / todayTrades.length) * 100) : 0;
   const todayBest = todayTrades.length > 0 ? Math.max(...todayTrades.map((t) => num(t.pnl))) : null;
   const todayWorst = todayTrades.length > 0 ? Math.min(...todayTrades.map((t) => num(t.pnl))) : null;
-  const dailyShareData = { pnl: todayPnl, date: today, trades: todayTrades.length, winRate: todayWinRate, bestTrade: todayBest, worstTrade: todayWorst };
-  const totalShareData = { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null };
+  const shareAvatar = userProfile?.avatar_url || null;
+  const shareName = userProfile?.full_name || '';
+  const dailyShareData = { pnl: todayPnl, date: today, trades: todayTrades.length, winRate: todayWinRate, bestTrade: todayBest, worstTrade: todayWorst, avatarUrl: shareAvatar, fullName: shareName };
+  const totalShareData = { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null, avatarUrl: shareAvatar, fullName: shareName };
 
   return (
     <div className="px-3 py-8 sm:px-4">

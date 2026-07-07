@@ -48,7 +48,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
   // Fetch user prefs for inline journal edit
   const { data: prefs } = await supabase
     .from('user_preferences')
-    .select('custom_emotions, custom_tags')
+    .select('custom_emotions, custom_tags, avatar_url, full_name')
     .eq('user_id', user.id)
     .maybeSingle();
 
@@ -92,7 +92,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
         </Link>
         <TradeShareMenu
           tradeId={trade.id}
-          tradeData={{ pair: trade.pair, direction: trade.direction, pnl, trade_date: trade.trade_date, session: trade.session, setup: trade.setup }}
+          tradeData={{ pair: trade.pair, direction: trade.direction, pnl, trade_date: trade.trade_date, session: trade.session, setup: trade.setup, avatarUrl: prefs?.avatar_url || null, fullName: prefs?.full_name || '' }}
           initialShareId={trade.share_id}
           initialSharedUntil={trade.shared_until}
         />

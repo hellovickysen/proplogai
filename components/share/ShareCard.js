@@ -38,7 +38,7 @@ function fmtDate(d) {
   } catch { return d; }
 }
 
-const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, ref) {
+const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote, avatarUrl, fullName }, ref) {
   const pnl = Number(data.pnl) || 0;
   const isWin = pnl >= 0;
   const isStory = ratio === '9:16';
@@ -100,11 +100,35 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote }, re
               fontSize: 12, color: '#08080f', fontWeight: 800,
               boxShadow: '0 0 14px rgba(139,92,246,0.5)',
             }}><img src={LOGO_MARK} width={16} height={16} alt="" /></div>
-            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.02em', paddingBottom: 5 }}>PropLogAI</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.2 }}>PropLogAI</span>
+              <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em', lineHeight: 1.2 }}>
+                {fmtDate(data.date || data.trade_date)}
+              </span>
+            </div>
           </div>
-          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em' }}>
-            {fmtDate(data.date || data.trade_date)}
-          </span>
+          {(fullName || avatarUrl) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.8)', letterSpacing: '-0.01em' }}>{fullName || ''}</span>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" style={{ width: 28, height: 28, borderRadius: 7, objectFit: 'cover', border: '1.5px solid rgba(255,255,255,0.15)' }} />
+              ) : fullName ? (
+                <div style={{
+                  width: 28, height: 28, borderRadius: 7,
+                  background: 'linear-gradient(135deg,#a78bfa,#22d3ee)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 12, fontWeight: 700, color: '#08080f',
+                }}>
+                  {fullName.charAt(0).toUpperCase()}
+                </div>
+              ) : null}
+            </div>
+          )}
+          {!fullName && !avatarUrl && (
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.02em' }}>
+              {fmtDate(data.date || data.trade_date)}
+            </span>
+          )}
         </div>
 
         <div style={{
