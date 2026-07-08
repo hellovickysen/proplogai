@@ -2,10 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { createExpense, updateExpense, deleteExpense, createPayout, updatePayout, deletePayout, renameFirm } from '@/app/dashboard/expenses/actions';
-import { createTrophy } from '@/app/dashboard/trophies/actions';
-import { createClient } from '@/lib/supabase/client';
-import { processImageFile } from '@/lib/imageUtils';
+import { createExpense, updateExpense, deleteExpense, createPayout, updatePayout, deletePayout, renameFirm } from '@/app/dashboard/prop-expenses/actions';
 import { useToast } from '@/components/ui/Toast';
 import { ExpensesEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -397,64 +394,15 @@ function EditExpenseForm({ expense, onSave, onCancel, existingFirms }) {
 /* ─── Add Payout Form ────────────────────────────────────────── */
 
 function AddPayoutForm({ onSave, onCancel, existingFirms, defaultFirmName }) {
-  const toast = useToast();
   const [f, setF] = useState({ firm_name: defaultFirmName || '', amount: '', payout_date: todayStr(), notes: '' });
   const [saving, setSaving] = useState(false);
 
-  // Certificate (optional collapsible)
-  const [showCert, setShowCert] = useState(false);
-  const [certTitle, setCertTitle] = useState('');
-  const [certDesc, setCertDesc] = useState('');
-  const [certFileUrl, setCertFileUrl] = useState('');
-  const [certPreview, setCertPreview] = useState(null);
-  const [certUploading, setCertUploading] = useState(false);
-
   function set(k, v) { setF((p) => ({ ...p, [k]: v })); }
-
-  async function handleCertFile(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 15 * 1024 * 1024) {
-      toast.error('File must be under 15MB');
-      return;
-    }
-    setCertUploading(true);
-    const processed = await processImageFile(file, { maxDimension: 1920 });
-    if (processed.error) {
-      toast.error(processed.error);
-      setCertUploading(false);
-      return;
-    }
-    const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const safe = processed.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const path = user.id + '/' + Date.now() + '_' + safe;
-    const { error } = await supabase.storage.from('trophies').upload(path, processed.file, { upsert: true });
-    if (error) {
-      toast.error('Upload failed: ' + error.message);
-      setCertUploading(false);
-      return;
-    }
-    const pub = supabase.storage.from('trophies').getPublicUrl(path);
-    setCertFileUrl(pub.data.publicUrl);
-    setCertPreview(processed.preview);
-    setCertUploading(false);
-    e.target.value = '';
-  }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (showCert && certFileUrl && !certTitle.trim()) {
-      toast.error('Certificate title is required when uploading a certificate.');
-      return;
-    }
     setSaving(true);
-    const certData = (showCert && certFileUrl) ? {
-      file_url: certFileUrl,
-      title: certTitle.trim(),
-      description: certDesc.trim(),
-    } : null;
-    await onSave({ ...f, firm_name: capitalizeWords(f.firm_name) }, certData);
+    await onSave({ ...f, firm_name: capitalizeWords(f.firm_name) });
     setSaving(false);
   }
 
@@ -478,54 +426,9 @@ function AddPayoutForm({ onSave, onCancel, existingFirms, defaultFirmName }) {
         <label className={labelCls}>Notes (optional)</label>
         <textarea className={field} rows={2} value={f.notes} onChange={(e) => set('notes', e.target.value)} placeholder="e.g. $1.5k requested, got $1.2k after 20% cut" />
       </div>
-
-      {/* Collapsible certificate section */}
-      <div className="rounded-xl border border-white/10 bg-white/[0.02]">
-        <button
-          type="button"
-          onClick={() => setShowCert(!showCert)}
-          className="flex w-full items-center justify-between px-4 py-3 text-sm"
-        >
-          <span className="flex items-center gap-2">
-            <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v13.5A1.5 1.5 0 003.75 21z" /></svg>
-            <span className="text-white/70">Attach Payout Certificate</span>
-            <span className="text-[11px] text-white/35">(optional)</span>
-          </span>
-          <svg className={'h-4 w-4 text-white/40 transition-transform ' + (showCert ? 'rotate-180' : '')} fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-        </button>
-
-        {showCert && (
-          <div className="space-y-3 border-t border-white/10 px-4 py-4">
-            <div>
-              <label className={labelCls}>Upload certificate *</label>
-              {certPreview && (
-                <div className="mb-2">
-                  <img src={certPreview} alt="Preview" className="h-28 w-full rounded-lg border border-white/10 object-cover" />
-                </div>
-              )}
-              <input
-                type="file"
-                accept="image/*,application/pdf"
-                onChange={handleCertFile}
-                className="block w-full text-sm text-white/60 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:text-white"
-              />
-              {certUploading && <p className="mt-1 text-xs text-cyan-400">Uploading...</p>}
-            </div>
-            <div>
-              <label className={labelCls}>Title *</label>
-              <input className={field} value={certTitle} onChange={(e) => setCertTitle(e.target.value)} placeholder="e.g. FTMO $100K Payout — March 2026" />
-            </div>
-            <div>
-              <label className={labelCls}>Description (optional)</label>
-              <textarea className={field} rows={2} value={certDesc} onChange={(e) => setCertDesc(e.target.value)} placeholder="Any details about this achievement..." />
-            </div>
-          </div>
-        )}
-      </div>
-
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
-        <button type="submit" disabled={saving || certUploading} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
+        <button type="submit" disabled={saving} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#34d399,#22d3ee)' }}>
           {saving ? <><Spinner /> Saving...</> : 'Add Payout'}
         </button>
       </div>
@@ -629,7 +532,7 @@ function FirmDashboard({
         onClick={onBack}
         className="mb-6 flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-white/50 transition-colors hover:bg-white/[0.05] hover:text-white/80"
       >
-        <span className="text-lg">&larr;</span> Back to Expenses
+        <span className="text-lg">&larr;</span> Back to Prop Expenses
       </button>
 
       {/* Firm Header */}
@@ -684,7 +587,7 @@ function FirmDashboard({
 
       {/* Stat Cards */}
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <HeroStat label="Total Expenses" value={fmtCurrency(totalExpenses)} tone="red" icon="💸" />
+        <HeroStat label="Total Prop Expenses" value={fmtCurrency(totalExpenses)} tone="red" icon="💸" />
         <HeroStat label="Total Payouts" value={fmtCurrency(totalPayouts)} tone="green" icon="💰" />
         <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon={<span className={'inline-block h-3 w-3 rounded-full ' + (netPL >= 0 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]')} />} />
       </div>
@@ -713,7 +616,7 @@ function FirmDashboard({
 
         {filteredExpenses.length === 0 ? (
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
-            <p className="text-sm text-white/40">{expenses.length === 0 ? `No expenses for ${firmName} yet.` : 'No expenses match this filter.'}</p>
+            <p className="text-sm text-white/40">{expenses.length === 0 ? `No prop expenses for ${firmName} yet.` : 'No expenses match this filter.'}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -907,41 +810,23 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
   async function handleAddExpense(data) {
     const res = await createExpense(data);
     if (res.error) { if (toast) toast.error(res.error); }
-    else { if (toast) toast.success('Expense added!'); setShowExpenseForm(false); router.refresh(); }
+    else { if (toast) toast.success('Prop expense added!'); setShowExpenseForm(false); router.refresh(); }
   }
 
   async function handleUpdateExpense(id, data) {
     const res = await updateExpense(id, data);
     if (res.error) { if (toast) toast.error(res.error); }
-    else { if (toast) toast.success('Expense updated!'); setEditingExpense(null); router.refresh(); }
+    else { if (toast) toast.success('Prop expense updated!'); setEditingExpense(null); router.refresh(); }
   }
 
   function handleDeleteExpense(id) {
     setPendingDelete({ type: 'expense', id });
   }
 
-  async function handleAddPayout(data, certData) {
+  async function handleAddPayout(data) {
     const res = await createPayout(data);
-    if (res.error) { if (toast) toast.error(res.error); return; }
-    // If certificate was attached, create trophy entry
-    if (certData && certData.file_url) {
-      const trophyRes = await createTrophy({
-        firm_name: data.firm_name,
-        title: certData.title,
-        category: 'payout',
-        description: certData.description || '',
-        file_url: certData.file_url,
-      });
-      if (trophyRes.error) {
-        if (toast) toast.warning('Payout added, but certificate failed: ' + trophyRes.error);
-      } else {
-        if (toast) toast.success('Payout + certificate added!');
-      }
-    } else {
-      if (toast) toast.success('Payout added!');
-    }
-    setShowPayoutForm(false);
-    router.refresh();
+    if (res.error) { if (toast) toast.error(res.error); }
+    else { if (toast) toast.success('Payout added!'); setShowPayoutForm(false); router.refresh(); }
   }
 
   async function handleUpdatePayout(id, data) {
@@ -961,7 +846,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
     if (type === 'expense') {
       const res = await deleteExpense(id);
       if (res.error) { if (toast) toast.error(res.error); }
-      else { if (toast) toast.warning('Expense deleted'); router.refresh(); }
+      else { if (toast) toast.warning('Prop expense deleted'); router.refresh(); }
     } else {
       const res = await deletePayout(id);
       if (res.error) { if (toast) toast.error(res.error); }
@@ -1006,7 +891,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           {/* Header */}
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h1 className="font-display text-2xl font-bold">Expenses</h1>
+              <h1 className="font-display text-2xl font-bold">Prop Expenses</h1>
               <p className="mt-1 text-sm text-white/55">Track your prop firm costs and payouts</p>
             </div>
             <button onClick={() => setShowExpenseForm(true)} className="rounded-xl px-4 py-2 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
@@ -1028,7 +913,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           {tab === 'Dashboard' && (
             <div className="space-y-6">
               <div className="grid gap-4 sm:grid-cols-3">
-                <HeroStat label="Total Expense" value={fmtCurrency(totalExpense)} tone="red" icon="💸" />
+                <HeroStat label="Total Prop Expense" value={fmtCurrency(totalExpense)} tone="red" icon="💸" />
                 <HeroStat label="Total Payout" value={fmtCurrency(totalPayout)} tone="green" icon="💰" />
                 <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon={<span className={'inline-block h-3 w-3 rounded-full ' + (netPL >= 0 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]')} />} />
               </div>
@@ -1042,7 +927,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
                 <div className="mb-4 font-display text-base font-semibold">Recent activity</div>
                 {expenses.length === 0 && payouts.length === 0 ? (
-                  <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first expense or payout.</p></div>
+                  <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first prop expense or payout.</p></div>
                 ) : (
                   <div className="space-y-3">
                     {[...[...expenses].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((e) => ({ type: 'expense', ...e, date: e.expense_date, amt: e.total_cost })),
@@ -1087,7 +972,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           {tab === 'Accounts' && (
             <div className="space-y-4">
               <div className="rounded-2xl border border-red-400/15 p-5" style={{ background: 'rgba(248,113,113,0.04)' }}>
-                <div className="font-mono text-xs uppercase tracking-wider text-white/45">Total Expense</div>
+                <div className="font-mono text-xs uppercase tracking-wider text-white/45">Total Prop Expense</div>
                 <div className="mt-1 font-display text-3xl font-bold text-red-400">{fmtCurrency(totalExpense)}</div>
               </div>
 
