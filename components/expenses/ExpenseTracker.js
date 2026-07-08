@@ -965,7 +965,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                <div className="mb-4 font-display text-base font-semibold">Recent activity</div>
+                <div className="mb-4 font-display text-base font-semibold">{dashboardScope === 'month' ? new Date().toLocaleString('en-US', { month: 'long' }) + ' activity' : 'Recent activity'}</div>
                 {dExpenses.length === 0 && dPayouts.length === 0 ? (
                   <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first prop expense or payout.</p></div>
                 ) : (
