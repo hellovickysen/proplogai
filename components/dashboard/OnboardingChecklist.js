@@ -194,7 +194,7 @@ export default function OnboardingChecklist({ milestones, completed, total, user
                     ? 'bg-violet-500/15'
                     : 'bg-white/[0.04]'
                 }`}>
-                  {m.done ? '&#10003;' : m.icon}
+                  {m.done ? '✓' : m.icon}
                 </div>
 
                 {/* Content */}
