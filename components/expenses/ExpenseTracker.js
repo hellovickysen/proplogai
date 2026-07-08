@@ -938,13 +938,16 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           {/* ─── Dashboard Tab ──────────────────────────────── */}
           {tab === 'Dashboard' && (
             <div className="space-y-6">
-              <div className="flex gap-1.5">
+              <div className="flex items-center gap-1.5">
                 {[{ key: 'all', label: 'All' }, { key: 'month', label: 'This Month' }].map(s => (
                   <button key={s.key} onClick={() => setDashboardScope(s.key)}
                     className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (dashboardScope === s.key ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}>
                     {s.label}
                   </button>
                 ))}
+                {dashboardScope === 'month' && (
+                  <span className="ml-1 font-mono text-[11px] text-white/40">{new Date().toLocaleString('en-US', { month: 'long' })}</span>
+                )}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
