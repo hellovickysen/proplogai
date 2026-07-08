@@ -48,6 +48,7 @@ export async function createTrophy(payload) {
     description: sanitize(payload.description, 500),
     file_url: payload.file_url,
     firm_name: firmName,
+    trophy_date: payload.trophy_date || null,
     is_public: false,
     share_id: null,
   });

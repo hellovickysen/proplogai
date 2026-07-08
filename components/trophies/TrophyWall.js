@@ -101,7 +101,7 @@ function Lightbox({ trophy, onClose }) {
             <div className="mt-1 flex items-center gap-2">
               <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + cat.color}>{cat.label}</span>
               {trophy.firm_name && <span className="font-mono text-[11px] text-white/50">{trophy.firm_name}</span>}
-              <span className="font-mono text-[11px] text-white/40">{fmtDate(trophy.created_at)}</span>
+              <span className="font-mono text-[11px] text-white/40">{fmtDate(trophy.trophy_date || trophy.created_at)}</span>
             </div>
           </div>
           <button onClick={onClose} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60 hover:text-white">&#10005;</button>
@@ -121,6 +121,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('payout');
   const [description, setDescription] = useState('');
+  const [trophyDate, setTrophyDate] = useState(new Date().toISOString().slice(0, 10));
   const [fileUrl, setFileUrl] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -165,7 +166,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
     e.preventDefault();
     if (!fileUrl) return;
     setSaving(true);
-    await onSave({ firm_name: firmName.trim(), title, category, description, file_url: fileUrl });
+    await onSave({ firm_name: firmName.trim(), title, category, description, file_url: fileUrl, trophy_date: trophyDate });
     setSaving(false);
   }
 
@@ -214,6 +215,11 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
         <textarea className={field} rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Any details about this achievement..." />
       </div>
 
+      <div>
+        <label className={labelCls}>Date</label>
+        <input type="date" className={field + ' cursor-pointer'} style={{ colorScheme: 'dark' }} value={trophyDate} onChange={(e) => setTrophyDate(e.target.value)} />
+      </div>
+
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
         <button type="submit" disabled={saving || uploading || !fileUrl || !firmName.trim()} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
@@ -247,7 +253,7 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
       <div className="flex flex-1 flex-col p-4">
         <h3 className="font-display text-sm font-semibold leading-tight line-clamp-2">{trophy.title}</h3>
         {trophy.description && <p className="mt-1 text-xs text-white/45 line-clamp-2">{trophy.description}</p>}
-        <div className="mt-2 font-mono text-[11px] text-white/35">{fmtDate(trophy.created_at)}</div>
+        <div className="mt-2 font-mono text-[11px] text-white/35">{fmtDate(trophy.trophy_date || trophy.created_at)}</div>
 
         {/* Actions -- pinned to bottom */}
         <div className="mt-auto flex items-center gap-1.5 border-t border-white/5 pt-3">
