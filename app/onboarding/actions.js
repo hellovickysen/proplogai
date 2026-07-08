@@ -11,6 +11,7 @@ const DEFAULT_SETUPS = [
   { name: 'Trend Continuation', direction: 'Enter in the direction of the established trend after a healthy retracement or consolidation breakout.', sort_order: 5 },
   { name: 'Reversal', direction: 'Trade reversals only at major structural levels with multiple confirmations. Higher risk — reduce size.', sort_order: 6 },
   { name: 'Good SL', direction: 'You followed your setup correctly but the market hit your stop loss. This is not a mistake — it is the cost of doing business. Mark this when your process was right and the loss was simply the market doing its thing.', sort_order: 7 },
+  { name: 'Bad SL', direction: 'You broke your own stop loss rule — moved it, widened it, or ignored it entirely. This is a risk management violation. Every time you select this, ask yourself: was the extra risk worth it? Your stop loss exists to protect your account.', sort_order: 8 },
   { name: 'No Setup', direction: 'Use this when the trade did not follow any planned setup, was emotional, or was taken impulsively.', is_default: true, sort_order: 99 },
 ];
 
