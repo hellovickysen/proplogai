@@ -37,6 +37,7 @@ export default async function PropExpensesPage() {
     .from('trophies')
     .select('id, title, category, description, file_url, firm_name, is_public, share_id, trophy_date, created_at')
     .eq('user_id', user.id)
+    .order('trophy_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
   if (trophiesError) console.error('trophies error', trophiesError);
 
