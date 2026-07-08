@@ -510,6 +510,13 @@ function FirmDashboard({
   const netPL = totalPayouts - totalExpenses;
   const totalAccounts = expenses.reduce((a, e) => a + (e.purchase_type === 'new' ? (Number(e.num_accounts) || 0) : 0), 0);
 
+  // Dashboard-scoped aggregates
+  const dTotalExpense = dExpenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
+  const dTotalPayout = dPayouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
+  const dNetPL = dTotalPayout - dTotalExpense;
+  const dTotalAccounts = dExpenses.reduce((a, e) => a + (e.purchase_type === 'new' ? (Number(e.num_accounts) || 0) : 0), 0);
+  const dFirmNames = [...new Set([...dExpenses.map(e => e.firm_name), ...dPayouts.map(p => p.firm_name)])].filter(Boolean);
+
   async function handleSaveName() {
     const trimmed = capitalizeWords(editName);
     if (!trimmed) { setIsEditingName(false); return; }
@@ -759,14 +766,33 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
   const [accountTypeFilter, setAccountTypeFilter] = useState('all');
   const [pendingDelete, setPendingDelete] = useState(null);
   const [payoutsVisible, setPayoutsVisible] = useState(5);
+  const [dashboardScope, setDashboardScope] = useState('all');
 
   const allTrophies = trophies || [];
+
+  // Dashboard scope filter (All vs This Month)
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth();
+  const dExpenses = dashboardScope === 'month'
+    ? expenses.filter(e => { const d = new Date(e.expense_date); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
+    : expenses;
+  const dPayouts = dashboardScope === 'month'
+    ? payouts.filter(p => { const d = new Date(p.payout_date); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
+    : payouts;
 
   // Aggregates
   const totalExpense = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
   const totalPayout = payouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
   const netPL = totalPayout - totalExpense;
   const totalAccounts = expenses.reduce((a, e) => a + (e.purchase_type === 'new' ? (Number(e.num_accounts) || 0) : 0), 0);
+
+  // Dashboard-scoped aggregates
+  const dTotalExpense = dExpenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
+  const dTotalPayout = dPayouts.reduce((a, p) => a + (Number(p.amount) || 0), 0);
+  const dNetPL = dTotalPayout - dTotalExpense;
+  const dTotalAccounts = dExpenses.reduce((a, e) => a + (e.purchase_type === 'new' ? (Number(e.num_accounts) || 0) : 0), 0);
+  const dFirmNames = [...new Set([...dExpenses.map(e => e.firm_name), ...dPayouts.map(p => p.firm_name)])].filter(Boolean);
 
   // Firms
   const firmMap = useMemo(() => {
@@ -912,26 +938,35 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           {/* ─── Dashboard Tab ──────────────────────────────── */}
           {tab === 'Dashboard' && (
             <div className="space-y-6">
+              <div className="flex gap-1.5">
+                {[{ key: 'all', label: 'All' }, { key: 'month', label: 'This Month' }].map(s => (
+                  <button key={s.key} onClick={() => setDashboardScope(s.key)}
+                    className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (dashboardScope === s.key ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="grid gap-4 sm:grid-cols-3">
-                <HeroStat label="Total Prop Expense" value={fmtCurrency(totalExpense)} tone="red" icon="💸" />
-                <HeroStat label="Total Payout" value={fmtCurrency(totalPayout)} tone="green" icon="💰" />
-                <HeroStat label="Net P/L" value={(netPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(netPL))} tone={netPL >= 0 ? 'green' : 'amber'} icon={<span className={'inline-block h-3 w-3 rounded-full ' + (netPL >= 0 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]')} />} />
+                <HeroStat label="Total Prop Expense" value={fmtCurrency(dTotalExpense)} tone="red" icon="💸" />
+                <HeroStat label="Total Payout" value={fmtCurrency(dTotalPayout)} tone="green" icon="💰" />
+                <HeroStat label="Net P/L" value={(dNetPL >= 0 ? '+' : '-') + fmtCurrency(Math.abs(dNetPL))} tone={dNetPL >= 0 ? 'green' : 'amber'} icon={<span className={'inline-block h-3 w-3 rounded-full ' + (dNetPL >= 0 ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]' : 'bg-red-400 shadow-[0_0_8px_rgba(248,113,113,0.5)]')} />} />
               </div>
 
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                <SecStat label="Total Firms" value={firms.length} />
-                <SecStat label="Total Accounts" value={totalAccounts} />
-                <SecStat label="Payouts" value={payouts.length} />
+                <SecStat label="Total Firms" value={dFirmNames.length} />
+                <SecStat label="Total Accounts" value={dTotalAccounts} />
+                <SecStat label="Payouts" value={dPayouts.length} />
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
                 <div className="mb-4 font-display text-base font-semibold">Recent activity</div>
-                {expenses.length === 0 && payouts.length === 0 ? (
+                {dExpenses.length === 0 && dPayouts.length === 0 ? (
                   <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first prop expense or payout.</p></div>
                 ) : (
                   <div className="space-y-3">
-                    {[...[...expenses].sort((a, b) => new Date(b.expense_date) - new Date(a.expense_date) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((e) => ({ type: 'expense', ...e, date: e.expense_date, amt: e.total_cost })),
-                      ...[...payouts].sort((a, b) => new Date(b.payout_date) - new Date(a.payout_date) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((p) => ({ type: 'payout', ...p, date: p.payout_date, amt: p.amount }))
+                    {[...[...dExpenses].sort((a, b) => new Date(b.expense_date) - new Date(a.expense_date) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((e) => ({ type: 'expense', ...e, date: e.expense_date, amt: e.total_cost })),
+                      ...[...dPayouts].sort((a, b) => new Date(b.payout_date) - new Date(a.payout_date) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((p) => ({ type: 'payout', ...p, date: p.payout_date, amt: p.amount }))
                     ]
                       .sort((a, b) => new Date(b.date) - new Date(a.date) || new Date(b.created_at) - new Date(a.created_at))
                       .slice(0, 8)
