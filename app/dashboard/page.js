@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { computeStats, equitySeries, equityChartData, fmtMoney, fmtR, num, getTradingDate } from '@/lib/stats';
+import { computeStats, equitySeries, equityChartData, fmtMoney, num, getTradingDate } from '@/lib/stats';
 import EquityChart from '@/components/dashboard/EquityChart';
 import { computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak } from '@/lib/discipline';
 import { getUserAccess } from '@/lib/plans';

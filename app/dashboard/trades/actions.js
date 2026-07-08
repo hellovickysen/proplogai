@@ -82,7 +82,6 @@ function buildRow(user, payload) {
     take_profit: toNum(payload.take_profit),
     lot_size: toNum(payload.lot_size),
     pnl: toNum(payload.pnl),
-    r_multiple: toNum(payload.r_multiple),
     setup: sanitizeText(payload.setup, MAX_SETUP_LENGTH),
     setup_id: payload.setup_id || null,
     setup_ids: setupIds,

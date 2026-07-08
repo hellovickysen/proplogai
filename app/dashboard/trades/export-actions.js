@@ -37,7 +37,7 @@ export async function exportTradesCSV() {
 
   const headers = [
     'Date', 'Pair', 'Direction', 'Entry Price', 'Exit Price', 'Stop Loss',
-    'Take Profit', 'Lot Size', 'P&L ($)', 'R Multiple', 'Setup', 'Timeframe',
+    'Take Profit', 'Lot Size', 'P&L ($)', 'Setup', 'Timeframe',
     'Session', 'Confidence', 'Emotions', 'Journal Note',
   ];
 
@@ -56,7 +56,6 @@ export async function exportTradesCSV() {
       t.take_profit != null ? t.take_profit : '',
       t.lot_size != null ? t.lot_size : '',
       t.pnl != null ? t.pnl : '',
-      t.r_multiple != null ? t.r_multiple : '',
       t.setup || '', t.timeframe || '', t.session || '',
       confidence, emotions, note,
     ];

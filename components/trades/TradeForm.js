@@ -100,7 +100,6 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     take_profit: initial && initial.take_profit != null ? initial.take_profit : '',
     lot_size: initial && initial.lot_size != null ? initial.lot_size : '',
     pnl: initial && initial.pnl != null ? initial.pnl : '',
-    r_multiple: initial && initial.r_multiple != null ? initial.r_multiple : '',
     setup: (initial && initial.setup) || '',
     setup_id: (initial && initial.setup_id) || '',
     setup_ids: initialSetupIds,
@@ -216,27 +215,6 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     }
     setQuickSaving(false);
   }
-
-  // Auto-calculate R multiple from entry/exit/stop_loss
-  useEffect(() => {
-    const entry = Number(form.entry_price);
-    const exit = Number(form.exit_price);
-    const sl = Number(form.stop_loss);
-    if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(sl)) return;
-    let risk, reward;
-    if (form.direction === 'long') {
-      risk = entry - sl;
-      reward = exit - entry;
-    } else {
-      risk = sl - entry;
-      reward = entry - exit;
-    }
-    if (risk <= 0) return;
-    const r = (reward / risk).toFixed(2);
-    if (r !== String(form.r_multiple)) {
-      setForm((f) => ({ ...f, r_multiple: r }));
-    }
-  }, [form.entry_price, form.exit_price, form.stop_loss, form.direction]);
 
   // Auto-calculate Risk:Reward from entry/exit/stop_loss
   useEffect(() => {
@@ -540,8 +518,6 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   const pnlNum = Number(form.pnl);
   const hasPnl = form.pnl !== '' && Number.isFinite(pnlNum);
-  const rNum = Number(form.r_multiple);
-  const hasR = form.r_multiple !== '' && Number.isFinite(rNum);
 
   const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
   const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -962,9 +938,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         <div className={'mt-4 font-display text-3xl font-bold ' + (hasPnl ? (pnlNum >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/50')}>
           {hasPnl ? (pnlNum >= 0 ? '+' : '-') + '$' + Math.abs(pnlNum).toLocaleString() : '$0.00'}
         </div>
-        <div className={'mt-1 font-mono text-sm ' + (hasR ? (rNum >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white/50')}>
-          {hasR ? (rNum >= 0 ? '+' : '-') + Math.abs(rNum).toFixed(2) + 'R' : '—R'}
-        </div>
+
         <div className="mt-4 font-mono text-xs text-white/55">{hasPnl ? (pnlNum >= 0 ? 'Win' : 'Loss') : 'Enter P&L to preview'}</div>
       </div>
     </div>

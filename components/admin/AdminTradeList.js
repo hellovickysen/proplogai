@@ -106,7 +106,7 @@ export default function AdminTradeList({ trades, jmap }) {
                     {t.take_profit != null && <span className="text-white/45">TP: <span className="font-mono text-white/65">{t.take_profit}</span></span>}
                     {t.lot_size != null && <span className="text-white/45">Lot: <span className="font-mono text-white/65">{t.lot_size}</span></span>}
                     {t.timeframe && <span className="text-white/45">TF: <span className="font-mono text-white/65">{t.timeframe}</span></span>}
-                    {t.r_multiple != null && <span className="text-white/45">R: <span className="font-mono text-white/65">{t.r_multiple}</span></span>}
+                    
                   </div>
 
                   {/* Journal */}
