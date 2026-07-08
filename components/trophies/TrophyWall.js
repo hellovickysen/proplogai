@@ -130,14 +130,14 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
   async function handleFile(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File must be under 5MB');
+    if (file.size > 15 * 1024 * 1024) {
+      toast.error('File must be under 15MB');
       return;
     }
     setUploading(true);
 
-    // Convert to WebP
-    const processed = await processImageFile(file);
+    // Convert to WebP and resize to max 1920px
+    const processed = await processImageFile(file, { maxDimension: 1920 });
     if (processed.error) {
       toast.error(processed.error);
       setUploading(false);
