@@ -224,6 +224,8 @@ export default async function DashboardPage() {
   const expenseNet = totalPayout - totalExpense;
   const hasExpenseData = (expenseRows && expenseRows.length > 0) || (payoutRows && payoutRows.length > 0);
 
+  const onboardingName = userProfile?.full_name || '';
+
   if (list.length === 0) {
     return (
       <div className="px-4 py-8 sm:px-6 sm:py-10">
@@ -231,12 +233,8 @@ export default async function DashboardPage() {
           milestones={onboardingProgress.milestones}
           completed={onboardingProgress.completed}
           total={onboardingProgress.total}
+          userName={onboardingName}
         />
-        <h1 className="font-display text-2xl font-bold">Welcome to PropLogAI &#x1F44B;</h1>
-        <p className="mt-1 text-sm text-white/55">Log your first trade to get started.</p>
-        <Link href="/dashboard/trades/new" className="mt-5 inline-block rounded-xl px-5 py-2.5 font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-          + Log your first trade
-        </Link>
       </div>
     );
   }
@@ -274,6 +272,7 @@ export default async function DashboardPage() {
         milestones={onboardingProgress.milestones}
         completed={onboardingProgress.completed}
         total={onboardingProgress.total}
+        userName={onboardingName}
       />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
