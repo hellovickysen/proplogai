@@ -73,13 +73,18 @@ export default async function TradeDetailPage({ params, searchParams }) {
   const screenshots = Array.isArray(journal?.screenshot_urls) ? journal.screenshot_urls.filter(Boolean) : [];
   if (!screenshots.length && journal?.screenshot_url) screenshots.push(journal.screenshot_url);
 
-  // Parse AI insight
+  // Parse AI insight — structured data lives in the `mistakes` jsonb column,
+  // `summary` is a plain text string
   let aiData = null;
-  if (aiInsight?.summary) {
-    try {
-      aiData = JSON.parse(aiInsight.summary);
-    } catch (e) {
-      aiData = { summary: aiInsight.summary };
+  if (aiInsight) {
+    if (aiInsight.mistakes && typeof aiInsight.mistakes === 'object') {
+      aiData = aiInsight.mistakes;
+    } else if (aiInsight.summary) {
+      try {
+        aiData = JSON.parse(aiInsight.summary);
+      } catch (e) {
+        aiData = { summary: aiInsight.summary };
+      }
     }
   }
 

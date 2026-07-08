@@ -18,14 +18,15 @@ export default function AnalyzeButton({ tradeId }) {
       const result = await analyzeTrade(tradeId);
       if (result?.error) {
         setError(result.error);
+        setLoading(false);
       } else {
-        // Refresh the page to show the new analysis
-        router.refresh();
+        // Server action already calls revalidatePath — just refresh to show results
+        window.location.reload();
       }
     } catch (e) {
-      setError(e.message || 'Analysis failed. Please try again.');
+      setError(typeof e === 'object' && e?.message ? e.message : 'Analysis failed. Please try again.');
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
