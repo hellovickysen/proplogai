@@ -1,32 +1,44 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { analyzeTrade } from '@/app/dashboard/trades/actions';
 
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 
 export default function AnalyzeButton({ tradeId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const router = useRouter();
+  const [done, setDone] = useState(false);
 
   async function handleAnalyze() {
     setLoading(true);
     setError(null);
     try {
-      const result = await analyzeTrade(tradeId);
-      if (result?.error) {
-        setError(result.error);
+      const res = await fetch('/api/analyze-trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tradeId }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        setError(data.error || 'Analysis failed. Please try again.');
         setLoading(false);
       } else {
-        // Server action already calls revalidatePath — just refresh to show results
+        setDone(true);
+        // Full reload to show the analysis results
         window.location.reload();
       }
     } catch (e) {
-      setError(typeof e === 'object' && e?.message ? e.message : 'Analysis failed. Please try again.');
+      setError('Analysis failed. Please try again.');
       setLoading(false);
     }
+  }
+
+  if (done) {
+    return (
+      <div className="text-sm text-emerald-400 font-medium">
+        ✦ Analysis complete — loading results...
+      </div>
+    );
   }
 
   return (
