@@ -18,9 +18,16 @@ export default function AnalyzeButton({ tradeId }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tradeId }),
       });
-      const data = await res.json();
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        setError('Server error (' + res.status + '). Please try again.');
+        setLoading(false);
+        return;
+      }
       if (!res.ok || data.error) {
-        setError(data.error || 'Analysis failed. Please try again.');
+        setError(data.error || 'Analysis failed (' + res.status + '). Please try again.');
         setLoading(false);
       } else {
         setDone(true);

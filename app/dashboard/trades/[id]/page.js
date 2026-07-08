@@ -254,13 +254,13 @@ export default async function TradeDetailPage({ params, searchParams }) {
           )}
 
           {/* What went well */}
-          {aiData.went_well && aiData.went_well.length > 0 && (
+          {Array.isArray(aiData.went_well) && aiData.went_well.length > 0 && (
             <div className="mb-4">
               <h3 className="text-xs font-semibold text-emerald-400/70 mb-2">✓ What went well</h3>
               <ul className="space-y-1">
                 {aiData.went_well.map((item, i) => (
                   <li key={i} className="text-sm text-white/60 pl-4 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-emerald-400/40">
-                    {item}
+                    {typeof item === 'string' ? item : JSON.stringify(item)}
                   </li>
                 ))}
               </ul>
@@ -268,7 +268,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
           )}
 
           {/* Mistakes */}
-          {aiData.mistakes && aiData.mistakes.length > 0 && (
+          {Array.isArray(aiData.mistakes) && aiData.mistakes.length > 0 && (
             <div className="mb-4">
               <h3 className="text-xs font-semibold text-red-400/70 mb-2">✗ Mistakes</h3>
               <ul className="space-y-1">
