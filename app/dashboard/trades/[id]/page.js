@@ -73,18 +73,13 @@ export default async function TradeDetailPage({ params, searchParams }) {
   const screenshots = Array.isArray(journal?.screenshot_urls) ? journal.screenshot_urls.filter(Boolean) : [];
   if (!screenshots.length && journal?.screenshot_url) screenshots.push(journal.screenshot_url);
 
-  // Parse AI insight — structured data lives in the `mistakes` jsonb column,
-  // `summary` is a plain text string
+  // Parse AI insight
   let aiData = null;
-  if (aiInsight) {
-    if (aiInsight.mistakes && typeof aiInsight.mistakes === 'object') {
-      aiData = aiInsight.mistakes;
-    } else if (aiInsight.summary) {
-      try {
-        aiData = JSON.parse(aiInsight.summary);
-      } catch (e) {
-        aiData = { summary: aiInsight.summary };
-      }
+  if (aiInsight?.summary) {
+    try {
+      aiData = JSON.parse(aiInsight.summary);
+    } catch (e) {
+      aiData = { summary: aiInsight.summary };
     }
   }
 
@@ -254,13 +249,13 @@ export default async function TradeDetailPage({ params, searchParams }) {
           )}
 
           {/* What went well */}
-          {Array.isArray(aiData.went_well) && aiData.went_well.length > 0 && (
+          {aiData.went_well && aiData.went_well.length > 0 && (
             <div className="mb-4">
               <h3 className="text-xs font-semibold text-emerald-400/70 mb-2">✓ What went well</h3>
               <ul className="space-y-1">
                 {aiData.went_well.map((item, i) => (
                   <li key={i} className="text-sm text-white/60 pl-4 relative before:absolute before:left-0 before:top-2 before:w-1.5 before:h-1.5 before:rounded-full before:bg-emerald-400/40">
-                    {typeof item === 'string' ? item : JSON.stringify(item)}
+                    {item}
                   </li>
                 ))}
               </ul>
@@ -268,7 +263,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
           )}
 
           {/* Mistakes */}
-          {Array.isArray(aiData.mistakes) && aiData.mistakes.length > 0 && (
+          {aiData.mistakes && aiData.mistakes.length > 0 && (
             <div className="mb-4">
               <h3 className="text-xs font-semibold text-red-400/70 mb-2">✗ Mistakes</h3>
               <ul className="space-y-1">
@@ -301,7 +296,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4 text-center">
           <div className="text-2xl mb-2 opacity-40">✦</div>
           <h3 className="text-sm font-semibold text-white/60 mb-1">AI Analysis</h3>
-          <p className="text-xs text-white/35 mb-3">Get Propol&apos;s feedback on this trade — what went well, mistakes, and a lesson.</p>
+          <p className="text-xs text-white/35 mb-3">Get Propol&#39;s feedback on this trade — what went well, mistakes, and a lesson.</p>
           <AnalyzeButton tradeId={id} />
         </div>
       )}
