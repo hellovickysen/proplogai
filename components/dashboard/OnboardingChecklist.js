@@ -24,6 +24,29 @@ const AI_UNDERSTANDS = [
   { icon: '🎯', label: 'Your trading style' },
 ];
 
+function StepBadge({ step, done, locked }) {
+  if (done) {
+    return (
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-base font-bold text-emerald-400">
+        ✓
+      </div>
+    );
+  }
+  if (locked) {
+    return (
+      <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-base text-white/30">
+        🔒
+      </div>
+    );
+  }
+  // Active / next step — show number
+  return (
+    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-violet-500/15 font-display text-base font-bold text-violet-300">
+      {step}
+    </div>
+  );
+}
+
 export default function OnboardingChecklist({ milestones, completed, total, coreCompleted, coreTotal, userName }) {
   const [dismissed, setDismissed] = useState(true);
   const [prevCompleted, setPrevCompleted] = useState(null);
@@ -124,8 +147,8 @@ export default function OnboardingChecklist({ milestones, completed, total, core
             href={m.href}
             className="flex items-center gap-3.5 rounded-xl border border-amber-400/15 bg-amber-500/[0.03] p-3.5 hover:bg-amber-500/[0.06] transition-all"
           >
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-lg">
-              {m.icon}
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/15 font-display text-base font-bold text-amber-300">
+              {m.step}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -203,14 +226,12 @@ export default function OnboardingChecklist({ milestones, completed, total, core
           const isNext = !m.done && !m.locked;
           const showAiPreview = m.id === 'trade' && m.done && !milestones.find(x => x.id === 'analysis')?.done;
 
-          // Locked card (previous step not done)
+          // Locked card
           if (m.locked) {
             return (
               <div key={m.id}>
                 <div className="flex items-start gap-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] p-3.5 opacity-40">
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-base text-white/30">
-                    🔒
-                  </div>
+                  <StepBadge step={m.step} done={false} locked={true} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-white/40">{m.title}</span>
@@ -228,6 +249,7 @@ export default function OnboardingChecklist({ milestones, completed, total, core
             );
           }
 
+          // Active or completed card
           return (
             <div key={m.id}>
               <Link
@@ -238,13 +260,7 @@ export default function OnboardingChecklist({ milestones, completed, total, core
                     : 'border-violet-400/20 bg-violet-500/[0.04] hover:bg-violet-500/[0.07]'
                 }`}
               >
-                <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg ${
-                  m.done
-                    ? 'bg-emerald-500/15 text-emerald-400'
-                    : 'bg-violet-500/15'
-                }`}>
-                  {m.done ? '✓' : m.icon}
-                </div>
+                <StepBadge step={m.step} done={m.done} locked={false} />
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -299,9 +315,7 @@ export default function OnboardingChecklist({ milestones, completed, total, core
           if (m.locked) {
             return (
               <div key={m.id} className="flex items-start gap-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] p-3.5 opacity-40">
-                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-base text-white/30">
-                  🔒
-                </div>
+                <StepBadge step={m.step} done={false} locked={true} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="rounded-full bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-400/40">BONUS</span>
@@ -321,11 +335,7 @@ export default function OnboardingChecklist({ milestones, completed, total, core
                   : 'border-amber-400/10 bg-amber-500/[0.02] hover:bg-amber-500/[0.05]'
               }`}
             >
-              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg ${
-                m.done ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/10'
-              }`}>
-                {m.done ? '✓' : m.icon}
-              </div>
+              <StepBadge step={m.step} done={m.done} locked={false} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-400">BONUS</span>
