@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { fmtMoney } from '@/lib/stats';
 import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
 import TradeShareMenu from '@/components/share/TradeShareMenu';
+import AnalyzeButton from '@/components/trades/AnalyzeButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -295,10 +296,8 @@ export default async function TradeDetailPage({ params, searchParams }) {
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4 text-center">
           <div className="text-2xl mb-2 opacity-40">✦</div>
           <h3 className="text-sm font-semibold text-white/60 mb-1">AI Analysis</h3>
-          <p className="text-xs text-white/35 mb-3">Get Propol's feedback on this trade — what went well, mistakes, and a lesson.</p>
-          <Link href="/dashboard/trades" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-            ✦ Analyze on Trades Page
-          </Link>
+          <p className="text-xs text-white/35 mb-3">Get Propol&apos;s feedback on this trade — what went well, mistakes, and a lesson.</p>
+          <AnalyzeButton tradeId={id} />
         </div>
       )}
 
