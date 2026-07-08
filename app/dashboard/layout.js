@@ -15,7 +15,6 @@ import { sendEmail, isEmailConfigured } from '@/lib/email';
 import { buildTrialEndingEmail } from '@/lib/subscription-emails';
 import { notify, TYPES } from '@/lib/notifications';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
-import GuidedTour from '@/components/ui/GuidedTour';
 import SearchBar from '@/components/layout/SearchBar';
 // MobileSearchBar removed — mobile uses nav drawer for navigation, search on desktop only
 import LiveClock from '@/components/layout/LiveClock';
@@ -167,13 +166,6 @@ export default async function DashboardLayout({ children }) {
     } catch (e) {}
   }
 
-  /* ── Trade count for guided tour ── */
-  let tradeCount = 0;
-  try {
-    const { count } = await supabase.from('trades').select('id', { count: 'exact', head: true }).eq('user_id', user.id);
-    tradeCount = count || 0;
-  } catch (e) {}
-
   const isAdmin = user.email === ADMIN_EMAIL;
   const initial = user.email ? user.email.charAt(0).toUpperCase() : '?';
 
@@ -209,7 +201,6 @@ export default async function DashboardLayout({ children }) {
         <RiskFooter />
       </div>
       <QuickActions />
-      <GuidedTour hasTrades={tradeCount > 0} />
     </div>
   );
 }

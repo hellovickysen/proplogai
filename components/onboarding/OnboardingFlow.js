@@ -10,6 +10,65 @@ const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'G
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 
+const FEATURES = [
+  {
+    icon: '📊',
+    title: 'Trade Logging',
+    desc: 'Log any trade in 30 seconds — pair, direction, P&L, and setups.',
+    accent: 'border-violet-400/30 bg-violet-500/[0.06]',
+    iconBg: 'bg-violet-500/15',
+  },
+  {
+    icon: '📝',
+    title: 'Journal & Psychology',
+    desc: 'Tag emotions, rate confidence, capture lessons and screenshots.',
+    accent: 'border-cyan-400/30 bg-cyan-500/[0.06]',
+    iconBg: 'bg-cyan-500/15',
+  },
+  {
+    icon: '✦',
+    title: 'Propol AI Coach',
+    desc: 'Instant trade analysis and monthly reviews that find your leaks.',
+    accent: 'border-amber-400/30 bg-amber-500/[0.06]',
+    iconBg: 'bg-amber-500/15',
+  },
+  {
+    icon: '📅',
+    title: 'P&L Calendar',
+    desc: 'See daily P&L at a glance. Spot streaks, slumps, and patterns.',
+    accent: 'border-emerald-400/30 bg-emerald-500/[0.06]',
+    iconBg: 'bg-emerald-500/15',
+  },
+  {
+    icon: '📖',
+    title: 'Rulebook & Setups',
+    desc: 'Define your trading playbook and track which setups you follow.',
+    accent: 'border-rose-400/30 bg-rose-500/[0.06]',
+    iconBg: 'bg-rose-500/15',
+  },
+  {
+    icon: '💰',
+    title: 'Expense Tracker',
+    desc: 'Track prop firm fees, renewals, and payouts. Know your real ROI.',
+    accent: 'border-yellow-400/30 bg-yellow-500/[0.06]',
+    iconBg: 'bg-yellow-500/15',
+  },
+  {
+    icon: '🏆',
+    title: 'Trophy Wall',
+    desc: 'Celebrate funded accounts, challenge passes, and big milestones.',
+    accent: 'border-orange-400/30 bg-orange-500/[0.06]',
+    iconBg: 'bg-orange-500/15',
+  },
+  {
+    icon: '👤',
+    title: 'Public Profile',
+    desc: 'Share your trading journey — calendar, trades, payouts, and wins.',
+    accent: 'border-blue-400/30 bg-blue-500/[0.06]',
+    iconBg: 'bg-blue-500/15',
+  },
+];
+
 export default function OnboardingFlow({ userEmail }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -43,145 +102,245 @@ export default function OnboardingFlow({ userEmail }) {
   const pct = ((step + 1) / total) * 100;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#07070b] px-4 py-10">
-      <div className="w-full max-w-lg">
-        <div className="mb-8">
-          <div className="mb-2 flex items-center justify-between font-mono text-[10px] uppercase tracking-wider text-white/40">
-            <span>Step {step + 1} of {total}</span>
-            <span>{Math.round(pct)}%</span>
-          </div>
-          <div className="h-1.5 rounded-full bg-white/10">
-            <div className="h-full rounded-full transition-all duration-500" style={{ width: pct + '%', background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} />
-          </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#07070b] px-4 py-10">
+      {/* Progress bar */}
+      <div className="mb-8 w-full max-w-lg">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-mono text-[11px] uppercase tracking-wider text-white/40">
+            Step {step + 1} of {total}
+          </span>
+          <span className="font-mono text-[11px] text-white/30">{Math.round(pct)}%</span>
         </div>
+        <div className="h-1 w-full rounded-full bg-white/[0.06]">
+          <div
+            className="h-1 rounded-full transition-all duration-500 ease-out"
+            style={{ ...gradientBtn, width: `${pct}%` }}
+          />
+        </div>
+      </div>
 
-        <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8">
-          {step === 0 && (
-            <div className="text-center">
-              <LogoMark size={64} rounded="rounded-2xl" className="mx-auto mb-5" />
-              <h1 className="font-display text-2xl font-bold">Welcome to PropLogAI</h1>
-              <p className="mt-3 text-sm leading-relaxed text-white/55">
-                Your AI-powered forex trading journal. Log trades, track your emotions, and get coaching that helps you find — and fix — the patterns costing you money.
-              </p>
-              <p className="mt-4 font-mono text-xs text-white/40">Signed in as {userEmail}</p>
-              <button onClick={() => setStep(1)} className="mt-7 rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
-                Let's go →
+      {/* Card container */}
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-white/[0.03] p-6 sm:p-8">
+        {/* ─── Step 0: Welcome ─── */}
+        {step === 0 && (
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl" style={gradientBtn}>
+              <LogoMark />
+            </div>
+            <h1 className="mb-2 font-display text-2xl font-bold sm:text-3xl" style={gradientText}>
+              Welcome to PropLogAI
+            </h1>
+            <p className="mb-5 max-w-sm text-sm leading-relaxed text-white/55">
+              Your AI-powered trading journal. Log trades, track emotions, and get
+              coaching that helps you find — and fix — the patterns costing you money.
+            </p>
+            <p className="mb-7 font-mono text-xs text-white/35">
+              Signed in as {userEmail}
+            </p>
+            <button
+              onClick={() => setStep(1)}
+              className="rounded-xl px-8 py-3 text-sm font-semibold text-[#08080f] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+              style={gradientBtn}
+            >
+              Let&apos;s go →
+            </button>
+          </div>
+        )}
+
+        {/* ─── Step 1: Feature Showcase ─── */}
+        {step === 1 && (
+          <div>
+            <h2 className="mb-1 text-center font-display text-xl font-bold text-white sm:text-2xl">
+              Everything you need
+            </h2>
+            <p className="mb-5 text-center text-sm text-white/45">
+              Here&apos;s what PropLogAI gives you from day one.
+            </p>
+
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {FEATURES.map((f, i) => (
+                <div
+                  key={i}
+                  className={`flex items-start gap-3 rounded-xl border p-3 transition-colors ${f.accent}`}
+                >
+                  <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-base ${f.iconBg}`}>
+                    {f.icon}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-white">{f.title}</div>
+                    <p className="mt-0.5 text-xs leading-relaxed text-white/45">{f.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex items-center justify-between">
+              <button
+                onClick={() => setStep(0)}
+                className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70 hover:bg-white/10"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => setStep(2)}
+                className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                style={gradientBtn}
+              >
+                Next →
               </button>
             </div>
-          )}
+          </div>
+        )}
 
-          {step === 1 && (
-            <div>
-              <h2 className="font-display text-xl font-bold">How PropLogAI works</h2>
-              <p className="mt-2 mb-6 text-sm text-white/50">Three steps to better trading.</p>
+        {/* ─── Step 2: Journal Setup ─── */}
+        {step === 2 && (
+          <div>
+            <h2 className="mb-1 text-center font-display text-xl font-bold text-white sm:text-2xl">
+              Set up your journal
+            </h2>
+            <p className="mb-5 text-center text-sm text-white/45">
+              Pick the emotions you want to track. You can always change these later in Settings.
+            </p>
 
-              <div className="space-y-4">
-                {[
-                  { icon: '☰', title: 'Log your trades', desc: 'Pair, direction, P&L — done in 30 seconds. CSV import coming soon.' },
-                  { icon: '✎', title: 'Journal each trade', desc: 'Tag your emotions, rate your confidence, note what happened and why. Add chart screenshots.' },
-                  { icon: '✦', title: 'Get AI coaching', desc: 'Instant per-trade analysis flags mistakes. The weekly coach report finds your recurring leaks.' },
-                ].map((item, i) => (
-                  <div key={i} className="flex gap-4 rounded-xl border border-white/10 bg-black/20 p-4">
-                    <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-lg text-lg" style={{ background: 'linear-gradient(120deg, rgba(139,92,246,0.2), rgba(34,211,238,0.1))', border: '1px solid rgba(255,255,255,0.08)' }}>
-                      {item.icon}
-                    </div>
-                    <div>
-                      <h3 className="font-display text-sm font-semibold">{item.title}</h3>
-                      <p className="mt-0.5 text-xs text-white/50">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 flex justify-between">
-                <button onClick={() => setStep(0)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm text-white/70">Back</button>
-                <button onClick={() => setStep(2)} className="rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
-                  Next →
+            <label className="mb-2 block font-mono text-xs uppercase tracking-wider text-white/55">
+              Your emotion tags
+            </label>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {emotions.map((em, i) => (
+                <button
+                  key={i}
+                  onClick={() => toggleEmotion(em)}
+                  className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200 transition-colors hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200"
+                >
+                  {em} ✕
                 </button>
-              </div>
+              ))}
             </div>
-          )}
 
-          {step === 2 && (
-            <div>
-              <h2 className="font-display text-xl font-bold">Set up your journal</h2>
-              <p className="mt-2 mb-5 text-sm text-white/50">Pick the emotions you want to track. You can always change these in Settings.</p>
+            <div className="mb-6 flex gap-2">
+              <input
+                value={newEmotion}
+                onChange={(e) => setNewEmotion(e.target.value)}
+                placeholder="Add a feeling (e.g. Anxious, Excited)…"
+                maxLength={50}
+                className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50"
+                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())}
+              />
+              <button
+                onClick={addEmotion}
+                className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/70 hover:bg-white/10"
+              >
+                Add
+              </button>
+            </div>
 
-              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Your emotion tags</label>
-              <div className="mb-4 flex flex-wrap gap-2">
-                {emotions.map((em, i) => (
+            <label className="mb-2 block font-mono text-xs uppercase tracking-wider text-white/55">
+              Default confidence
+            </label>
+            <div className="mb-6 flex items-center gap-2">
+              {[0, 1, 2, 3, 4, 5].map((i) =>
+                i === 0 ? (
                   <button
                     key={i}
-                    type="button"
-                    onClick={() => toggleEmotion(em)}
-                    className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200 hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200"
+                    onClick={() => setDefaultConfidence(0)}
+                    className={
+                      'rounded-lg border px-2.5 py-1 text-xs transition-colors ' +
+                      (defaultConfidence === 0
+                        ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300'
+                        : 'border-white/10 text-white/30 hover:text-white/50')
+                    }
                   >
-                    {em} ✕
+                    None
                   </button>
-                ))}
-              </div>
-
-              <div className="mb-5 flex gap-2">
-                <input
-                  className="flex-1 rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60"
-                  value={newEmotion}
-                  onChange={(e) => setNewEmotion(e.target.value)}
-                  placeholder="Add a feeling (e.g. Anxious, Excited)…"
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())}
-                />
-                <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-3 text-sm text-white/70 hover:text-white">Add</button>
-              </div>
-
-              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/40">Default confidence</label>
-              <div className="mb-1 flex gap-1 text-2xl">
-                {[0, 1, 2, 3, 4, 5].map((i) =>
-                  i === 0 ? (
-                    <button key={i} type="button" onClick={() => setDefaultConfidence(0)} className={'rounded-lg border px-2 py-1 text-xs ' + (defaultConfidence === 0 ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300' : 'border-white/10 text-white/30')}>None</button>
-                  ) : (
-                    <button key={i} type="button" onClick={() => setDefaultConfidence(i)} className={i <= defaultConfidence ? 'text-amber-400' : 'text-white/35'}>&#9733;</button>
-                  )
-                )}
-              </div>
-
-              <div className="mt-6 flex justify-between">
-                <button onClick={() => setStep(1)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm text-white/70">Back</button>
-                <button onClick={() => setStep(3)} className="rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f]" style={gradientBtn}>
-                  Next →
-                </button>
-              </div>
+                ) : (
+                  <button
+                    key={i}
+                    onClick={() => setDefaultConfidence(i)}
+                    className={
+                      'text-xl transition-colors ' +
+                      (i <= defaultConfidence ? 'text-amber-400' : 'text-white/20 hover:text-white/35')
+                    }
+                  >
+                    &#9733;
+                  </button>
+                )
+              )}
             </div>
-          )}
 
-          {step === 3 && (
-            <div className="text-center">
-              <div className="mx-auto mb-5 text-5xl">🚀</div>
-              <h2 className="font-display text-xl font-bold">You're all set!</h2>
-              <p className="mt-3 text-sm leading-relaxed text-white/55">
-                Your journal is ready. Log your first trade and let the AI coach start working for you.
-              </p>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setStep(1)}
+                className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70 hover:bg-white/10"
+              >
+                Back
+              </button>
+              <button
+                onClick={() => setStep(3)}
+                className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                style={gradientBtn}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
 
-              <div className="mx-auto mt-6 max-w-xs space-y-2 text-left">
-                {[
-                  'Log a trade (pair, direction, P&L)',
-                  'Add your journal entry (emotions + notes)',
-                  'Hit "Analyze" for instant AI feedback',
-                ].map((tip, i) => (
-                  <div key={i} className="flex items-center gap-2.5 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <span className="grid h-5 w-5 flex-shrink-0 place-items-center rounded-full font-mono text-[10px] font-bold" style={gradientBtn}>{i + 1}</span>
-                    <span className="text-xs text-white/60">{tip}</span>
+        {/* ─── Step 3: Ready ─── */}
+        {step === 3 && (
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-3xl">
+              🚀
+            </div>
+            <h2 className="mb-2 font-display text-xl font-bold text-white sm:text-2xl">
+              You&apos;re all set!
+            </h2>
+            <p className="mb-5 max-w-sm text-sm leading-relaxed text-white/50">
+              Your journal is ready. Here&apos;s how to get started:
+            </p>
+
+            <div className="mb-6 w-full space-y-2.5">
+              {[
+                { n: '1', text: 'Log a trade — pair, direction, and your P&L' },
+                { n: '2', text: 'Add a journal entry — emotions, notes, screenshots' },
+                { n: '3', text: 'Hit "Analyze" for instant AI feedback on any trade' },
+              ].map((tip) => (
+                <div
+                  key={tip.n}
+                  className="flex items-center gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3 text-left"
+                >
+                  <div
+                    className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-xs font-bold text-[#08080f]"
+                    style={gradientBtn}
+                  >
+                    {tip.n}
                   </div>
-                ))}
-              </div>
-
-              <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
-                <button onClick={() => setStep(2)} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm text-white/70">Back</button>
-                <button onClick={finish} disabled={saving} className="rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={gradientBtn}>
-                  {saving ? 'Saving…' : 'Start trading →'}
-                </button>
-              </div>
+                  <span className="text-sm text-white/70">{tip.text}</span>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+
+            <p className="mb-5 text-xs text-white/35">
+              You&apos;ll see a checklist on your dashboard to help you explore every feature.
+            </p>
+
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+              <button
+                onClick={() => setStep(2)}
+                className="order-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70 hover:bg-white/10 sm:order-1"
+              >
+                Back
+              </button>
+              <button
+                onClick={finish}
+                disabled={saving}
+                className="order-1 rounded-xl px-8 py-3 text-sm font-semibold text-[#08080f] transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-60 sm:order-2"
+                style={gradientBtn}
+              >
+                {saving ? 'Saving…' : 'Start trading →'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -17,6 +17,8 @@ import BetaNotice from '@/components/ui/BetaNotice';
 import { notify, TYPES } from '@/lib/notifications';
 import DailyCoachingCard from '@/components/coach/DailyCoachingCard';
 import { computePersona } from '@/lib/persona';
+import { getOnboardingProgress } from '@/lib/onboarding';
+import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
 
 export const dynamic = 'force-dynamic';
 
@@ -130,6 +132,9 @@ export default async function DashboardPage() {
   const access = await getUserAccess(supabase, user);
   const planAccess = access.toJSON();
 
+  // Onboarding checklist progress
+  const onboardingProgress = await getOnboardingProgress(supabase, user.id);
+
   // User profile for share cards
   const { data: userProfile } = await supabase
     .from('user_preferences')
@@ -220,25 +225,16 @@ export default async function DashboardPage() {
   const hasExpenseData = (expenseRows && expenseRows.length > 0) || (payoutRows && payoutRows.length > 0);
 
   if (list.length === 0) {
-    const steps = [
-      { n: '1', t: 'Log your first trade', d: 'Pair, direction, and your P&L — that is all it takes.' },
-      { n: '2', t: 'Journal it', d: 'Add emotions, a confidence rating, notes and a screenshot.' },
-      { n: '3', t: 'Get AI coaching', d: 'Instant per-trade analysis, plus a coach report across all trades.' },
-    ];
     return (
       <div className="px-4 py-8 sm:px-6 sm:py-10">
+        <OnboardingChecklist
+          milestones={onboardingProgress.milestones}
+          completed={onboardingProgress.completed}
+          total={onboardingProgress.total}
+        />
         <h1 className="font-display text-2xl font-bold">Welcome to PropLogAI &#x1F44B;</h1>
-        <p className="mt-1 text-sm text-white/55">Let's get your journal started.</p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          {steps.map((st) => (
-            <div key={st.n} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-              <div className="font-display text-2xl font-bold" style={gradientText}>{st.n}</div>
-              <h3 className="mt-2 font-display text-base font-semibold">{st.t}</h3>
-              <p className="mt-1 text-sm text-white/55">{st.d}</p>
-            </div>
-          ))}
-        </div>
-        <Link href="/dashboard/trades/new" className="mt-7 inline-block rounded-xl px-5 py-2.5 font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+        <p className="mt-1 text-sm text-white/55">Log your first trade to get started.</p>
+        <Link href="/dashboard/trades/new" className="mt-5 inline-block rounded-xl px-5 py-2.5 font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
           + Log your first trade
         </Link>
       </div>
@@ -274,6 +270,11 @@ export default async function DashboardPage() {
     <div className="px-3 py-8 sm:px-4">
       <ReferralCapture />
       <BetaNotice />
+      <OnboardingChecklist
+        milestones={onboardingProgress.milestones}
+        completed={onboardingProgress.completed}
+        total={onboardingProgress.total}
+      />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>
         <div className="flex items-center gap-2">

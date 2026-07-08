@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { changePassword, savePreferences } from '@/app/dashboard/settings/actions';
 import { useToast } from '@/components/ui/Toast';
 import { validatePassword } from '@/lib/security';
-import { replayTour } from '@/components/ui/GuidedTour';
+
 import { processImageFile } from '@/lib/imageUtils';
 import BillingTab from '@/components/settings/BillingTab';
 import PublicProfileSettings from '@/components/profile/PublicProfileSettings';
@@ -241,15 +241,18 @@ function ProfileTab({ user, prefs }) {
         </button>
       </div>
 
-      {/* Replay walkthrough */}
+      {/* Reset onboarding checklist */}
       <div className={card}>
-        <div className="mb-2 font-display text-base font-semibold">Walkthrough</div>
-        <p className="mb-3 text-sm text-white/55">Replay the guided tour to see how everything works.</p>
+        <div className="mb-2 font-display text-base font-semibold">Getting Started Checklist</div>
+        <p className="mb-3 text-sm text-white/55">Show the onboarding checklist on your dashboard again.</p>
         <button
-          onClick={replayTour}
+          onClick={() => {
+            try { localStorage.removeItem('pl_checklist_dismissed'); } catch {}
+            toast('Checklist restored — check your dashboard', 'success');
+          }}
           className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70 hover:bg-white/10 transition-colors"
         >
-          Replay walkthrough
+          Show checklist
         </button>
       </div>
     </div>
