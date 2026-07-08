@@ -17,7 +17,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
   // Fetch trade with user_id check
   const { data: trade, error: tradeErr } = await supabase
     .from('trades')
-    .select('*')
+    .select('id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, share_id, shared_until, created_at')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -40,7 +40,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
   // Fetch journal entry
   const { data: journal } = await supabase
     .from('journal_entries')
-    .select('*')
+    .select('id, trade_id, note, lesson, emotions, tags, confidence, screenshot_url, screenshot_urls, created_at')
     .eq('trade_id', id)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -55,7 +55,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
   // Fetch AI analysis
   const { data: aiInsight } = await supabase
     .from('ai_insights')
-    .select('*')
+    .select('id, summary, mistakes, severity, created_at')
     .eq('trade_id', id)
     .eq('user_id', user.id)
     .eq('type', 'trade_analysis')
