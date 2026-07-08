@@ -677,12 +677,14 @@ function FirmDashboard({
         ) : (
           <div className="space-y-2">
             {(showAllPayouts ? payouts : payouts.slice(0, PAGE_SIZE)).map((p) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
+              <div key={p.id} className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 sm:px-4 sm:py-3">
                 <div className="min-w-0 flex-1">
-                  <div className="whitespace-nowrap font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
-                  {p.notes && <p className="mt-0.5 text-xs text-white/50">{p.notes}</p>}
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-[11px] text-white/35">{fmtDate(p.payout_date)}</span>
+                    {p.notes && <span className="truncate text-[11px] text-white/30">· {p.notes}</span>}
+                  </div>
                 </div>
-                <div className="font-mono text-sm font-bold text-emerald-400">+{fmtCurrency(p.amount)}</div>
+                <div className="flex-shrink-0 font-mono text-sm font-bold text-emerald-400">+{fmtCurrency(p.amount)}</div>
                 <button onClick={() => onEditPayout(p)} className="grid h-8 w-8 place-items-center rounded text-white/30 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors" title="Edit">
                   <PencilIcon className="h-3 w-3" />
                 </button>
@@ -1100,22 +1102,24 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
               ) : (
                 <div className="space-y-3">
                   {payouts.slice(0, payoutsVisible).map((p) => (
-                    <div key={p.id} className="flex items-start gap-2 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:flex-row sm:items-center sm:gap-3 sm:p-5">
-                      <button onClick={() => openFirmDashboard(p.firm_name)} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 font-display text-sm font-bold text-emerald-300">
+                    <div key={p.id} className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2.5 sm:px-5 sm:py-4">
+                      <button onClick={() => openFirmDashboard(p.firm_name)} className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-emerald-500/15 font-display text-xs font-bold text-emerald-300 sm:h-10 sm:w-10 sm:text-sm">
                         {firmInitial(p.firm_name)}
                       </button>
                       <div className="min-w-0 flex-1">
-                        <button onClick={() => openFirmDashboard(p.firm_name)} className="font-display text-base font-semibold hover:text-cyan-300 transition-colors">{p.firm_name}</button>
-                        <div className="whitespace-nowrap font-mono text-[11px] text-white/40">{fmtDate(p.payout_date)}</div>
-                        {p.notes && <p className="mt-1 text-xs text-white/50">{p.notes}</p>}
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => openFirmDashboard(p.firm_name)} className="truncate font-display text-sm font-semibold hover:text-cyan-300 transition-colors sm:text-base">{p.firm_name}</button>
+                          <span className="flex-shrink-0 font-mono text-sm font-bold text-emerald-400">+{fmtCurrency(p.amount)}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-[11px] text-white/35">{fmtDate(p.payout_date)}</span>
+                          {p.notes && <span className="truncate text-[11px] text-white/30">· {p.notes}</span>}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-mono text-sm font-bold text-emerald-400 sm:text-lg">+{fmtCurrency(p.amount)}</div>
-                      </div>
-                      <button onClick={() => setEditingPayout(p)} className="grid h-8 w-8 place-items-center rounded text-white/30 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors" title="Edit">
+                      <button onClick={() => setEditingPayout(p)} className="grid h-7 w-7 flex-shrink-0 place-items-center rounded text-white/30 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors" title="Edit">
                         <PencilIcon className="h-3 w-3" />
                       </button>
-                      <button onClick={() => handleDeletePayout(p.id)} className="grid h-8 w-8 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
+                      <button onClick={() => handleDeletePayout(p.id)} className="grid h-7 w-7 flex-shrink-0 place-items-center rounded text-[10px] text-white/30 hover:bg-red-500/20 hover:text-red-400 transition-colors" title="Delete">&#10005;</button>
                     </div>
                   ))}
                   {payoutsVisible < payouts.length && (
