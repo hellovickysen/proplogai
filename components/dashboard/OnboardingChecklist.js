@@ -344,10 +344,16 @@ export default function OnboardingChecklist({ milestones, completed, total, core
             );
           }
           return (
-            <Link
+            <button
               key={m.id}
-              href={m.href}
-              className={`group flex items-start gap-3.5 rounded-xl border p-3.5 transition-all ${
+              onClick={() => {
+                const shareBtn = document.querySelector('[data-tour="share-btn"]');
+                if (shareBtn) {
+                  shareBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  setTimeout(() => { const btn = shareBtn.querySelector('button'); if (btn) btn.click(); }, 400);
+                }
+              }}
+              className={`group flex items-start gap-3.5 rounded-xl border p-3.5 transition-all text-left w-full ${
                 m.done
                   ? 'border-white/[0.05] bg-white/[0.01] opacity-50'
                   : 'border-amber-400/10 bg-amber-500/[0.02] hover:bg-amber-500/[0.05]'
@@ -376,7 +382,7 @@ export default function OnboardingChecklist({ milestones, completed, total, core
                   </>
                 )}
               </div>
-            </Link>
+            </button>
           );
         })}
       </div>
