@@ -6,6 +6,23 @@ import Link from 'next/link';
 const STORAGE_KEY = 'pl_checklist_dismissed';
 const COMPLETED_KEY = 'pl_checklist_completed';
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
+
+const shimmerStyle = `
+@keyframes pl-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.pl-bar-shimmer {
+  background: linear-gradient(90deg, #a78bfa 0%, #22d3ee 30%, #a78bfa 50%, #22d3ee 80%, #a78bfa 100%);
+  background-size: 200% 100%;
+  animation: pl-shimmer 2.5s ease-in-out infinite;
+}
+.pl-bar-shimmer-amber {
+  background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 30%, #f59e0b 50%, #fbbf24 80%, #f59e0b 100%);
+  background-size: 200% 100%;
+  animation: pl-shimmer 2.5s ease-in-out infinite;
+}
+`;
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 const AI_PREVIEW = [
@@ -169,6 +186,7 @@ export default function OnboardingChecklist({ milestones, completed, total, core
 
   return (
     <div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
+      <style dangerouslySetInnerHTML={{ __html: shimmerStyle }} />
       {/* ─── Welcome Header ─── */}
       <div className="mb-5">
         <h2 className="font-display text-lg font-bold text-white sm:text-xl">
@@ -192,8 +210,8 @@ export default function OnboardingChecklist({ milestones, completed, total, core
           {milestones.map((m) => (
             <div
               key={m.id}
-              className="h-2 flex-1 rounded-full transition-all duration-500"
-              style={m.done ? (m.bonus ? { background: '#fbbf24' } : gradientBtn) : { background: 'rgba(255,255,255,0.06)' }}
+              className={'h-2 flex-1 rounded-full transition-all duration-500 ' + (m.done ? (m.bonus ? 'pl-bar-shimmer-amber' : 'pl-bar-shimmer') : '')}
+              style={m.done ? undefined : { background: 'rgba(255,255,255,0.06)' }}
             />
           ))}
         </div>
