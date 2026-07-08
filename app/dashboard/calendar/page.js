@@ -46,7 +46,7 @@ export default async function CalendarPage({ searchParams }) {
 
   const { data: trades, error: tradesError } = await supabase
     .from('trades')
-    .select('id, pair, direction, pnl, r_multiple, setup, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
+    .select('id, pair, direction, pnl, setup, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
     .eq('user_id', user.id)
     .gte('trade_date', monthStartDate)
     .lt('trade_date', monthEndDate)

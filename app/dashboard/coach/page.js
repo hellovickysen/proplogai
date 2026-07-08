@@ -68,7 +68,7 @@ export default async function CoachPage() {
   // ── Persona + Streaks ──
   const { data: allTrades } = await supabase
     .from('trades')
-    .select('id, pair, direction, pnl, r_multiple, setup, setup_followed, no_setup_reason, session, trade_date, created_at')
+    .select('id, pair, direction, pnl, setup, setup_followed, no_setup_reason, session, trade_date, created_at')
     .eq('user_id', user.id)
     .order('trade_date', { ascending: false })
     .order('created_at', { ascending: false })

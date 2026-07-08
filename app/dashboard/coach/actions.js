@@ -125,7 +125,7 @@ export async function sendCoachReportEmail() {
   // Fetch trade stats for the email
   const { data: trades } = await supabase
     .from('trades')
-    .select('pnl, r_multiple')
+    .select('pnl')
     .eq('user_id', user.id)
     .limit(50);
   const list = trades || [];

@@ -15,7 +15,7 @@ export async function exportTradesCSV() {
 
   const { data: trades, error: tErr } = await supabase
     .from('trades')
-    .select('id, pair, direction, entry_price, exit_price, stop_loss, take_profit, lot_size, pnl, r_multiple, setup, timeframe, session, trade_date, opened_at, closed_at, created_at')
+    .select('id, pair, direction, entry_price, exit_price, stop_loss, take_profit, lot_size, pnl, setup, timeframe, session, trade_date, opened_at, closed_at, created_at')
     .eq('user_id', user.id)
     .order('trade_date', { ascending: false, nullsFirst: false });
 
