@@ -1,51 +1,33 @@
 "use client";
 
 import { useState } from 'react';
+import { analyzeTrade } from '@/app/dashboard/trades/actions';
 
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 
 export default function AnalyzeButton({ tradeId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [done, setDone] = useState(false);
 
   async function handleAnalyze() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/analyze-trade', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tradeId }),
-      });
-      let data;
-      try {
-        data = await res.json();
-      } catch {
-        setError('Server error (' + res.status + '). Please try again.');
-        setLoading(false);
-        return;
-      }
-      if (!res.ok || data.error) {
-        setError(data.error || 'Analysis failed (' + res.status + '). Please try again.');
+      const result = await analyzeTrade(tradeId);
+      if (result && result.error) {
+        setError(result.error);
         setLoading(false);
       } else {
-        setDone(true);
-        // Full reload to show the analysis results
+        // Analysis done — full page reload to show results
+        // (avoids Server Components render issues with router.refresh)
         window.location.reload();
       }
     } catch (e) {
-      setError('Analysis failed. Please try again.');
+      // Server action errors sometimes throw instead of returning
+      const msg = e && typeof e === 'object' && e.message ? e.message : String(e);
+      setError(msg || 'Analysis failed. Please try again.');
       setLoading(false);
     }
-  }
-
-  if (done) {
-    return (
-      <div className="text-sm text-emerald-400 font-medium">
-        ✦ Analysis complete — loading results...
-      </div>
-    );
   }
 
   return (
