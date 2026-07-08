@@ -9,6 +9,7 @@ import { replayTour } from '@/components/ui/GuidedTour';
 import { processImageFile } from '@/lib/imageUtils';
 import BillingTab from '@/components/settings/BillingTab';
 import PublicProfileSettings from '@/components/profile/PublicProfileSettings';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
 const DEFAULT_TAGS = ['news', 'high impact', 'low volume', 'scalp', 'swing'];
@@ -269,6 +270,8 @@ function JournalSettingsTab({ prefs, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   const [error, setError] = useState(null);
+  const [pendingDeleteEmotion, setPendingDeleteEmotion] = useState(null);
+  const [pendingDeleteTag, setPendingDeleteTag] = useState(null);
 
   function addEmotion() {
     const t = newEmotion.trim();
@@ -319,7 +322,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
           {emotions.map((em, i) => (
             <span key={i} className="group flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200">
               {em}
-              <button type="button" onClick={() => removeEmotion(i)} className="inline text-red-400 hover:text-red-300">&#10005;</button>
+              <button type="button" onClick={() => setPendingDeleteEmotion(i)} className="inline text-red-400 hover:text-red-300">&#10005;</button>
             </span>
           ))}
         </div>
@@ -338,7 +341,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
           {tags.map((tag, i) => (
             <span key={i} className="group flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
               {tag}
-              <button type="button" onClick={() => removeTag(i)} className="inline text-red-400 hover:text-red-300">&#10005;</button>
+              <button type="button" onClick={() => setPendingDeleteTag(i)} className="inline text-red-400 hover:text-red-300">&#10005;</button>
             </span>
           ))}
         </div>
@@ -372,6 +375,21 @@ function JournalSettingsTab({ prefs, onSaved }) {
       <button onClick={onSave} disabled={saving} className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
         {saving ? 'Saving...' : 'Save settings'}
       </button>
+
+      <ConfirmDialog
+        open={pendingDeleteEmotion !== null}
+        onClose={() => setPendingDeleteEmotion(null)}
+        onConfirm={() => { removeEmotion(pendingDeleteEmotion); setPendingDeleteEmotion(null); }}
+        title="Remove this emotion?"
+        message={`Are you sure you want to remove "${pendingDeleteEmotion !== null ? emotions[pendingDeleteEmotion] : ''}"? Click Save settings to apply.`}
+      />
+      <ConfirmDialog
+        open={pendingDeleteTag !== null}
+        onClose={() => setPendingDeleteTag(null)}
+        onConfirm={() => { removeTag(pendingDeleteTag); setPendingDeleteTag(null); }}
+        title="Remove this tag?"
+        message={`Are you sure you want to remove "${pendingDeleteTag !== null ? tags[pendingDeleteTag] : ''}"? Click Save settings to apply.`}
+      />
     </div>
   );
 }
