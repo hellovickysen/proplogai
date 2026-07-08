@@ -34,6 +34,7 @@ export default function DashboardShareMenu({ dailyData, totalData, hasTodayTrade
     setOpen(false);
     setModalType(type);
     setModalData(data);
+    try { localStorage.setItem('pl_first_share', '1'); } catch {}
   }
 
   return (

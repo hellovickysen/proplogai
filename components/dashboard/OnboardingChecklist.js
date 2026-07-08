@@ -64,14 +64,23 @@ function StepBadge({ step, done, locked }) {
   );
 }
 
-export default function OnboardingChecklist({ milestones, completed, total, coreCompleted, coreTotal, userName }) {
+export default function OnboardingChecklist({ milestones: rawMilestones, completed: rawCompleted, total, coreCompleted, coreTotal, userName }) {
   const [dismissed, setDismissed] = useState(true);
   const [prevCompleted, setPrevCompleted] = useState(null);
   const [celebrating, setCelebrating] = useState(null);
+  const [hasShared, setHasShared] = useState(false);
   const celebrationTimer = useRef(null);
+
+  // Check localStorage for bonus step (PnL card share)
+  const milestones = rawMilestones.map((m) =>
+    m.bonus && hasShared ? { ...m, done: true, locked: false } : m
+  );
+  const completed = hasShared && !rawMilestones.find(m => m.bonus)?.done
+    ? rawCompleted + 1 : rawCompleted;
 
   useEffect(() => {
     try {
+      if (localStorage.getItem('pl_first_share') === '1') setHasShared(true);
       const stored = localStorage.getItem(STORAGE_KEY);
       setDismissed(stored === '1');
       const prev = localStorage.getItem(COMPLETED_KEY);
@@ -79,6 +88,11 @@ export default function OnboardingChecklist({ milestones, completed, total, core
     } catch {
       setDismissed(false);
     }
+    // Poll localStorage for share flag (fires when share menu is used on same page)
+    const shareCheck = setInterval(() => {
+      try { if (localStorage.getItem('pl_first_share') === '1') setHasShared(true); } catch {}
+    }, 2000);
+    return () => clearInterval(shareCheck);
   }, []);
 
   useEffect(() => {
