@@ -974,28 +974,30 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                       .sort((a, b) => new Date(b.date) - new Date(a.date) || new Date(b.created_at) - new Date(a.created_at))
                       .slice(0, 8)
                       .map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
-                          <div className={'grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg font-display text-sm font-bold ' + (item.type === 'payout' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60')}>
+                        <div key={item.id} className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5 sm:px-4 sm:py-3">
+                          <div className={'grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg font-display text-xs font-bold ' + (item.type === 'payout' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60')}>
                             {firmInitial(item.firm_name)}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2">
-                              <button onClick={() => openFirmDashboard(item.firm_name)} className="text-sm font-semibold hover:text-cyan-300 transition-colors">{item.firm_name}</button>
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => openFirmDashboard(item.firm_name)} className="truncate text-sm font-semibold hover:text-cyan-300 transition-colors">{item.firm_name}</button>
                               {item.type === 'expense' && item.purchase_type && (
-                                <span className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold ' + (PURCHASE_COLORS[item.purchase_type] || 'border-white/10 text-white/50')}>
+                                <span className={'flex-shrink-0 whitespace-nowrap rounded-full border px-1.5 py-px text-[9px] font-semibold ' + (PURCHASE_COLORS[item.purchase_type] || 'border-white/10 text-white/50')}>
                                   {PURCHASE_LABELS[item.purchase_type] || item.purchase_type}
                                 </span>
                               )}
                               {item.type === 'payout' && (
-                                <span className="rounded-full border border-emerald-400/30 bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+                                <span className="flex-shrink-0 whitespace-nowrap rounded-full border border-emerald-400/30 bg-emerald-500/15 px-1.5 py-px text-[9px] font-semibold text-emerald-300">
                                   Payout
                                 </span>
                               )}
                             </div>
-                            <div className="font-mono text-[11px] text-white/40">{fmtDate(item.date)}</div>
-                            {item.notes && <p className="mt-0.5 text-xs text-white/40">{item.notes}</p>}
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-mono text-[11px] text-white/35">{fmtDate(item.date)}</span>
+                              {item.notes && <span className="truncate text-[11px] text-white/30">· {item.notes}</span>}
+                            </div>
                           </div>
-                          <div className={'font-mono text-sm font-bold ' + (item.type === 'payout' ? 'text-emerald-400' : 'text-red-400')}>
+                          <div className={'flex-shrink-0 font-mono text-sm font-bold ' + (item.type === 'payout' ? 'text-emerald-400' : 'text-red-400')}>
                             {item.type === 'payout' ? '+' : '-'}{fmtCurrency(item.amt)}
                           </div>
                         </div>
