@@ -401,31 +401,37 @@ export default function TrophyWall({ trophies, firmNames, planAccess }) {
 
       {/* Filter bar */}
       {trophies.length > 1 && (
-        <div className="mb-4 flex flex-wrap items-end gap-3">
-          <div>
+        <div className="mb-4 flex items-end gap-3">
+          <div className="flex-1 min-w-0">
             <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Firm</label>
-            <select className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-cyan-400/60" value={firmFilter} onChange={(e) => setFirmFilter(e.target.value)}>
-              <option value="">All firms</option>
-              {firmOptions.map((f) => (
-                <option key={f} value={f}>{f}</option>
-              ))}
-            </select>
+            <div className="relative">
+              <select className="w-full appearance-none rounded-lg border border-white/10 bg-[#0b0b14] px-3 py-2 pr-8 text-sm text-white/70 outline-none focus:border-cyan-400/60 cursor-pointer" value={firmFilter} onChange={(e) => setFirmFilter(e.target.value)}>
+                <option value="">All firms</option>
+                {firmOptions.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+            </div>
           </div>
-          <div>
-            <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Category</label>
-            <select className="rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-cyan-400/60" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-              <option value="">All categories</option>
-              {CATEGORIES.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
-              ))}
-            </select>
+          <div className="flex-1 min-w-0">
+            <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Type</label>
+            <div className="relative">
+              <select className="w-full appearance-none rounded-lg border border-white/10 bg-[#0b0b14] px-3 py-2 pr-8 text-sm text-white/70 outline-none focus:border-cyan-400/60 cursor-pointer" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
+                <option value="">All types</option>
+                {CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </select>
+              <svg className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/40" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+            </div>
           </div>
           {hasFilters && (
             <button
               onClick={() => { setFirmFilter(''); setCategoryFilter(''); }}
-              className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/55 hover:text-white"
+              className="flex-shrink-0 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/55 hover:text-white"
             >
-              Clear filters
+              Clear
             </button>
           )}
         </div>
