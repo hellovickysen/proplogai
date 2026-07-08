@@ -1,6 +1,6 @@
 # PropLogAI — Technical Documentation
 
-Comprehensive technical reference for the PropLogAI codebase. Last updated: July 5, 2026 (Phase R).
+Comprehensive technical reference for the PropLogAI codebase. Last updated: July 9, 2026 (Onboarding Redesign + R-Multiple Removal + Inline Trade Analysis, post-Phase R).
 
 ## 1. Architecture Overview
 
@@ -48,9 +48,9 @@ proplogai/
 │   ├── (landing)/
 │   │   └── pricing/page.js    # Standalone pricing comparison page (Phase R)
 │   ├── dashboard/
-│   │   ├── layout.js          # Dashboard shell (sidebar, header, nav, subscription fetch + SubscriptionBanner + trial email trigger)
-│   │   ├── page.js            # Main dashboard (stats, charts, discipline, BlurGate on share button)
-│   │   ├── trades/            # Trade list, detail, new, edit + actions (BlurGate on CSV export)
+│   │   ├── layout.js          # Dashboard shell (sidebar, header, nav, subscription fetch + SubscriptionBanner + trial email trigger; GuidedTour removed, OnboardingChecklist rendered instead)
+│   │   ├── page.js            # Main dashboard (stats, charts, discipline, BlurGate on share button, OnboardingChecklist)
+│   │   ├── trades/            # Trade list, detail, new, edit + actions (BlurGate on CSV export; trade detail page has inline "Analyze this trade" via AnalyzeButton.js + /api/analyze-trade)
 │   │   ├── calendar/          # P&L calendar (dual desktop/mobile render, BlurGate on CalendarInsights)
 │   │   ├── coach/             # AI coach report + actions (planAccess passed to PropolCoachHub)
 │   │   ├── rulebook/          # Setup CRUD (8 defaults) + actions (planAccess + customSetupLimit)
@@ -72,19 +72,20 @@ proplogai/
 │   ├── tools/                 # Public tools landing (SEO, LandingNav + LandingFooter); tools/consistency-calculator/ (public Consistency Calculator page, LandingNav + LandingFooter)
 │   └── api/
 │       ├── logo/               # PNG logo for email templates
+│       ├── analyze-trade/      # NEW — inline trade analysis API route for the trade detail page, with step-by-step error reporting
 │       └── razorpay/           # Razorpay API routes (Phase R)
 │           ├── create-subscription/route.js   # Creates Razorpay subscription, returns hosted checkout short_url
 │           ├── webhook/route.js                # Verifies + handles Razorpay webhook events
 │           ├── callback/route.js               # Post-checkout redirect handler, verifies payment signature
 │           └── cancel-subscription/route.js    # Cancels a user's Razorpay subscription
 ├── components/
-│   ├── ui/                    # Skeleton, Toast, EmptyStates, Fab, ConfirmDialog, BetaNotice, GuidedTour, PlanBadge, BetaFeatureWarning, UpgradeCard, BlurGate (Phase R), SubscriptionBanner (Phase R)
+│   ├── ui/                    # Skeleton, Toast, EmptyStates, Fab, ConfirmDialog, BetaNotice, GuidedTour (still exists in the codebase but no longer imported/used anywhere — replaced by dashboard/OnboardingChecklist.js), PlanBadge, BetaFeatureWarning, UpgradeCard, BlurGate (Phase R), SubscriptionBanner (Phase R)
 │   ├── layout/                # Sidebar, MobileNav, RiskFooter, PostHogProvider
-│   ├── trades/                # TradeForm, TradeTable, TradeFilters, DeleteTradeButton, ExportButton
+│   ├── trades/                # TradeForm, TradeTable, TradeFilters, DeleteTradeButton, ExportButton, AnalyzeButton (NEW — client component powering inline "Analyze this trade" on the trade detail page, calls /api/analyze-trade)
 │   ├── journal/                # JournalForm (screenshot limit notice), JournalSection (passes screenshotLimit), JournalView
 │   ├── coach/                  # CoachReport, GenerateReportButton, EmailReportButton, AnalyzeButton, TradeAnalysisTab (upgrade CTA at limit), MonthlyReviewTab (upgrade CTA at limit)
 │   ├── calendar/                # CalendarMonth, PnlCalendar, CalendarInsights (10 insight cards + Trade Win gauge, Elite-only via BlurGate)
-│   ├── dashboard/               # DisciplineCards, WeeklyScoreRing, AchievementBadges, EquityChart, DashboardShareButton
+│   ├── dashboard/               # DisciplineCards, WeeklyScoreRing, AchievementBadges, EquityChart, DashboardShareButton, OnboardingChecklist (NEW — persistent "Train Your AI Coach" dashboard checklist, replaces GuidedTour in the dashboard layout)
 │   ├── expenses/                # ExpenseTracker
 │   ├── trophies/                # TrophyWall (limit reached opens UpgradeModal)
 │   ├── referrals/               # ReferralDashboard, ReferralCapture
@@ -92,7 +93,7 @@ proplogai/
 │   ├── rulebook/                # RulebookPage (X/3 custom setup badge + limit state)
 │   ├── settings/                # SettingsTabs, BillingTab (billing management UI, Phase R)
 │   ├── admin/                   # AdminBanButton, AdminTradeList, AdminUserTabs, BetaCountControl
-│   ├── onboarding/              # OnboardingFlow
+│   ├── onboarding/              # OnboardingFlow (rebuilt as a 4-step wizard: Welcome, Feature Showcase with 8 feature cards, Journal Setup with emotion/confidence picker, Ready screen)
 │   ├── landing/                 # LandingMotion (IntersectionObserver animations), CursorGlow, CardGlow, LandingNav (Tools/Blog/Pricing/About links, 14-Day Trial badge, DefaultLogo, centered pill container), CookieBanner, LandingFooter (Lyrafin-style multi-column footer, Phase R)
 │   ├── share/                   # ShareButton, ShareCard, ShareModal, ShareJournalButton, SharedScreenshots
 │   ├── support/                 # SupportPage (conversation thread, reply form, close with transcript opt-out, multi-select bulk delete)
@@ -101,10 +102,11 @@ proplogai/
 │   └── Logo.js                  # Logo + LogoMark components
 ├── lib/
 │   ├── ai.js                   # OpenRouter integration (callOpenRouter, analyzeTradeWithAI, analyzeCoachReport, tradeToText, datasetToText)
+│   ├── onboarding.js            # NEW — getOnboardingProgress server-side helper; computes OnboardingChecklist step progress from the DB
 │   ├── email.js                # Resend integration (sendCoachReportEmail, sendTicketTranscript, sendTicketResolvedEmail, isEmailConfigured, escHtml)
 │   ├── subscription-emails.js  # Razorpay lifecycle emails: trial ending, payment receipt, cancellation, payment failed (Phase R)
 │   ├── razorpay.js             # Razorpay SDK wrapper: createSubscription, cancelSubscription, fetchSubscription, verifyWebhookSignature, verifyPaymentSignature (Phase R)
-│   ├── stats.js                # computeStats, equitySeries, equityChartData, fmtMoney, fmtR, fmtMoneyCompact, num, getTradingDate, getTradingMonth
+│   ├── stats.js                # computeStats (avgR removed from return value), equitySeries, equityChartData, fmtMoney, fmtMoneyCompact, num, getTradingDate, getTradingMonth — fmtR function removed
 │   ├── discipline.js           # computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak, calculateWeekScore
 │   ├── achievements.js          # ACHIEVEMENT_DEFS, computeAchievements
 │   ├── notifications.js         # notify, notifyAdmin, TYPES, NOTIFICATION_META
@@ -123,7 +125,7 @@ proplogai/
 │   └── cleanup-orphans.js       # Storage orphan cleanup script
 ├── next.config.mjs               # CSP headers, HSTS, image remotePatterns, optimizePackageImports
 ├── tailwind.config.js            # Custom colors (ink, mint, loss), content glob includes .ts/.tsx
-└── supabase/migrations/          # SQL files 0001-0031
+└── supabase/migrations/          # SQL files 0001-0034 (includes 0032_clear_r_multiple.sql, 0032_setup_reference_images.sql, 0032_trophy_date.sql, 0033_bad_sl_setup.sql, 0033_drop_r_multiple.sql, 0034_restore_r_multiple.sql)
 ```
 
 ## 4. Database Schema
@@ -131,7 +133,7 @@ proplogai/
 ### Tables (15 total)
 
 **trades** — Core trade log entries
-- id, user_id, account_id, pair, direction, entry_price, exit_price, stop_loss, take_profit, lot_size, pnl, r_multiple, setup (text), setup_id (uuid FK), setup_ids (jsonb array), setup_followed (yes/partial/no), no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, share_id (uuid nullable), shared_until (timestamptz nullable), external_id, source, created_at
+- id, user_id, account_id, pair, direction, entry_price, exit_price, stop_loss, take_profit, lot_size, pnl, r_multiple (column retained but never populated or displayed — see migrations 0032-0034 below), setup (text), setup_id (uuid FK), setup_ids (jsonb array), setup_followed (yes/partial/no), no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, share_id (uuid nullable), shared_until (timestamptz nullable), external_id, source, created_at
 
 **journal_entries** — Trade journals (1:1 with trades via trade_id CASCADE)
 - id, user_id, trade_id, note, emotions[], confidence, screenshot_url, screenshot_urls (jsonb), lesson (text, migration 0025), tags (text[], migration 0026), created_at
@@ -285,7 +287,7 @@ setup_followed: 'partial'  // Auto-computed overall for DB storage
 
 3. **AbortError handlers must throw, not return.** Returning `{ error: '...' }` from a function that normally returns a string causes type mismatches in callers.
 
-4. **computeStats returns { n, net, winRate, profitFactor, avgR }** — not { total, totalPnl }. Always check the actual function signature before using return values.
+4. **computeStats returns { n, net, winRate, profitFactor }** (avgR removed as part of the r_multiple removal cleanup — see section 14) — not { total, totalPnl }. Always check the actual function signature before using return values.
 
 5. **computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak all require (trades, journals)** as two arguments. Passing only trades breaks journal-based scoring.
 
@@ -314,6 +316,8 @@ setup_followed: 'partial'  // Auto-computed overall for DB storage
 17. **Never trust a Razorpay webhook payload without verifying its signature first.** `verifyWebhookSignature(body, signature, secret)` (HMAC SHA256 against `RAZORPAY_WEBHOOK_SECRET`) must pass before any `subscriptions` row is updated from `/api/razorpay/webhook`.
 
 18. **The Razorpay checkout callback route must verify the payment signature** (`verifyPaymentSignature(orderId, paymentId, signature)`) before marking a subscription active — the redirect query params alone are not proof of payment.
+
+19. **`trades.r_multiple` is a DB column that must never be read or written by application code**, even though it still exists in the schema. It was cleared and dropped (migrations 0032/0033) then restored (migration 0034) solely to fix `PostgREST` schema-cache errors on `select(*)` queries from clients still expecting the column. Always use explicit column lists in `.select()` calls on `trades` rather than `select('*')`, both to avoid re-introducing `r_multiple` into payloads and to avoid depending on schema-cache state for correctness.
 
 ## 9. Phase L Changes (June 30, 2026 — post-K)
 
@@ -674,3 +678,110 @@ The separate `proplogai-blog` repository (not touched by this change) had its `H
 
 ### Environment Variables (required, not yet configured)
 - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RAZORPAY_PLAN_ID_MONTHLY`, `RAZORPAY_PLAN_ID_YEARLY`
+
+## 14. Onboarding Redesign + R-Multiple Removal + Inline Trade Analysis (July 9, 2026 — post-R)
+
+### Onboarding Redesign
+
+**OnboardingFlow.js (rebuilt as a 4-step wizard)**
+The `/onboarding` route wizard was rebuilt with 4 steps:
+1. **Welcome** — introduces the product
+2. **Feature Showcase** — 8 feature cards highlighting core functionality
+3. **Journal Setup** — emotion/confidence picker to prime the user's first journal entry
+4. **Ready** — hands off to the dashboard
+
+**GuidedTour.js removed from the dashboard layout**
+The 7-step `components/ui/GuidedTour.js` spotlight walkthrough (see Phase L, section 9) is no longer imported or rendered anywhere in the app — `app/dashboard/layout.js` and `app/dashboard/page.js` no longer reference it. The file itself has **not** been deleted from the codebase; it is simply dead code retained for reference. All new-user activation is now driven by `OnboardingChecklist.js`.
+
+**NEW: components/dashboard/OnboardingChecklist.js**
+A persistent dashboard checklist positioned as "Train Your AI Coach" rather than a generic product tour. Key mechanics:
+- **5 sequential steps**, unlocking one at a time (🔒 locked state shown for steps not yet reachable):
+  1. Teach your AI how you trade — create a custom setup
+  2. Log your first trade
+  3. Tell the story behind your trade — complete a journal entry
+  4. Meet your AI Coach — run an AI trade analysis
+  5. **BONUS** — celebrate your first trading day by sharing a PnL card
+- Numbered step badges (1, 2, 3, 4, 5), replaced with a ✓ once a step is completed
+- Shimmer-animated progress bar labeled "AI Learning Progress"
+- Per-step celebration toasts fire as each step completes
+- An AI preview card is shown after the user's first trade (previewing what AI coaching will look like once they complete step 4)
+- Completing all steps triggers a final "AI Coach Activated" celebration screen
+- The bonus step (PnL share) is tracked client-side via `localStorage` key `pl_first_share` rather than a DB column
+- Steps 1-4 progress is computed server-side (see `lib/onboarding.js` below); only the bonus share step relies on localStorage
+
+**NEW: lib/onboarding.js**
+Server-side helper, `getOnboardingProgress(user)` (or equivalent signature), that queries the DB (setups, trades, journal_entries, ai_insights) to compute which of the 5 checklist steps are complete, feeding `OnboardingChecklist.js` on each dashboard render.
+
+**NEW: components/trades/AnalyzeButton.js + app/api/analyze-trade/route.js**
+See "Inline Trade Analysis" below — also wired into the OnboardingChecklist's "Meet your AI Coach" step.
+
+**Settings "Replay Walkthrough"**
+The Settings > Profile > Walkthrough replay control now resets `OnboardingChecklist` progress (re-locks steps / clears the `pl_first_share` localStorage flag) instead of resetting `GuidedTour`'s `pl_tour_complete` flag.
+
+### R-Multiple Removal
+
+`r_multiple` has been removed from the application layer everywhere it was previously surfaced, while the underlying DB column is retained:
+
+- Removed from the trade form (no input/display)
+- Removed from CSV export
+- Removed from AI context — `lib/tradeContext.js`'s `avgR` reference removed
+- Removed from search results (`lib/search.js` / `/api/search`)
+- Removed from the admin trade list (`components/admin/AdminTradeList.js`)
+- Removed from all `.select()` queries across 9+ files (trade list, trade detail, dashboard, calendar, exports, etc. now use explicit column lists that omit `r_multiple`)
+- `lib/stats.js`: `fmtR` function removed entirely; `avgR` removed from `computeStats()`'s return object (dashboard "Avg R" stat was already replaced by Expectancy in Phase M — this completes the cleanup by removing the underlying computation)
+
+**Database column history (migrations 0032-0034):**
+```sql
+-- supabase/migrations/0032_clear_r_multiple.sql
+-- Clears existing r_multiple values (sets to NULL) ahead of the column drop
+UPDATE trades SET r_multiple = NULL;
+
+-- supabase/migrations/0033_drop_r_multiple.sql
+-- Drops the column entirely
+ALTER TABLE trades DROP COLUMN r_multiple;
+
+-- supabase/migrations/0034_restore_r_multiple.sql
+-- Re-adds the column after PostgREST schema cache issues broke select(*) queries
+-- referencing the dropped column across cached client connections
+ALTER TABLE trades ADD COLUMN r_multiple numeric;
+```
+The column is re-added purely for `select(*)`/schema-cache compatibility — it is never populated or displayed by the application. Any future code should not read or write `r_multiple`.
+
+**Other July 2026 migrations (not r_multiple related):**
+- `0032_setup_reference_images.sql`
+- `0032_trophy_date.sql`
+- `0033_bad_sl_setup.sql` — seeds the new "Bad SL" default setup (see below)
+
+### Trade Detail Page: Inline Trade Analysis
+
+**NEW: components/trades/AnalyzeButton.js**
+Client component rendered on the trade detail page (`/dashboard/trades/[id]`). Replaces the old "Analyze on Trades Page" link (which redirected the user away to run analysis elsewhere) with an inline "Analyze this trade" button that triggers analysis without leaving the page.
+
+**NEW: app/api/analyze-trade/route.js**
+API route backing `AnalyzeButton.js`. Runs the same `analyzeTradeWithAI` pipeline used elsewhere (guardrails, rate limiting, `ai_insights` caching) but is structured to report errors step-by-step (e.g., distinguishing "rate limit hit" vs. "AI call failed" vs. "trade not found") back to the client for clearer inline error states, rather than a single generic failure message.
+
+**Explicit column selection**
+All `select('*')` calls on the trade detail page (`app/dashboard/trades/[id]/page.js`) have been replaced with explicit column lists — both to drop `r_multiple` from the payload and as a general hardening measure (see Pitfall #19 below).
+
+### DEFAULT_SETUPS: "Bad SL" Added
+
+`app/onboarding/actions.js`'s `DEFAULT_SETUPS` array (seeded for every new user) now includes an 8th named setup, **"Bad SL"**, at `sort_order: 8` — bringing the total default setup count to **9** (including the exclusive "No Setup" option). Seeded via migration `0033_bad_sl_setup.sql` for existing installs; new signups get it automatically from `DEFAULT_SETUPS`.
+
+### New Files
+- `lib/onboarding.js`
+- `components/dashboard/OnboardingChecklist.js`
+- `components/trades/AnalyzeButton.js`
+- `app/api/analyze-trade/route.js`
+- `supabase/migrations/0032_clear_r_multiple.sql`, `supabase/migrations/0032_setup_reference_images.sql`, `supabase/migrations/0032_trophy_date.sql`, `supabase/migrations/0033_bad_sl_setup.sql`, `supabase/migrations/0033_drop_r_multiple.sql`, `supabase/migrations/0034_restore_r_multiple.sql`
+
+### Modified Files
+- `components/onboarding/OnboardingFlow.js` (rebuilt as 4-step wizard)
+- `app/dashboard/layout.js`, `app/dashboard/page.js` (GuidedTour removed, OnboardingChecklist added)
+- `components/settings/SettingsTabs.js` (Replay Walkthrough now resets OnboardingChecklist)
+- `lib/stats.js` (fmtR removed, avgR removed from computeStats), `lib/tradeContext.js` (avgR reference removed), `lib/search.js`
+- `app/dashboard/trades/[id]/page.js` (AnalyzeButton added, select('*') replaced with explicit columns), `components/admin/AdminTradeList.js`
+- `app/onboarding/actions.js` (Bad SL added to DEFAULT_SETUPS)
+- Trade form, CSV export, and the 9+ files with `.select()` queries touching `trades.r_multiple`
+
+### Not Deleted (Dead Code Note)
+- `components/ui/GuidedTour.js` still exists in the repository. It is no longer imported or referenced by any route or component — retained as dead code rather than removed in this change.
