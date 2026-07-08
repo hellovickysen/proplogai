@@ -4,53 +4,54 @@ import { analyzeTradeWithAI } from '@/lib/ai';
 import { getUserAccess } from '@/lib/plans';
 import { getUserTradeContext } from '@/lib/tradeContext';
 import { notify, TYPES } from '@/lib/notifications';
-import { revalidatePath } from 'next/cache';
 
 export async function POST(req) {
+  let step = 'init';
   try {
     const { tradeId } = await req.json();
-    if (!tradeId) {
-      return NextResponse.json({ error: 'Missing tradeId' }, { status: 400 });
-    }
+    if (!tradeId) return NextResponse.json({ error: 'Missing tradeId' }, { status: 400 });
 
+    step = 'auth';
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: 'You must be signed in.' }, { status: 401 });
-    }
+    if (!user) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
 
-    // Plan-based limit check
+    step = 'access';
     const access = await getUserAccess(supabase, user);
-    if (!access.canUse('ai_analysis')) {
-      return NextResponse.json({ error: 'AI trade analysis requires the Elite plan.' }, { status: 403 });
-    }
+    if (!access.canUse('ai_analysis')) return NextResponse.json({ error: 'Requires Elite plan' }, { status: 403 });
+
+    step = 'remaining';
     const { remaining } = await access.remaining('ai_analysis', supabase, user.id);
     if (remaining <= 0 && access.plan === 'basic' && !access.isBeta && !access.isAdmin) {
-      return NextResponse.json({ error: "You've used all AI analyses this month. Upgrade to Elite for more." }, { status: 403 });
+      return NextResponse.json({ error: 'Monthly limit reached' }, { status: 403 });
     }
 
-    // Fetch trade
-    const { data: trade } = await supabase.from('trades').select('id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, created_at').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
-    if (!trade) {
-      return NextResponse.json({ error: 'Trade not found.' }, { status: 404 });
-    }
+    step = 'fetch-trade';
+    const { data: trade, error: tErr } = await supabase.from('trades')
+      .select('id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, created_at')
+      .eq('id', tradeId).eq('user_id', user.id).maybeSingle();
+    if (tErr) return NextResponse.json({ error: 'Trade query failed: ' + tErr.message, step }, { status: 500 });
+    if (!trade) return NextResponse.json({ error: 'Trade not found' }, { status: 404 });
 
-    // Fetch journal
-    const { data: journal } = await supabase.from('journal_entries').select('id, trade_id, note, lesson, emotions, tags, confidence, screenshot_url, screenshot_urls, created_at').eq('trade_id', tradeId).eq('user_id', user.id).maybeSingle();
+    step = 'fetch-journal';
+    const { data: journal, error: jErr } = await supabase.from('journal_entries')
+      .select('id, trade_id, note, lesson, emotions, tags, confidence, screenshot_url, screenshot_urls, created_at')
+      .eq('trade_id', tradeId).eq('user_id', user.id).maybeSingle();
+    if (jErr) return NextResponse.json({ error: 'Journal query failed: ' + jErr.message, step }, { status: 500 });
 
-    // Build context
+    step = 'context';
     const depth = access.effectivePlan === 'elite' ? 90 : 30;
     const context = await getUserTradeContext(supabase, user.id, { depth });
 
-    // Run AI analysis
+    step = 'ai-call';
     let analysis;
     try {
       analysis = await analyzeTradeWithAI(trade, journal, context);
-    } catch (e) {
-      return NextResponse.json({ error: (e && e.message) || 'AI analysis failed.' }, { status: 500 });
+    } catch (aiErr) {
+      return NextResponse.json({ error: 'AI call failed: ' + (aiErr.message || String(aiErr)), step }, { status: 500 });
     }
 
-    // Save to DB
+    step = 'save';
     const row = {
       user_id: user.id,
       trade_id: tradeId,
@@ -60,35 +61,27 @@ export async function POST(req) {
       severity: Number.isFinite(Number(analysis.execution_score)) ? Math.round(Number(analysis.execution_score)) : null,
     };
 
-    const { data: existing } = await supabase
-      .from('ai_insights')
-      .select('id')
-      .eq('trade_id', tradeId)
-      .eq('type', 'trade_analysis')
-      .eq('user_id', user.id)
-      .maybeSingle();
+    const { data: existing } = await supabase.from('ai_insights')
+      .select('id').eq('trade_id', tradeId).eq('type', 'trade_analysis').eq('user_id', user.id).maybeSingle();
 
-    let dbError;
+    let dbErr;
     if (existing) {
-      const res = await supabase.from('ai_insights').update(row).eq('id', existing.id).eq('user_id', user.id);
-      dbError = res.error;
+      const r = await supabase.from('ai_insights').update(row).eq('id', existing.id).eq('user_id', user.id);
+      dbErr = r.error;
     } else {
-      const res = await supabase.from('ai_insights').insert(row);
-      dbError = res.error;
+      const r = await supabase.from('ai_insights').insert(row);
+      dbErr = r.error;
     }
-    if (dbError) {
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
-    }
+    if (dbErr) return NextResponse.json({ error: 'DB save failed: ' + dbErr.message, step }, { status: 500 });
 
-    // Notification
-    const grade = analysis.grade || '';
-    await notify(supabase, user.id, TYPES.AI_ANALYSIS, 'AI Analysis Complete', `${trade.pair} — Grade: ${grade}`, { link: '/dashboard/trades/' + tradeId });
-
-    try { revalidatePath('/dashboard/trades/' + tradeId); } catch (e) {}
+    step = 'notify';
+    try {
+      await notify(supabase, user.id, TYPES.AI_ANALYSIS, 'AI Analysis Complete',
+        trade.pair + ' — Grade: ' + (analysis.grade || ''), { link: '/dashboard/trades/' + tradeId });
+    } catch (e) { /* non-critical */ }
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error('analyze-trade API error:', e);
-    return NextResponse.json({ error: 'AI analysis failed. Please try again.' }, { status: 500 });
+    return NextResponse.json({ error: 'Crashed at step: ' + step + ' — ' + (e.message || String(e)) }, { status: 500 });
   }
 }

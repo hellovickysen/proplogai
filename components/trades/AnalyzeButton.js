@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { analyzeTrade } from '@/app/dashboard/trades/actions';
 
 const gradientBtn = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' };
 
@@ -13,19 +12,21 @@ export default function AnalyzeButton({ tradeId }) {
     setLoading(true);
     setError(null);
     try {
-      const result = await analyzeTrade(tradeId);
-      if (result && result.error) {
-        setError(result.error);
+      const res = await fetch('/api/analyze-trade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tradeId }),
+      });
+      let data;
+      try { data = await res.json(); } catch { data = {}; }
+      if (!res.ok || data.error) {
+        setError(data.error || 'Failed (' + res.status + ')');
         setLoading(false);
       } else {
-        // Analysis done — full page reload to show results
-        // (avoids Server Components render issues with router.refresh)
         window.location.reload();
       }
     } catch (e) {
-      // Server action errors sometimes throw instead of returning
-      const msg = e && typeof e === 'object' && e.message ? e.message : String(e);
-      setError(msg || 'Analysis failed. Please try again.');
+      setError('Network error: ' + (e.message || 'Please try again'));
       setLoading(false);
     }
   }
@@ -44,7 +45,7 @@ export default function AnalyzeButton({ tradeId }) {
             Analyzing...
           </>
         ) : (
-          <>✦ Analyze this trade</>
+          <>&#10022; Analyze this trade</>
         )}
       </button>
       {error && (
