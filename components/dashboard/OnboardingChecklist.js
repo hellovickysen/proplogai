@@ -16,18 +16,18 @@ const AI_PREVIEW = [
   'One habit to improve this week',
 ];
 
-const UNLOCKED_FEATURES = [
-  { icon: '🤖', label: 'AI Coach' },
-  { icon: '📊', label: 'Monthly Review' },
-  { icon: '🎯', label: 'Trader Score' },
-  { icon: '🏆', label: 'First Achievement' },
+const AI_UNDERSTANDS = [
+  { icon: '📖', label: 'Your trading rules' },
+  { icon: '📊', label: 'Your first trade' },
+  { icon: '📝', label: 'Your journal' },
+  { icon: '🧠', label: 'Your psychology' },
+  { icon: '🎯', label: 'Your trading style' },
 ];
 
-export default function OnboardingChecklist({ milestones, completed, total, userName }) {
+export default function OnboardingChecklist({ milestones, completed, total, coreCompleted, coreTotal, userName }) {
   const [dismissed, setDismissed] = useState(true);
   const [prevCompleted, setPrevCompleted] = useState(null);
   const [celebrating, setCelebrating] = useState(null);
-  const [showFinal, setShowFinal] = useState(false);
   const celebrationTimer = useRef(null);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function OnboardingChecklist({ milestones, completed, total, user
       setPrevCompleted(completed);
       return;
     }
-    if (completed > prevCompleted && completed < total) {
+    if (completed > prevCompleted) {
       const justDone = milestones.find((m, i) => m.done && i === completed - 1);
       if (justDone) {
         setCelebrating(justDone);
@@ -56,12 +56,8 @@ export default function OnboardingChecklist({ milestones, completed, total, user
       }
       try { localStorage.setItem(COMPLETED_KEY, String(completed)); } catch {}
       setPrevCompleted(completed);
-    } else if (completed === total && prevCompleted < total) {
-      setShowFinal(true);
-      try { localStorage.setItem(COMPLETED_KEY, String(completed)); } catch {}
-      setPrevCompleted(completed);
     }
-  }, [completed, prevCompleted, total, milestones]);
+  }, [completed, prevCompleted, milestones]);
 
   useEffect(() => {
     return () => { if (celebrationTimer.current) clearTimeout(celebrationTimer.current); };
@@ -77,40 +73,75 @@ export default function OnboardingChecklist({ milestones, completed, total, user
   const pct = Math.round((completed / total) * 100);
   const displayName = userName || 'there';
   const nextStep = milestones.find((m) => !m.done);
-  const firstStepDone = milestones[0]?.done;
+  const coreComplete = coreCompleted >= coreTotal;
+  const coreMilestones = milestones.filter((m) => !m.bonus);
+  const bonusMilestones = milestones.filter((m) => m.bonus);
 
-  // ─── Final Celebration: AI Coach Activated ───
-  if (showFinal || completed === total) {
+  // ─── AI Coach Activated (core 4 steps done) ───
+  if (coreComplete) {
     return (
-      <div className="mb-6 rounded-2xl border border-emerald-400/20 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-5 sm:p-7">
-        <div className="flex flex-col items-center text-center">
-          <div className="mb-3 text-4xl">🎉</div>
-          <h3 className="mb-1 font-display text-xl font-bold" style={gradientText}>
-            AI Coach Activated
-          </h3>
-          <p className="mb-2 text-sm font-medium text-white">
-            Congratulations, {displayName}!
-          </p>
-          <p className="mb-5 max-w-md text-sm leading-relaxed text-white/50">
-            Your AI has enough data to begin coaching you. The more you trade and journal,
-            the smarter it gets.
-          </p>
-          <div className="mb-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {UNLOCKED_FEATURES.map((f) => (
-              <div key={f.label} className="rounded-xl border border-emerald-400/10 bg-emerald-500/[0.04] px-3 py-2.5 text-center">
-                <div className="text-xl">{f.icon}</div>
-                <div className="mt-1 text-xs font-medium text-white/70">{f.label}</div>
-              </div>
-            ))}
+      <div className="mb-6 space-y-3">
+        <div className="rounded-2xl border border-emerald-400/20 bg-gradient-to-b from-emerald-500/[0.08] to-transparent p-5 sm:p-7">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-3 text-4xl">🎉</div>
+            <h3 className="mb-1 font-display text-xl font-bold" style={gradientText}>
+              Your AI Coach is Ready
+            </h3>
+            <p className="mb-2 text-sm font-medium text-white">
+              Congratulations, {displayName}!
+            </p>
+            <p className="mb-4 max-w-md text-sm leading-relaxed text-white/50">
+              Your AI now understands how you trade. The more you journal, the smarter it gets.
+            </p>
+            <div className="mb-5 flex flex-wrap justify-center gap-2">
+              {AI_UNDERSTANDS.map((item) => (
+                <div key={item.label} className="flex items-center gap-1.5 rounded-full border border-emerald-400/15 bg-emerald-500/[0.05] px-3 py-1.5">
+                  <span className="text-sm">{item.icon}</span>
+                  <span className="text-xs font-medium text-emerald-300/80">{item.label}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/dashboard/coach"
+                className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f]"
+                style={gradientBtn}
+              >
+                Open AI Coach &rarr;
+              </Link>
+              <button
+                onClick={dismiss}
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white/50 hover:text-white/70"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
-          <Link
-            href="/dashboard/coach"
-            className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f]"
-            style={gradientBtn}
-          >
-            Open AI Coach &rarr;
-          </Link>
         </div>
+
+        {/* Bonus step shown below completion */}
+        {bonusMilestones.map((m) => !m.done && (
+          <Link
+            key={m.id}
+            href={m.href}
+            className="flex items-center gap-3.5 rounded-xl border border-amber-400/15 bg-amber-500/[0.03] p-3.5 hover:bg-amber-500/[0.06] transition-all"
+          >
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-lg">
+              {m.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-400">BONUS</span>
+                <span className="text-sm font-semibold text-white">{m.title}</span>
+              </div>
+              <p className="mt-0.5 text-xs text-white/40">{m.desc}</p>
+            </div>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <span className="text-xs text-amber-400/60">🏆</span>
+              <span className="font-mono text-[10px] text-amber-400/50">{m.reward}</span>
+            </div>
+          </Link>
+        ))}
       </div>
     );
   }
@@ -134,14 +165,14 @@ export default function OnboardingChecklist({ milestones, completed, total, user
           <span className="font-mono text-xs font-semibold" style={gradientText}>
             AI Learning Progress &middot; {pct}%
           </span>
-          <span className="font-mono text-xs text-white/30">{completed}/{total} steps</span>
+          <span className="font-mono text-xs text-white/30">Step {completed + 1 > total ? total : completed + 1} of {total}</span>
         </div>
         <div className="flex gap-1">
           {milestones.map((m, i) => (
             <div
               key={m.id}
               className="h-2 flex-1 rounded-full transition-all duration-500"
-              style={i < completed ? gradientBtn : { background: 'rgba(255,255,255,0.06)' }}
+              style={m.done ? (m.bonus ? { background: '#fbbf24' } : gradientBtn) : { background: 'rgba(255,255,255,0.06)' }}
             />
           ))}
         </div>
@@ -168,10 +199,10 @@ export default function OnboardingChecklist({ milestones, completed, total, user
         </div>
       )}
 
-      {/* ─── Task Cards ─── */}
+      {/* ─── Core Task Cards ─── */}
       <div className="space-y-2">
-        {milestones.map((m, i) => {
-          const isNext = !m.done && (i === 0 || milestones[i - 1].done);
+        {coreMilestones.map((m, i) => {
+          const isNext = !m.done && (i === 0 || coreMilestones[i - 1].done);
           const showAiPreview = m.id === 'trade' && m.done && !milestones.find(x => x.id === 'analysis')?.done;
 
           return (
@@ -247,6 +278,47 @@ export default function OnboardingChecklist({ milestones, completed, total, user
             </div>
           );
         })}
+
+        {/* ─── Bonus Step ─── */}
+        {bonusMilestones.map((m) => (
+          <Link
+            key={m.id}
+            href={m.href}
+            className={`group flex items-start gap-3.5 rounded-xl border p-3.5 transition-all ${
+              m.done
+                ? 'border-white/[0.05] bg-white/[0.01] opacity-50'
+                : 'border-amber-400/10 bg-amber-500/[0.02] hover:bg-amber-500/[0.05]'
+            }`}
+          >
+            <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg ${
+              m.done ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/10'
+            }`}>
+              {m.done ? '✓' : m.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-400">BONUS</span>
+                <span className={`text-sm font-semibold ${m.done ? 'text-white/40 line-through' : 'text-white'}`}>
+                  {m.title}
+                </span>
+                {!m.done && (
+                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] text-white/35">
+                    {m.time}
+                  </span>
+                )}
+              </div>
+              {!m.done && (
+                <>
+                  <p className="mt-0.5 text-xs leading-relaxed text-white/40">{m.desc}</p>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <span className="text-[10px] text-amber-400">🏆</span>
+                    <span className="font-mono text-[10px] text-amber-400/50">{m.reward}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </Link>
+        ))}
       </div>
 
       {/* ─── Dismiss ─── */}

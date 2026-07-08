@@ -233,6 +233,8 @@ export default async function DashboardPage() {
           milestones={onboardingProgress.milestones}
           completed={onboardingProgress.completed}
           total={onboardingProgress.total}
+          coreCompleted={onboardingProgress.coreCompleted}
+          coreTotal={onboardingProgress.coreTotal}
           userName={onboardingName}
         />
       </div>
