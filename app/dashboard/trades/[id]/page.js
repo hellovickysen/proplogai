@@ -5,6 +5,7 @@ import { fmtMoney } from '@/lib/stats';
 import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
 import TradeShareMenu from '@/components/share/TradeShareMenu';
 import AnalyzeButton from '@/components/trades/AnalyzeButton';
+import DeleteTradeButton from '@/components/trades/DeleteTradeButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -302,11 +303,12 @@ export default async function TradeDetailPage({ params, searchParams }) {
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-3 mt-6">
+      <div className="flex items-center justify-between mt-6">
         <Link href="/dashboard/trades" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/60 hover:text-white/80 hover:bg-white/[0.06] transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
           All Trades
         </Link>
+        <DeleteTradeButton tradeId={id} pair={trade.pair} />
       </div>
     </div>
   );

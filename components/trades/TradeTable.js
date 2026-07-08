@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { fmtMoney, fmtMoneyCompact, num } from '@/lib/stats';
+import DeleteTradeButton from '@/components/trades/DeleteTradeButton';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -44,9 +45,12 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
                     <span className="text-xs text-amber-400/60">📝</span>
                   )}
                 </div>
-                <span className={'font-mono text-base font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>
-                  {fmtMoneyCompact(t.pnl)}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className={'font-mono text-base font-bold ' + (win ? 'text-emerald-400' : 'text-red-400')}>
+                    {fmtMoneyCompact(t.pnl)}
+                  </span>
+                  <DeleteTradeButton tradeId={t.id} pair={t.pair} compact />
+                </div>
               </div>
               {/* Row 2: Meta info */}
               <div className="flex items-center justify-between">

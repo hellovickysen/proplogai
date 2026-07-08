@@ -3,24 +3,21 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteTrade } from '@/app/dashboard/trades/actions';
-import { useToast } from '@/components/ui/Toast';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
-export default function DeleteTradeButton({ tradeId }) {
+export default function DeleteTradeButton({ tradeId, pair, compact }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const toast = useToast();
-  const [busy, setBusy] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
-  async function onConfirmDelete() {
-    setShowConfirm(false);
-    setBusy(true);
-    const res = await deleteTrade(tradeId);
-    if (res && res.error) {
-      if (toast) toast.error(res.error);
-      setBusy(false);
+  async function handleDelete() {
+    setLoading(true);
+    const result = await deleteTrade(tradeId);
+    if (result?.error) {
+      setLoading(false);
+      setOpen(false);
+      alert(result.error);
     } else {
-      if (toast) toast.warning('Trade deleted');
       router.push('/dashboard/trades');
       router.refresh();
     }
@@ -29,19 +26,35 @@ export default function DeleteTradeButton({ tradeId }) {
   return (
     <>
       <button
-        onClick={() => setShowConfirm(true)}
-        disabled={busy}
-        className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-60"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen(true); }}
+        className={compact
+          ? 'rounded-lg p-1.5 text-white/25 hover:text-red-400 hover:bg-red-500/10 transition-colors'
+          : 'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-400/20 bg-red-500/[0.05] text-sm text-red-400 hover:bg-red-500/10 transition-colors'
+        }
+        title="Delete trade"
       >
-        {busy ? 'Deleting...' : 'Delete'}
+        {compact ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14" />
+          </svg>
+        ) : (
+          <>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14" />
+            </svg>
+            Delete Trade
+          </>
+        )}
       </button>
-
       <ConfirmDialog
-        open={showConfirm}
-        onClose={() => setShowConfirm(false)}
-        onConfirm={onConfirmDelete}
-        title="Delete this trade?"
-        message="This action can't be undone. The trade and its journal entry will be permanently removed."
+        open={open}
+        onClose={() => setOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete trade"
+        message={`Are you sure you want to delete ${pair || 'this trade'}? This will also remove the journal entry, AI analysis, and any screenshots. This action cannot be undone.`}
+        confirmLabel="Delete"
+        loadingLabel="Deleting..."
+        loading={loading}
       />
     </>
   );
