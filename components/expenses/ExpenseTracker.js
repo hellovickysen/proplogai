@@ -930,10 +930,10 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                   <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first prop expense or payout.</p></div>
                 ) : (
                   <div className="space-y-3">
-                    {[...[...expenses].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((e) => ({ type: 'expense', ...e, date: e.expense_date, amt: e.total_cost })),
-                      ...[...payouts].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((p) => ({ type: 'payout', ...p, date: p.payout_date, amt: p.amount }))
+                    {[...[...expenses].sort((a, b) => new Date(b.expense_date) - new Date(a.expense_date) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((e) => ({ type: 'expense', ...e, date: e.expense_date, amt: e.total_cost })),
+                      ...[...payouts].sort((a, b) => new Date(b.payout_date) - new Date(a.payout_date) || new Date(b.created_at) - new Date(a.created_at)).slice(0, 5).map((p) => ({ type: 'payout', ...p, date: p.payout_date, amt: p.amount }))
                     ]
-                      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                      .sort((a, b) => new Date(b.date) - new Date(a.date) || new Date(b.created_at) - new Date(a.created_at))
                       .slice(0, 8)
                       .map((item) => (
                         <div key={item.id} className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-3">
