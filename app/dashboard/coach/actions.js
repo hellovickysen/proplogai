@@ -44,7 +44,7 @@ export async function generateCoachReport() {
 
   const { data: trades } = await supabase
     .from('trades')
-    .select('*')
+    .select('id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, created_at')
     .eq('user_id', user.id)
     .order('trade_date', { ascending: false })
     .order('created_at', { ascending: false })
@@ -55,7 +55,7 @@ export async function generateCoachReport() {
   }
 
   const ids = list.map((t) => t.id);
-  const { data: journals } = await supabase.from('journal_entries').select('*').in('trade_id', ids);
+  const { data: journals } = await supabase.from('journal_entries').select('id, trade_id, note, lesson, emotions, tags, confidence, created_at').in('trade_id', ids);
   const jmap = {};
   (journals || []).forEach((j) => {
     jmap[j.trade_id] = j;
@@ -111,7 +111,7 @@ export async function sendCoachReportEmail() {
   // Fetch the latest coach report
   const { data: insight } = await supabase
     .from('ai_insights')
-    .select('*')
+    .select('id, summary, mistakes, severity, created_at')
     .eq('user_id', user.id)
     .eq('type', 'coach_report')
     .order('created_at', { ascending: false })

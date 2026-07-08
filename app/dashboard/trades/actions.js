@@ -288,9 +288,9 @@ export async function analyzeTrade(tradeId) {
     return { error: 'You\'ve used all 3 AI analyses this month. Upgrade to Elite for more.' };
   }
 
-  const { data: trade } = await supabase.from('trades').select('*').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
+  const { data: trade } = await supabase.from('trades').select('id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, created_at').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
   if (!trade) return { error: 'Trade not found.' };
-  const { data: journal } = await supabase.from('journal_entries').select('*').eq('trade_id', tradeId).eq('user_id', user.id).maybeSingle();
+  const { data: journal } = await supabase.from('journal_entries').select('id, trade_id, note, lesson, emotions, tags, confidence, screenshot_url, screenshot_urls, created_at').eq('trade_id', tradeId).eq('user_id', user.id).maybeSingle();
 
   // Build user context for personalized AI analysis
   const depth = access.effectivePlan === 'elite' ? 90 : 30;
