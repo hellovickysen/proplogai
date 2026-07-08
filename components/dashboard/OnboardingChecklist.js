@@ -41,7 +41,6 @@ export default function OnboardingChecklist({ milestones, completed, total, core
     }
   }, []);
 
-  // Detect newly completed step
   useEffect(() => {
     if (prevCompleted === null) {
       try { localStorage.setItem(COMPLETED_KEY, String(completed)); } catch {}
@@ -72,7 +71,7 @@ export default function OnboardingChecklist({ milestones, completed, total, core
 
   const pct = Math.round((completed / total) * 100);
   const displayName = userName || 'there';
-  const nextStep = milestones.find((m) => !m.done);
+  const nextStep = milestones.find((m) => !m.done && !m.locked);
   const coreComplete = coreCompleted >= coreTotal;
   const coreMilestones = milestones.filter((m) => !m.bonus);
   const bonusMilestones = milestones.filter((m) => m.bonus);
@@ -119,7 +118,6 @@ export default function OnboardingChecklist({ milestones, completed, total, core
           </div>
         </div>
 
-        {/* Bonus step shown below completion */}
         {bonusMilestones.map((m) => !m.done && (
           <Link
             key={m.id}
@@ -165,10 +163,10 @@ export default function OnboardingChecklist({ milestones, completed, total, core
           <span className="font-mono text-xs font-semibold" style={gradientText}>
             AI Learning Progress &middot; {pct}%
           </span>
-          <span className="font-mono text-xs text-white/30">Step {completed + 1 > total ? total : completed + 1} of {total}</span>
+          <span className="font-mono text-xs text-white/30">Step {Math.min(completed + 1, total)} of {total}</span>
         </div>
         <div className="flex gap-1">
-          {milestones.map((m, i) => (
+          {milestones.map((m) => (
             <div
               key={m.id}
               className="h-2 flex-1 rounded-full transition-all duration-500"
@@ -201,9 +199,34 @@ export default function OnboardingChecklist({ milestones, completed, total, core
 
       {/* ─── Core Task Cards ─── */}
       <div className="space-y-2">
-        {coreMilestones.map((m, i) => {
-          const isNext = !m.done && (i === 0 || coreMilestones[i - 1].done);
+        {coreMilestones.map((m) => {
+          const isNext = !m.done && !m.locked;
           const showAiPreview = m.id === 'trade' && m.done && !milestones.find(x => x.id === 'analysis')?.done;
+
+          // Locked card (previous step not done)
+          if (m.locked) {
+            return (
+              <div key={m.id}>
+                <div className="flex items-start gap-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] p-3.5 opacity-40">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-base text-white/30">
+                    🔒
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-white/40">{m.title}</span>
+                      <span className="rounded-full border border-white/[0.06] bg-white/[0.02] px-2 py-0.5 font-mono text-[10px] text-white/20">
+                        {m.time}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className="text-[10px] text-white/20">&#9733;</span>
+                      <span className="font-mono text-[10px] text-white/20">{m.reward}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          }
 
           return (
             <div key={m.id}>
@@ -212,23 +235,17 @@ export default function OnboardingChecklist({ milestones, completed, total, core
                 className={`group flex items-start gap-3.5 rounded-xl border p-3.5 transition-all ${
                   m.done
                     ? 'border-white/[0.05] bg-white/[0.01] opacity-50'
-                    : isNext
-                    ? 'border-violet-400/20 bg-violet-500/[0.04] hover:bg-violet-500/[0.07]'
-                    : 'border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04]'
+                    : 'border-violet-400/20 bg-violet-500/[0.04] hover:bg-violet-500/[0.07]'
                 }`}
               >
-                {/* Icon / Check */}
                 <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg ${
                   m.done
                     ? 'bg-emerald-500/15 text-emerald-400'
-                    : isNext
-                    ? 'bg-violet-500/15'
-                    : 'bg-white/[0.04]'
+                    : 'bg-violet-500/15'
                 }`}>
                   {m.done ? '✓' : m.icon}
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-semibold ${m.done ? 'text-white/40 line-through' : 'text-white'}`}>
@@ -251,15 +268,13 @@ export default function OnboardingChecklist({ milestones, completed, total, core
                   )}
                 </div>
 
-                {/* Arrow for actionable steps */}
-                {!m.done && isNext && (
+                {!m.done && (
                   <svg className="mt-2 h-4 w-4 flex-shrink-0 text-violet-400/50 group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 )}
               </Link>
 
-              {/* ─── AI Preview: shown after first trade, before AI analysis ─── */}
               {showAiPreview && (
                 <div className="mt-2 mb-1 rounded-xl border border-violet-400/15 bg-violet-500/[0.04] p-3.5">
                   <div className="mb-2 text-xs font-semibold" style={gradientText}>
@@ -280,45 +295,62 @@ export default function OnboardingChecklist({ milestones, completed, total, core
         })}
 
         {/* ─── Bonus Step ─── */}
-        {bonusMilestones.map((m) => (
-          <Link
-            key={m.id}
-            href={m.href}
-            className={`group flex items-start gap-3.5 rounded-xl border p-3.5 transition-all ${
-              m.done
-                ? 'border-white/[0.05] bg-white/[0.01] opacity-50'
-                : 'border-amber-400/10 bg-amber-500/[0.02] hover:bg-amber-500/[0.05]'
-            }`}
-          >
-            <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg ${
-              m.done ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/10'
-            }`}>
-              {m.done ? '✓' : m.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-400">BONUS</span>
-                <span className={`text-sm font-semibold ${m.done ? 'text-white/40 line-through' : 'text-white'}`}>
-                  {m.title}
-                </span>
-                {!m.done && (
-                  <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] text-white/35">
-                    {m.time}
+        {bonusMilestones.map((m) => {
+          if (m.locked) {
+            return (
+              <div key={m.id} className="flex items-start gap-3.5 rounded-xl border border-white/[0.04] bg-white/[0.01] p-3.5 opacity-40">
+                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/[0.04] text-base text-white/30">
+                  🔒
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-amber-500/10 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-400/40">BONUS</span>
+                    <span className="text-sm font-semibold text-white/40">{m.title}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <Link
+              key={m.id}
+              href={m.href}
+              className={`group flex items-start gap-3.5 rounded-xl border p-3.5 transition-all ${
+                m.done
+                  ? 'border-white/[0.05] bg-white/[0.01] opacity-50'
+                  : 'border-amber-400/10 bg-amber-500/[0.02] hover:bg-amber-500/[0.05]'
+              }`}
+            >
+              <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-lg ${
+                m.done ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/10'
+              }`}>
+                {m.done ? '✓' : m.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-amber-500/15 px-2 py-0.5 font-mono text-[10px] font-semibold text-amber-400">BONUS</span>
+                  <span className={`text-sm font-semibold ${m.done ? 'text-white/40 line-through' : 'text-white'}`}>
+                    {m.title}
                   </span>
+                  {!m.done && (
+                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] text-white/35">
+                      {m.time}
+                    </span>
+                  )}
+                </div>
+                {!m.done && (
+                  <>
+                    <p className="mt-0.5 text-xs leading-relaxed text-white/40">{m.desc}</p>
+                    <div className="mt-1.5 flex items-center gap-1.5">
+                      <span className="text-[10px] text-amber-400">🏆</span>
+                      <span className="font-mono text-[10px] text-amber-400/50">{m.reward}</span>
+                    </div>
+                  </>
                 )}
               </div>
-              {!m.done && (
-                <>
-                  <p className="mt-0.5 text-xs leading-relaxed text-white/40">{m.desc}</p>
-                  <div className="mt-1.5 flex items-center gap-1.5">
-                    <span className="text-[10px] text-amber-400">🏆</span>
-                    <span className="font-mono text-[10px] text-amber-400/50">{m.reward}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
 
       {/* ─── Dismiss ─── */}
