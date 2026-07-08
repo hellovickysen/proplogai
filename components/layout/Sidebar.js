@@ -11,7 +11,7 @@ const NAV = [
   { label: 'Trades',    icon: '☰', href: '/dashboard/trades' },
   { label: 'Rulebook',  icon: '📋', href: '/dashboard/rulebook' },
   { label: 'Calendar',  icon: '📅', href: '/dashboard/calendar' },
-  { label: 'Expenses',  icon: '💳', href: '/dashboard/expenses', tourId: 'nav-expenses' },
+  { label: 'Prop Expenses',  icon: '💳', href: '/dashboard/prop-expenses', tourId: 'nav-expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
   { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach', tourId: 'nav-coach' },
   { label: 'Tools',     icon: '🛠', href: '/dashboard/tools' },

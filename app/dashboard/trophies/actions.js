@@ -55,7 +55,7 @@ export async function createTrophy(payload) {
   if (error) return { error: error.message };
 
   revalidatePath('/dashboard/trophies');
-  revalidatePath('/dashboard/expenses');
+  revalidatePath('/dashboard/prop-expenses');
   return { ok: true };
 }
 
@@ -83,7 +83,7 @@ export async function deleteTrophy(id) {
   }
 
   revalidatePath('/dashboard/trophies');
-  revalidatePath('/dashboard/expenses');
+  revalidatePath('/dashboard/prop-expenses');
   return { ok: true };
 }
 

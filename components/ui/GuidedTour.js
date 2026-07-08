@@ -8,7 +8,7 @@ const TOUR_STEPS = [
     page: '/dashboard',
     target: null, // No target — center modal welcome
     title: 'Welcome to PropLogAI!',
-    description: 'Let\'s take a quick tour of the essentials. You\'ll learn how to log trades, journal your psychology, track expenses, and share your results. Takes about 60 seconds.',
+    description: 'Let\'s take a quick tour of the essentials. You\'ll learn how to log trades, journal your psychology, track prop expenses, and share your results. Takes about 60 seconds.',
     icon: '👋',
   },
   {
