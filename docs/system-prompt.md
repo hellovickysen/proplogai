@@ -119,6 +119,7 @@ Each selected setup has its own Yes/Partial/No follow status (inline buttons in 
 2. Cross-user pattern intelligence — anonymized aggregate insights across all users
 3. Set Razorpay production env vars (RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, RAZORPAY_PLAN_ID_MONTHLY, RAZORPAY_PLAN_ID_YEARLY) in Vercel and go live with billing
 4. Tier 3 "Ask Propol" search summary — on-demand AI summary of search results pattern
+5. Mobile sticky bottom navigation bar — fixed bottom nav with 5 quick-access tabs (Dashboard, Trades, Calendar, Expenses, Settings) for faster mobile navigation
 
 ## Development Workflow
 - Push code via GitHub MCP integration (github__push_files for multi-file commits, github__create_or_update_file for single files, github__delete_file for removals)
