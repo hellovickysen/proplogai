@@ -785,3 +785,94 @@ All `select('*')` calls on the trade detail page (`app/dashboard/trades/[id]/pag
 
 ### Not Deleted (Dead Code Note)
 - `components/ui/GuidedTour.js` still exists in the repository. It is no longer imported or referenced by any route or component — retained as dead code rather than removed in this change.
+
+
+## Current Dashboard Layout Architecture (as of July 2026)
+
+The dashboard layout (app/dashboard/layout.js) is the most critical file in the codebase. It handles auth, preferences, referrals, subscriptions, notifications, and renders the shell.
+
+### Component Tree
+```
+<div class="flex min-h-screen">
+  <Sidebar email fullName avatarUrl planAccess credits />
+  <div class="flex min-w-0 flex-1 flex-col">
+    <header class="border-b border-white/10">
+      Left:  <MobileNav .../> + <Logo /> (mobile) | <Today P&L chip> (desktop)
+      Center: <SearchBar planAccess /> (desktop only)
+      Right: <LiveClock /> + <NotificationBell /> + <Today P&L chip> (mobile) + <HeaderAvatar .../> (desktop)
+    </header>
+    <main class="flex-1">
+      <SubscriptionBanner subscription planAccess />
+      {children}
+    </main>
+    <RiskFooter />
+  </div>
+  <QuickActions />  <!-- Floating FAB bottom-right, 6 quick actions -->
+</div>
+```
+
+### Key Layout Components
+| Component | File | Visibility | Purpose |
+|-----------|------|------------|---------|
+| Sidebar | components/layout/Sidebar.js | Desktop (hidden mobile) | Collapsible nav (60px rail / 200px expanded), 9 nav items + SUPPORT section + avatar card |
+| MobileNav | components/layout/MobileNav.js | Mobile only (sm:hidden) | Hamburger slide-from-left drawer with full nav |
+| SearchBar | components/layout/SearchBar.js | Desktop only | Cmd+K, keyword search (all users) + AI NL parsing (Elite) |
+| LiveClock | components/layout/LiveClock.js | Always | Local time updating every second |
+| HeaderAvatar | components/layout/HeaderAvatar.js | Desktop only (hidden sm:block) | Avatar dropdown: profile, settings, subscription, credits, admin, sign out |
+| QuickActions | components/layout/QuickActions.js | Always | Floating FAB (56px gradient circle), 6 actions: Log Trade, Quick Log, Add Expense, Add Payout, Add Trophy, AI Coach |
+| NotificationBell | components/notifications/NotificationBell.js | Always | Real-time via Supabase Realtime + 60s polling fallback, toast on new, excludes admin types from user bell |
+| SubscriptionBanner | components/ui/SubscriptionBanner.js | Conditional | Trial expiring (<=3 days), expired, halted, cancelled-but-active states |
+| RiskFooter | components/layout/RiskFooter.js | Always | "PropLogAI is an educational tool" disclaimer + Privacy/Terms links |
+
+### Props Flow
+- Sidebar receives: email, fullName, avatarUrl, planAccess, credits (referral_balance)
+- MobileNav receives: email, avatarUrl, isAdmin, adminNotifCount, credits, fullName, planAccess
+- NotificationBell receives: initialCount, excludeTypes (ADMIN_NOTIF_TYPES array)
+- SearchBar receives: planAccess (for AI NL parsing gating)
+- HeaderAvatar receives: email, fullName, avatarUrl, credits, isAdmin, adminNotifCount, planAccess
+
+### What the Layout Fetches (Server-Side)
+1. Auth user (redirects to /login if missing)
+2. User preferences (redirects to /onboarding if not complete)
+3. Auto-saves Google OAuth full_name if missing
+4. Referral code processing from cookies
+5. Plan access via getUserAccess() + subscription data
+6. Trial ending email trigger (3 days or less, send-once via notification dedup)
+7. Today's P&L from trades (using getTradingDate boundary)
+8. Notification unread counts (user + admin separately)
+
+## Troubleshooting Guide
+
+### Page crashes after a schema change
+1. Check if any query uses select('*') on the affected table
+2. Run `NOTIFY pgrst, 'reload schema';` in Supabase SQL Editor
+3. If still failing, the column may need to be re-added as empty nullable
+
+### Push doesn't appear live after ~90 seconds
+1. Check a brand-new route — if it 404s, the build failed and NO recent commits deployed
+2. Ask user to check Vercel dashboard for build errors
+3. Common causes: adjacent JSX roots without fragment, unused imports, duplicate const names
+
+### AI analysis returns 'Could not parse the AI report'
+1. Check if the JSON schema is too large (deeply nested = truncation)
+2. Check if the model slug is valid (current: anthropic/claude-haiku-4.5)
+3. Check raw response preview — look for markdown code fences wrapping JSON
+4. Check max_tokens (trade analysis: 1200, coach report: 3000)
+
+### 'Upload failed' on image upload
+1. Check if path includes user ID prefix (required by RLS)
+2. Check if processImageFile wrapper object vs .file is being passed
+3. Check file size (5MB limit across all upload points)
+
+### Trade detail page crashes
+1. Check aiInsight rendering — read structured data from .mistakes (jsonb), NOT JSON.parse(.summary)
+2. Check if any select('*') query references a dropped column
+3. Check for Infinity being passed as planAccess limit props
+
+### Notification bell not showing new types
+1. Ensure the type is added to ADMIN_NOTIF_TYPES in BOTH app/admin/layout.js AND app/dashboard/layout.js
+2. Ensure notifyAdmin() calls are guarded with `if (user.email !== ADMIN_EMAIL)` to avoid self-duplicate
+
+### ExpenseTracker crashes when opening a firm
+1. Check if scoped variables (dExpenses, dPayouts) are accidentally inside FirmDashboard instead of the main component
+2. This is a single 60KB+ file — be extra careful with search-replace edits

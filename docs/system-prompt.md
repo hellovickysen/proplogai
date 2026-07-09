@@ -129,6 +129,32 @@ Each selected setup has its own Yes/Partial/No follow status (inline buttons in 
 - Optional env vars: OPENROUTER_MODEL, NEXT_PUBLIC_POSTHOG_KEY, RESEND_API_KEY, RESEND_FROM, SUPABASE_SERVICE_ROLE_KEY, ADMIN_EMAIL
 - Payment env vars (required for Razorpay to function, not yet set): RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET, RAZORPAY_PLAN_ID_MONTHLY, RAZORPAY_PLAN_ID_YEARLY
 
+
+## Lessons Learned & Safe Development Patterns
+For the FULL detailed list of 12 critical bugs, 18 anti-patterns, and the safe editing workflow, see docs/handover-guide.md. Key highlights:
+
+### File Editing Safety
+- ALWAYS fetch current files via github__get_file_contents with branch/SHA ref — NEVER from raw.githubusercontent.com (cached/stale)
+- For reverts, get the file at the exact parent commit SHA, not from memory or cached URLs
+- Use paramsFile for large GitHub pushes (write JSON to /tmp, pass path) — inline params get token-truncated
+- The github__push_files commit message key MUST be 'message' (not 'commit_message')
+- After pushing, verify deployment (~90s). Vercel silently serves stale content on build failure.
+- Cannot push binary files via GitHub MCP — stores raw base64 TEXT, not decoded binary
+
+### Supabase Safety
+- NEVER drop columns referenced by select('*') without first replacing all queries with explicit column lists
+- Ship code changes FIRST (remove references), deploy, THEN run DROP migration
+- After any DDL, run NOTIFY pgrst, 'reload schema'; in SQL Editor
+- All migrations must be idempotent (IF NOT EXISTS / IF EXISTS patterns)
+- Upload paths to storage buckets MUST be prefixed with user ID
+
+### Next.js / React Gotchas
+- JSX return must have single root or fragment — adding siblings without <></> breaks build silently
+- Infinity cannot be serialized as props from Server to Client components — convert to -1
+- Server action imports in client components can cause opaque SSR crashes — use API route wrappers
+- HTML entities (&#10003;) render as literal text inside JSX {} expressions — use Unicode chars ('✓')
+- When removing a shared helper's return field, grep ENTIRE codebase for references
+
 ## Security Rules
 1. EVERY Supabase query on authenticated pages MUST include .eq('user_id', user.id) — never rely on RLS alone
 2. All server action mutations (update/delete) must include .eq('user_id', user.id) for ownership verification
