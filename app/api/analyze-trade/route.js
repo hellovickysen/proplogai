@@ -4,6 +4,10 @@ import { analyzeTradeWithAI } from '@/lib/ai';
 import { getUserAccess } from '@/lib/plans';
 import { getUserTradeContext } from '@/lib/tradeContext';
 import { notify, TYPES } from '@/lib/notifications';
+import { rateLimit } from '@/lib/rateLimit';
+
+// Burst protection: max 5 AI analysis calls per minute per user (all tiers)
+const aiAnalysisLimiter = rateLimit({ windowMs: 60000, max: 5, name: 'ai-analysis' });
 
 export async function POST(req) {
   let step = 'init';
@@ -15,6 +19,12 @@ export async function POST(req) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
+
+    // Burst rate limit — prevent rapid-fire AI calls (all tiers including Elite/Admin)
+    const { allowed: rateLimitOk } = aiAnalysisLimiter.check(user.id);
+    if (!rateLimitOk) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 });
+    }
 
     step = 'access';
     const access = await getUserAccess(supabase, user);

@@ -1,10 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
 import { getUserAccess } from '@/lib/plans';
+import { rateLimit } from '@/lib/rateLimit';
 import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+
+// Burst protection: max 10 AI parse calls per minute per user
+const aiParseLimiter = rateLimit({ windowMs: 60000, max: 10, name: 'ai-parse' });
 
 function model() {
   return process.env.OPENROUTER_MODEL || 'anthropic/claude-haiku-4.5';
@@ -44,6 +48,15 @@ export async function POST(request) {
     const access = await getUserAccess(supabase, user);
     if (!access.isElite && !access.isAdmin && !access.isBeta) {
       return NextResponse.json({ error: 'Elite feature', upgrade: true }, { status: 403 });
+    }
+
+    // Burst rate limit — prevent rapid-fire AI calls
+    const { allowed, retryAfterMs } = aiParseLimiter.check(user.id);
+    if (!allowed) {
+      return NextResponse.json(
+        { filters: {}, isAI: false, rateLimited: true },
+        { status: 429, headers: { 'Retry-After': String(Math.ceil(retryAfterMs / 1000)) } }
+      );
     }
 
     const { query } = await request.json();
