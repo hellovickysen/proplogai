@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { createClient } from '@/lib/supabase/server';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
-import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import QuickLog from '@/components/trades/QuickLog';
 import RiskFooter from '@/components/layout/RiskFooter';
 import NotificationBell from '@/components/notifications/NotificationBell';
@@ -180,7 +179,7 @@ export default async function DashboardLayout({ children }) {
  <div className="flex flex-1 overflow-hidden">
  <Sidebar />
  <main className="flex-1 overflow-y-auto">
- <div className="space-y-4 p-4 pb-24 sm:pb-4 md:p-8">
+ <div className="space-y-4 p-4 md:p-8">
  <div className="flex items-center justify-between gap-4">
  <div>
  <Logo className="h-8 w-8 md:hidden" />
@@ -201,7 +200,6 @@ export default async function DashboardLayout({ children }) {
  </div>
  <RiskFooter />
  </div>
- <MobileBottomNav />
  <QuickLog />
  <GuidedTour show={tradeCount > 0} />
  </>
