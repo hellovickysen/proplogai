@@ -4,9 +4,15 @@ import { NextResponse } from 'next/server';
 export async function middleware(request) {
   let supabaseResponse = NextResponse.next({ request });
 
-  // If Supabase env vars are missing (e.g. a build made before they were set),
-  // skip auth instead of crashing every route with a 500.
+  // If Supabase env vars are missing, block protected routes instead of failing open.
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    const isProtected = request.nextUrl.pathname.startsWith('/dashboard') ||
+                        request.nextUrl.pathname.startsWith('/admin');
+    if (isProtected) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/login';
+      return NextResponse.redirect(url);
+    }
     return supabaseResponse;
   }
 

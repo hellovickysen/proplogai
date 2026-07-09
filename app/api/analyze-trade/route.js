@@ -30,14 +30,20 @@ export async function POST(req) {
     const { data: trade, error: tErr } = await supabase.from('trades')
       .select('id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, created_at')
       .eq('id', tradeId).eq('user_id', user.id).maybeSingle();
-    if (tErr) return NextResponse.json({ error: 'Trade query failed: ' + tErr.message, step }, { status: 500 });
+    if (tErr) {
+      console.error('[analyze-trade] Trade query failed:', tErr.message);
+      return NextResponse.json({ error: 'Failed to load trade data' }, { status: 500 });
+    }
     if (!trade) return NextResponse.json({ error: 'Trade not found' }, { status: 404 });
 
     step = 'fetch-journal';
     const { data: journal, error: jErr } = await supabase.from('journal_entries')
       .select('id, trade_id, note, lesson, emotions, tags, confidence, screenshot_url, screenshot_urls, created_at')
       .eq('trade_id', tradeId).eq('user_id', user.id).maybeSingle();
-    if (jErr) return NextResponse.json({ error: 'Journal query failed: ' + jErr.message, step }, { status: 500 });
+    if (jErr) {
+      console.error('[analyze-trade] Journal query failed:', jErr.message);
+      return NextResponse.json({ error: 'Failed to load journal data' }, { status: 500 });
+    }
 
     step = 'context';
     const depth = access.effectivePlan === 'elite' ? 90 : 30;
@@ -48,7 +54,8 @@ export async function POST(req) {
     try {
       analysis = await analyzeTradeWithAI(trade, journal, context);
     } catch (aiErr) {
-      return NextResponse.json({ error: 'AI call failed: ' + (aiErr.message || String(aiErr)), step }, { status: 500 });
+      console.error('[analyze-trade] AI call failed:', aiErr.message || aiErr);
+      return NextResponse.json({ error: 'AI analysis failed. Please try again.' }, { status: 500 });
     }
 
     step = 'save';
@@ -72,7 +79,10 @@ export async function POST(req) {
       const r = await supabase.from('ai_insights').insert(row);
       dbErr = r.error;
     }
-    if (dbErr) return NextResponse.json({ error: 'DB save failed: ' + dbErr.message, step }, { status: 500 });
+    if (dbErr) {
+      console.error('[analyze-trade] DB save failed:', dbErr.message);
+      return NextResponse.json({ error: 'Failed to save analysis' }, { status: 500 });
+    }
 
     step = 'notify';
     try {
@@ -82,6 +92,7 @@ export async function POST(req) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    return NextResponse.json({ error: 'Crashed at step: ' + step + ' — ' + (e.message || String(e)) }, { status: 500 });
+    console.error('[analyze-trade] Unexpected error at step:', step, e.message || e);
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
   }
 }
