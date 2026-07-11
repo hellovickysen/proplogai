@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FEATURES, ELITE_FEATURES, PLANS } from '@/lib/plans';
 
 /**
@@ -91,11 +91,36 @@ export default function BlurGate({ feature, access, children, className = '', co
 }
 
 /**
- * Inline upgrade modal — shows plan comparison and triggers Razorpay checkout.
+ * Load Razorpay Checkout.js script dynamically.
+ */
+function useRazorpayScript() {
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Razorpay) {
+      setLoaded(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => setLoaded(true);
+    document.body.appendChild(script);
+    return () => {
+      // Don't remove — other components may need it
+    };
+  }, []);
+  return loaded;
+}
+
+/**
+ * Inline upgrade modal — shows plan comparison and triggers Razorpay Checkout.js.
+ * Opens payment modal on proplogai.com (no redirect to Razorpay site).
+ * On success, redirects to /dashboard/settings?tab=billing&status=success.
  */
 function UpgradeModal({ onClose, feature }) {
   const [loading, setLoading] = useState(false);
-  const [billingCycle, setBillingCycle] = useState('monthly'); // 'monthly' or 'yearly'
+  const [billingCycle, setBillingCycle] = useState('monthly');
+  const razorpayReady = useRazorpayScript();
 
   const price = billingCycle === 'yearly' ? PLANS.elite.priceYearly : PLANS.elite.priceMonthly;
   const savings = billingCycle === 'yearly'
@@ -105,6 +130,7 @@ function UpgradeModal({ onClose, feature }) {
   async function handleUpgrade() {
     setLoading(true);
     try {
+      // 1. Create subscription on the server
       const res = await fetch('/api/razorpay/create-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,10 +142,57 @@ function UpgradeModal({ onClose, feature }) {
         setLoading(false);
         return;
       }
-      // Redirect to Razorpay hosted page
-      if (data.shortUrl) {
-        window.location.href = data.shortUrl;
+
+      const subscriptionId = data.subscriptionId;
+      const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+
+      // Fallback to hosted page if Checkout.js not loaded or key not available
+      if (!razorpayReady || !keyId || !window.Razorpay) {
+        if (data.shortUrl) {
+          window.location.href = data.shortUrl;
+        }
+        return;
       }
+
+      // 2. Open Razorpay Checkout modal
+      const options = {
+        key: keyId,
+        subscription_id: subscriptionId,
+        name: 'PropLogAI',
+        description: `Elite Plan (${billingCycle})`,
+        theme: {
+          color: '#a78bfa',
+          backdrop_color: 'rgba(0,0,0,0.85)',
+        },
+        modal: {
+          confirm_close: true,
+          ondismiss: () => {
+            setLoading(false);
+          },
+        },
+        handler: async function (response) {
+          // 3. Payment successful — verify via callback
+          try {
+            const params = new URLSearchParams({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_subscription_id: response.razorpay_subscription_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            // Hit callback route to update DB, then redirect
+            window.location.href = `/api/razorpay/callback?${params.toString()}`;
+          } catch {
+            // Fallback: redirect directly to success
+            window.location.href = '/dashboard/settings?tab=billing&status=success';
+          }
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', function (response) {
+        alert('Payment failed: ' + (response.error?.description || 'Please try again.'));
+        setLoading(false);
+      });
+      rzp.open();
     } catch (err) {
       alert('Something went wrong. Please try again.');
       setLoading(false);
@@ -203,7 +276,7 @@ function UpgradeModal({ onClose, feature }) {
           className="w-full rounded-xl py-3 text-sm font-bold text-[#08080f] shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
           style={gradientBtn}
         >
-          {loading ? 'Redirecting...' : 'Start 14-day free trial'}
+          {loading ? 'Opening checkout...' : 'Start 14-day free trial'}
         </button>
         <p className="text-center text-white/30 text-[11px] mt-3">
           No charge for 14 days · Cancel anytime · Secure payment via Razorpay
