@@ -182,11 +182,20 @@ export default async function AdminOverviewPage() {
       tradeTrend = groupByDay(recentTrades, 'created_at', 14);
     } catch { tradeTrend = groupByDay([], 'created_at', 14); }
 
-    // ── Plan breakdown ──
-    let plans = { free: 0, pro: 0, elite: 0 };
+    // ── Plan breakdown (Razorpay) ──
+    let plans = { basic: 0, elite: 0, trialing: 0 };
     try {
-      const { data: subs } = await sb.from('subscriptions').select('plan');
-      (subs || []).forEach((s) => { plans[s.plan || 'free'] = (plans[s.plan || 'free'] || 0) + 1; });
+      const { data: subs } = await sb.from('subscriptions').select('plan, status, trial_ends_at');
+      (subs || []).forEach((s) => {
+        const isActive = ['active', 'authenticated', 'created'].includes(s.status);
+        const isTrialing = s.trial_ends_at && new Date(s.trial_ends_at) > new Date();
+        if (s.plan === 'elite' && (isActive || isTrialing)) {
+          plans.elite++;
+          if (isTrialing && s.status !== 'active') plans.trialing++;
+        } else {
+          plans.basic++;
+        }
+      });
     } catch {}
 
     // ── Open tickets ──
@@ -240,9 +249,9 @@ export default async function AdminOverviewPage() {
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <h2 className="mb-4 font-display text-sm font-semibold">Plan Breakdown</h2>
             <div className="grid grid-cols-3 gap-3">
-              <div><div className="font-mono text-xs text-white/45">Free</div><div className="mt-1 font-display text-2xl font-bold">{plans.free}</div></div>
-              <div><div className="font-mono text-xs text-white/45">Pro</div><div className="mt-1 font-display text-2xl font-bold text-violet-400">{plans.pro}</div></div>
-              <div><div className="font-mono text-xs text-white/45">Elite</div><div className="mt-1 font-display text-2xl font-bold text-amber-400">{plans.elite}</div></div>
+              <div><div className="font-mono text-xs text-white/45">Basic</div><div className="mt-1 font-display text-2xl font-bold">{plans.basic}</div></div>
+              <div><div className="font-mono text-xs text-white/45">Elite</div><div className="mt-1 font-display text-2xl font-bold text-violet-400">{plans.elite}</div></div>
+              <div><div className="font-mono text-xs text-white/45">Trialing</div><div className="mt-1 font-display text-2xl font-bold text-amber-400">{plans.trialing}</div></div>
             </div>
           </div>
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">

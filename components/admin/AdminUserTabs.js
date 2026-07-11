@@ -99,9 +99,16 @@ export default function AdminUserTabs({ users, search }) {
                 </td>
                 <td className="px-4 py-3 font-mono">{u.trades}</td>
                 <td className="px-4 py-3">
-                  {u.isAdmin
-                    ? <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">Admin</span>
-                    : <BetaToggle userId={u.id} initialBeta={u.isBeta} />}
+                  <div className="flex items-center gap-1.5">
+                    {u.isAdmin
+                      ? <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">Admin</span>
+                      : <BetaToggle userId={u.id} initialBeta={u.isBeta} />}
+                    {u.subscription?.plan === 'elite' && (
+                      <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-300">
+                        Elite{u.subscription.isTrialing ? ' (trial)' : ''}
+                      </span>
+                    )}
+                  </div>
                 </td>
                 {tab === 'banned' && (
                   <td className="max-w-[200px] px-4 py-3 text-xs text-white/50">

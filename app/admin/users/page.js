@@ -37,6 +37,19 @@ export default async function AdminUsersPage({ searchParams }) {
       });
     } catch {}
 
+    // Fetch subscription data for plan badges
+    let subMap = {};
+    try {
+      const { data: subs } = await sb.from('subscriptions').select('user_id, plan, status, trial_ends_at');
+      (subs || []).forEach((s) => {
+        const isActive = ['active', 'authenticated', 'created'].includes(s.status);
+        const isTrialing = s.trial_ends_at && new Date(s.trial_ends_at) > new Date();
+        if (isActive || isTrialing) {
+          subMap[s.user_id] = { plan: s.plan || 'basic', status: s.status, isTrialing };
+        }
+      });
+    } catch {}
+
     let users = authUsers.map((u) => ({
       id: u.id,
       email: u.email || '(no email)',
@@ -50,6 +63,7 @@ export default async function AdminUsersPage({ searchParams }) {
       banReason: u.user_metadata?.ban_reason || null,
       isAdmin: u.email === ADMIN_EMAIL,
       isBeta: betaMap[u.id] || false,
+      subscription: subMap[u.id] || null,
     }));
 
     if (search) {
