@@ -83,6 +83,7 @@ export async function POST(request) {
     return NextResponse.json({
       shortUrl: sub.short_url,
       subscriptionId: sub.id,
+      keyId: process.env.RAZORPAY_KEY_ID || '',
     });
   } catch (err) {
     console.error('Create subscription error:', err);

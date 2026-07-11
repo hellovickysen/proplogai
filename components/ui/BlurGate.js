@@ -144,7 +144,7 @@ function UpgradeModal({ onClose, feature }) {
       }
 
       const subscriptionId = data.subscriptionId;
-      const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+      const keyId = data.keyId;
 
       // Fallback to hosted page if Checkout.js not loaded or key not available
       if (!razorpayReady || !keyId || !window.Razorpay) {
