@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createSubscription } from '@/lib/razorpay';
 
 /**
@@ -7,9 +8,21 @@ import { createSubscription } from '@/lib/razorpay';
  *
  * Creates a Razorpay subscription and returns the hosted checkout URL.
  * Body: { billingCycle: 'monthly' | 'yearly' }
+ *
+ * Uses service-role client for DB writes since RLS may block user inserts
+ * on the subscriptions table.
  */
+
+function getAdminClient() {
+  return createAdminClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
+
 export async function POST(request) {
   try {
+    // Authenticate user via cookie-based client
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -21,8 +34,11 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid billing cycle.' }, { status: 400 });
     }
 
+    // Use admin client for DB operations (bypasses RLS)
+    const admin = getAdminClient();
+
     // Check if user already has an active subscription
-    const { data: existingSub } = await supabase
+    const { data: existingSub } = await admin
       .from('subscriptions')
       .select('id, status, razorpay_subscription_id')
       .eq('user_id', user.id)
@@ -52,13 +68,16 @@ export async function POST(request) {
     };
 
     if (existingSub) {
-      await supabase
+      const { error: updateErr } = await admin
         .from('subscriptions')
         .update(subRow)
-        .eq('id', existingSub.id)
-        .eq('user_id', user.id);
+        .eq('id', existingSub.id);
+      if (updateErr) console.error('Subscription update error:', updateErr.message);
     } else {
-      await supabase.from('subscriptions').insert(subRow);
+      const { error: insertErr } = await admin
+        .from('subscriptions')
+        .insert(subRow);
+      if (insertErr) console.error('Subscription insert error:', insertErr.message);
     }
 
     return NextResponse.json({
