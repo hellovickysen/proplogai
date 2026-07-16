@@ -1,6 +1,12 @@
 const nextConfig = {
+  poweredByHeader: false,
+  compress: true,
   experimental: {
     optimizePackageImports: ['@supabase/supabase-js', '@supabase/ssr'],
+    staleTimes: {
+      dynamic: 30,    // Cache dynamic pages for 30s on the client
+      static: 300,    // Cache static pages for 5 min on the client
+    },
   },
   images: {
     remotePatterns: [
@@ -13,6 +19,33 @@ const nextConfig = {
   },
   async headers() {
     return [
+      {
+        source: '/_next/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/(.*)\\.(woff2?|ttf|eot|otf)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/(.*)\\.(jpg|jpeg|png|gif|webp|svg|ico)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=604800',
+          },
+        ],
+      },
       {
         source: '/(.*)',
         headers: [

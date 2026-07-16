@@ -14,7 +14,7 @@ import { sendEmail, isEmailConfigured } from '@/lib/email';
 import { buildTrialEndingEmail } from '@/lib/subscription-emails';
 import { notify, TYPES } from '@/lib/notifications';
 import { ADMIN_EMAIL } from '@/lib/supabase/admin';
-import SearchBar from '@/components/layout/SearchBar';
+import LazySearchBar from '@/components/layout/LazySearchBar';
 import LiveClock from '@/components/layout/LiveClock';
 import QuickActions from '@/components/layout/QuickActions';
 import HeaderAvatar from '@/components/layout/HeaderAvatar';
@@ -237,7 +237,7 @@ export default async function DashboardLayout({ children }) {
             </div>
             <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} todayStats={todayAccountStats} planAccess={planAccess} />
           </div>
-          <SearchBar planAccess={planAccess} />
+          <LazySearchBar planAccess={planAccess} />
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <LiveClock />
             <NotificationBell initialCount={notifCount} excludeTypes={ADMIN_NOTIF_TYPES} />
