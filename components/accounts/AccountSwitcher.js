@@ -58,7 +58,10 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
     setOpen(false);
     const res = await setActiveAccount(accountId);
     if (res.ok) {
-      router.refresh();
+      // Full page reload to avoid Next.js RSC cache race condition
+      // router.refresh() can fire before revalidatePath fully propagates
+      window.location.reload();
+      return;
     }
     setSwitching(false);
   }
