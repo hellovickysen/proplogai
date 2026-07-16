@@ -14,8 +14,12 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   const [pendingHref, setPendingHref] = useState(null);
   const dirtyRef = useRef(false);
   const allowNavRef = useRef(false);
+  const modalOpenRef = useRef(false); // prevent double-fire
 
   const onJournalDirtyChange = useCallback((d) => setJournalDirty(d), []);
+
+  // Keep modalOpenRef in sync
+  useEffect(() => { modalOpenRef.current = showLeaveModal; }, [showLeaveModal]);
 
   // Track trade form changes
   useEffect(() => {
@@ -38,32 +42,27 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   const isDirty = tradeDirty || journalDirty;
   useEffect(() => { dirtyRef.current = isDirty; }, [isDirty]);
 
-  // ── Navigation guard: intercept link clicks ──
-  // We prevent the native click AND return false to block React's handler
+  function shouldBlock() {
+    return dirtyRef.current && !allowNavRef.current && !modalOpenRef.current;
+  }
+
+  // ── Click interceptor ──
   useEffect(() => {
     function handleClick(e) {
-      if (!dirtyRef.current || allowNavRef.current) return;
-
+      if (!shouldBlock()) return;
       const link = e.target.closest('a[href]');
       if (!link) return;
-
       const href = link.getAttribute('href');
       if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
       if (link.target === '_blank') return;
-      // Allow external links
       if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
 
-      // Block the click completely
       e.preventDefault();
       e.stopImmediatePropagation();
-
-      // Prevent any further handling by returning false
       setPendingHref(href);
       setShowLeaveModal(true);
       return false;
     }
-
-    // Register on BOTH capture and bubble phases to be thorough
     document.addEventListener('click', handleClick, true);
     document.addEventListener('click', handleClick, false);
     return () => {
@@ -72,14 +71,13 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     };
   }, []);
 
-  // ── Also override history.pushState as a safety net ──
+  // ── History API override ──
   useEffect(() => {
     const origPush = history.pushState;
     const origReplace = history.replaceState;
 
-    const patchedPush = function (...args) {
-      if (dirtyRef.current && !allowNavRef.current) {
-        // Try to extract URL from args
+    history.pushState = function (...args) {
+      if (shouldBlock()) {
         const url = args[2];
         if (url && typeof url === 'string' && url !== window.location.pathname) {
           setPendingHref(url);
@@ -90,8 +88,8 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
       return origPush.apply(history, args);
     };
 
-    const patchedReplace = function (...args) {
-      if (dirtyRef.current && !allowNavRef.current) {
+    history.replaceState = function (...args) {
+      if (shouldBlock()) {
         const url = args[2];
         if (url && typeof url === 'string' && url !== window.location.pathname) {
           setPendingHref(url);
@@ -102,20 +100,17 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
       return origReplace.apply(history, args);
     };
 
-    history.pushState = patchedPush;
-    history.replaceState = patchedReplace;
-
     return () => {
       history.pushState = origPush;
       history.replaceState = origReplace;
     };
   }, []);
 
-  // ── Browser back button ──
+  // ── Browser back ──
   useEffect(() => {
     history.pushState({ dirtyGuard: true }, '');
     function onPopState() {
-      if (dirtyRef.current && !allowNavRef.current) {
+      if (shouldBlock()) {
         history.pushState({ dirtyGuard: true }, '');
         setPendingHref('__back__');
         setShowLeaveModal(true);
@@ -125,7 +120,7 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  // ── Tab close/refresh ──
+  // ── Tab close ──
   useEffect(() => {
     function onBeforeUnload(e) {
       if (dirtyRef.current && !allowNavRef.current) {
@@ -145,10 +140,10 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   }
 
   function handleDiscard() {
-    setShowLeaveModal(false);
     setSaving(false);
     dirtyRef.current = false;
     allowNavRef.current = true;
+    setShowLeaveModal(false);
     const href = pendingHref;
     setPendingHref(null);
     if (href === '__back__') {
@@ -170,7 +165,18 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
       setShowLeaveModal(false);
       setPendingHref(null);
       const form = document.getElementById('trade-form');
-      if (form) form.requestSubmit();
+      if (form) {
+        form.requestSubmit();
+        // TradeForm validation might fail — reset saving after a delay
+        // If validation passes, the form navigates away and this timeout is harmless
+        setTimeout(() => {
+          setSaving(false);
+          allowNavRef.current = false;
+        }, 1500);
+      } else {
+        setSaving(false);
+        allowNavRef.current = false;
+      }
     } catch (e) {
       setSaving(false);
       allowNavRef.current = false;
@@ -191,7 +197,12 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     } catch (e) {
       // ignore
     }
-    setTimeout(() => { setSaving(false); allowNavRef.current = false; }, 3000);
+    // Reset after delay — if form validation fails, page stays and we need to unlock
+    setTimeout(() => {
+      setSaving(false);
+      allowNavRef.current = false;
+      dirtyRef.current = isDirty;
+    }, 1500);
   }
 
   function handleCancel() {
