@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import TradeForm from '@/components/trades/TradeForm';
+import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
 
 export const dynamic = 'force-dynamic';
 
@@ -48,6 +49,18 @@ export default async function EditTradePage({ params }) {
     .eq('user_id', user.id)
     .order('sort_order', { ascending: true });
 
+  // Fetch journal entry for this trade
+  const { data: journal } = await supabase
+    .from('journal_entries')
+    .select('id, trade_id, note, lesson, emotions, tags, confidence, screenshot_url, screenshot_urls, created_at')
+    .eq('trade_id', id)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  // Build screenshots array
+  const screenshots = Array.isArray(journal?.screenshot_urls) ? journal.screenshot_urls.filter(Boolean) : [];
+  if (!screenshots.length && journal?.screenshot_url) screenshots.push(journal.screenshot_url);
+
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-6 flex items-center gap-3">
@@ -55,6 +68,11 @@ export default async function EditTradePage({ params }) {
         <h1 className="font-display text-2xl font-bold">Edit trade</h1>
       </div>
       <TradeForm mode="edit" tradeId={id} initial={trade} prefs={prefs} setups={setups || []} />
+
+      {/* Journal section below the trade form */}
+      <div className="mt-6 max-w-4xl">
+        <JournalInlineEdit tradeId={id} journal={journal} userId={user.id} prefs={prefs} screenshots={screenshots} />
+      </div>
     </div>
   );
 }
