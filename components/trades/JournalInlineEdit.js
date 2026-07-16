@@ -21,15 +21,8 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   // Expose save function for parent to call
   const saveRef = useRef(null);
 
-  // Track unsaved changes — warn on navigation
+  // Keep dirtyRef in sync for imperative checks
   useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
-  useEffect(() => {
-    function onBeforeUnload(e) {
-      if (dirtyRef.current) { e.preventDefault(); e.returnValue = ''; }
-    }
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => window.removeEventListener('beforeunload', onBeforeUnload);
-  }, []);
 
   // Emotion & tag options — use user's saved list; only fall back to defaults if never configured
   const defaultEmotions = ['Disciplined', 'Confident', 'FOMO', 'Greed', 'Boredom', 'Revenge'];
