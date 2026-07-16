@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { setActiveAccount } from '@/app/dashboard/accounts/actions';
@@ -217,8 +218,11 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
         </div>
       )}
 
-      {/* Upgrade modal for Basic users */}
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} feature="multi_account" />}
+      {/* Upgrade modal — portal to body to escape SmartHeader's transform context */}
+      {showUpgrade && typeof document !== 'undefined' && createPortal(
+        <UpgradeModal onClose={() => setShowUpgrade(false)} feature="multi_account" />,
+        document.body
+      )}
     </div>
   );
 }
