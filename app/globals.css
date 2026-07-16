@@ -27,12 +27,14 @@ body {
   animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Page transition — fade in */
+/* Page transition — fade in (dashboard pages only).
+ * Scoped to main.flex-1 so the landing page hero paints instantly
+ * without an opacity:0 first frame that would hurt LCP. */
 @keyframes page-fade-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-main > * {
+main.flex-1 > * {
   animation: page-fade-in 0.25s ease-out;
 }
 

@@ -1,9 +1,9 @@
-import { HeroParticles, LandingMotion } from '@/components/landing/LandingMotion';
 import { createClient } from '@/lib/supabase/server';
 import Logo from '@/components/Logo';
 import LandingNav from '@/components/landing/LandingNav';
 import CookieBanner from '@/components/landing/CookieBanner';
 import LandingFooter from '@/components/landing/LandingFooter';
+import DeferredMotion from '@/components/landing/DeferredMotion';
 import HeroSection from '@/components/landing/sections/HeroSection';
 import PainSection from '@/components/landing/sections/PainSection';
 import SolutionSection from '@/components/landing/sections/SolutionSection';
@@ -24,7 +24,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen overflow-hidden">
-      <LandingMotion />
+      <DeferredMotion />
 
       {/* Nav */}
       <LandingNav logo={<Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />} />
