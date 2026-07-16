@@ -12,9 +12,11 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   const [journalDirty, setJournalDirty] = useState(false);
   const [tradeDirty, setTradeDirty] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [pendingHref, setPendingHref] = useState(null);
+  const [pendingNav, setPendingNav] = useState(null); // { args, type: 'push'|'replace'|'back' }
   const dirtyRef = useRef(false);
-  const navigatingRef = useRef(false);
+  const allowNavRef = useRef(false);
+  const origPushRef = useRef(null);
+  const origReplaceRef = useRef(null);
 
   const onJournalDirtyChange = useCallback((d) => setJournalDirty(d), []);
 
@@ -24,7 +26,6 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     if (!form) return;
     function markDirty() { setTradeDirty(true); }
     function onClickInForm(e) {
-      // Button clicks inside the form = setup/direction/session/emotion toggles
       if (e.target.closest('button[type="button"]')) markDirty();
     }
     form.addEventListener('input', markDirty);
@@ -38,11 +39,54 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   }, []);
 
   const isDirty = tradeDirty || journalDirty;
-
-  // Keep ref in sync for event handlers
   useEffect(() => { dirtyRef.current = isDirty; }, [isDirty]);
 
-  // Browser tab close/refresh — native popup (unavoidable for real page unload)
+  // Intercept history.pushState/replaceState — catches Next.js App Router navigation
+  useEffect(() => {
+    const origPush = history.pushState.bind(history);
+    const origReplace = history.replaceState.bind(history);
+    origPushRef.current = origPush;
+    origReplaceRef.current = origReplace;
+
+    history.pushState = function (...args) {
+      if (dirtyRef.current && !allowNavRef.current) {
+        setPendingNav({ args, type: 'push' });
+        setShowLeaveModal(true);
+        return;
+      }
+      return origPush(...args);
+    };
+
+    history.replaceState = function (...args) {
+      if (dirtyRef.current && !allowNavRef.current) {
+        setPendingNav({ args, type: 'replace' });
+        setShowLeaveModal(true);
+        return;
+      }
+      return origReplace(...args);
+    };
+
+    return () => {
+      history.pushState = origPush;
+      history.replaceState = origReplace;
+    };
+  }, []);
+
+  // Browser back button
+  useEffect(() => {
+    window.history.pushState({ dirtyGuard: true }, '');
+    function onPopState() {
+      if (dirtyRef.current && !allowNavRef.current) {
+        window.history.pushState({ dirtyGuard: true }, '');
+        setPendingNav({ type: 'back' });
+        setShowLeaveModal(true);
+      }
+    }
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // Tab close/refresh
   useEffect(() => {
     function onBeforeUnload(e) {
       if (dirtyRef.current) { e.preventDefault(); e.returnValue = ''; }
@@ -51,109 +95,77 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, []);
 
-  // Intercept in-app link clicks — show custom modal instead of native popup
-  useEffect(() => {
-    function onClick(e) {
-      if (!dirtyRef.current || navigatingRef.current) return;
-      const link = e.target.closest('a[href]');
-      if (!link) return;
-      const href = link.getAttribute('href');
-      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-      if (link.target === '_blank') return;
-      if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
-      if (link.dataset.skipDirtyCheck) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      setPendingHref(href);
-      setShowLeaveModal(true);
-    }
-    document.addEventListener('click', onClick, true);
-    return () => document.removeEventListener('click', onClick, true);
-  }, []);
-
-  // Browser back button — intercept with popstate
-  useEffect(() => {
-    window.history.pushState({ dirtyGuard: true }, '');
-    function onPopState() {
-      if (dirtyRef.current && !navigatingRef.current) {
-        window.history.pushState({ dirtyGuard: true }, '');
-        setPendingHref('__back__');
-        setShowLeaveModal(true);
-      }
-    }
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
-
-  function doNavigate(href) {
-    navigatingRef.current = true;
-    dirtyRef.current = false;
-    setShowLeaveModal(false);
-    setPendingHref(null);
-    if (href === '__back__') {
+  function executeNav(nav) {
+    if (!nav) return;
+    allowNavRef.current = true;
+    if (nav.type === 'push' && origPushRef.current) {
+      origPushRef.current(...nav.args);
+      // Also trigger Next.js to sync with the new URL
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } else if (nav.type === 'replace' && origReplaceRef.current) {
+      origReplaceRef.current(...nav.args);
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    } else if (nav.type === 'back') {
       window.history.go(-2);
-    } else if (href) {
-      router.push(href);
     }
-  }
-
-  function handleDiscard() {
-    setSaving(false);
-    doNavigate(pendingHref);
+    setTimeout(() => { allowNavRef.current = false; }, 500);
   }
 
   function handleStay() {
     setShowLeaveModal(false);
-    setPendingHref(null);
+    setPendingNav(null);
     setSaving(false);
+  }
+
+  function handleDiscard() {
+    setSaving(false);
+    setShowLeaveModal(false);
+    const nav = pendingNav;
+    setPendingNav(null);
+    dirtyRef.current = false;
+    executeNav(nav);
   }
 
   async function handleSaveAndLeave() {
     setSaving(true);
     try {
-      // Save journal first (it's a direct DB call)
       if (journalDirty && window.__journalSave) {
         await window.__journalSave();
       }
-      // Submit trade form — this triggers onSubmit which navigates on success
-      // So we don't need to navigate ourselves after
+      // Submit trade form — its onSubmit will navigate via router.push
+      // which we need to allow through
+      allowNavRef.current = true;
       const form = document.getElementById('trade-form');
       if (form) {
+        setShowLeaveModal(false);
+        setPendingNav(null);
         form.requestSubmit();
-        // TradeForm's onSubmit will handle navigation
-      } else {
-        // Fallback if form not found
-        doNavigate(pendingHref);
       }
     } catch (e) {
       setSaving(false);
+      allowNavRef.current = false;
     }
   }
 
   async function handleSaveAll() {
     setSaving(true);
     try {
-      // Save journal
       if (journalDirty && window.__journalSave) {
         await window.__journalSave();
       }
-      // Submit trade form
+      allowNavRef.current = true;
       const form = document.getElementById('trade-form');
       if (form) form.requestSubmit();
     } catch (e) {
       // ignore
     }
-    // Note: TradeForm's onSubmit navigates away on success,
-    // so setSaving(false) may not run. That's fine — page is changing.
-    // If it stays (validation error), TradeForm shows the error and we reset:
-    setTimeout(() => setSaving(false), 3000);
+    setTimeout(() => { setSaving(false); allowNavRef.current = false; }, 3000);
   }
 
   return (
     <>
       <TradeForm mode="edit" tradeId={tradeId} initial={trade} prefs={prefs} setups={setups || []} accounts={accounts || []} activeAccountId={activeAccountId} hideButtons />
 
-      {/* Journal — buttons hidden, save exposed via window ref */}
       <div className="mt-6 lg:pr-[324px]">
         <JournalInlineEdit
           tradeId={tradeId}
@@ -167,9 +179,8 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
         />
       </div>
 
-      {/* Single combined Save/Cancel at the bottom */}
       <div className="mt-6 flex items-center gap-3">
-        <Link href={'/dashboard/trades/' + tradeId} data-skip-dirty-check className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">
+        <Link href={'/dashboard/trades/' + tradeId} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">
           Cancel
         </Link>
         <button
@@ -182,7 +193,6 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
         </button>
       </div>
 
-      {/* Custom unsaved changes modal */}
       {showLeaveModal && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={handleStay}>
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
