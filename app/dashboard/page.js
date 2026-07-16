@@ -233,7 +233,8 @@ export default async function DashboardPage() {
 
   const onboardingName = userProfile?.full_name || '';
 
-  if (list.length === 0) {
+  if (list.length === 0 && !activeAccountId) {
+    // No trades at all AND no account filter — show onboarding for new users
     return (
       <div className="px-4 py-8 sm:px-6 sm:py-10">
         <OnboardingChecklist

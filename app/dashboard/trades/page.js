@@ -108,13 +108,19 @@ export default async function TradesPage() {
           <div className="text-5xl mb-4 opacity-40">
             &#9776;
           </div>
-          <h2 className="text-lg font-semibold text-white/80 mb-2">No trades yet</h2>
+          <h2 className="text-lg font-semibold text-white/80 mb-2">
+            {activeAccountId ? 'No trades for this account' : 'No trades yet'}
+          </h2>
           <p className="text-sm text-white/40 max-w-xs mb-6">
-            Log your first trade to start tracking your performance. It only takes 30 seconds.
+            {activeAccountId
+              ? 'Log a trade with this account selected, or switch to All Accounts to see everything.'
+              : 'Log your first trade to start tracking your performance. It only takes 30 seconds.'}
           </p>
-          <Link href="/dashboard/trades/new" className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
-            + Log your first trade
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/dashboard/trades/new" className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+              + New Trade
+            </Link>
+          </div>
         </div>
       ) : (
         <div>

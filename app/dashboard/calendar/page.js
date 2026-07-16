@@ -88,8 +88,8 @@ export default async function CalendarPage({ searchParams }) {
 
   const list = trades || [];
 
-  // Empty state — user has no trades at all
-  if (totalTradeCount === 0) {
+  // Empty state — user has no trades at all (only for unfiltered view, not account-filtered)
+  if (totalTradeCount === 0 && !activeAccountId) {
     return (
       <div className="p-6 mx-auto">
         <h1 className="text-2xl font-bold mb-6">Calendar</h1>

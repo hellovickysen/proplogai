@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { setActiveAccount } from '@/app/dashboard/accounts/actions';
 
 const PHASE_BADGES = {
@@ -186,15 +187,16 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
 
           {/* Manage accounts link */}
           <div className="mx-3 my-1 border-t border-white/[0.06]" />
-          <a
+          <Link
             href="/dashboard/accounts"
             className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-xs text-white/40 hover:text-white/70 transition-colors"
+            onClick={() => setOpen(false)}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
               <path d="M12 5v14M5 12h14" strokeLinecap="round" />
             </svg>
             Manage accounts
-          </a>
+          </Link>
         </div>
       )}
     </div>
