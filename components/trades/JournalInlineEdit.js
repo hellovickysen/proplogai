@@ -409,10 +409,10 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
       <div className="mb-5">
         <label className="text-xs font-semibold text-white/50 mb-2 block">Screenshots</label>
         {screenshotUrls.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+          <div className="flex flex-wrap gap-2 mb-3">
             {screenshotUrls.map((url, i) => (
-              <div key={i} className="relative group rounded-lg overflow-hidden border border-white/10 bg-black/30">
-                <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-40 object-contain" />
+              <div key={i} className="relative group w-36 h-24 rounded-lg overflow-hidden border border-white/10 bg-black/30">
+                <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-full object-cover" />
                 <button
                   type="button"
                   onClick={() => removeScreenshot(url, i)}
