@@ -63,7 +63,7 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
       if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
       if (link.dataset.skipDirtyCheck) return;
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation();
       setPendingHref(href);
       setShowLeaveModal(true);
     }
