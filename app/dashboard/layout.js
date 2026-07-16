@@ -171,12 +171,12 @@ export default async function DashboardLayout({ children }) {
   const isAdmin = user.email === ADMIN_EMAIL;
   const initial = user.email ? user.email.charAt(0).toUpperCase() : '?';
 
-  // ── Multi-account: fetch accounts + active selection (Elite only) ──
+  // ── Multi-account: always show switcher, fetch data for Elite ──
   let accounts = [];
   let activeAccountId = null;
   let todayAccountStats = {};
-  const showAccountSwitcher = access.canUse('multi_account');
-  if (showAccountSwitcher) {
+  const isElite = access.canUse('multi_account');
+  if (isElite) {
     accounts = await getAccounts(supabase, user.id);
     activeAccountId = await getActiveAccountId(supabase, user.id);
     if (accounts.length > 0) {
@@ -198,9 +198,7 @@ export default async function DashboardLayout({ children }) {
               <span className="font-mono text-xs uppercase tracking-wider text-white/55">Today</span>
               <span className={'font-mono text-xs font-semibold ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>
-            {showAccountSwitcher && (
-              <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} todayStats={todayAccountStats} />
-            )}
+            <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} todayStats={todayAccountStats} planAccess={planAccess} />
           </div>
           <SearchBar planAccess={planAccess} />
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { setActiveAccount } from '@/app/dashboard/accounts/actions';
+import { UpgradeModal } from '@/components/ui/BlurGate';
 
 const PHASE_BADGES = {
   challenge: { label: 'Challenge', cls: 'bg-amber-500/15 text-amber-300 border-amber-400/30' },
@@ -21,13 +22,17 @@ function fmtPnl(v) {
 
 /**
  * AccountSwitcher — global account selector pill for the dashboard header.
- * Always renders for Elite users (even with 0 accounts — shows "All Accounts" + manage link).
+ * Visible to ALL users. Basic users see upgrade modal on interaction.
  */
-export default function AccountSwitcher({ accounts, activeAccountId, todayStats = {} }) {
+export default function AccountSwitcher({ accounts, activeAccountId, todayStats = {}, planAccess }) {
   const [open, setOpen] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const ref = useRef(null);
   const router = useRouter();
+
+  const isElite = planAccess && (planAccess.isAdmin || planAccess.isBeta || planAccess.effectivePlan === 'elite');
+  const hasAccounts = accounts.length > 0;
 
   // Close on outside click
   useEffect(() => {
@@ -49,6 +54,14 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
     return () => document.removeEventListener('keydown', handleKey);
   }, [open]);
 
+  function handlePillClick() {
+    if (!isElite) {
+      setShowUpgrade(true);
+      return;
+    }
+    setOpen(!open);
+  }
+
   async function switchAccount(accountId) {
     setSwitching(true);
     setOpen(false);
@@ -63,32 +76,42 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
   const activeAccount = accounts.find((a) => a.id === activeAccountId);
   const displayName = activeAccount ? activeAccount.name : 'All Accounts';
   const displayColor = activeAccount ? activeAccount.color : null;
-  const hasAccounts = accounts.length > 0;
 
   // Compute total today P&L across all accounts
   const allPnl = Object.values(todayStats).reduce((sum, s) => sum + (s.pnl || 0), 0);
 
-  // Green active indicator — always visible on the pill
+  // Green active indicator
   const greenDot = (
     <span className="h-2 w-2 rounded-full flex-shrink-0 bg-emerald-400" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }} />
+  );
+
+  // Lock icon for Basic users
+  const lockIcon = (
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-400 flex-shrink-0">
+      <rect x="5" y="11" width="14" height="10" rx="2" />
+      <path d="M8 11V7a4 4 0 018 0v4" />
+    </svg>
   );
 
   return (
     <div className="relative" ref={ref}>
       {/* Pill button — desktop */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={handlePillClick}
         disabled={switching}
-        className="hidden sm:flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 min-h-[36px] text-xs font-medium text-white/80 hover:bg-white/[0.06] transition-colors disabled:opacity-50"
+        className={'hidden sm:flex items-center gap-2 rounded-lg border px-2.5 py-1.5 min-h-[36px] text-xs font-medium transition-colors disabled:opacity-50 ' +
+          (isElite
+            ? 'border-white/10 bg-white/[0.03] text-white/80 hover:bg-white/[0.06]'
+            : 'border-violet-400/20 bg-violet-500/[0.05] text-white/60 hover:bg-violet-500/[0.1]')}
       >
-        {greenDot}
-        {displayColor && (
+        {isElite ? greenDot : lockIcon}
+        {isElite && displayColor && (
           <span
             className="h-2 w-2 rounded-full flex-shrink-0"
             style={{ backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` }}
           />
         )}
-        <span className="max-w-[120px] truncate">{displayName}</span>
+        <span className="max-w-[120px] truncate">{isElite ? displayName : 'Accounts'}</span>
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className={'text-white/40 transition-transform ' + (open ? 'rotate-180' : '')}>
           <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -96,22 +119,25 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
 
       {/* Mobile: compact button */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={handlePillClick}
         disabled={switching}
-        className="sm:hidden flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] h-9 px-2 disabled:opacity-50"
+        className={'sm:hidden flex items-center justify-center gap-1 rounded-lg border h-9 px-2 disabled:opacity-50 ' +
+          (isElite
+            ? 'border-white/10 bg-white/[0.03]'
+            : 'border-violet-400/20 bg-violet-500/[0.05]')}
       >
-        {greenDot}
-        {displayColor && (
+        {isElite ? greenDot : lockIcon}
+        {isElite && displayColor && (
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` }} />
         )}
       </button>
 
-      {/* Dropdown */}
-      {open && (
+      {/* Dropdown — Elite only */}
+      {open && isElite && (
         <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-white/10 bg-[#12121a] py-1.5 shadow-2xl">
           {/* All Accounts option */}
           <button
-            onClick={() => hasAccounts ? switchAccount(null) : null}
+            onClick={() => switchAccount(null)}
             className={'flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors ' +
               (!activeAccountId ? 'bg-emerald-500/[0.06] border-l-2 border-l-emerald-400' : 'hover:bg-white/[0.04] border-l-2 border-l-transparent')}
           >
@@ -190,6 +216,9 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
           </Link>
         </div>
       )}
+
+      {/* Upgrade modal for Basic users */}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} feature="multi_account" />}
     </div>
   );
 }
