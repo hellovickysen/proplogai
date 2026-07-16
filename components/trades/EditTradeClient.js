@@ -14,6 +14,7 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [pendingHref, setPendingHref] = useState(null);
   const dirtyRef = useRef(false);
+  const navigatingRef = useRef(false);
 
   const onJournalDirtyChange = useCallback((d) => setJournalDirty(d), []);
 
@@ -47,16 +48,13 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   // Intercept in-app link clicks — show custom modal instead of native popup
   useEffect(() => {
     function onClick(e) {
-      if (!dirtyRef.current) return;
-      // Find the closest <a> tag
+      if (!dirtyRef.current || navigatingRef.current) return;
       const link = e.target.closest('a[href]');
       if (!link) return;
       const href = link.getAttribute('href');
       if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
-      // Only intercept internal links (same origin)
       if (link.target === '_blank') return;
       if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
-      // Don't intercept if it's the Cancel button (it has its own flow)
       if (link.dataset.skipDirtyCheck) return;
       e.preventDefault();
       e.stopPropagation();
@@ -69,11 +67,9 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
 
   // Browser back button — intercept with popstate
   useEffect(() => {
-    // Push a dummy state so we can intercept back
     window.history.pushState({ dirtyGuard: true }, '');
-    function onPopState(e) {
-      if (dirtyRef.current) {
-        // Re-push so back doesn't actually navigate
+    function onPopState() {
+      if (dirtyRef.current && !navigatingRef.current) {
         window.history.pushState({ dirtyGuard: true }, '');
         setPendingHref('__back__');
         setShowLeaveModal(true);
@@ -83,33 +79,66 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  function confirmLeave() {
-    setShowLeaveModal(false);
-    // Reset dirty so we don't re-intercept
+  function doNavigate(href) {
+    navigatingRef.current = true;
     dirtyRef.current = false;
-    if (pendingHref === '__back__') {
-      window.history.go(-2); // go back past our dummy state
-    } else if (pendingHref) {
-      router.push(pendingHref);
+    setShowLeaveModal(false);
+    setPendingHref(null);
+    if (href === '__back__') {
+      window.history.go(-2);
+    } else if (href) {
+      router.push(href);
     }
+  }
+
+  function handleDiscard() {
+    doNavigate(pendingHref);
+  }
+
+  function handleStay() {
+    setShowLeaveModal(false);
     setPendingHref(null);
   }
 
-  function cancelLeave() {
-    setShowLeaveModal(false);
-    setPendingHref(null);
+  async function handleSaveAndLeave() {
+    setSaving(true);
+    try {
+      // Save journal first (it's a direct DB call)
+      if (journalDirty && window.__journalSave) {
+        await window.__journalSave();
+      }
+      // Submit trade form — this triggers onSubmit which navigates on success
+      // So we don't need to navigate ourselves after
+      const form = document.getElementById('trade-form');
+      if (form) {
+        form.requestSubmit();
+        // TradeForm's onSubmit will handle navigation
+      } else {
+        // Fallback if form not found
+        doNavigate(pendingHref);
+      }
+    } catch (e) {
+      setSaving(false);
+    }
   }
 
   async function handleSaveAll() {
     setSaving(true);
-    // 1. Submit the trade form
-    const form = document.getElementById('trade-form');
-    if (form) form.requestSubmit();
-    // 2. Save journal via exposed window function
-    if (journalDirty && window.__journalSave) {
-      await window.__journalSave();
+    try {
+      // Save journal
+      if (journalDirty && window.__journalSave) {
+        await window.__journalSave();
+      }
+      // Submit trade form
+      const form = document.getElementById('trade-form');
+      if (form) form.requestSubmit();
+    } catch (e) {
+      // ignore
     }
-    setSaving(false);
+    // Note: TradeForm's onSubmit navigates away on success,
+    // so setSaving(false) may not run. That's fine — page is changing.
+    // If it stays (validation error), TradeForm shows the error and we reset:
+    setTimeout(() => setSaving(false), 3000);
   }
 
   return (
@@ -147,29 +176,27 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
 
       {/* Custom unsaved changes modal */}
       {showLeaveModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={cancelLeave}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={handleStay}>
           <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-display font-semibold text-white mb-2">Unsaved changes</h3>
             <p className="text-sm text-white/55 mb-6">You have unsaved changes. Do you want to save before leaving?</p>
             <div className="flex items-center gap-3">
               <button
-                onClick={async () => {
-                  await handleSaveAll();
-                  confirmLeave();
-                }}
-                className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]"
+                onClick={handleSaveAndLeave}
+                disabled={saving}
+                className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-50"
                 style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
               >
-                Save & leave
+                {saving ? 'Saving...' : 'Save & leave'}
               </button>
               <button
-                onClick={confirmLeave}
+                onClick={handleDiscard}
                 className="rounded-xl border border-red-400/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-500/20 transition-colors"
               >
                 Discard
               </button>
               <button
-                onClick={cancelLeave}
+                onClick={handleStay}
                 className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-white/50 hover:text-white/70 transition-colors"
               >
                 Stay
