@@ -15,25 +15,38 @@ export default async function AccountsPage() {
   const access = await getUserAccess(supabase, user);
   const planAccess = access.toJSON();
 
-  // Fetch accounts (even for Basic — they'll see the BlurGate)
+  // Fetch active accounts
   const accounts = await getAccounts(supabase, user.id);
 
-  // Fetch per-account trade stats
-  const accountStats = {};
-  if (accounts.length > 0) {
-    const { data: trades } = await supabase
-      .from('trades')
-      .select('account_id, pnl')
-      .eq('user_id', user.id);
+  // Fetch archived accounts
+  const { data: archivedAccounts } = await supabase
+    .from('accounts')
+    .select('id, name, prop_firm, account_size, phase, status, color, starting_balance, is_archived, sort_order, created_at')
+    .eq('user_id', user.id)
+    .eq('is_archived', true)
+    .order('created_at', { ascending: false });
 
-    (trades || []).forEach((t) => {
-      const aid = t.account_id;
-      if (!aid) return;
-      if (!accountStats[aid]) accountStats[aid] = { totalPnl: 0, tradeCount: 0 };
-      accountStats[aid].totalPnl += Number(t.pnl) || 0;
-      accountStats[aid].tradeCount += 1;
-    });
-  }
+  // Fetch all trades for per-account stats + "All Accounts" total
+  const { data: allTrades } = await supabase
+    .from('trades')
+    .select('account_id, pnl')
+    .eq('user_id', user.id);
+
+  const accountStats = {};
+  let totalPnl = 0;
+  let totalTradeCount = 0;
+
+  (allTrades || []).forEach((t) => {
+    totalPnl += Number(t.pnl) || 0;
+    totalTradeCount += 1;
+    const aid = t.account_id;
+    if (!aid) return;
+    if (!accountStats[aid]) accountStats[aid] = { totalPnl: 0, tradeCount: 0 };
+    accountStats[aid].totalPnl += Number(t.pnl) || 0;
+    accountStats[aid].tradeCount += 1;
+  });
+
+  const allAccountsStats = { totalPnl, tradeCount: totalTradeCount };
 
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
@@ -43,7 +56,12 @@ export default async function AccountsPage() {
       </div>
 
       <BlurGate feature="multi_account" access={planAccess}>
-        <AccountManager accounts={accounts} stats={accountStats} />
+        <AccountManager
+          accounts={accounts}
+          archivedAccounts={archivedAccounts || []}
+          stats={accountStats}
+          allAccountsStats={allAccountsStats}
+        />
       </BlurGate>
     </div>
   );

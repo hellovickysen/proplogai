@@ -137,6 +137,35 @@ export async function archiveAccount(accountId) {
   return { ok: true };
 }
 
+/** Restore an archived account back to active. */
+export async function restoreAccount(accountId) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+
+  // Check active account limit before restoring
+  const { count } = await supabase
+    .from('accounts')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('is_archived', false);
+
+  if ((count || 0) >= ACCOUNTS_LIMIT) {
+    return { error: `You already have ${ACCOUNTS_LIMIT} active accounts. Archive one first.` };
+  }
+
+  const { error } = await supabase
+    .from('accounts')
+    .update({ is_archived: false })
+    .eq('id', accountId)
+    .eq('user_id', user.id);
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/accounts');
+  return { ok: true };
+}
+
 /** Set the active account for the global switcher. Pass null for "All Accounts". */
 export async function setActiveAccount(accountId) {
   const { supabase, user } = await getCtx();
@@ -164,7 +193,5 @@ export async function setActiveAccount(accountId) {
 
   // No revalidatePath here — all pages use `dynamic = 'force-dynamic'` (no cache)
   // and the AccountSwitcher does a full window.location.reload() after this action.
-  // revalidatePath was causing a race: it triggered an intermediate RSC update that
-  // errored before the reload delivered the correct page.
   return { ok: true };
 }
