@@ -17,6 +17,7 @@ import { ADMIN_EMAIL } from '@/lib/supabase/admin';
 import LazySearchBar from '@/components/layout/LazySearchBar';
 import LiveClock from '@/components/layout/LiveClock';
 import QuickActions from '@/components/layout/QuickActions';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import HeaderAvatar from '@/components/layout/HeaderAvatar';
 import AccountSwitcher from '@/components/accounts/AccountSwitcher';
 import SmartHeader from '@/components/layout/SmartHeader';
@@ -253,6 +254,7 @@ export default async function DashboardLayout({ children }) {
         <RiskFooter />
       </div>
       <QuickActions />
+      <MobileBottomNav />
     </div>
   );
 }
