@@ -21,11 +21,7 @@ function fmtPnl(v) {
 
 /**
  * AccountSwitcher — global account selector pill for the dashboard header.
- *
- * Props:
- * accounts         - array of account objects from getAccounts()
- * activeAccountId   - currently selected account ID (null = All Accounts)
- * todayStats        - map of { accountId: { pnl, tradeCount } } for today's P&L per account
+ * Always renders for Elite users (even with 0 accounts — shows "All Accounts" + manage link).
  */
 export default function AccountSwitcher({ accounts, activeAccountId, todayStats = {} }) {
   const [open, setOpen] = useState(false);
@@ -58,8 +54,6 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
     setOpen(false);
     const res = await setActiveAccount(accountId);
     if (res.ok) {
-      // Full page reload to avoid Next.js RSC cache race condition
-      // router.refresh() can fire before revalidatePath fully propagates
       window.location.reload();
       return;
     }
@@ -69,28 +63,30 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
   const activeAccount = accounts.find((a) => a.id === activeAccountId);
   const displayName = activeAccount ? activeAccount.name : 'All Accounts';
   const displayColor = activeAccount ? activeAccount.color : null;
+  const hasAccounts = accounts.length > 0;
 
   // Compute total today P&L across all accounts
   const allPnl = Object.values(todayStats).reduce((sum, s) => sum + (s.pnl || 0), 0);
 
-  if (accounts.length === 0) return null;
+  // Green active indicator — always visible on the pill
+  const greenDot = (
+    <span className="h-2 w-2 rounded-full flex-shrink-0 bg-emerald-400" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }} />
+  );
 
   return (
     <div className="relative" ref={ref}>
-      {/* Pill button */}
+      {/* Pill button — desktop */}
       <button
         onClick={() => setOpen(!open)}
         disabled={switching}
         className="hidden sm:flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 min-h-[36px] text-xs font-medium text-white/80 hover:bg-white/[0.06] transition-colors disabled:opacity-50"
       >
+        {greenDot}
         {displayColor && (
           <span
             className="h-2 w-2 rounded-full flex-shrink-0"
             style={{ backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` }}
           />
-        )}
-        {!displayColor && (
-          <span className="h-2 w-2 rounded-full flex-shrink-0 bg-white/30" />
         )}
         <span className="max-w-[120px] truncate">{displayName}</span>
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className={'text-white/40 transition-transform ' + (open ? 'rotate-180' : '')}>
@@ -98,19 +94,15 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
         </svg>
       </button>
 
-      {/* Mobile: compact icon button */}
+      {/* Mobile: compact button */}
       <button
         onClick={() => setOpen(!open)}
         disabled={switching}
-        className="sm:hidden flex items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] h-9 w-9 disabled:opacity-50"
+        className="sm:hidden flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] h-9 px-2 disabled:opacity-50"
       >
-        {displayColor ? (
-          <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` }} />
-        ) : (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/50">
-            <path d="M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2" strokeLinecap="round" />
-            <rect x="8" y="2" width="8" height="4" rx="1" />
-          </svg>
+        {greenDot}
+        {displayColor && (
+          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` }} />
         )}
       </button>
 
@@ -119,9 +111,9 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
         <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-white/10 bg-[#12121a] py-1.5 shadow-2xl">
           {/* All Accounts option */}
           <button
-            onClick={() => switchAccount(null)}
+            onClick={() => hasAccounts ? switchAccount(null) : null}
             className={'flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors ' +
-              (!activeAccountId ? 'bg-white/[0.06]' : 'hover:bg-white/[0.04]')}
+              (!activeAccountId ? 'bg-emerald-500/[0.06] border-l-2 border-l-emerald-400' : 'hover:bg-white/[0.04] border-l-2 border-l-transparent')}
           >
             <span className="h-2 w-2 rounded-full bg-white/30 flex-shrink-0" />
             <div className="flex-1 min-w-0">
@@ -133,13 +125,11 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
               )}
             </div>
             {!activeAccountId && (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-cyan-400 flex-shrink-0">
-                <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <span className="h-2 w-2 rounded-full bg-emerald-400 flex-shrink-0" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }} />
             )}
           </button>
 
-          {accounts.length > 0 && (
+          {hasAccounts && (
             <div className="mx-3 my-1 border-t border-white/[0.06]" />
           )}
 
@@ -155,7 +145,7 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
                 key={account.id}
                 onClick={() => switchAccount(account.id)}
                 className={'flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors ' +
-                  (isActive ? 'bg-white/[0.06]' : 'hover:bg-white/[0.04]')}
+                  (isActive ? 'bg-emerald-500/[0.06] border-l-2 border-l-emerald-400' : 'hover:bg-white/[0.04] border-l-2 border-l-transparent')}
               >
                 <span
                   className="h-2 w-2 rounded-full flex-shrink-0"
@@ -180,9 +170,7 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
                   )}
                 </div>
                 {isActive && (
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-cyan-400 flex-shrink-0">
-                    <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 flex-shrink-0" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }} />
                 )}
               </button>
             );

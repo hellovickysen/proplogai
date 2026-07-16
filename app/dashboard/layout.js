@@ -175,10 +175,11 @@ export default async function DashboardLayout({ children }) {
   let accounts = [];
   let activeAccountId = null;
   let todayAccountStats = {};
-  if (access.canUse('multi_account')) {
+  const showAccountSwitcher = access.canUse('multi_account');
+  if (showAccountSwitcher) {
     accounts = await getAccounts(supabase, user.id);
+    activeAccountId = await getActiveAccountId(supabase, user.id);
     if (accounts.length > 0) {
-      activeAccountId = await getActiveAccountId(supabase, user.id);
       todayAccountStats = await getAccountStats(supabase, user.id, today);
     }
   }
@@ -197,7 +198,7 @@ export default async function DashboardLayout({ children }) {
               <span className="font-mono text-xs uppercase tracking-wider text-white/55">Today</span>
               <span className={'font-mono text-xs font-semibold ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>
-            {accounts.length > 0 && (
+            {showAccountSwitcher && (
               <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} todayStats={todayAccountStats} />
             )}
           </div>
