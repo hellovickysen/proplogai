@@ -411,8 +411,8 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         {screenshotUrls.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
             {screenshotUrls.map((url, i) => (
-              <div key={i} className="relative group rounded-lg overflow-hidden border border-white/10">
-                <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-24 object-cover" />
+              <div key={i} className="relative group rounded-lg overflow-hidden border border-white/10 bg-black/30">
+                <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-40 object-contain" />
                 <button
                   type="button"
                   onClick={() => removeScreenshot(url, i)}
