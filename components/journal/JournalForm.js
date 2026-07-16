@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { saveJournal } from '@/app/dashboard/trades/actions';
 import { processImageFile } from '@/lib/imageUtils';
+import { secureUpload } from '@/lib/secureUpload';
 import Lightbox from '@/components/ui/Lightbox';
 import { resolveEmotions } from '@/lib/emotions';
 import { resolveTags } from '@/lib/tags';
@@ -62,7 +62,6 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
     }
     setUploading(true);
     setError(null);
-    const supabase = createClient();
     const newUrls = [];
 
     for (const file of files) {
@@ -76,14 +75,13 @@ export default function JournalForm({ tradeId, userId, initial, prefs = null, on
 
       const safe = processed.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const path = userId + '/' + tradeId + '/' + Date.now() + '_' + safe;
-      const up = await supabase.storage.from('screenshots').upload(path, processed.file, { upsert: true });
-      if (up.error) {
-        setError('Upload failed: ' + up.error.message);
+      const { url, error: uploadErr } = await secureUpload(processed.file, path);
+      if (uploadErr) {
+        setError('Upload failed: ' + uploadErr);
         setUploading(false);
         return;
       }
-      const pub = supabase.storage.from('screenshots').getPublicUrl(path);
-      newUrls.push(pub.data.publicUrl);
+      newUrls.push(url);
     }
 
     setScreenshotUrls((cur) => [...cur, ...newUrls]);

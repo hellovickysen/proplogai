@@ -8,6 +8,7 @@ import { createTrade, updateTrade } from '@/app/dashboard/trades/actions';
 import { DEFAULT_EMOTIONS, resolveEmotions } from '@/lib/emotions';
 import { resolveTags } from '@/lib/tags';
 import { processImageFile } from '@/lib/imageUtils';
+import { secureUpload } from '@/lib/secureUpload';
 import { useToast } from '@/components/ui/Toast';
 
 const PAIRS = ['XAU/USD', 'EUR/USD', 'GBP/USD', 'USD/JPY', 'GBP/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
@@ -419,14 +420,13 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
       const safe = processed.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const path = user.id + '/new/' + Date.now() + '_' + safe;
-      const up = await supabase.storage.from('screenshots').upload(path, processed.file, { upsert: true });
-      if (up.error) {
-        setError('Upload failed: ' + up.error.message);
+      const { url, error: uploadErr } = await secureUpload(processed.file, path);
+      if (uploadErr) {
+        setError('Upload failed: ' + uploadErr);
         setUploading(false);
         return;
       }
-      const pub = supabase.storage.from('screenshots').getPublicUrl(path);
-      newUrls.push(pub.data.publicUrl);
+      newUrls.push(url);
     }
 
     setScreenshotUrls((cur) => [...cur, ...newUrls]);

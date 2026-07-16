@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createSetup, updateSetup, deleteSetup, seedDefaultSetups, resetToDefaultSetups } from '@/app/dashboard/rulebook/actions';
 import { createClient } from '@/lib/supabase/client';
 import { processImageFile } from '@/lib/imageUtils';
+import { secureUpload } from '@/lib/secureUpload';
 import { useToast } from '@/components/ui/Toast';
 import { RulebookEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -115,10 +116,9 @@ function SetupForm({ initial, onSave, onCancel, imageLimit }) {
         const pFile = processed.file;
         const ext = pFile.name.endsWith('.webp') ? 'webp' : 'jpg';
         const path = `${user.id}/setups/${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('screenshots').upload(path, pFile, { contentType: pFile.type || 'image/webp', upsert: false });
-        if (upErr) { toast.error('Upload failed: ' + upErr.message); continue; }
-        const { data: pub } = supabase.storage.from('screenshots').getPublicUrl(path);
-        if (pub?.publicUrl) newUrls.push(pub.publicUrl);
+        const { url: pubUrl, error: upErr } = await secureUpload(pFile, path);
+        if (upErr) { toast.error('Upload failed: ' + upErr); continue; }
+        if (pubUrl) newUrls.push(pubUrl);
       } catch (err) { toast.error('Upload failed'); }
     }
     if (newUrls.length > 0) setImages((prev) => [...prev, ...newUrls]);

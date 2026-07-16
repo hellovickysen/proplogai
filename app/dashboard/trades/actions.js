@@ -55,7 +55,8 @@ async function getCtx() {
 function isValidStorageUrl(url) {
   if (!url || typeof url !== 'string') return false;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  return url.startsWith(supabaseUrl) || url.startsWith('https://');
+  const storagePrefix = supabaseUrl + '/storage/v1/object/public/screenshots/';
+  return url.startsWith(storagePrefix);
 }
 
 const VALID_SETUP_FOLLOWED = ['yes', 'partial', 'no'];
