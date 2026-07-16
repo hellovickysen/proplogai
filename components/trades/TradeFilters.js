@@ -179,6 +179,10 @@ export default function TradeFilters({ trades, prefs }) {
   const [hasLesson, setHasLesson] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  /* Refs to ensure URL params are only applied once (not re-applied after clear) */
+  const emotionUrlApplied = useRef(false);
+  const tagUrlApplied = useRef(false);
+
   /* Scroll to highlighted trade on mount */
   useEffect(() => {
     if (highlightTradeId) {
@@ -221,21 +225,27 @@ export default function TradeFilters({ trades, prefs }) {
     return [...new Set(fromTrades)].sort();
   }, [trades]);
 
-  /* Resolve URL params to actual stored values (case-insensitive match) */
+  /* Resolve URL params to actual stored values — only once per mount */
   useEffect(() => {
-    if (urlEmotion && emotionOptions.length > 0 && !emotionFilter) {
+    if (urlEmotion && emotionOptions.length > 0 && !emotionUrlApplied.current) {
       const match = emotionOptions.find(e => e.toLowerCase() === urlEmotion.toLowerCase());
-      if (match) setEmotionFilter(match);
+      if (match) {
+        setEmotionFilter(match);
+        emotionUrlApplied.current = true;
+      }
     }
-  }, [urlEmotion, emotionOptions, emotionFilter]);
+  }, [urlEmotion, emotionOptions]);
 
-  /* Backward compat: single ?tag= URL param seeds the multi-tag array */
+  /* Backward compat: single ?tag= URL param seeds the multi-tag array — only once */
   useEffect(() => {
-    if (urlTag && tagOptions.length > 0 && tagFilter.length === 0) {
+    if (urlTag && tagOptions.length > 0 && !tagUrlApplied.current) {
       const match = tagOptions.find(t => t.toLowerCase() === urlTag.toLowerCase());
-      if (match) setTagFilter([match]);
+      if (match) {
+        setTagFilter([match]);
+        tagUrlApplied.current = true;
+      }
     }
-  }, [urlTag, tagOptions, tagFilter.length]);
+  }, [urlTag, tagOptions]);
 
   /* Stamp absolute trade number BEFORE filtering so it survives filters */
   const numberedTrades = useMemo(() =>
@@ -335,7 +345,7 @@ export default function TradeFilters({ trades, prefs }) {
           <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
         {hasFilters && (
-          <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setDateFrom(''); setDateTo(''); }} className="rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white">Clear filters</button>
+          <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setDateFrom(''); setDateTo(''); }} className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
         )}
       </div>
 
@@ -377,7 +387,7 @@ export default function TradeFilters({ trades, prefs }) {
               <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
             {hasFilters && (
-              <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }} className="col-span-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/55 hover:text-white">Clear filters</button>
+              <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }} className="col-span-2 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
             )}
           </div>
         )}
