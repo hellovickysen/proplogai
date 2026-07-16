@@ -9,6 +9,7 @@ import { buildPaymentReceiptEmail, buildPaymentFailedEmail } from '@/lib/subscri
  *
  * Handles Razorpay webhook events for subscription lifecycle.
  * Uses service role client since webhooks are not user-authenticated.
+ * Includes idempotency protection to prevent duplicate event processing.
  */
 
 function getAdminClient() {
@@ -16,6 +17,32 @@ function getAdminClient() {
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
+}
+
+/**
+ * Check if a webhook event has already been processed.
+ * Returns true if this is a duplicate (already processed), false if new.
+ */
+async function isDuplicateEvent(supabase, eventId, eventType) {
+  if (!eventId) return false; // No event ID — can't deduplicate, process anyway
+
+  // Try to insert — unique constraint on event_id will reject duplicates
+  const { error } = await supabase
+    .from('razorpay_webhook_events')
+    .insert({ event_id: eventId, event_type: eventType });
+
+  if (error) {
+    // Unique violation = duplicate event
+    if (error.code === '23505') {
+      console.log(`Razorpay webhook: duplicate event ${eventId} (${eventType}), skipping`);
+      return true;
+    }
+    // Table might not exist yet (migration not run) — log and proceed
+    console.warn('Webhook idempotency check failed:', error.message);
+    return false;
+  }
+
+  return false; // Successfully inserted — this is a new event
 }
 
 export async function POST(request) {
@@ -31,7 +58,18 @@ export async function POST(request) {
 
     const event = JSON.parse(rawBody);
     const eventType = event.event;
+    const eventId = event.payload?.payment?.entity?.id
+      || event.payload?.subscription?.entity?.id
+      || null;
+    // Build a composite key: eventType + entity ID to uniquely identify this delivery
+    const idempotencyKey = eventId ? `${eventType}:${eventId}:${event.created_at || ''}` : null;
+
     const supabase = getAdminClient();
+
+    // Idempotency check — skip if already processed
+    if (idempotencyKey && await isDuplicateEvent(supabase, idempotencyKey, eventType)) {
+      return NextResponse.json({ status: 'ok', duplicate: true });
+    }
 
     console.log(`Razorpay webhook: ${eventType}`);
 
