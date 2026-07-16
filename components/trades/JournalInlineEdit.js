@@ -74,11 +74,68 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     setScreenshotUrls(prev => prev.filter((_, i) => i !== idx));
   }
 
+  // Mutable options lists — start from prefs, grow when user adds inline
+  const [emotionOptions, setEmotionOptions] = useState(allEmotions);
+  const [tagOptions, setTagOptions] = useState(allTags);
+  const [newEmotionInput, setNewEmotionInput] = useState('');
+  const [newTagInput, setNewTagInput] = useState('');
+  const [showAddEmotion, setShowAddEmotion] = useState(false);
+  const [showAddTag, setShowAddTag] = useState(false);
+
   function toggleEmotion(e) {
     setEmotions(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]);
   }
   function toggleTag(t) {
     setTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+  }
+
+  async function addNewEmotion() {
+    const val = newEmotionInput.trim();
+    if (!val) return;
+    if (emotionOptions.some(e => e.toLowerCase() === val.toLowerCase())) {
+      // Already exists — just select it
+      const match = emotionOptions.find(e => e.toLowerCase() === val.toLowerCase());
+      if (!emotions.includes(match)) setEmotions(prev => [...prev, match]);
+    } else {
+      // Add to options and select it
+      setEmotionOptions(prev => [...prev, val]);
+      setEmotions(prev => [...prev, val]);
+      // Persist to user_preferences
+      try {
+        const supabase = createClient();
+        const { data: p } = await supabase.from('user_preferences').select('custom_emotions').eq('user_id', userId).maybeSingle();
+        const existing = p?.custom_emotions || [];
+        if (!existing.some(e => e.toLowerCase() === val.toLowerCase())) {
+          await supabase.from('user_preferences').update({ custom_emotions: [...existing, val] }).eq('user_id', userId);
+        }
+      } catch (e) {}
+    }
+    setNewEmotionInput('');
+    setShowAddEmotion(false);
+  }
+
+  async function addNewTag() {
+    const val = newTagInput.trim().toLowerCase().replace(/\s+/g, '-');
+    if (!val) return;
+    if (tagOptions.includes(val)) {
+      // Already exists — just select it
+      if (!tags.includes(val)) setTags(prev => [...prev, val]);
+    } else {
+      // Add to options and select it
+      setTagOptions(prev => [...prev, val]);
+      setTags(prev => [...prev, val]);
+      // Persist to user_preferences
+      try {
+        const supabase = createClient();
+        const { data: p } = await supabase.from('user_preferences').select('custom_tags').eq('user_id', userId).maybeSingle();
+        const existing = p?.custom_tags || [];
+        if (!existing.includes(val)) {
+          await supabase.from('user_preferences').update({ custom_tags: [...existing, val] }).eq('user_id', userId);
+        }
+      } catch (e) {}
+    }
+    setNewTagInput('');
+    setShowAddTag(false);
   }
 
   async function handleSave() {
@@ -230,7 +287,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
       <div className="mb-4">
         <label className="text-xs font-semibold text-white/50 mb-2 block">Emotions</label>
         <div className="flex flex-wrap gap-1.5">
-          {allEmotions.map(e => (
+          {emotionOptions.map(e => (
             <button
               key={e}
               type="button"
@@ -244,6 +301,23 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
               {e}
             </button>
           ))}
+          {showAddEmotion ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                value={newEmotionInput}
+                onChange={e => setNewEmotionInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addNewEmotion(); } else if (e.key === 'Escape') setShowAddEmotion(false); }}
+                placeholder="New emotion"
+                autoFocus
+                className="w-24 rounded-lg border border-violet-400/30 bg-black/40 px-2 py-1 text-xs text-white outline-none focus:border-violet-400/60 placeholder:text-white/25"
+              />
+              <button type="button" onClick={addNewEmotion} className="rounded-lg border border-violet-400/30 bg-violet-400/10 px-2 py-1 text-xs text-violet-300 hover:bg-violet-400/20">Add</button>
+              <button type="button" onClick={() => setShowAddEmotion(false)} className="text-xs text-white/30 hover:text-white/50">&times;</button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setShowAddEmotion(true)} className="px-2.5 py-1 rounded-lg border border-dashed border-white/15 text-xs text-white/30 hover:text-white/50 hover:border-white/25 transition-colors">+ Add</button>
+          )}
         </div>
       </div>
 
@@ -251,7 +325,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
       <div className="mb-4">
         <label className="text-xs font-semibold text-white/50 mb-2 block">Tags</label>
         <div className="flex flex-wrap gap-1.5">
-          {allTags.map(t => (
+          {tagOptions.map(t => (
             <button
               key={t}
               type="button"
@@ -265,6 +339,23 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
               #{t}
             </button>
           ))}
+          {showAddTag ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="text"
+                value={newTagInput}
+                onChange={e => setNewTagInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addNewTag(); } else if (e.key === 'Escape') setShowAddTag(false); }}
+                placeholder="New tag"
+                autoFocus
+                className="w-24 rounded-lg border border-cyan-400/30 bg-black/40 px-2 py-1 text-xs text-white outline-none focus:border-cyan-400/60 placeholder:text-white/25"
+              />
+              <button type="button" onClick={addNewTag} className="rounded-lg border border-cyan-400/30 bg-cyan-400/10 px-2 py-1 text-xs text-cyan-300 hover:bg-cyan-400/20">Add</button>
+              <button type="button" onClick={() => setShowAddTag(false)} className="text-xs text-white/30 hover:text-white/50">&times;</button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setShowAddTag(true)} className="px-2.5 py-1 rounded-lg border border-dashed border-white/15 text-xs text-white/30 hover:text-white/50 hover:border-white/25 transition-colors">+ Add</button>
+          )}
         </div>
       </div>
 
