@@ -1,8 +1,23 @@
 import { Suspense } from 'react';
+import { Poppins, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import Script from 'next/script';
 import { ToastProvider } from '@/components/ui/Toast';
 import NavigationLoader from '@/components/layout/NavigationLoader';
+
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-poppins',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  variable: '--font-jetbrains-mono',
+});
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
@@ -26,14 +41,8 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${poppins.variable} ${jetbrainsMono.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
         {GTM_ID && (
           <Script id="gtm" strategy="afterInteractive">
             {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

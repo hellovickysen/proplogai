@@ -31,7 +31,7 @@ export default function HeroSection({ betaCount }) {
   return (
     <section className="hero-product-stage relative overflow-hidden px-4 pb-20 pt-16 sm:px-10 sm:pt-20">
 
-      <div className="relative z-10 mx-auto max-w-4xl text-center" data-reveal>
+      <div className="relative z-10 mx-auto max-w-4xl text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-300/20 bg-red-300/8 px-4 py-1.5 text-xs font-semibold text-red-200/90">
           <span className="h-1.5 w-1.5 rounded-full bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.85)]" />
           85% of prop challenges fail for the same reason

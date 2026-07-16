@@ -9,7 +9,7 @@ html, body {
   font-size: 16px;
 }
 body {
-  font-family: 'Poppins', system-ui, sans-serif;
+  font-family: var(--font-poppins), system-ui, sans-serif;
 }
 
 /* Toast slide-in animation */

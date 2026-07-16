@@ -5,10 +5,10 @@ module.exports = {
     extend: {
       colors: { ink: '#07070b', ink2: '#0b0b14', mint: '#34d399', loss: '#f87171' },
       fontFamily: {
-        display: ['Poppins', 'sans-serif'],
-        sans: ['Poppins', 'system-ui', 'sans-serif'],
-        body: ['Poppins', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        display: ['var(--font-poppins)', 'sans-serif'],
+        sans: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
+        body: ['var(--font-poppins)', 'system-ui', 'sans-serif'],
+        mono: ['var(--font-jetbrains-mono)', 'monospace'],
       },
       fontSize: {
         xs: ['0.8125rem', { lineHeight: '1.25rem' }],   // 13px (was 12px)
