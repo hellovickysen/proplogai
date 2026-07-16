@@ -74,7 +74,7 @@ function TimeframeDropdown({ value, onChange, labelCls, fieldCls }) {
   );
 }
 
-export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null }) {
+export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, hideButtons = false }) {
   const router = useRouter();
 
   // Resolve initial setup_ids from setup_ids array, or single setup_id, or empty
@@ -931,12 +931,14 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
           {error ? <p className="mt-4 text-sm text-red-400">{error}</p> : null}
 
+          {!hideButtons && (
           <div className="mt-6 flex gap-3">
             <Link href={mode === 'edit' ? '/dashboard/trades/' + tradeId : '/dashboard/trades'} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">Cancel</Link>
             <button type="submit" disabled={saving || uploading} className="rounded-xl px-5 py-3 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
               {saving ? 'Saving...' : mode === 'edit' ? 'Save changes' : 'Save trade'}
             </button>
           </div>
+          )}
         </form>
       </div>
 

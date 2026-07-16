@@ -7,13 +7,19 @@ import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
 
-export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '', startInEditMode = false }) {
+export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '', startInEditMode = false, hideButtons = false, onDirtyChange }) {
   const router = useRouter();
   const toast = useToast?.() || { success: () => {}, error: () => {} };
   const [editing, setEditing] = useState(startInEditMode);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const dirtyRef = useRef(false);
+
+  // Notify parent of dirty state changes
+  useEffect(() => { if (onDirtyChange) onDirtyChange(dirty); }, [dirty, onDirtyChange]);
+
+  // Expose save function for parent to call
+  const saveRef = useRef(null);
 
   // Track unsaved changes — warn on navigation
   useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
@@ -155,6 +161,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   }
 
   async function handleSave() {
+    if (!dirty && !hideButtons) return; // skip if nothing changed (unless forced by parent)
     setSaving(true);
     try {
       const supabase = createClient();
@@ -193,6 +200,14 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     }
     setSaving(false);
   }
+
+  // Keep ref updated so parent can call save
+  useEffect(() => { saveRef.current = handleSave; });
+  // Expose on window for the edit page wrapper to call
+  useEffect(() => {
+    window.__journalSave = () => saveRef.current?.();
+    return () => { delete window.__journalSave; };
+  }, []);
 
   // View mode
   if (!editing) {
@@ -448,35 +463,25 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         </label>
       </div>
 
-      {/* Save — secondary style when on edit page (startInEditMode) to avoid duplicate gradient buttons */}
-      <div className="flex items-center gap-3">
-        {startInEditMode ? (
+      {/* Save/Cancel — hidden when parent provides its own buttons */}
+      {!hideButtons && (
+        <div className="flex items-center gap-3">
           <button
             onClick={handleSave}
-            disabled={saving || uploading || !dirty}
-            className={'px-5 py-2 rounded-xl border text-sm font-semibold transition-colors disabled:opacity-40 ' + (dirty ? 'border-violet-400/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20' : 'border-white/10 bg-white/[0.03] text-white/40')}
+            disabled={saving || uploading}
+            className="px-5 py-2 rounded-xl text-sm font-semibold text-[#08080f] disabled:opacity-50"
+            style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
           >
-            {saving ? 'Saving...' : (dirty ? 'Save Journal' : 'Journal saved')}
+            {saving ? 'Saving...' : (journal?.id ? 'Save Changes' : 'Add Journal')}
           </button>
-        ) : (
-          <>
-            <button
-              onClick={handleSave}
-              disabled={saving || uploading}
-              className="px-5 py-2 rounded-xl text-sm font-semibold text-[#08080f] disabled:opacity-50"
-              style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-            >
-              {saving ? 'Saving...' : (journal?.id ? 'Save Changes' : 'Add Journal')}
-            </button>
-            <button
-              onClick={() => setEditing(false)}
-              className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/50 hover:text-white/70 transition-colors"
-            >
-              Cancel
-            </button>
-          </>
-        )}
-      </div>
+          <button
+            onClick={() => setEditing(false)}
+            className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/50 hover:text-white/70 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </div>
   );
 }

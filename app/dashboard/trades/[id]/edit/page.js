@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-import TradeForm from '@/components/trades/TradeForm';
-import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
+import EditTradeClient from '@/components/trades/EditTradeClient';
+import { getActiveAccountId } from '@/lib/accounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -61,18 +61,25 @@ export default async function EditTradePage({ params }) {
   const screenshots = Array.isArray(journal?.screenshot_urls) ? journal.screenshot_urls.filter(Boolean) : [];
   if (!screenshots.length && journal?.screenshot_url) screenshots.push(journal.screenshot_url);
 
+  // Multi-account
+  const activeAccountId = await getActiveAccountId(supabase, user.id);
+
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
       <div className="mb-6 flex items-center gap-3">
         <Link href={`/dashboard/trades/${id}`} className="grid h-10 w-10 place-items-center rounded-lg border border-white/10 bg-white/5 text-white/60">&larr;</Link>
         <h1 className="font-display text-2xl font-bold">Edit trade</h1>
       </div>
-      <TradeForm mode="edit" tradeId={id} initial={trade} prefs={prefs} setups={setups || []} />
-
-      {/* Journal section below the trade form — match TradeForm's main column width */}
-      <div className="mt-6 lg:pr-[324px]">
-        <JournalInlineEdit tradeId={id} journal={journal} userId={user.id} prefs={prefs} screenshots={screenshots} startInEditMode />
-      </div>
+      <EditTradeClient
+        tradeId={id}
+        trade={trade}
+        prefs={prefs}
+        setups={setups || []}
+        journal={journal}
+        screenshots={screenshots}
+        userId={user.id}
+        activeAccountId={activeAccountId}
+      />
     </div>
   );
 }
