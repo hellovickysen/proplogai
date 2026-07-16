@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { changePassword, savePreferences } from '@/app/dashboard/settings/actions';
 import { useToast } from '@/components/ui/Toast';
 import { validatePassword } from '@/lib/security';
+import { FEATURES } from '@/lib/plans';
 
 import { processImageFile } from '@/lib/imageUtils';
 import BillingTab from '@/components/settings/BillingTab';
@@ -13,11 +14,20 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
 const DEFAULT_TAGS = ['news', 'high impact', 'low volume', 'scalp', 'swing'];
-const MAX_CUSTOM_TAGS = 10;
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
 const card = 'rounded-2xl border border-white/10 bg-white/[0.03] p-6';
+
+/** Compute feature limit from serialized planAccess */
+function getLimit(planAccess, feature) {
+  if (!planAccess) return FEATURES[feature]?.basic ?? Infinity;
+  if (planAccess.isAdmin) return Infinity;
+  const plan = planAccess.effectivePlan || 'basic';
+  const f = FEATURES[feature];
+  if (!f) return Infinity;
+  return f[plan] ?? f.basic;
+}
 
 function EyeIcon() {
   return (
@@ -259,8 +269,12 @@ function ProfileTab({ user, prefs }) {
   );
 }
 
-function JournalSettingsTab({ prefs, onSaved }) {
+function JournalSettingsTab({ prefs, planAccess, onSaved }) {
   const toast = useToast();
+  const maxTags = getLimit(planAccess, 'custom_tags');
+  const maxEmotions = getLimit(planAccess, 'custom_emotions');
+  const isElite = planAccess?.effectivePlan === 'elite' || planAccess?.isAdmin;
+
   const existingEmotions = (prefs && prefs.custom_emotions && prefs.custom_emotions.length > 0)
     ? prefs.custom_emotions : DEFAULT_EMOTIONS;
   const [emotions, setEmotions] = useState(existingEmotions);
@@ -276,9 +290,13 @@ function JournalSettingsTab({ prefs, onSaved }) {
   const [pendingDeleteEmotion, setPendingDeleteEmotion] = useState(null);
   const [pendingDeleteTag, setPendingDeleteTag] = useState(null);
 
+  const atEmotionLimit = maxEmotions !== Infinity && emotions.length >= maxEmotions;
+  const atTagLimit = maxTags !== Infinity && tags.length >= maxTags;
+
   function addEmotion() {
     const t = newEmotion.trim();
     if (!t || emotions.map((e) => e.toLowerCase()).includes(t.toLowerCase())) return;
+    if (atEmotionLimit) return;
     setEmotions([...emotions, t]);
     setNewEmotion('');
   }
@@ -288,7 +306,7 @@ function JournalSettingsTab({ prefs, onSaved }) {
   function addTag() {
     const t = newTag.trim().toLowerCase();
     if (!t || tags.includes(t)) return;
-    if (tags.length >= MAX_CUSTOM_TAGS) return;
+    if (atTagLimit) return;
     setTags([...tags, t]);
     setNewTag('');
   }
@@ -319,7 +337,14 @@ function JournalSettingsTab({ prefs, onSaved }) {
     <div className="space-y-6">
       {/* Emotion tags */}
       <div className={card}>
-        <div className="mb-1 font-display text-base font-semibold">Emotions</div>
+        <div className="mb-1 flex items-center gap-2">
+          <span className="font-display text-base font-semibold">Emotions</span>
+          {isElite ? (
+            <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 font-mono text-[10px] text-violet-300">Unlimited</span>
+          ) : (
+            <span className="font-mono text-xs text-white/40">{emotions.length}/{maxEmotions}</span>
+          )}
+        </div>
         <p className="mb-4 text-xs text-white/55">Customize the feelings you track in your journal.</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {emotions.map((em, i) => (
@@ -329,17 +354,30 @@ function JournalSettingsTab({ prefs, onSaved }) {
             </span>
           ))}
         </div>
-        <div className="flex gap-2">
-          <input className={field + ' flex-1'} value={newEmotion} onChange={(e) => setNewEmotion(e.target.value)} placeholder="e.g. Anxious, Excited..." onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())} />
-          <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
-        </div>
+        {!atEmotionLimit ? (
+          <div className="flex gap-2">
+            <input className={field + ' flex-1'} value={newEmotion} onChange={(e) => setNewEmotion(e.target.value)} placeholder="e.g. Anxious, Excited..." onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())} />
+            <button type="button" onClick={addEmotion} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
+          </div>
+        ) : (
+          <p className="text-xs text-amber-400/80">You've reached the {maxEmotions} emotion limit. <a href="/dashboard/settings?tab=billing" className="underline text-violet-300 hover:text-violet-200">Upgrade to Elite</a> for unlimited.</p>
+        )}
         <button type="button" onClick={resetEmotionDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
       </div>
 
       {/* Tags */}
       <div className={card}>
-        <div className="mb-1 font-display text-base font-semibold">Tags</div>
-        <p className="mb-4 text-xs text-white/55">Context tags for your trades (e.g. news, scalp, nfp). Up to {MAX_CUSTOM_TAGS}.</p>
+        <div className="mb-1 flex items-center gap-2">
+          <span className="font-display text-base font-semibold">Tags</span>
+          {isElite ? (
+            <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 font-mono text-[10px] text-violet-300">Unlimited</span>
+          ) : (
+            <span className="font-mono text-xs text-white/40">{tags.length}/{maxTags}</span>
+          )}
+        </div>
+        <p className="mb-4 text-xs text-white/55">
+          Context tags for your trades (e.g. news, scalp, nfp).{!isElite && ` Up to ${maxTags}.`}
+        </p>
         <div className="mb-4 flex flex-wrap gap-2">
           {tags.map((tag, i) => (
             <span key={i} className="group flex items-center gap-1.5 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3 py-1.5 text-xs text-cyan-200">
@@ -348,11 +386,13 @@ function JournalSettingsTab({ prefs, onSaved }) {
             </span>
           ))}
         </div>
-        {tags.length < MAX_CUSTOM_TAGS && (
+        {!atTagLimit ? (
           <div className="flex gap-2">
             <input className={field + ' flex-1'} value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="e.g. CPI, Earnings..." onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())} />
             <button type="button" onClick={addTag} className="rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm text-white/70 hover:text-white">Add</button>
           </div>
+        ) : (
+          <p className="text-xs text-amber-400/80">You've reached the {maxTags} tag limit. <a href="/dashboard/settings?tab=billing" className="underline text-violet-300 hover:text-violet-200">Upgrade to Elite</a> for unlimited.</p>
         )}
         <button type="button" onClick={resetTagDefaults} className="mt-3 text-xs text-white/50 underline hover:text-white/70">Reset to defaults</button>
       </div>
@@ -419,7 +459,7 @@ export default function SettingsTabs({ user, prefs: initialPrefs, planAccess, su
       </div>
       {tab === 'profile' && <ProfileTab user={user} prefs={prefs} />}
       {tab === 'public' && <PublicProfileSettings user={user} prefs={prefs} />}
-      {tab === 'journal' && <JournalSettingsTab prefs={prefs} onSaved={(updated) => setPrefs((p) => ({ ...p, ...updated }))} />}
+      {tab === 'journal' && <JournalSettingsTab prefs={prefs} planAccess={planAccess} onSaved={(updated) => setPrefs((p) => ({ ...p, ...updated }))} />}
       {tab === 'billing' && <BillingTab planAccess={planAccess} subscription={subscription} paymentStatus={paymentStatus} />}
     </div>
   );
