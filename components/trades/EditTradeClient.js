@@ -18,16 +18,22 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
 
   const onJournalDirtyChange = useCallback((d) => setJournalDirty(d), []);
 
-  // Track trade form changes via input/change events
+  // Track trade form changes — input/change for text fields, click for toggle buttons
   useEffect(() => {
     const form = document.getElementById('trade-form');
     if (!form) return;
     function markDirty() { setTradeDirty(true); }
+    function onClickInForm(e) {
+      // Button clicks inside the form = setup/direction/session/emotion toggles
+      if (e.target.closest('button[type="button"]')) markDirty();
+    }
     form.addEventListener('input', markDirty);
     form.addEventListener('change', markDirty);
+    form.addEventListener('click', onClickInForm);
     return () => {
       form.removeEventListener('input', markDirty);
       form.removeEventListener('change', markDirty);
+      form.removeEventListener('click', onClickInForm);
     };
   }, []);
 
@@ -92,12 +98,14 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   }
 
   function handleDiscard() {
+    setSaving(false);
     doNavigate(pendingHref);
   }
 
   function handleStay() {
     setShowLeaveModal(false);
     setPendingHref(null);
+    setSaving(false);
   }
 
   async function handleSaveAndLeave() {
