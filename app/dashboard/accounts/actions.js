@@ -162,8 +162,9 @@ export async function setActiveAccount(accountId) {
 
   if (error) return { error: error.message };
 
-  revalidatePath('/dashboard');
-  revalidatePath('/dashboard/trades');
-  revalidatePath('/dashboard/calendar');
+  // No revalidatePath here — all pages use `dynamic = 'force-dynamic'` (no cache)
+  // and the AccountSwitcher does a full window.location.reload() after this action.
+  // revalidatePath was causing a race: it triggered an intermediate RSC update that
+  // errored before the reload delivered the correct page.
   return { ok: true };
 }
