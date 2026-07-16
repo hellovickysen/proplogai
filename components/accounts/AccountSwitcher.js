@@ -22,7 +22,7 @@ function fmtPnl(v) {
 
 /**
  * AccountSwitcher — global account selector pill for the dashboard header.
- * Visible to ALL users. Basic users see upgrade modal on interaction.
+ * Visible to ALL users. Basic users see dropdown but "Manage accounts" is locked.
  */
 export default function AccountSwitcher({ accounts, activeAccountId, todayStats = {}, planAccess }) {
   const [open, setOpen] = useState(false);
@@ -54,14 +54,6 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
     return () => document.removeEventListener('keydown', handleKey);
   }, [open]);
 
-  function handlePillClick() {
-    if (!isElite) {
-      setShowUpgrade(true);
-      return;
-    }
-    setOpen(!open);
-  }
-
   async function switchAccount(accountId) {
     setSwitching(true);
     setOpen(false);
@@ -71,6 +63,14 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
       return;
     }
     setSwitching(false);
+  }
+
+  function handleManageClick() {
+    setOpen(false);
+    if (!isElite) {
+      setShowUpgrade(true);
+    }
+    // Elite users: the <Link> handles navigation naturally
   }
 
   const activeAccount = accounts.find((a) => a.id === activeAccountId);
@@ -85,33 +85,22 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
     <span className="h-2 w-2 rounded-full flex-shrink-0 bg-emerald-400" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }} />
   );
 
-  // Lock icon for Basic users
-  const lockIcon = (
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-400 flex-shrink-0">
-      <rect x="5" y="11" width="14" height="10" rx="2" />
-      <path d="M8 11V7a4 4 0 018 0v4" />
-    </svg>
-  );
-
   return (
     <div className="relative" ref={ref}>
       {/* Pill button — desktop */}
       <button
-        onClick={handlePillClick}
+        onClick={() => setOpen(!open)}
         disabled={switching}
-        className={'hidden sm:flex items-center gap-2 rounded-lg border px-2.5 py-1.5 min-h-[36px] text-xs font-medium transition-colors disabled:opacity-50 ' +
-          (isElite
-            ? 'border-white/10 bg-white/[0.03] text-white/80 hover:bg-white/[0.06]'
-            : 'border-violet-400/20 bg-violet-500/[0.05] text-white/60 hover:bg-violet-500/[0.1]')}
+        className="hidden sm:flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 min-h-[36px] text-xs font-medium text-white/80 hover:bg-white/[0.06] transition-colors disabled:opacity-50"
       >
-        {isElite ? greenDot : lockIcon}
-        {isElite && displayColor && (
+        {greenDot}
+        {displayColor && (
           <span
             className="h-2 w-2 rounded-full flex-shrink-0"
             style={{ backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` }}
           />
         )}
-        <span className="max-w-[120px] truncate">{isElite ? displayName : 'Accounts'}</span>
+        <span className="max-w-[120px] truncate">{displayName}</span>
         <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className={'text-white/40 transition-transform ' + (open ? 'rotate-180' : '')}>
           <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -119,25 +108,22 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
 
       {/* Mobile: compact button */}
       <button
-        onClick={handlePillClick}
+        onClick={() => setOpen(!open)}
         disabled={switching}
-        className={'sm:hidden flex items-center justify-center gap-1 rounded-lg border h-9 px-2 disabled:opacity-50 ' +
-          (isElite
-            ? 'border-white/10 bg-white/[0.03]'
-            : 'border-violet-400/20 bg-violet-500/[0.05]')}
+        className="sm:hidden flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] h-9 px-2 disabled:opacity-50"
       >
-        {isElite ? greenDot : lockIcon}
-        {isElite && displayColor && (
+        {greenDot}
+        {displayColor && (
           <span className="h-2 w-2 rounded-full" style={{ backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` }} />
         )}
       </button>
 
-      {/* Dropdown — Elite only */}
-      {open && isElite && (
+      {/* Dropdown — same look for Basic and Elite */}
+      {open && (
         <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-white/10 bg-[#12121a] py-1.5 shadow-2xl">
           {/* All Accounts option */}
           <button
-            onClick={() => switchAccount(null)}
+            onClick={() => hasAccounts ? switchAccount(null) : null}
             className={'flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors ' +
               (!activeAccountId ? 'bg-emerald-500/[0.06] border-l-2 border-l-emerald-400' : 'hover:bg-white/[0.04] border-l-2 border-l-transparent')}
           >
@@ -159,7 +145,7 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
             <div className="mx-3 my-1 border-t border-white/[0.06]" />
           )}
 
-          {/* Individual accounts */}
+          {/* Individual accounts — Elite only (Basic has none) */}
           {accounts.map((account) => {
             const stats = todayStats[account.id] || {};
             const pnl = stats.pnl || 0;
@@ -202,18 +188,32 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
             );
           })}
 
-          {/* Manage accounts link */}
+          {/* Manage accounts — Elite: navigates, Basic: shows lock + upgrade modal */}
           <div className="mx-3 my-1 border-t border-white/[0.06]" />
-          <Link
-            href="/dashboard/accounts"
-            className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-xs text-white/40 hover:text-white/70 transition-colors"
-            onClick={() => setOpen(false)}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
-              <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-            </svg>
-            Manage accounts
-          </Link>
+          {isElite ? (
+            <Link
+              href="/dashboard/accounts"
+              className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-xs text-white/40 hover:text-white/70 transition-colors"
+              onClick={() => setOpen(false)}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
+                <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+              </svg>
+              Manage accounts
+            </Link>
+          ) : (
+            <button
+              onClick={handleManageClick}
+              className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-xs text-violet-400/70 hover:text-violet-300 transition-colors"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="flex-shrink-0">
+                <rect x="5" y="11" width="14" height="10" rx="2" />
+                <path d="M8 11V7a4 4 0 018 0v4" />
+              </svg>
+              Manage accounts
+              <span className="ml-auto rounded-full border border-violet-400/30 bg-violet-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-violet-300">Elite</span>
+            </button>
+          )}
         </div>
       )}
 
