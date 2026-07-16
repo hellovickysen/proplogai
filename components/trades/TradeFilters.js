@@ -35,11 +35,11 @@ function FilterDropdown({ label, value, onChange, placeholder, options }) {
         <span className={'text-white/30 text-[10px] transition-transform ' + (open ? 'rotate-180' : '')}>&#9660;</span>
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 min-w-full rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl">
+        <div className="absolute left-0 top-full z-30 mt-1 min-w-[200px] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-64 overflow-y-auto styled-scrollbar">
           <button
             type="button"
             onClick={() => { onChange(''); setOpen(false); }}
-            className={'flex w-full items-center px-3.5 py-2 text-sm transition-colors ' +
+            className={'flex w-full items-center whitespace-nowrap px-3.5 py-2 text-sm transition-colors ' +
               (!value ? 'bg-cyan-500/15 text-cyan-300 font-semibold' : 'text-white/70 hover:bg-white/[0.06] hover:text-white')}
           >
             {placeholder}
@@ -49,7 +49,7 @@ function FilterDropdown({ label, value, onChange, placeholder, options }) {
               key={opt}
               type="button"
               onClick={() => { onChange(opt); setOpen(false); }}
-              className={'flex w-full items-center px-3.5 py-2 text-sm transition-colors ' +
+              className={'flex w-full items-center whitespace-nowrap px-3.5 py-2 text-sm transition-colors ' +
                 (opt === value ? 'bg-cyan-500/15 text-cyan-300 font-semibold' : 'text-white/70 hover:bg-white/[0.06] hover:text-white')}
             >
               {opt}
@@ -124,12 +124,12 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options }
         </div>
       )}
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 min-w-full rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-52 overflow-y-auto">
+        <div className="absolute left-0 top-full z-30 mt-1 min-w-[200px] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-64 overflow-y-auto styled-scrollbar">
           {selected.length > 0 && (
             <button
               type="button"
               onClick={() => { onChange([]); setOpen(false); }}
-              className="flex w-full items-center px-3.5 py-2 text-sm text-white/40 hover:bg-white/[0.06] hover:text-white/70 border-b border-white/5"
+              className="flex w-full items-center whitespace-nowrap px-3.5 py-2 text-sm text-white/40 hover:bg-white/[0.06] hover:text-white/70 border-b border-white/5"
             >
               Clear all
             </button>
@@ -141,13 +141,13 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options }
                 key={opt}
                 type="button"
                 onClick={() => toggle(opt)}
-                className={'flex w-full items-center gap-2 px-3.5 py-2 text-sm transition-colors ' +
+                className={'flex w-full items-center gap-2.5 whitespace-nowrap px-3.5 py-2 text-sm transition-colors ' +
                   (isSelected ? 'bg-cyan-500/15 text-cyan-300 font-semibold' : 'text-white/70 hover:bg-white/[0.06] hover:text-white')}
               >
-                <span className={'flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-all ' +
+                <span className={'flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-all ' +
                   (isSelected ? 'border-cyan-400 bg-cyan-400' : 'border-white/30 bg-transparent')}>
                   {isSelected && (
-                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                   )}
                 </span>
                 {opt}
