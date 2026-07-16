@@ -71,7 +71,7 @@ export default async function EditTradePage({ params }) {
 
       {/* Journal section below the trade form */}
       <div className="mt-6 max-w-4xl">
-        <JournalInlineEdit tradeId={id} journal={journal} userId={user.id} prefs={prefs} screenshots={screenshots} />
+        <JournalInlineEdit tradeId={id} journal={journal} userId={user.id} prefs={prefs} screenshots={screenshots} startInEditMode />
       </div>
     </div>
   );

@@ -7,10 +7,10 @@ import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
 
-export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '' }) {
+export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '', startInEditMode = false }) {
   const router = useRouter();
   const toast = useToast?.() || { success: () => {}, error: () => {} };
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(startInEditMode);
   const [saving, setSaving] = useState(false);
 
   // Emotion & tag options — use user's saved list; only fall back to defaults if never configured
