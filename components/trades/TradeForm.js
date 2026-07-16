@@ -942,8 +942,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         </form>
       </div>
 
-      {/* Preview panel */}
-      <div className="h-fit rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      {/* Preview panel — sticky on desktop */}
+      <div className="sticky top-20 h-fit rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <div className="font-mono text-xs uppercase tracking-wider text-white/55">Preview</div>
         <div className="mt-3 font-display text-lg font-bold">
           {form.pair}{' '}
@@ -971,6 +971,33 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         </div>
 
         <div className="mt-4 font-mono text-xs text-white/55">{hasPnl ? (pnlNum >= 0 ? 'Win' : 'Loss') : 'Enter P&L to preview'}</div>
+
+        {/* Emotions — from journal (create mode) */}
+        {emotions.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-1">
+            {emotions.map((em, i) => (
+              <span key={i} className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-200">{em}</span>
+            ))}
+          </div>
+        )}
+
+        {/* Tags — from journal (create mode) */}
+        {tradeTags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {tradeTags.map((tag, i) => (
+              <span key={i} className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-[10px] text-cyan-200">#{tag}</span>
+            ))}
+          </div>
+        )}
+
+        {/* Session & Date */}
+        {(form.session || form.trade_date) && (
+          <div className="mt-3 flex flex-wrap gap-2 font-mono text-[10px] text-white/40">
+            {form.session && <span>{form.session}</span>}
+            {form.session && form.trade_date && <span>·</span>}
+            {form.trade_date && <span>{form.trade_date}</span>}
+          </div>
+        )}
       </div>
     </div>
   );
