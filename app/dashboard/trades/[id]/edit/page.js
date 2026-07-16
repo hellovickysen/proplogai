@@ -69,8 +69,8 @@ export default async function EditTradePage({ params }) {
       </div>
       <TradeForm mode="edit" tradeId={id} initial={trade} prefs={prefs} setups={setups || []} />
 
-      {/* Journal section below the trade form */}
-      <div className="mt-6">
+      {/* Journal section below the trade form — match TradeForm's main column width */}
+      <div className="mt-6 lg:pr-[324px]">
         <JournalInlineEdit tradeId={id} journal={journal} userId={user.id} prefs={prefs} screenshots={screenshots} startInEditMode />
       </div>
     </div>
