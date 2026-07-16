@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { processImageFile } from '@/lib/imageUtils';
@@ -12,6 +12,18 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   const toast = useToast?.() || { success: () => {}, error: () => {} };
   const [editing, setEditing] = useState(startInEditMode);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const dirtyRef = useRef(false);
+
+  // Track unsaved changes — warn on navigation
+  useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
+  useEffect(() => {
+    function onBeforeUnload(e) {
+      if (dirtyRef.current) { e.preventDefault(); e.returnValue = ''; }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
 
   // Emotion & tag options — use user's saved list; only fall back to defaults if never configured
   const defaultEmotions = ['Disciplined', 'Confident', 'FOMO', 'Greed', 'Boredom', 'Revenge'];
@@ -54,6 +66,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         if (upErr) { toast.error?.('Upload failed'); continue; }
         const { data: { publicUrl } } = supabase.storage.from('screenshots').getPublicUrl(path);
         setScreenshotUrls(prev => [...prev, publicUrl]);
+        setDirty(true);
       } catch (err) {
         toast.error?.('Upload failed');
       }
@@ -72,6 +85,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
       }
     } catch (e) {}
     setScreenshotUrls(prev => prev.filter((_, i) => i !== idx));
+    setDirty(true);
   }
 
   // Mutable options lists — start from prefs, grow when user adds inline
@@ -84,9 +98,11 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
 
   function toggleEmotion(e) {
     setEmotions(prev => prev.includes(e) ? prev.filter(x => x !== e) : [...prev, e]);
+    setDirty(true);
   }
   function toggleTag(t) {
     setTags(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+    setDirty(true);
   }
 
   async function addNewEmotion() {
@@ -168,7 +184,8 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
       }
 
       toast.success?.('Journal saved');
-      setEditing(false);
+      setDirty(false);
+      setEditing(startInEditMode); // stay in edit mode if started there
       router.refresh();
     } catch (err) {
       console.error('Save journal error:', err);
@@ -367,7 +384,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
             <button
               key={n}
               type="button"
-              onClick={() => setConfidence(n === confidence ? 0 : n)}
+              onClick={() => { setConfidence(n === confidence ? 0 : n); setDirty(true); }}
               className={`w-10 h-8 rounded-lg text-xs font-semibold transition-all ${
                 n <= confidence
                   ? 'bg-violet-400/25 border border-violet-400/40 text-violet-300'
@@ -386,7 +403,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         <label className="text-xs font-semibold text-white/50 mb-2 block">Notes</label>
         <textarea
           value={note}
-          onChange={e => setNote(e.target.value)}
+          onChange={e => { setNote(e.target.value); setDirty(true); }}
           rows={4}
           placeholder="What happened in this trade? What were you thinking?"
           className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-sm text-white placeholder:text-white/25 outline-none focus:border-violet-400/40 resize-y"
@@ -398,7 +415,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         <label className="text-xs font-semibold text-white/50 mb-2 block">Lesson Learned</label>
         <textarea
           value={lesson}
-          onChange={e => setLesson(e.target.value)}
+          onChange={e => { setLesson(e.target.value); setDirty(true); }}
           rows={2}
           placeholder="What's the key takeaway from this trade?"
           className="w-full rounded-xl bg-amber-400/[0.04] border border-amber-400/15 px-4 py-3 text-sm text-amber-200/80 placeholder:text-amber-200/25 outline-none focus:border-amber-400/30 resize-y"
@@ -431,22 +448,34 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         </label>
       </div>
 
-      {/* Save */}
+      {/* Save — secondary style when on edit page (startInEditMode) to avoid duplicate gradient buttons */}
       <div className="flex items-center gap-3">
-        <button
-          onClick={handleSave}
-          disabled={saving || uploading}
-          className="px-5 py-2 rounded-xl text-sm font-semibold text-[#08080f] disabled:opacity-50"
-          style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-        >
-          {saving ? 'Saving...' : (journal?.id ? 'Save Changes' : 'Add Journal')}
-        </button>
-        <button
-          onClick={() => setEditing(false)}
-          className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/50 hover:text-white/70 transition-colors"
-        >
-          Cancel
-        </button>
+        {startInEditMode ? (
+          <button
+            onClick={handleSave}
+            disabled={saving || uploading || !dirty}
+            className={'px-5 py-2 rounded-xl border text-sm font-semibold transition-colors disabled:opacity-40 ' + (dirty ? 'border-violet-400/40 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20' : 'border-white/10 bg-white/[0.03] text-white/40')}
+          >
+            {saving ? 'Saving...' : (dirty ? 'Save Journal' : 'Journal saved')}
+          </button>
+        ) : (
+          <>
+            <button
+              onClick={handleSave}
+              disabled={saving || uploading}
+              className="px-5 py-2 rounded-xl text-sm font-semibold text-[#08080f] disabled:opacity-50"
+              style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+            >
+              {saving ? 'Saving...' : (journal?.id ? 'Save Changes' : 'Add Journal')}
+            </button>
+            <button
+              onClick={() => setEditing(false)}
+              className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/50 hover:text-white/70 transition-colors"
+            >
+              Cancel
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
