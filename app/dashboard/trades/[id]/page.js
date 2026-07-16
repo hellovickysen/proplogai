@@ -134,23 +134,33 @@ export default async function TradeDetailPage({ params, searchParams }) {
           </div>
         </div>
 
-        {/* Setup badges */}
+        {/* Setup badges — color reflects follow status */}
         {setupNames.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
-            {setupNames.map((s, i) => (
-              <span key={i} className="px-3 py-1 rounded-lg bg-amber-400/[0.1] border border-amber-400/20 text-amber-400 text-xs font-medium">
-                ⚡ {s}
-              </span>
-            ))}
-            {trade.setup_followed && (
-              <span className={`px-3 py-1 rounded-lg text-xs font-medium ${
-                trade.setup_followed === 'yes' ? 'bg-emerald-400/[0.1] border border-emerald-400/20 text-emerald-400' :
-                trade.setup_followed === 'no' ? 'bg-red-400/[0.1] border border-red-400/20 text-red-400' :
-                'bg-amber-400/[0.1] border border-amber-400/20 text-amber-400'
-              }`}>
-                {trade.setup_followed === 'yes' ? '✓ Followed' : trade.setup_followed === 'no' ? '✗ Not followed' : '~ Partial'}
-              </span>
-            )}
+            {setupNames.map((s, i) => {
+              // Good SL always green, Bad SL / No Setup always red
+              const isGoodSL = s === 'Good SL';
+              const isBadOrNoSetup = s === 'Bad SL' || s === 'No Setup';
+              let pillClass;
+              if (isGoodSL) {
+                pillClass = 'bg-emerald-400/[0.1] border border-emerald-400/20 text-emerald-400';
+              } else if (isBadOrNoSetup) {
+                pillClass = 'bg-red-400/[0.1] border border-red-400/20 text-red-400';
+              } else if (trade.setup_followed === 'yes') {
+                pillClass = 'bg-emerald-400/[0.1] border border-emerald-400/20 text-emerald-400';
+              } else if (trade.setup_followed === 'no') {
+                pillClass = 'bg-red-400/[0.1] border border-red-400/20 text-red-400';
+              } else if (trade.setup_followed === 'partial') {
+                pillClass = 'bg-amber-400/[0.1] border border-amber-400/20 text-amber-400';
+              } else {
+                pillClass = 'bg-amber-400/[0.1] border border-amber-400/20 text-amber-400';
+              }
+              return (
+                <span key={i} className={`px-3 py-1 rounded-lg text-xs font-medium ${pillClass}`}>
+                  ⚡ {s}
+                </span>
+              );
+            })}
           </div>
         )}
 
