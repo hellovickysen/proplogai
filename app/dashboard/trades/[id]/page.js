@@ -6,6 +6,7 @@ import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
 import TradeShareMenu from '@/components/share/TradeShareMenu';
 import AnalyzeButton from '@/components/trades/AnalyzeButton';
 import DeleteTradeButton from '@/components/trades/DeleteTradeButton';
+import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
 
 export const dynamic = 'force-dynamic';
 
@@ -206,13 +207,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
               {screenshots.length > 0 && (
                 <div>
                   <h3 className="text-xs font-semibold text-white/50 mb-2">Screenshots</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {screenshots.map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/30 transition-colors">
-                        <img src={url} alt={`Trade screenshot ${i + 1}`} className="w-full h-auto max-h-80 object-contain bg-black/50" />
-                      </a>
-                    ))}
-                  </div>
+                  <ScreenshotGallery urls={screenshots} layout="grid" />
                 </div>
               )}
             </div>

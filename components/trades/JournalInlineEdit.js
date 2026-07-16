@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
+import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
 
 export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '' }) {
   const router = useRouter();
@@ -30,7 +31,6 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   // Screenshot state
   const [screenshotUrls, setScreenshotUrls] = useState(initialScreenshots);
   const [uploading, setUploading] = useState(false);
-  const [lightboxUrl, setLightboxUrl] = useState(null);
 
   async function handleScreenshotUpload(e) {
     const files = Array.from(e.target.files || []);
@@ -120,18 +120,10 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     setSaving(false);
   }
 
-  // Lightbox modal
-  const lightbox = lightboxUrl ? (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 p-4" onClick={() => setLightboxUrl(null)}>
-      <button className="absolute top-4 right-4 text-white/60 hover:text-white text-2xl z-10" onClick={() => setLightboxUrl(null)}>✕</button>
-      <img src={lightboxUrl} alt="Screenshot" className="max-w-full max-h-[90vh] object-contain rounded-lg" onClick={e => e.stopPropagation()} />
-    </div>
-  ) : null;
-
   // View mode
   if (!editing) {
     return (
-      <>{lightbox}<div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
+      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-mono text-xs uppercase tracking-wider text-white/55">📝 Journal Entry</h2>
           <button
@@ -202,17 +194,11 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
               </div>
             )}
 
-            {/* Screenshots */}
+            {/* Screenshots — with carousel lightbox */}
             {screenshotUrls.length > 0 && (
               <div className="mb-4">
                 <h3 className="text-xs font-semibold text-white/50 mb-2">Screenshots</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {screenshotUrls.map((url, i) => (
-                    <div key={i} onClick={() => setLightboxUrl(url)} className="block rounded-xl overflow-hidden border border-white/10 hover:border-violet-400/30 transition-colors cursor-pointer">
-                      <img src={url} alt={`Screenshot ${i + 1}`} className="w-full h-auto max-h-80 object-contain bg-black/50" />
-                    </div>
-                  ))}
-                </div>
+                <ScreenshotGallery urls={screenshotUrls} layout="grid" />
               </div>
             )}
 
@@ -226,13 +212,13 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
             )}
           </>
         )}
-      </div></>
+      </div>
     );
   }
 
   // Edit mode
   return (
-    <>{lightbox}<div className="rounded-2xl border border-violet-400/20 bg-violet-400/[0.03] p-5 sm:p-6 mb-4">
+    <div className="rounded-2xl border border-violet-400/20 bg-violet-400/[0.03] p-5 sm:p-6 mb-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-mono text-xs uppercase tracking-wider text-violet-300/70">✎ Editing Journal</h2>
         <button onClick={() => setEditing(false)} className="text-xs text-white/40 hover:text-white/60 transition-colors">
@@ -371,6 +357,6 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
           Cancel
         </button>
       </div>
-    </div></>
+    </div>
   );
 }
