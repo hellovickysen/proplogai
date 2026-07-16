@@ -24,6 +24,14 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   // Keep dirtyRef in sync for imperative checks
   useEffect(() => { dirtyRef.current = dirty; }, [dirty]);
 
+  // Warn on tab close/refresh when editing with unsaved changes
+  useEffect(() => {
+    if (!editing || !dirty) return;
+    function onBeforeUnload(e) { e.preventDefault(); e.returnValue = ''; }
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [editing, dirty]);
+
   // Emotion & tag options — use user's saved list; only fall back to defaults if never configured
   const defaultEmotions = ['Disciplined', 'Confident', 'FOMO', 'Greed', 'Boredom', 'Revenge'];
   const defaultTags = ['news', 'high-impact', 'low-volume', 'scalp', 'swing'];
@@ -473,6 +481,12 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
           >
             Cancel
           </button>
+          {dirty && !saving && (
+            <span className="flex items-center gap-1.5 text-xs text-amber-400/70">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Unsaved changes
+            </span>
+          )}
         </div>
       )}
     </div>
