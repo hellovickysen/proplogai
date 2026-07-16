@@ -21,6 +21,7 @@ import LiveClock from '@/components/layout/LiveClock';
 import QuickActions from '@/components/layout/QuickActions';
 import HeaderAvatar from '@/components/layout/HeaderAvatar';
 import AccountSwitcher from '@/components/accounts/AccountSwitcher';
+import SmartHeader from '@/components/layout/SmartHeader';
 import { getAccounts, getActiveAccountId, getAccountStats } from '@/lib/accounts';
 
 /* Admin notification types — excluded from user dashboard bell */
@@ -188,7 +189,7 @@ export default async function DashboardLayout({ children }) {
     <div className="flex min-h-screen">
       <Sidebar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} planAccess={planAccess} credits={prefs.referral_balance} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="relative z-20 flex items-center justify-between border-b border-white/10 px-3 py-3 sm:px-6 sm:py-4">
+        <SmartHeader>
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} planAccess={planAccess} />
             <Link href="/dashboard" className="sm:hidden flex-shrink-0">
@@ -211,7 +212,7 @@ export default async function DashboardLayout({ children }) {
               <HeaderAvatar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} credits={prefs.referral_balance} isAdmin={isAdmin} adminNotifCount={adminNotifCount} planAccess={planAccess} />
             </div>
           </div>
-        </header>
+        </SmartHeader>
         <main className="flex-1"><SubscriptionBanner subscription={subscription} planAccess={planAccess} />{children}</main>
         <RiskFooter />
       </div>
