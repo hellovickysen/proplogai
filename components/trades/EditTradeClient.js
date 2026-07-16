@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import TradeForm from '@/components/trades/TradeForm';
 import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
 
@@ -12,15 +11,13 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   const [journalDirty, setJournalDirty] = useState(false);
   const [tradeDirty, setTradeDirty] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [pendingNav, setPendingNav] = useState(null); // { args, type: 'push'|'replace'|'back' }
+  const [pendingHref, setPendingHref] = useState(null);
   const dirtyRef = useRef(false);
   const allowNavRef = useRef(false);
-  const origPushRef = useRef(null);
-  const origReplaceRef = useRef(null);
 
   const onJournalDirtyChange = useCallback((d) => setJournalDirty(d), []);
 
-  // Track trade form changes — input/change for text fields, click for toggle buttons
+  // Track trade form changes
   useEffect(() => {
     const form = document.getElementById('trade-form');
     if (!form) return;
@@ -41,30 +38,72 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   const isDirty = tradeDirty || journalDirty;
   useEffect(() => { dirtyRef.current = isDirty; }, [isDirty]);
 
-  // Intercept history.pushState/replaceState — catches Next.js App Router navigation
+  // ── Navigation guard: intercept link clicks ──
+  // We prevent the native click AND return false to block React's handler
   useEffect(() => {
-    const origPush = history.pushState.bind(history);
-    const origReplace = history.replaceState.bind(history);
-    origPushRef.current = origPush;
-    origReplaceRef.current = origReplace;
+    function handleClick(e) {
+      if (!dirtyRef.current || allowNavRef.current) return;
 
-    history.pushState = function (...args) {
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+      if (link.target === '_blank') return;
+      // Allow external links
+      if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
+
+      // Block the click completely
+      e.preventDefault();
+      e.stopImmediatePropagation();
+
+      // Prevent any further handling by returning false
+      setPendingHref(href);
+      setShowLeaveModal(true);
+      return false;
+    }
+
+    // Register on BOTH capture and bubble phases to be thorough
+    document.addEventListener('click', handleClick, true);
+    document.addEventListener('click', handleClick, false);
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener('click', handleClick, false);
+    };
+  }, []);
+
+  // ── Also override history.pushState as a safety net ──
+  useEffect(() => {
+    const origPush = history.pushState;
+    const origReplace = history.replaceState;
+
+    const patchedPush = function (...args) {
       if (dirtyRef.current && !allowNavRef.current) {
-        setPendingNav({ args, type: 'push' });
-        setShowLeaveModal(true);
-        return;
+        // Try to extract URL from args
+        const url = args[2];
+        if (url && typeof url === 'string' && url !== window.location.pathname) {
+          setPendingHref(url);
+          setShowLeaveModal(true);
+          return;
+        }
       }
-      return origPush(...args);
+      return origPush.apply(history, args);
     };
 
-    history.replaceState = function (...args) {
+    const patchedReplace = function (...args) {
       if (dirtyRef.current && !allowNavRef.current) {
-        setPendingNav({ args, type: 'replace' });
-        setShowLeaveModal(true);
-        return;
+        const url = args[2];
+        if (url && typeof url === 'string' && url !== window.location.pathname) {
+          setPendingHref(url);
+          setShowLeaveModal(true);
+          return;
+        }
       }
-      return origReplace(...args);
+      return origReplace.apply(history, args);
     };
+
+    history.pushState = patchedPush;
+    history.replaceState = patchedReplace;
 
     return () => {
       history.pushState = origPush;
@@ -72,13 +111,13 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     };
   }, []);
 
-  // Browser back button
+  // ── Browser back button ──
   useEffect(() => {
-    window.history.pushState({ dirtyGuard: true }, '');
+    history.pushState({ dirtyGuard: true }, '');
     function onPopState() {
       if (dirtyRef.current && !allowNavRef.current) {
-        window.history.pushState({ dirtyGuard: true }, '');
-        setPendingNav({ type: 'back' });
+        history.pushState({ dirtyGuard: true }, '');
+        setPendingHref('__back__');
         setShowLeaveModal(true);
       }
     }
@@ -86,44 +125,38 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  // Tab close/refresh
+  // ── Tab close/refresh ──
   useEffect(() => {
     function onBeforeUnload(e) {
-      if (dirtyRef.current) { e.preventDefault(); e.returnValue = ''; }
+      if (dirtyRef.current && !allowNavRef.current) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
     }
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, []);
 
-  function executeNav(nav) {
-    if (!nav) return;
-    allowNavRef.current = true;
-    if (nav.type === 'push' && origPushRef.current) {
-      origPushRef.current(...nav.args);
-      // Also trigger Next.js to sync with the new URL
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    } else if (nav.type === 'replace' && origReplaceRef.current) {
-      origReplaceRef.current(...nav.args);
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    } else if (nav.type === 'back') {
-      window.history.go(-2);
-    }
-    setTimeout(() => { allowNavRef.current = false; }, 500);
-  }
-
+  // ── Modal actions ──
   function handleStay() {
     setShowLeaveModal(false);
-    setPendingNav(null);
+    setPendingHref(null);
     setSaving(false);
   }
 
   function handleDiscard() {
-    setSaving(false);
     setShowLeaveModal(false);
-    const nav = pendingNav;
-    setPendingNav(null);
+    setSaving(false);
     dirtyRef.current = false;
-    executeNav(nav);
+    allowNavRef.current = true;
+    const href = pendingHref;
+    setPendingHref(null);
+    if (href === '__back__') {
+      history.go(-2);
+    } else if (href) {
+      router.push(href);
+    }
+    setTimeout(() => { allowNavRef.current = false; }, 1000);
   }
 
   async function handleSaveAndLeave() {
@@ -132,21 +165,19 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
       if (journalDirty && window.__journalSave) {
         await window.__journalSave();
       }
-      // Submit trade form — its onSubmit will navigate via router.push
-      // which we need to allow through
       allowNavRef.current = true;
+      dirtyRef.current = false;
+      setShowLeaveModal(false);
+      setPendingHref(null);
       const form = document.getElementById('trade-form');
-      if (form) {
-        setShowLeaveModal(false);
-        setPendingNav(null);
-        form.requestSubmit();
-      }
+      if (form) form.requestSubmit();
     } catch (e) {
       setSaving(false);
       allowNavRef.current = false;
     }
   }
 
+  // ── Bottom save button ──
   async function handleSaveAll() {
     setSaving(true);
     try {
@@ -154,12 +185,19 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
         await window.__journalSave();
       }
       allowNavRef.current = true;
+      dirtyRef.current = false;
       const form = document.getElementById('trade-form');
       if (form) form.requestSubmit();
     } catch (e) {
       // ignore
     }
     setTimeout(() => { setSaving(false); allowNavRef.current = false; }, 3000);
+  }
+
+  function handleCancel() {
+    allowNavRef.current = true;
+    dirtyRef.current = false;
+    router.push('/dashboard/trades/' + tradeId);
   }
 
   return (
@@ -180,9 +218,12 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
       </div>
 
       <div className="mt-6 flex items-center gap-3">
-        <Link href={'/dashboard/trades/' + tradeId} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">
+        <button
+          onClick={handleCancel}
+          className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70"
+        >
           Cancel
-        </Link>
+        </button>
         <button
           onClick={handleSaveAll}
           disabled={saving || !isDirty}
