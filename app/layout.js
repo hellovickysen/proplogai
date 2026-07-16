@@ -1,7 +1,8 @@
+import { Suspense } from 'react';
 import './globals.css';
 import Script from 'next/script';
-import PostHogProvider from '@/components/layout/PostHogProvider';
 import { ToastProvider } from '@/components/ui/Toast';
+import NavigationLoader from '@/components/layout/NavigationLoader';
 
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
@@ -54,9 +55,10 @@ export default function RootLayout({ children }) {
             />
           </noscript>
         )}
-        <PostHogProvider>
-          <ToastProvider>{children}</ToastProvider>
-        </PostHogProvider>
+        <Suspense fallback={null}>
+          <NavigationLoader />
+        </Suspense>
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );

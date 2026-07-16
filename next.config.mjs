@@ -1,4 +1,3 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
     optimizePackageImports: ['@supabase/supabase-js', '@supabase/ssr'],
@@ -30,11 +29,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://us.i.posthog.com https://*.posthog.com https://checkout.razorpay.com https://www.googletagmanager.com",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://checkout.razorpay.com https://www.googletagmanager.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://*.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com",
-              "connect-src 'self' https://*.supabase.co https://*.supabase.in https://openrouter.ai https://us.i.posthog.com https://*.posthog.com https://*.razorpay.com https://api.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com",
+              "connect-src 'self' https://*.supabase.co https://*.supabase.in https://openrouter.ai https://*.razorpay.com https://api.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com",
               "frame-src 'self' https://*.razorpay.com https://api.razorpay.com",
               "frame-ancestors 'none'",
             ].join('; '),

@@ -1,14 +1,17 @@
-export default function Loading() {
+export default function ToolsLoading() {
   return (
-    <div className="min-h-screen p-4 md:p-8 animate-pulse">
-      <div className="h-8 w-32 bg-white/10 rounded-lg mb-2" />
-      <div className="h-4 w-64 bg-white/5 rounded mb-8" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="h-40 bg-white/[0.03] rounded-2xl border border-white/10"
-          />
+    <div className="px-3 py-8 sm:px-4 animate-pulse">
+      <div className="mb-6">
+        <div className="h-8 w-24 rounded-lg bg-white/[0.06]" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="h-10 w-10 rounded-xl bg-white/[0.06] mb-3" />
+            <div className="h-5 w-28 rounded bg-white/[0.06] mb-2" />
+            <div className="h-3 w-full rounded bg-white/[0.06]" />
+            <div className="h-3 w-3/4 rounded bg-white/[0.06] mt-1" />
+          </div>
         ))}
       </div>
     </div>
