@@ -24,7 +24,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
           const hasImages = t._journal && t._journal.hasImages;
           const hasJournal = hasNote || hasImages;
           const leftBorderColor = win ? 'border-l-emerald-400/50' : 'border-l-red-400/50';
-          const tradeNum = totalCount > 0 ? totalCount - idx : rows.length - idx;
+          const tradeNum = t._tradeNum || (totalCount > 0 ? totalCount - idx : rows.length - idx);
           return (
             <Link
               key={t.id}
@@ -99,6 +99,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               : 'border-l-[3px] border-l-red-400/40';
 
             const setupNames = t.setup ? t.setup.split(', ').filter(Boolean) : [];
+            const tradeNum = t._tradeNum || (totalCount > 0 ? totalCount - idx : rows.length - idx);
 
             return (
               <tr
@@ -112,7 +113,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
                 {/* Trade number */}
                 <td className="px-2 py-3.5">
                   <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.06] font-mono text-[10px] text-white/30">
-                    {totalCount > 0 ? totalCount - idx : rows.length - idx}
+                    {tradeNum}
                   </span>
                 </td>
 

@@ -137,8 +137,14 @@ export default function TradeFilters({ trades, prefs }) {
     }
   }, [urlTag, tagOptions, tagFilter]);
 
+  /* Stamp absolute trade number BEFORE filtering so it survives filters */
+  const numberedTrades = useMemo(() =>
+    trades.map((t, i) => ({ ...t, _tradeNum: trades.length - i })),
+    [trades]
+  );
+
   const filtered = useMemo(() => {
-    return trades.filter((t) => {
+    return numberedTrades.filter((t) => {
       // Result filter
       if (result === 'win' && num(t.pnl) < 0) return false;
       if (result === 'loss' && num(t.pnl) >= 0) return false;
@@ -178,7 +184,7 @@ export default function TradeFilters({ trades, prefs }) {
 
       return true;
     });
-  }, [trades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo]);
+  }, [numberedTrades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo]);
 
   const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter || hasLesson || dateFrom || dateTo;
   const activeFilterCount = [setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo].filter(Boolean).length;
