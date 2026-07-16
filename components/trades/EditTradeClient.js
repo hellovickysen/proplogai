@@ -11,7 +11,9 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   const [saving, setSaving] = useState(false);
   const [journalDirty, setJournalDirty] = useState(false);
   const [tradeDirty, setTradeDirty] = useState(false);
-  const formRef = useRef(null);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [pendingHref, setPendingHref] = useState(null);
+  const dirtyRef = useRef(false);
 
   const onJournalDirtyChange = useCallback((d) => setJournalDirty(d), []);
 
@@ -19,7 +21,6 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   useEffect(() => {
     const form = document.getElementById('trade-form');
     if (!form) return;
-    formRef.current = form;
     function markDirty() { setTradeDirty(true); }
     form.addEventListener('input', markDirty);
     form.addEventListener('change', markDirty);
@@ -30,6 +31,74 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   }, []);
 
   const isDirty = tradeDirty || journalDirty;
+
+  // Keep ref in sync for event handlers
+  useEffect(() => { dirtyRef.current = isDirty; }, [isDirty]);
+
+  // Browser tab close/refresh — native popup (unavoidable for real page unload)
+  useEffect(() => {
+    function onBeforeUnload(e) {
+      if (dirtyRef.current) { e.preventDefault(); e.returnValue = ''; }
+    }
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
+
+  // Intercept in-app link clicks — show custom modal instead of native popup
+  useEffect(() => {
+    function onClick(e) {
+      if (!dirtyRef.current) return;
+      // Find the closest <a> tag
+      const link = e.target.closest('a[href]');
+      if (!link) return;
+      const href = link.getAttribute('href');
+      if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+      // Only intercept internal links (same origin)
+      if (link.target === '_blank') return;
+      if (href.startsWith('http') && !href.startsWith(window.location.origin)) return;
+      // Don't intercept if it's the Cancel button (it has its own flow)
+      if (link.dataset.skipDirtyCheck) return;
+      e.preventDefault();
+      e.stopPropagation();
+      setPendingHref(href);
+      setShowLeaveModal(true);
+    }
+    document.addEventListener('click', onClick, true);
+    return () => document.removeEventListener('click', onClick, true);
+  }, []);
+
+  // Browser back button — intercept with popstate
+  useEffect(() => {
+    // Push a dummy state so we can intercept back
+    window.history.pushState({ dirtyGuard: true }, '');
+    function onPopState(e) {
+      if (dirtyRef.current) {
+        // Re-push so back doesn't actually navigate
+        window.history.pushState({ dirtyGuard: true }, '');
+        setPendingHref('__back__');
+        setShowLeaveModal(true);
+      }
+    }
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  function confirmLeave() {
+    setShowLeaveModal(false);
+    // Reset dirty so we don't re-intercept
+    dirtyRef.current = false;
+    if (pendingHref === '__back__') {
+      window.history.go(-2); // go back past our dummy state
+    } else if (pendingHref) {
+      router.push(pendingHref);
+    }
+    setPendingHref(null);
+  }
+
+  function cancelLeave() {
+    setShowLeaveModal(false);
+    setPendingHref(null);
+  }
 
   async function handleSaveAll() {
     setSaving(true);
@@ -63,7 +132,7 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
 
       {/* Single combined Save/Cancel at the bottom */}
       <div className="mt-6 flex items-center gap-3">
-        <Link href={'/dashboard/trades/' + tradeId} className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">
+        <Link href={'/dashboard/trades/' + tradeId} data-skip-dirty-check className="rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/70">
           Cancel
         </Link>
         <button
@@ -75,6 +144,40 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
           {saving ? 'Saving...' : 'Save changes'}
         </button>
       </div>
+
+      {/* Custom unsaved changes modal */}
+      {showLeaveModal && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={cancelLeave}>
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#12121a] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-display font-semibold text-white mb-2">Unsaved changes</h3>
+            <p className="text-sm text-white/55 mb-6">You have unsaved changes. Do you want to save before leaving?</p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={async () => {
+                  await handleSaveAll();
+                  confirmLeave();
+                }}
+                className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]"
+                style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+              >
+                Save & leave
+              </button>
+              <button
+                onClick={confirmLeave}
+                className="rounded-xl border border-red-400/30 bg-red-500/10 px-5 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-500/20 transition-colors"
+              >
+                Discard
+              </button>
+              <button
+                onClick={cancelLeave}
+                className="rounded-xl border border-white/10 bg-white/5 px-5 py-2.5 text-sm text-white/50 hover:text-white/70 transition-colors"
+              >
+                Stay
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
