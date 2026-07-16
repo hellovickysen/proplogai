@@ -13,13 +13,13 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Emotion & tag options
-  const defaultEmotions = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greedy', 'Impatient', 'Frustrated', 'Revenge', 'Anxious', 'Excited', 'Bored'];
-  const customEmotions = prefs?.custom_emotions || [];
-  const allEmotions = [...new Set([...defaultEmotions, ...customEmotions])];
-  const defaultTags = ['news', 'high impact', 'low volume', 'scalp', 'swing'];
-  const customTags = prefs?.custom_tags || [];
-  const allTags = [...new Set([...defaultTags, ...customTags])];
+  // Emotion & tag options — use user's saved list; only fall back to defaults if never configured
+  const defaultEmotions = ['Disciplined', 'Confident', 'FOMO', 'Greed', 'Boredom', 'Revenge'];
+  const defaultTags = ['news', 'high-impact', 'low-volume', 'scalp', 'swing'];
+  const allEmotions = Array.isArray(prefs?.custom_emotions) && prefs.custom_emotions.length > 0
+    ? prefs.custom_emotions : defaultEmotions;
+  const allTags = Array.isArray(prefs?.custom_tags) && prefs.custom_tags.length > 0
+    ? prefs.custom_tags : defaultTags;
 
   // Form state
   const [note, setNote] = useState(journal?.note || '');
