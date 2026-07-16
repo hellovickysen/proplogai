@@ -74,6 +74,7 @@ function buildRow(user, payload) {
 
   return {
     user_id: user.id,
+    account_id: payload.account_id || null,
     pair: pair.toUpperCase(),
     direction: payload.direction === 'short' ? 'short' : 'long',
     entry_price: toNum(payload.entry_price),

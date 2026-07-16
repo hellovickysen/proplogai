@@ -4,6 +4,7 @@ import TradeFilters from '@/components/trades/TradeFilters';
 import ExportButton from '@/components/trades/ExportButton';
 import BlurGate from '@/components/ui/BlurGate';
 import { getUserAccess } from '@/lib/plans';
+import { getActiveAccountId, applyAccountFilter } from '@/lib/accounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,10 +14,15 @@ export default async function TradesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data: trades, error: tradesError } = await supabase
+  // Multi-account: get active account filter
+  const activeAccountId = await getActiveAccountId(supabase, user.id);
+
+  let tradesQuery = supabase
     .from('trades')
     .select('id, pair, direction, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, source')
-    .eq('user_id', user.id)
+    .eq('user_id', user.id);
+  tradesQuery = applyAccountFilter(tradesQuery, activeAccountId);
+  const { data: trades, error: tradesError } = await tradesQuery
     .order('trade_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
 

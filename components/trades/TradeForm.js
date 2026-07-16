@@ -74,7 +74,7 @@ function TimeframeDropdown({ value, onChange, labelCls, fieldCls }) {
   );
 }
 
-export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null }) {
+export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null }) {
   const router = useRouter();
 
   // Resolve initial setup_ids from setup_ids array, or single setup_id, or empty
@@ -92,6 +92,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   }
 
   const [form, setForm] = useState({
+    account_id: (initial && initial.account_id) || activeAccountId || '',
     pair: (initial && initial.pair) || 'XAU/USD',
     direction: (initial && initial.direction) || 'long',
     entry_price: initial && initial.entry_price != null ? initial.entry_price : '',
@@ -526,6 +527,34 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div className="space-y-6">
         <form onSubmit={onSubmit} id="trade-form" className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
+          {/* Account selector (Elite with multiple accounts only) */}
+          {accounts.length > 0 && (
+            <div className="mb-5">
+              <label className={labelCls}>Account</label>
+              <div className="flex flex-wrap gap-2">
+                {accounts.map((acc) => (
+                  <button
+                    key={acc.id}
+                    type="button"
+                    onClick={() => set('account_id', form.account_id === acc.id ? '' : acc.id)}
+                    className={'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ' +
+                      (form.account_id === acc.id
+                        ? 'border-violet-400/50 bg-violet-500/15 text-violet-200'
+                        : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
+                  >
+                    <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: acc.color || '#a78bfa' }} />
+                    {acc.name}
+                    {acc.phase && (
+                      <span className="text-[9px] text-white/30 ml-0.5">
+                        {acc.phase === 'challenge' ? 'CH' : acc.phase === 'funded' ? 'FD' : 'PO'}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Section 1: Trade Details */}
           <div className="mb-5">
             <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/50">

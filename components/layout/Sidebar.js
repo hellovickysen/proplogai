@@ -9,6 +9,7 @@ import PlanBadge from '@/components/ui/PlanBadge';
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades',    icon: '☰', href: '/dashboard/trades' },
+  { label: 'Accounts',  icon: '📂', href: '/dashboard/accounts', elite: true },
   { label: 'Rulebook',  icon: '📋', href: '/dashboard/rulebook' },
   { label: 'Calendar',  icon: '📅', href: '/dashboard/calendar' },
   { label: 'Prop Expenses',  icon: '💳', href: '/dashboard/prop-expenses', tourId: 'nav-expenses' },
@@ -117,7 +118,7 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
 
         {/* -- Main Nav -- */}
         <nav className={'flex flex-1 flex-col gap-0.5 overflow-y-auto overflow-x-hidden ' + (collapsed ? 'px-1.5' : 'px-2')}>
-          {NAV.map((item) => <NavItem key={item.href} item={item} />)}
+          {NAV.filter((item) => !item.elite || (planAccess && planAccess.effectivePlan === 'elite')).map((item) => <NavItem key={item.href} item={item} />)}
         </nav>
 
         {/* -- Support Section -- */}

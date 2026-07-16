@@ -19,6 +19,7 @@ import DailyCoachingCard from '@/components/coach/DailyCoachingCard';
 import { computePersona } from '@/lib/persona';
 import { getOnboardingProgress } from '@/lib/onboarding';
 import OnboardingChecklist from '@/components/dashboard/OnboardingChecklist';
+import { getActiveAccountId, applyAccountFilter } from '@/lib/accounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,10 +91,16 @@ function fmtCurrency(v) {
 export default async function DashboardPage() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const { data: trades, error: tradesError } = await supabase
+
+  // Multi-account: get active account filter
+  const activeAccountId = await getActiveAccountId(supabase, user.id);
+
+  let tradesQuery = supabase
     .from('trades')
     .select('id, pair, direction, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, journal_entries(emotions, note, screenshot_url, screenshot_urls, confidence)')
-    .eq('user_id', user.id)
+    .eq('user_id', user.id);
+  tradesQuery = applyAccountFilter(tradesQuery, activeAccountId);
+  const { data: trades, error: tradesError } = await tradesQuery
     .order('trade_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
 

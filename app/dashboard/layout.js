@@ -20,6 +20,8 @@ import SearchBar from '@/components/layout/SearchBar';
 import LiveClock from '@/components/layout/LiveClock';
 import QuickActions from '@/components/layout/QuickActions';
 import HeaderAvatar from '@/components/layout/HeaderAvatar';
+import AccountSwitcher from '@/components/accounts/AccountSwitcher';
+import { getAccounts, getActiveAccountId, getAccountStats } from '@/lib/accounts';
 
 /* Admin notification types — excluded from user dashboard bell */
 const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup', 'ticket_user_replied', 'ticket_closed'];
@@ -169,6 +171,17 @@ export default async function DashboardLayout({ children }) {
   const isAdmin = user.email === ADMIN_EMAIL;
   const initial = user.email ? user.email.charAt(0).toUpperCase() : '?';
 
+  // ── Multi-account: fetch accounts + active selection (Elite only) ──
+  let accounts = [];
+  let activeAccountId = null;
+  let todayAccountStats = {};
+  if (access.canUse('multi_account')) {
+    accounts = await getAccounts(supabase, user.id);
+    if (accounts.length > 0) {
+      activeAccountId = await getActiveAccountId(supabase, user.id);
+      todayAccountStats = await getAccountStats(supabase, user.id, today);
+    }
+  }
 
   return (
     <div className="flex min-h-screen">
@@ -184,6 +197,9 @@ export default async function DashboardLayout({ children }) {
               <span className="font-mono text-xs uppercase tracking-wider text-white/55">Today</span>
               <span className={'font-mono text-xs font-semibold ' + tone}>{fmtMoney(todayPnl)}</span>
             </div>
+            {accounts.length > 0 && (
+              <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} todayStats={todayAccountStats} />
+            )}
           </div>
           <SearchBar planAccess={planAccess} />
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">

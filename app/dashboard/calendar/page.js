@@ -6,6 +6,7 @@ import { num, fmtMoney } from '@/lib/stats';
 import CalendarInsights from '@/components/calendar/CalendarInsights';
 import BlurGate from '@/components/ui/BlurGate';
 import { getUserAccess } from '@/lib/plans';
+import { getActiveAccountId, applyAccountFilter } from '@/lib/accounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,32 +39,41 @@ export default async function CalendarPage({ searchParams }) {
   const access = await getUserAccess(supabase, user);
   const planAccess = access.toJSON();
 
+  // Multi-account: get active account filter
+  const activeAccountId = await getActiveAccountId(supabase, user.id);
+
   // Calculate the start and end of the displayed month for date-range filtering
   const monthStartDate = `${year}-${pad2(month + 1)}-01`;
   const nextMonthVal = month === 11 ? 0 : month + 1;
   const nextYearVal = month === 11 ? year + 1 : year;
   const monthEndDate = `${nextYearVal}-${pad2(nextMonthVal + 1)}-01`;
 
-  const { data: trades, error: tradesError } = await supabase
+  let monthQuery = supabase
     .from('trades')
     .select('id, pair, direction, pnl, setup, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
     .eq('user_id', user.id)
     .gte('trade_date', monthStartDate)
-    .lt('trade_date', monthEndDate)
+    .lt('trade_date', monthEndDate);
+  monthQuery = applyAccountFilter(monthQuery, activeAccountId);
+  const { data: trades, error: tradesError } = await monthQuery
     .order('trade_date', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
 
   // Lightweight count query to check if user has any trades at all (for empty state)
-  const { count: totalTradeCount } = await supabase
+  let countQuery = supabase
     .from('trades')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id);
+  countQuery = applyAccountFilter(countQuery, activeAccountId);
+  const { count: totalTradeCount } = await countQuery;
 
   // All-time trades for CalendarInsights toggle (lightweight — only fields needed for insights)
-  const { data: allTrades } = await supabase
+  let allTradesQuery = supabase
     .from('trades')
     .select('pair, direction, pnl, session, trade_date, closed_at, created_at')
     .eq('user_id', user.id);
+  allTradesQuery = applyAccountFilter(allTradesQuery, activeAccountId);
+  const { data: allTrades } = await allTradesQuery;
 
   if (tradesError) {
     return (
