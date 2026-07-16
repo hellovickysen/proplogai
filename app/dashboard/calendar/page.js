@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import CalendarMonth from '@/components/calendar/CalendarMonth';
-import TradeTable from '@/components/trades/TradeTable';
+import CalendarTradeList from '@/components/calendar/CalendarTradeList';
 import { num, fmtMoney } from '@/lib/stats';
 import CalendarInsights from '@/components/calendar/CalendarInsights';
 import BlurGate from '@/components/ui/BlurGate';
@@ -114,13 +114,13 @@ export default async function CalendarPage({ searchParams }) {
     );
   }
 
-  // Fetch journal entries for the trades in this month
+  // Fetch journal entries for the trades in this month (full data for accordion detail)
   const tradeIds = list.map((t) => t.id);
   let journalMap = {};
   if (tradeIds.length > 0) {
     const { data: journals, error: journalError } = await supabase
       .from('journal_entries')
-      .select('trade_id, emotions, note, screenshot_url, screenshot_urls, confidence')
+      .select('trade_id, emotions, tags, note, screenshot_url, screenshot_urls, confidence')
       .in('trade_id', tradeIds);
     if (journalError) console.error('journal entries error', journalError);
     (journals || []).forEach((j) => {
@@ -128,16 +128,26 @@ export default async function CalendarPage({ searchParams }) {
     });
   }
 
-  // Enrich trade objects with _journal metadata (used by TradeTable)
+  // Enrich trade objects with full _journal metadata (used by CalendarTradeList accordion)
   const enrichedTrades = list.map((t) => {
     const j = journalMap[t.id];
     if (!j) return t;
+    // Collect screenshot URLs into a flat array
+    const screenshotUrls = [];
+    if (j.screenshot_urls && j.screenshot_urls.length > 0) {
+      screenshotUrls.push(...j.screenshot_urls);
+    } else if (j.screenshot_url) {
+      screenshotUrls.push(j.screenshot_url);
+    }
     return {
       ...t,
       _journal: {
         emotions: j.emotions || [],
+        tags: j.tags || [],
+        note: j.note || '',
+        screenshotUrls,
         hasNote: !!(j.note && j.note.trim()),
-        hasImages: !!(j.screenshot_url || (j.screenshot_urls && j.screenshot_urls.length > 0)),
+        hasImages: screenshotUrls.length > 0,
         confidence: j.confidence != null ? j.confidence : null,
       },
     };
@@ -205,7 +215,7 @@ export default async function CalendarPage({ searchParams }) {
         <CalendarMonth trades={enrichedTrades} year={year} month={month} selected={selected} monthlyPnl={monthlyPnl} journalDays={journalDays} monthParam={monthParam} />
       </div>
 
-      {/* Day trades section below the calendar */}
+      {/* Day trades section below the calendar — expandable accordion */}
       {selected && (
         <div className="mt-6">
           <div className="flex items-center gap-3 mb-4">
@@ -216,11 +226,7 @@ export default async function CalendarPage({ searchParams }) {
               </span>
             )}
           </div>
-          {selectedTrades.length === 0 ? (
-            <p className="text-white/40 text-sm">No trades on this date.</p>
-          ) : (
-            <TradeTable rows={selectedTrades} />
-          )}
+          <CalendarTradeList trades={selectedTrades} />
         </div>
       )}
     </div>
