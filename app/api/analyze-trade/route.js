@@ -21,7 +21,7 @@ export async function POST(req) {
     if (!user) return NextResponse.json({ error: 'Not signed in' }, { status: 401 });
 
     // Burst rate limit — prevent rapid-fire AI calls (all tiers including Elite/Admin)
-    const { allowed: rateLimitOk } = aiAnalysisLimiter.check(user.id);
+    const { allowed: rateLimitOk } = await aiAnalysisLimiter.check(user.id);
     if (!rateLimitOk) {
       return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 });
     }

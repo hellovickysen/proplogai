@@ -51,7 +51,7 @@ export async function POST(request) {
     }
 
     // Burst rate limit — prevent rapid-fire AI calls
-    const { allowed, retryAfterMs } = aiParseLimiter.check(user.id);
+    const { allowed, retryAfterMs } = await aiParseLimiter.check(user.id);
     if (!allowed) {
       return NextResponse.json(
         { filters: {}, isAI: false, rateLimited: true },
@@ -105,7 +105,7 @@ export async function POST(request) {
     // Parse JSON — strip code fences if present
     let filters = {};
     try {
-      const cleaned = raw.replace(/```json?\s*/gi, '').replace(/```/g, '').trim();
+      const cleaned = raw.replace(/```json?\\s*/gi, '').replace(/```/g, '').trim();
       filters = JSON.parse(cleaned);
     } catch (e) {
       console.error('AI parse JSON error:', e.message, 'raw:', raw.substring(0, 200));
