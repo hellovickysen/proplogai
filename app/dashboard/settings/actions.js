@@ -63,7 +63,7 @@ export async function savePreferences(payload) {
       ? payload.custom_setups.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().slice(0, 100)).slice(0, 50)
       : [],
     custom_tags: Array.isArray(payload.custom_tags)
-      ? payload.custom_tags.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().toLowerCase().slice(0, 50)).slice(0, tagLimit === Infinity ? undefined : tagLimit)
+      ? payload.custom_tags.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().toLowerCase().replace(/\s+/g, '-').slice(0, 50)).slice(0, tagLimit === Infinity ? undefined : tagLimit)
       : [],
     default_confidence: Number(payload.default_confidence) || 0,
     avatar_url: avatarUrl,

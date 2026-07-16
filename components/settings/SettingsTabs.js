@@ -12,8 +12,8 @@ import BillingTab from '@/components/settings/BillingTab';
 import PublicProfileSettings from '@/components/profile/PublicProfileSettings';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
-const DEFAULT_EMOTIONS = ['Disciplined', 'Calm', 'Confident', 'FOMO', 'Fear', 'Greed', 'Revenge', 'Boredom'];
-const DEFAULT_TAGS = ['news', 'high impact', 'low volume', 'scalp', 'swing'];
+const DEFAULT_EMOTIONS = ['Disciplined', 'Confident', 'FOMO', 'Greed', 'Boredom', 'Revenge'];
+const DEFAULT_TAGS = ['news', 'high-impact', 'low-volume', 'scalp', 'swing'];
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -304,7 +304,7 @@ function JournalSettingsTab({ prefs, planAccess, onSaved }) {
   function resetEmotionDefaults() { setEmotions([...DEFAULT_EMOTIONS]); }
 
   function addTag() {
-    const t = newTag.trim().toLowerCase();
+    const t = newTag.trim().toLowerCase().replace(/\s+/g, '-');
     if (!t || tags.includes(t)) return;
     if (atTagLimit) return;
     setTags([...tags, t]);
