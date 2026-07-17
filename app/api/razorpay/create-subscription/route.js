@@ -11,8 +11,9 @@ import { resolveAffiliateByCoupon, getPartnerOfferId } from '@/lib/affiliate';
  * Body: { billingCycle: 'monthly' | 'yearly', couponCode?: string }
  *
  * If a valid partner coupon is supplied, a Razorpay discount offer is attached
- * (5% off the first charge) and the buyer is bound to that partner for
- * commission. Attribution is coupon-only — no links or cookies.
+ * (5% off) AND the 14-day trial is skipped so the discounted amount is charged
+ * immediately. The buyer is bound to that partner for commission.
+ * Attribution is coupon-only — no links or cookies.
  */
 
 function getServiceClient() {
@@ -55,6 +56,9 @@ export async function POST(request) {
       offerId = getPartnerOfferId(); // may be null if the offer isn't configured yet
     }
 
+    // Coupon checkout skips the free trial (buyer pays the discounted amount now).
+    const useTrial = !affiliate;
+
     // Check if user already has an active subscription
     const { data: existingSub } = await admin
       .from('subscriptions')
@@ -66,16 +70,19 @@ export async function POST(request) {
       return NextResponse.json({ error: 'You already have an active subscription.' }, { status: 400 });
     }
 
-    // Create Razorpay subscription (with the discount offer when a coupon applied)
+    // Create Razorpay subscription (discount offer + immediate charge when a coupon applied)
     const sub = await createSubscription({
       billingCycle,
       email: user.email,
       userId: user.id,
       offerId,
+      trial: useTrial,
     });
 
     // Store/update subscription record in DB
-    const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    const trialEndsAt = useTrial
+      ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+      : null;
 
     const subRow = {
       user_id: user.id,

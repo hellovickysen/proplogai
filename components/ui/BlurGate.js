@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FEATURES, ELITE_FEATURES, PLANS } from '@/lib/plans';
+import { useRouter } from 'next/navigation';
+import { FEATURES } from '@/lib/plans';
 
 /**
  * BlurGate — wraps Elite-only content with a blur overlay + upgrade CTA for Basic users.
@@ -91,213 +92,23 @@ export default function BlurGate({ feature, access, children, className = '', co
 }
 
 /**
- * Load Razorpay Checkout.js script dynamically.
- */
-function useRazorpayScript() {
-  const [loaded, setLoaded] = useState(false);
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.Razorpay) {
-      setLoaded(true);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => setLoaded(true);
-    document.body.appendChild(script);
-    return () => {
-      // Don't remove — other components may need it
-    };
-  }, []);
-  return loaded;
-}
-
-/**
- * Inline upgrade modal — shows plan comparison and triggers Razorpay Checkout.js.
- * Opens payment modal on proplogai.com (no redirect to Razorpay site).
- * On success, redirects to /dashboard/settings?tab=billing&status=success.
+ * UpgradeModal — now a lightweight redirector to the full checkout page
+ * (/dashboard/upgrade). Kept as a named export with the same props so every
+ * existing call site (BillingTab, coach tabs, banners, etc.) transparently
+ * routes users to the branded checkout page instead of an inline modal.
  */
 function UpgradeModal({ onClose, feature }) {
-  const [loading, setLoading] = useState(false);
-  const [billingCycle, setBillingCycle] = useState('monthly');
-  const [couponCode, setCouponCode] = useState('');
-  const razorpayReady = useRazorpayScript();
-
-  const price = billingCycle === 'yearly' ? PLANS.elite.priceYearly : PLANS.elite.priceMonthly;
-  const savings = billingCycle === 'yearly'
-    ? Math.round((1 - PLANS.elite.priceYearly / PLANS.elite.priceMonthly) * 100)
-    : 0;
-
-  async function handleUpgrade() {
-    setLoading(true);
-    try {
-      // 1. Create subscription on the server
-      const res = await fetch('/api/razorpay/create-subscription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ billingCycle, couponCode: couponCode.trim() || undefined }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        alert(data.error);
-        setLoading(false);
-        return;
-      }
-
-      const subscriptionId = data.subscriptionId;
-      const keyId = data.keyId;
-
-      // Fallback to hosted page if Checkout.js not loaded or key not available
-      if (!razorpayReady || !keyId || !window.Razorpay) {
-        if (data.shortUrl) {
-          window.location.href = data.shortUrl;
-        }
-        return;
-      }
-
-      // 2. Open Razorpay Checkout modal
-      const options = {
-        key: keyId,
-        subscription_id: subscriptionId,
-        name: 'PropLogAI',
-        description: `Elite Plan (${billingCycle})`,
-        theme: {
-          color: '#a78bfa',
-          backdrop_color: 'rgba(0,0,0,0.85)',
-        },
-        modal: {
-          confirm_close: true,
-          ondismiss: () => {
-            setLoading(false);
-          },
-        },
-        handler: async function (response) {
-          // 3. Payment successful — verify via callback
-          try {
-            const params = new URLSearchParams({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature,
-            });
-            // Hit callback route to update DB, then redirect
-            window.location.href = `/api/razorpay/callback?${params.toString()}`;
-          } catch {
-            // Fallback: redirect directly to success
-            window.location.href = '/dashboard/settings?tab=billing&status=success';
-          }
-        },
-      };
-
-      const rzp = new window.Razorpay(options);
-      rzp.on('payment.failed', function (response) {
-        alert('Payment failed: ' + (response.error?.description || 'Please try again.'));
-        setLoading(false);
-      });
-      rzp.open();
-    } catch (err) {
-      alert('Something went wrong. Please try again.');
-      setLoading(false);
-    }
-  }
+  const router = useRouter();
+  useEffect(() => {
+    const q = feature ? `?feature=${encodeURIComponent(feature)}` : '';
+    router.push(`/dashboard/upgrade${q}`);
+  }, [feature, router]);
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-      <div
-        className="relative w-full max-w-md rounded-2xl border border-white/10 bg-[#0b0b14] p-6 shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button onClick={onClose} className="absolute top-4 right-4 text-white/40 hover:text-white/70 transition-colors">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-violet-300 border border-violet-400/30 bg-violet-500/10 mb-3">
-            ✦ Elite
-          </div>
-          <h2 className="text-xl font-bold text-white mb-1">Upgrade to Elite</h2>
-          <p className="text-white/50 text-sm">14-day free trial · Cancel anytime</p>
-        </div>
-
-        {/* Billing toggle */}
-        <div className="flex items-center justify-center gap-2 mb-5">
-          <button
-            onClick={() => setBillingCycle('monthly')}
-            className={`rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${
-              billingCycle === 'monthly'
-                ? 'bg-white/10 text-white border border-white/20'
-                : 'text-white/40 hover:text-white/60'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBillingCycle('yearly')}
-            className={`rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${
-              billingCycle === 'yearly'
-                ? 'bg-white/10 text-white border border-white/20'
-                : 'text-white/40 hover:text-white/60'
-            }`}
-          >
-            Yearly
-            {savings > 0 && (
-              <span className="ml-1.5 text-emerald-400 text-[10px] font-bold">-{savings}%</span>
-            )}
-          </button>
-        </div>
-
-        {/* Price */}
-        <div className="text-center mb-5">
-          <div className="text-3xl font-bold text-white">
-            ${price}<span className="text-base font-normal text-white/40">/mo</span>
-          </div>
-          {billingCycle === 'yearly' && (
-            <p className="text-white/40 text-xs mt-1">${(PLANS.elite.priceYearly * 12).toFixed(2)}/year</p>
-          )}
-        </div>
-
-        {/* Feature list */}
-        <div className="space-y-2.5 mb-5">
-          {ELITE_FEATURES.map((f, i) => (
-            <div key={i} className="flex items-center gap-3 text-sm">
-              <span className="text-base">{f.icon}</span>
-              <span className="text-white/70">{f.label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Partner coupon */}
-        <div className="mb-5">
-          <label className="mb-1.5 block text-[11px] font-mono uppercase tracking-wider text-white/45">
-            Have a partner code?
-          </label>
-          <input
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20))}
-            placeholder="Enter code for 5% off"
-            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 font-mono text-sm uppercase tracking-wider text-white/90 outline-none focus:border-cyan-400/50"
-          />
-          {couponCode && (
-            <p className="mt-1.5 text-[11px] text-emerald-300/80">5% off your first payment will be applied at checkout.</p>
-          )}
-        </div>
-
-        {/* CTA */}
-        <button
-          onClick={handleUpgrade}
-          disabled={loading}
-          className="w-full rounded-xl py-3 text-sm font-bold text-[#08080f] shadow-lg hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
-          style={gradientBtn}
-        >
-          {loading ? 'Opening checkout...' : 'Start 14-day free trial'}
-        </button>
-        <p className="text-center text-white/30 text-[11px] mt-3">
-          No charge for 14 days · Cancel anytime · Secure payment via Razorpay
-        </p>
+      <div className="relative rounded-2xl border border-white/10 bg-[#0b0b14] px-6 py-5 text-sm text-white/70 shadow-2xl">
+        Taking you to checkout…
       </div>
     </div>
   );
