@@ -1,6 +1,6 @@
 # PropLogAI — Technical Documentation
 
-Comprehensive technical reference for the PropLogAI codebase. Last updated: July 9, 2026 (Onboarding Redesign + R-Multiple Removal + Inline Trade Analysis, post-Phase R).
+Comprehensive technical reference for the PropLogAI codebase. Last updated: July 17, 2026 (iOS WebSocket CSP fix + Affiliate/Partner Program).
 
 ## 1. Architecture Overview
 
@@ -930,3 +930,33 @@ The app displays USD ($9.99/mo, $7.99/mo yearly) but Razorpay bills **INR** (liv
 2. Add **partner.proplogai.com** domain in Vercel + DNS CNAME (done).
 3. Create Razorpay **Subscription offers** (UPI) and set `RAZORPAY_OFFER_ID_5_UPI` (partner) / paste into promo codes; redeploy.
 4. Add `refund.created` (+ `refund.processed`) events to the Razorpay webhook.
+
+
+## iOS WebSocket CSP Fix (July 17, 2026)
+
+### Problem
+Dashboard crashed on iPhone Safari and Chrome with error: "WebSocket not available: The operation is insecure." Worked fine on Android and desktop browsers.
+
+### Root Cause
+CSP `connect-src` directive was missing `wss://` scheme for Supabase domains. iOS Safari strictly enforces CSP for WebSocket connections — unlike Android Chrome, which is lenient. The Supabase Realtime subscription in `NotificationBell.js` threw an unhandled `DOMException`, which bubbled up and crashed the entire dashboard layout.
+
+### Fix
+1. **next.config.mjs** — Added `wss://*.supabase.co wss://*.supabase.in` to CSP `connect-src`
+2. **components/notifications/NotificationBell.js** — Wrapped Realtime subscription in try-catch; falls back to 60s polling
+3. **app/dashboard/error.js** — Dashboard-specific error boundary (shows error details + reports to server)
+4. **app/global-error.js** — Catches layout-level errors (replaces full HTML tree)
+5. **app/api/error-report/route.js** — Logs client errors to Vercel function logs for diagnosis
+
+### Error Boundary Architecture
+```
+app/global-error.js     ← catches app/layout.js errors (replaces <html>)
+  app/error.js           ← catches app/page.js + child layout errors (dev-only details)
+    app/dashboard/error.js ← catches dashboard page errors (always shows details + reports)
+```
+Note: In Next.js App Router, `error.js` does NOT catch errors from its own `layout.js`. Dashboard layout errors are caught by the parent `app/error.js`.
+
+### CSP Rule
+When using any WebSocket service (Supabase Realtime, Socket.io, etc.), CSP `connect-src` MUST include both `https://` AND `wss://` for the target domain. Example:
+```
+connect-src 'self' https://*.supabase.co wss://*.supabase.co
+```
