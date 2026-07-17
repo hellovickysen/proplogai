@@ -1,13 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 
-const AFF_COOKIE = 'plog_aff';
-const AFF_COOKIE_MAX_AGE = 60 * 60 * 24 * 90; // 90 days
-
-// Public partner paths (no auth required). Everything else under the partner
-// subdomain that is app-like requires a signed-in user.
-const PARTNER_PUBLIC = ['/', '/login', '/apply', '/join'];
-
 function isPartnerHost(host) {
   return host.startsWith('partner.');
 }
@@ -47,7 +40,7 @@ export async function middleware(request) {
       partnerProtected(effectivePath, partner);
     if (isProtected) {
       const url = request.nextUrl.clone();
-      url.pathname = partner ? '/login' : '/login';
+      url.pathname = '/login';
       return NextResponse.redirect(url);
     }
     return finalize(request, supabaseResponse, partner, pathname, effectivePath);
@@ -110,10 +103,8 @@ function partnerProtected(effectivePath, partner) {
 }
 
 /**
- * Build the final response:
- * - capture ?ref=<slug> into the plog_aff cookie (main host, cookie-only fallback)
- * - rewrite partner-host requests onto the /partner segment
- * - carry over any Supabase auth cookies from the refresh step
+ * Build the final response: rewrite partner-host requests onto the /partner
+ * segment and carry over any refreshed Supabase auth cookies.
  */
 function finalize(request, supabaseResponse, partner, pathname, effectivePath) {
   let response = supabaseResponse;
@@ -124,17 +115,6 @@ function finalize(request, supabaseResponse, partner, pathname, effectivePath) {
     response = NextResponse.rewrite(url, { request });
     // Carry over refreshed auth cookies onto the rewrite response
     supabaseResponse.cookies.getAll().forEach((c) => response.cookies.set(c));
-  }
-
-  // ?ref=<slug> fallback: set the affiliate attribution cookie (does not overwrite).
-  const ref = request.nextUrl.searchParams.get('ref');
-  if (ref && /^[A-Za-z0-9_]{3,20}$/.test(ref) && !request.cookies.get(AFF_COOKIE)) {
-    response.cookies.set(AFF_COOKIE, ref, {
-      path: '/',
-      maxAge: AFF_COOKIE_MAX_AGE,
-      sameSite: 'lax',
-      secure: true,
-    });
   }
 
   return response;

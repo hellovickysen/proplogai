@@ -21,14 +21,14 @@ export default function PartnersTab({ affiliate, userEmail }) {
           Turn your audience into <span style={gradientText}>lifetime recurring income</span>
         </h2>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/60">
-          Refer traders to PropLogAI and earn <strong className="text-white">40% commission</strong> — every month they stay
-          subscribed, for as long as they stay. Monthly and yearly plans both pay out.
+          Share your coupon code — your audience gets <strong className="text-white">5% off</strong> at checkout and you earn
+          <strong className="text-white"> 40% commission</strong> every month they stay subscribed. Monthly and yearly plans both pay out.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           {[
             { icon: '♾️', t: 'Lifetime recurring', d: 'Paid every renewal, not just once.' },
             { icon: '📈', t: 'Up to 60%', d: 'Top partners earn higher rates.' },
-            { icon: '⚡', t: 'Instant setup', d: 'Approved partners get a link + coupon.' },
+            { icon: '⚡', t: 'Instant setup', d: 'Approved partners get a coupon code.' },
           ].map((v) => (
             <div key={v.t} className="rounded-xl border border-white/5 bg-white/[0.02] p-4">
               <div className="text-lg">{v.icon}</div>
@@ -46,7 +46,7 @@ export default function PartnersTab({ affiliate, userEmail }) {
       {status === 'approved' && <ApprovedCard affiliate={affiliate} />}
       {status === 'pending' && (
         <StatusCard tone="amber" title="Application under review"
-          body="Thanks for applying! We review every partner application manually. You'll get an email the moment you're approved — then your link and coupon go live." />
+          body="Thanks for applying! We review every partner application manually. You'll get an email the moment you're approved — then your coupon code goes live." />
       )}
       {status === 'suspended' && (
         <StatusCard tone="red" title="Account suspended"
@@ -167,7 +167,7 @@ function ApplicationForm({ userEmail }) {
   if (done) {
     return (
       <StatusCard tone="cyan" title="Application received 🎉"
-        body="Thanks! We'll review it manually and email you once you're approved. Then your referral link and coupon go live instantly." />
+        body="Thanks! We'll review it manually and email you once you're approved. Then your coupon code goes live instantly." />
     );
   }
 
@@ -215,7 +215,6 @@ function ApplicationForm({ userEmail }) {
 }
 
 function ApprovedCard({ affiliate }) {
-  const link = affiliate?.referral_username ? `https://proplogai.com/ref/${affiliate.referral_username}` : '';
   return (
     <div className="rounded-2xl border border-cyan-400/25 bg-cyan-500/[0.06] p-6 sm:p-8">
       <div className="flex items-center gap-2">
@@ -223,13 +222,8 @@ function ApprovedCard({ affiliate }) {
         <h3 className="font-display text-lg font-semibold text-white">You're an approved partner</h3>
       </div>
       <p className="mt-2 text-sm text-white/60">
-        Manage your links, coupon, stats, and payouts in the partner portal.
+        Set your coupon code in the partner portal and share it — buyers get 5% off at checkout and you earn commission on every payment.
       </p>
-      {link && (
-        <p className="mt-3 font-mono text-xs text-white/50">
-          Your link: <span className="text-cyan-300">{link}</span>
-        </p>
-      )}
       <a
         href={PORTAL_URL + '/dashboard'}
         target="_blank"

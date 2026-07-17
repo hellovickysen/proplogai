@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookSignature } from '@/lib/razorpay';
 import { sendEmail, isEmailConfigured } from '@/lib/email';
 import { buildPaymentReceiptEmail, buildPaymentFailedEmail } from '@/lib/subscription-emails';
-import { commissionForCharge } from '@/lib/affiliate';
+import { PLAN_PRICE_USD, MAX_COMMISSION_RATE } from '@/lib/affiliate';
 
 /**
  * POST /api/razorpay/webhook
@@ -12,9 +12,9 @@ import { commissionForCharge } from '@/lib/affiliate';
  * Uses service role client since webhooks are not user-authenticated.
  * Includes idempotency protection to prevent duplicate event processing.
  *
- * Affiliate program: creates recurring commissions on paid events, stops
- * commissions on cancel/halt/complete, and reverses on refund. Commission
- * inserts are idempotent via a unique index on razorpay_payment_id.
+ * Partner program: creates recurring commissions on paid events (on the NET
+ * amount actually charged), stops on cancel/halt/complete, reverses on refund.
+ * Commission inserts are idempotent via a unique index on razorpay_payment_id.
  */
 
 function getAdminClient() {
@@ -252,10 +252,12 @@ async function updateSubscription(supabase, razorpaySubId, updates) {
   return data;
 }
 
-/* ─── Affiliate commission engine ──────────────────────────────
- * Creates a pending commission for the referring affiliate when a referred
- * user is charged. Idempotent: a unique index on razorpay_payment_id blocks
- * duplicates. Never throws — commission failures must not fail the webhook.
+/* ─── Partner commission engine ────────────────────────────────
+ * Creates a pending commission for the referring partner when a referred user
+ * is charged. Commission is computed on the NET amount actually charged
+ * (payment.amount), so any first-charge discount is reflected automatically.
+ * Idempotent: a unique index on razorpay_payment_id blocks duplicates.
+ * Never throws — commission failures must not fail the webhook.
  */
 async function recordAffiliateCommission(supabase, userId, payment) {
   try {
@@ -281,7 +283,15 @@ async function recordAffiliateCommission(supabase, userId, payment) {
       .eq('user_id', userId)
       .maybeSingle();
     const billingCycle = subRow?.billing_cycle === 'yearly' ? 'yearly' : 'monthly';
-    const amount = commissionForCharge(aff.commission_rate, billingCycle);
+
+    // Net base: prefer the actual charged amount (reflects any discount).
+    // payment.amount is in the smallest currency unit; the app treats it as cents.
+    const netBase = (payment && typeof payment.amount === 'number' && payment.amount > 0)
+      ? payment.amount / 100
+      : (PLAN_PRICE_USD[billingCycle] ?? PLAN_PRICE_USD.monthly);
+
+    const rate = Math.max(0, Math.min(MAX_COMMISSION_RATE, Number(aff.commission_rate) || 0));
+    const amount = Math.round(netBase * rate * 100) / 100;
 
     const { error } = await supabase.from('affiliate_commissions').insert({
       affiliate_id: aff.id,

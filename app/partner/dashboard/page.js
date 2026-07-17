@@ -2,12 +2,10 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getAffiliateStats } from '@/lib/affiliate';
+import { getAffiliateStats, PARTNER_DISCOUNT_PCT } from '@/lib/affiliate';
 import AffiliateClient from './AffiliateClient';
 
 export const dynamic = 'force-dynamic';
-
-const SITE = process.env.NEXT_PUBLIC_SITE_URL || 'https://proplogai.com';
 
 export default async function AffiliateDashboard() {
   const supabase = createClient();
@@ -32,7 +30,7 @@ export default async function AffiliateDashboard() {
     return (
       <Shell>
         <Notice
-          title="You're not an affiliate yet"
+          title="You're not a partner yet"
           body="Apply to join the PropLogAI partner program and start earning lifetime recurring commission."
           cta={{ href: '/apply', label: 'Apply now' }}
         />
@@ -44,7 +42,7 @@ export default async function AffiliateDashboard() {
     const map = {
       pending: { title: 'Application under review', body: 'Thanks for applying! Your application is being reviewed. You’ll get access as soon as it’s approved.', tone: 'amber' },
       rejected: { title: 'Application not approved', body: 'Unfortunately your application was not approved at this time.', tone: 'red' },
-      suspended: { title: 'Account suspended', body: 'Your affiliate account is currently suspended. Please contact support if you think this is a mistake.', tone: 'red' },
+      suspended: { title: 'Account suspended', body: 'Your partner account is currently suspended. Please contact support if you think this is a mistake.', tone: 'red' },
     };
     const m = map[aff.status] || map.pending;
     return (
@@ -72,8 +70,8 @@ export default async function AffiliateDashboard() {
       .limit(10),
   ]);
 
-  const referralLink = `${SITE}/ref/${aff.referral_username}`;
   const hasOpenPayout = (payouts || []).some((p) => p.status === 'requested' || p.status === 'approved');
+  const discountPct = Math.round(PARTNER_DISCOUNT_PCT * 100);
 
   return (
     <Shell>
@@ -88,11 +86,10 @@ export default async function AffiliateDashboard() {
       </div>
 
       <AffiliateClient
-        referralLink={referralLink}
-        username={aff.referral_username}
         coupon={coupon?.code || ''}
         stats={stats}
         hasOpenPayout={hasOpenPayout}
+        discountPct={discountPct}
       />
 
       {/* Recent commissions */}
@@ -100,7 +97,7 @@ export default async function AffiliateDashboard() {
         <h2 className="mb-3 font-mono text-xs uppercase tracking-wider text-white/55">Recent commissions</h2>
         <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
           {(commissions || []).length === 0 ? (
-            <p className="px-5 py-6 text-sm text-white/45">No commissions yet. Share your link to start earning.</p>
+            <p className="px-5 py-6 text-sm text-white/45">No commissions yet. Share your coupon code to start earning.</p>
           ) : (
             <table className="w-full text-left text-sm">
               <thead>

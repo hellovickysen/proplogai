@@ -2,19 +2,20 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createSubscription } from '@/lib/razorpay';
-import { AFF_COOKIE, resolveAffiliateBySlug } from '@/lib/affiliate';
+import { resolveAffiliateByCoupon, getPartnerOfferId } from '@/lib/affiliate';
 
 /**
  * POST /api/razorpay/create-subscription
  *
  * Creates a Razorpay subscription and returns the hosted checkout URL.
- * Body: { billingCycle: 'monthly' | 'yearly' }
+ * Body: { billingCycle: 'monthly' | 'yearly', couponCode?: string }
  *
- * Uses service-role client for DB writes since RLS may block user inserts
- * on the subscriptions table.
+ * If a valid partner coupon is supplied, a Razorpay discount offer is attached
+ * (5% off the first charge) and the buyer is bound to that partner for
+ * commission. Attribution is coupon-only — no links or cookies.
  */
 
-function getAdminClient() {
+function getServiceClient() {
   return createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -30,13 +31,29 @@ export async function POST(request) {
       return NextResponse.json({ error: 'You must be signed in.' }, { status: 401 });
     }
 
-    const { billingCycle = 'monthly' } = await request.json();
+    const { billingCycle = 'monthly', couponCode } = await request.json();
     if (!['monthly', 'yearly'].includes(billingCycle)) {
       return NextResponse.json({ error: 'Invalid billing cycle.' }, { status: 400 });
     }
 
-    // Use admin client for DB operations (bypasses RLS)
-    const admin = getAdminClient();
+    // Use service-role client for DB operations (bypasses RLS)
+    const admin = getServiceClient();
+
+    // Validate a partner coupon (if provided) BEFORE creating the subscription,
+    // so an invalid code doesn't leave a dangling Razorpay subscription.
+    let affiliate = null;
+    let offerId = null;
+    const code = typeof couponCode === 'string' ? couponCode.trim() : '';
+    if (code) {
+      affiliate = await resolveAffiliateByCoupon(admin, code);
+      if (!affiliate) {
+        return NextResponse.json({ error: 'That coupon code is invalid or inactive.' }, { status: 400 });
+      }
+      if (affiliate.user_id === user.id) {
+        return NextResponse.json({ error: "You can't use your own coupon code." }, { status: 400 });
+      }
+      offerId = getPartnerOfferId(); // may be null if the offer isn't configured yet
+    }
 
     // Check if user already has an active subscription
     const { data: existingSub } = await admin
@@ -49,11 +66,12 @@ export async function POST(request) {
       return NextResponse.json({ error: 'You already have an active subscription.' }, { status: 400 });
     }
 
-    // Create Razorpay subscription
+    // Create Razorpay subscription (with the discount offer when a coupon applied)
     const sub = await createSubscription({
       billingCycle,
       email: user.email,
       userId: user.id,
+      offerId,
     });
 
     // Store/update subscription record in DB
@@ -86,8 +104,27 @@ export async function POST(request) {
       subscriptionDbId = inserted?.id || null;
     }
 
-    // Bind affiliate attribution from the plog_aff cookie (first-touch, never breaks checkout).
-    await bindAffiliateReferral(admin, request, user, subscriptionDbId);
+    // Bind the buyer to the partner (first-touch). Wrapped so it can never break checkout.
+    if (affiliate) {
+      try {
+        const { data: existing } = await admin
+          .from('affiliate_referrals')
+          .select('id')
+          .eq('referred_user_id', user.id)
+          .maybeSingle();
+        if (!existing) {
+          await admin.from('affiliate_referrals').insert({
+            affiliate_id: affiliate.id,
+            referred_user_id: user.id,
+            source: 'coupon',
+            subscription_id: subscriptionDbId,
+            status: 'active',
+          });
+        }
+      } catch (e) {
+        console.error('Affiliate bind error (non-fatal):', e?.message || e);
+      }
+    }
 
     return NextResponse.json({
       shortUrl: sub.short_url,
@@ -100,39 +137,5 @@ export async function POST(request) {
       { error: err.message || 'Failed to create subscription.' },
       { status: 500 }
     );
-  }
-}
-
-/**
- * Link the checkout user to the referring affiliate captured at click time.
- * First-touch: if the user is already bound, we do nothing. Self-referrals are
- * blocked. Any failure here is swallowed so it can never block a payment.
- */
-async function bindAffiliateReferral(admin, request, user, subscriptionDbId) {
-  try {
-    const slug = request.cookies.get(AFF_COOKIE)?.value;
-    if (!slug) return;
-
-    const affiliate = await resolveAffiliateBySlug(admin, slug);
-    if (!affiliate) return;
-    if (affiliate.user_id === user.id) return; // no self-referrals
-
-    // First-touch lock: skip if this user is already attributed.
-    const { data: existing } = await admin
-      .from('affiliate_referrals')
-      .select('id')
-      .eq('referred_user_id', user.id)
-      .maybeSingle();
-    if (existing) return;
-
-    await admin.from('affiliate_referrals').insert({
-      affiliate_id: affiliate.id,
-      referred_user_id: user.id,
-      source: 'link',
-      subscription_id: subscriptionDbId,
-      status: 'active',
-    });
-  } catch (e) {
-    console.error('Affiliate bind error (non-fatal):', e?.message || e);
   }
 }

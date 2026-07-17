@@ -120,6 +120,7 @@ function useRazorpayScript() {
 function UpgradeModal({ onClose, feature }) {
   const [loading, setLoading] = useState(false);
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [couponCode, setCouponCode] = useState('');
   const razorpayReady = useRazorpayScript();
 
   const price = billingCycle === 'yearly' ? PLANS.elite.priceYearly : PLANS.elite.priceMonthly;
@@ -134,7 +135,7 @@ function UpgradeModal({ onClose, feature }) {
       const res = await fetch('/api/razorpay/create-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ billingCycle }),
+        body: JSON.stringify({ billingCycle, couponCode: couponCode.trim() || undefined }),
       });
       const data = await res.json();
       if (data.error) {
@@ -260,13 +261,29 @@ function UpgradeModal({ onClose, feature }) {
         </div>
 
         {/* Feature list */}
-        <div className="space-y-2.5 mb-6">
+        <div className="space-y-2.5 mb-5">
           {ELITE_FEATURES.map((f, i) => (
             <div key={i} className="flex items-center gap-3 text-sm">
               <span className="text-base">{f.icon}</span>
               <span className="text-white/70">{f.label}</span>
             </div>
           ))}
+        </div>
+
+        {/* Partner coupon */}
+        <div className="mb-5">
+          <label className="mb-1.5 block text-[11px] font-mono uppercase tracking-wider text-white/45">
+            Have a partner code?
+          </label>
+          <input
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20))}
+            placeholder="Enter code for 5% off"
+            className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 font-mono text-sm uppercase tracking-wider text-white/90 outline-none focus:border-cyan-400/50"
+          />
+          {couponCode && (
+            <p className="mt-1.5 text-[11px] text-emerald-300/80">5% off your first payment will be applied at checkout.</p>
+          )}
         </div>
 
         {/* CTA */}

@@ -3,18 +3,17 @@
 import { useState } from 'react';
 import { saveCoupon, requestPayout } from '../actions';
 
-export default function AffiliateClient({ referralLink, username, coupon, stats, hasOpenPayout }) {
+export default function AffiliateClient({ coupon, stats, hasOpenPayout, discountPct = 5 }) {
   return (
     <div className="space-y-6">
       {/* Share tools */}
       <div className="grid gap-4 lg:grid-cols-2">
-        <CopyCard label="Your referral link" value={referralLink} mono />
-        <CouponCard initial={coupon} />
+        <CouponCard initial={coupon} discountPct={discountPct} />
+        <HowItWorks discountPct={discountPct} />
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        <Stat label="Clicks" value={stats.clicks} />
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label="Referred" value={stats.referred} />
         <Stat label="Active subs" value={stats.activeSubs} />
         <Stat label="Paid users" value={stats.paidUsers} />
@@ -27,42 +26,14 @@ export default function AffiliateClient({ referralLink, username, coupon, stats,
   );
 }
 
-/* ─── Copy card (link) ─────────────────────────────────────── */
-function CopyCard({ label, value, mono }) {
-  const [copied, setCopied] = useState(false);
-  async function copy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
-    } catch {}
-  }
-  return (
-    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <p className="mb-2 font-mono text-xs uppercase tracking-wider text-white/55">{label}</p>
-      <div className="flex items-center gap-2">
-        <code className={`min-w-0 flex-1 truncate rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white/85 ${mono ? 'font-mono' : ''}`}>
-          {value}
-        </code>
-        <button
-          onClick={copy}
-          className="flex-shrink-0 rounded-xl px-4 py-2.5 text-xs font-semibold text-[#08080f]"
-          style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-        >
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── Coupon editor ────────────────────────────────────────── */
-function CouponCard({ initial }) {
+/* ─── Coupon editor (the partner's share tool) ─────────────── */
+function CouponCard({ initial, discountPct }) {
   const [code, setCode] = useState(initial || '');
   const [editing, setEditing] = useState(!initial);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
+  const [copied, setCopied] = useState(false);
 
   async function save() {
     setErr('');
@@ -79,11 +50,19 @@ function CouponCard({ initial }) {
     setTimeout(() => setMsg(''), 1600);
   }
 
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {}
+  }
+
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
       <div className="mb-2 flex items-center justify-between">
-        <p className="font-mono text-xs uppercase tracking-wider text-white/55">Tracking coupon</p>
-        <span className="font-mono text-[10px] text-white/35">tracking only · no discount</span>
+        <p className="font-mono text-xs uppercase tracking-wider text-white/55">Your coupon code</p>
+        <span className="font-mono text-[10px] text-emerald-300/80">buyers get {discountPct}% off</span>
       </div>
       <div className="flex items-center gap-2">
         <input
@@ -103,12 +82,21 @@ function CouponCard({ initial }) {
             {busy ? '…' : 'Save'}
           </button>
         ) : (
-          <button
-            onClick={() => setEditing(true)}
-            className="flex-shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-medium text-white/75 hover:bg-white/[0.08]"
-          >
-            Edit
-          </button>
+          <>
+            <button
+              onClick={copy}
+              className="flex-shrink-0 rounded-xl px-4 py-2.5 text-xs font-semibold text-[#08080f]"
+              style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+            >
+              {copied ? 'Copied!' : 'Copy'}
+            </button>
+            <button
+              onClick={() => setEditing(true)}
+              className="flex-shrink-0 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-medium text-white/75 hover:bg-white/[0.08]"
+            >
+              Edit
+            </button>
+          </>
         )}
       </div>
       {err && <p className="mt-2 text-xs text-red-300">{err}</p>}
@@ -117,6 +105,31 @@ function CouponCard({ initial }) {
         <p className="mt-2 text-[11px] text-white/35">3–20 letters/numbers. Editable once every 30 days.</p>
       )}
     </div>
+  );
+}
+
+/* ─── How it works ─────────────────────────────────────────── */
+function HowItWorks({ discountPct }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      <p className="mb-3 font-mono text-xs uppercase tracking-wider text-white/55">How you earn</p>
+      <ol className="space-y-2 text-sm text-white/65">
+        <li className="flex gap-2.5"><Dot n="1" /> Share your coupon code with your audience.</li>
+        <li className="flex gap-2.5"><Dot n="2" /> They enter it at checkout and get <strong className="text-white">{discountPct}% off</strong> their first payment.</li>
+        <li className="flex gap-2.5"><Dot n="3" /> You earn recurring commission for as long as they stay subscribed.</li>
+      </ol>
+    </div>
+  );
+}
+
+function Dot({ n }) {
+  return (
+    <span
+      className="grid h-5 w-5 flex-shrink-0 place-items-center rounded-full text-[10px] font-bold text-[#08080f]"
+      style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+    >
+      {n}
+    </span>
   );
 }
 
