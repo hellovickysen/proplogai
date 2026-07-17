@@ -56,8 +56,11 @@ export async function POST(request) {
       offerId = getPartnerOfferId(); // may be null if the offer isn't configured yet
     }
 
-    // Coupon checkout skips the free trial (buyer pays the discounted amount now).
-    const useTrial = !affiliate;
+    // Coupon checkout skips the free trial ONLY when a discount will actually
+    // apply (offer configured) — so a missing offer can never leave a coupon
+    // user with "no trial AND no discount". Without an offer, they keep the trial.
+    const discountApplies = !!(affiliate && offerId);
+    const useTrial = !discountApplies;
 
     // Check if user already has an active subscription
     const { data: existingSub } = await admin
