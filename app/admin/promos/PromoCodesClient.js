@@ -71,7 +71,9 @@ function PromoRow({ promo }) {
   const notStarted = promo.starts_at && new Date(promo.starts_at).getTime() > now;
   const expired = promo.expires_at && new Date(promo.expires_at).getTime() < now;
   const maxedOut = promo.max_redemptions != null && (promo.redeemed_count || 0) >= promo.max_redemptions;
-  const live = promo.active && !notStarted && !expired && !maxedOut && !!promo.razorpay_offer_id;
+  const hasOffer = !!(promo.razorpay_offer_id || promo.razorpay_offer_id_upi);
+  const methods = [promo.razorpay_offer_id ? 'Card' : null, promo.razorpay_offer_id_upi ? 'UPI' : null].filter(Boolean);
+  const live = promo.active && !notStarted && !expired && !maxedOut && hasOffer;
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -82,11 +84,11 @@ function PromoRow({ promo }) {
             <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-0.5 text-[11px] font-semibold text-cyan-300">
               {Math.round(Number(promo.discount_pct) || 0)}% off
             </span>
-            <Status live={live} active={promo.active} notStarted={notStarted} expired={expired} maxedOut={maxedOut} hasOffer={!!promo.razorpay_offer_id} />
+            <Status live={live} active={promo.active} notStarted={notStarted} expired={expired} maxedOut={maxedOut} hasOffer={hasOffer} />
           </div>
           {promo.label && <p className="mt-1 text-sm text-white/55">{promo.label}</p>}
           <p className="mt-1 font-mono text-[11px] text-white/40">
-            Offer: {promo.razorpay_offer_id || '— none —'} · Used {promo.redeemed_count || 0}{promo.max_redemptions != null ? ` / ${promo.max_redemptions}` : ''}
+            Methods: {methods.length ? methods.join(' + ') : '— none —'} · Used {promo.redeemed_count || 0}{promo.max_redemptions != null ? ` / ${promo.max_redemptions}` : ''}
           </p>
           <p className="mt-0.5 font-mono text-[11px] text-white/35">
             {fmtWindow(promo.starts_at, promo.expires_at)}
@@ -131,6 +133,7 @@ function PromoForm({ mode, promo, onDone }) {
     label: promo?.label || '',
     discount_pct: promo?.discount_pct != null ? String(Math.round(Number(promo.discount_pct))) : '',
     razorpay_offer_id: promo?.razorpay_offer_id || '',
+    razorpay_offer_id_upi: promo?.razorpay_offer_id_upi || '',
     starts_at: promo?.starts_at ? String(promo.starts_at).slice(0, 10) : '',
     expires_at: promo?.expires_at ? String(promo.expires_at).slice(0, 10) : '',
     max_redemptions: promo?.max_redemptions != null ? String(promo.max_redemptions) : '',
@@ -170,11 +173,17 @@ function PromoForm({ mode, promo, onDone }) {
           <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Discount %</label>
           <input type="number" min={1} max={100} value={form.discount_pct} onChange={(e) => u('discount_pct', e.target.value)} placeholder="50" className={FIELD} />
         </div>
-        <div className="sm:col-span-2">
-          <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Razorpay Offer Id</label>
-          <input value={form.razorpay_offer_id} onChange={(e) => u('razorpay_offer_id', e.target.value)} placeholder="offer_XXXXXXXXXXXX" className={FIELD + ' font-mono'} />
-          <p className="mt-1 text-[11px] text-white/35">Create the offer in Razorpay → Subscriptions → Offers, then paste its Offer Id here. The % above should match the offer.</p>
+        <div>
+          <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Razorpay Offer Id — Card</label>
+          <input value={form.razorpay_offer_id} onChange={(e) => u('razorpay_offer_id', e.target.value)} placeholder="offer_XXXX (Card)" className={FIELD + ' font-mono'} />
         </div>
+        <div>
+          <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Razorpay Offer Id — UPI</label>
+          <input value={form.razorpay_offer_id_upi} onChange={(e) => u('razorpay_offer_id_upi', e.target.value)} placeholder="offer_XXXX (UPI)" className={FIELD + ' font-mono'} />
+        </div>
+        <p className="sm:col-span-2 -mt-1 text-[11px] text-white/35">
+          Create a subscription offer in Razorpay → Subscriptions → Offers for each payment method (Card and/or UPI), then paste the Offer Id(s) here. Enter at least one. The % above should match the offer(s).
+        </p>
         <div className="sm:col-span-2">
           <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Label (internal, optional)</label>
           <input value={form.label} onChange={(e) => u('label', e.target.value)} placeholder="Diwali 2026 campaign" className={FIELD} />

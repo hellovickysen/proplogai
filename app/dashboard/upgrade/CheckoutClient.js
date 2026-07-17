@@ -27,11 +27,14 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [code, setCode] = useState(initialCoupon || '');
   const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(null); // { discountPct } once validated
+  const [applied, setApplied] = useState(null); // { discountPct, methods } once validated
+  const [method, setMethod] = useState('card'); // chosen payment method when a discount applies
   const [couponMsg, setCouponMsg] = useState('');
   const [couponErr, setCouponErr] = useState('');
   const [loading, setLoading] = useState(false);
   const razorpayReady = useRazorpayScript();
+
+  const availableMethods = (applied?.methods && applied.methods.length) ? applied.methods : [];
 
   const chargeNow = billingCycle === 'yearly' ? yearlyTotal : priceMonthly;
   const effPct = applied?.discountPct || 0;
@@ -56,7 +59,9 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
         setCouponErr(data.error || 'That code is invalid.');
         return;
       }
-      setApplied({ discountPct: data.discountPct || 0 });
+      const methods = Array.isArray(data.methods) ? data.methods : [];
+      setApplied({ discountPct: data.discountPct || 0, methods });
+      if (methods.length) setMethod(methods[0]);
       setCouponMsg(data.discountPct > 0
         ? `Code applied — ${data.discountPct}% off, billed today (no free trial).`
         : 'Code applied.');
@@ -76,10 +81,11 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
   async function handlePay() {
     setLoading(true);
     try {
+      const useMethod = hasDiscount && availableMethods.length ? method : undefined;
       const res = await fetch('/api/razorpay/create-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ billingCycle, couponCode: applied ? code.trim() : undefined }),
+        body: JSON.stringify({ billingCycle, couponCode: applied ? code.trim() : undefined, method: useMethod }),
       });
       const data = await res.json();
       if (data.error) { alert(data.error); setLoading(false); return; }
@@ -90,7 +96,7 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
         return;
       }
 
-      const rzp = new window.Razorpay({
+      const options = {
         key: keyId,
         subscription_id: subscriptionId,
         name: 'PropLogAI',
@@ -105,7 +111,26 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
           });
           window.location.href = `/api/razorpay/callback?${params.toString()}`;
         },
-      });
+      };
+
+      // When a discount applies, restrict the Razorpay modal to the chosen
+      // method so the pinned per-method offer actually applies.
+      if (useMethod === 'upi' || useMethod === 'card') {
+        options.config = {
+          display: {
+            blocks: {
+              chosen: {
+                name: useMethod === 'upi' ? 'Pay via UPI' : 'Pay via Card',
+                instruments: [{ method: useMethod }],
+              },
+            },
+            sequence: ['block.chosen'],
+            preferences: { show_default_blocks: false },
+          },
+        };
+      }
+
+      const rzp = new window.Razorpay(options);
       rzp.on('payment.failed', function (r) {
         alert('Payment failed: ' + (r.error?.description || 'Please try again.'));
         setLoading(false);
@@ -199,11 +224,40 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
             {couponMsg && <p className="mt-1.5 text-[11px] text-emerald-300">{couponMsg}</p>}
           </div>
 
+          {/* Payment method (only when a discount applies — the pinned offer is per-method) */}
+          {hasDiscount && availableMethods.length > 0 && (
+            <div className="mt-4">
+              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/45">Pay with</label>
+              {availableMethods.length > 1 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {availableMethods.map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setMethod(m)}
+                      className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+                        method === m
+                          ? 'border-cyan-400/50 bg-white/[0.06] text-white'
+                          : 'border-white/10 bg-white/[0.02] text-white/60 hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      {m === 'upi' ? 'UPI' : 'Card'}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-white/70">
+                  {availableMethods[0] === 'upi' ? 'UPI' : 'Card'}
+                  <span className="text-white/40"> — required to apply this discount</span>
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Breakdown */}
           <div className="mt-5 space-y-2 border-t border-white/10 pt-4 text-sm">
             <Row label={`Elite (${billingCycle})`} value={`$${money(chargeNow)}`} />
             {hasDiscount && (
-              <Row label={`Partner discount (${effPct}%)`} value={`-$${money(chargeNow - discounted)}`} accent />
+              <Row label={`Discount (${effPct}%)`} value={`-$${money(chargeNow - discounted)}`} accent />
             )}
             <div className="flex items-center justify-between border-t border-white/10 pt-3">
               <span className="font-semibold text-white">{hasDiscount ? 'Total due today' : 'Due today'}</span>

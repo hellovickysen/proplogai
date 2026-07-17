@@ -18,7 +18,7 @@ export default async function AdminPromosPage() {
 
   const { data: promos } = await admin
     .from('promo_codes')
-    .select('id, code, label, discount_pct, razorpay_offer_id, active, starts_at, expires_at, max_redemptions, redeemed_count, created_at')
+    .select('id, code, label, discount_pct, razorpay_offer_id, razorpay_offer_id_upi, active, starts_at, expires_at, max_redemptions, redeemed_count, created_at')
     .order('created_at', { ascending: false });
 
   return (

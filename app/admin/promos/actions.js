@@ -18,13 +18,14 @@ function parseForm(form) {
   const code = normalizeCoupon(form?.code);
   const label = String(form?.label || '').trim().slice(0, 80) || null;
   const discountPct = Number(form?.discount_pct);
-  const offerId = String(form?.razorpay_offer_id || '').trim().slice(0, 120);
+  const offerIdCard = String(form?.razorpay_offer_id || '').trim().slice(0, 120) || null;
+  const offerIdUpi = String(form?.razorpay_offer_id_upi || '').trim().slice(0, 120) || null;
   const startsAt = form?.starts_at ? new Date(form.starts_at).toISOString() : null;
   const expiresAt = form?.expires_at ? new Date(form.expires_at).toISOString() : null;
   const maxRedemptions = form?.max_redemptions === '' || form?.max_redemptions == null
     ? null
     : Math.max(1, parseInt(form.max_redemptions, 10) || 0) || null;
-  return { code, label, discountPct, offerId, startsAt, expiresAt, maxRedemptions };
+  return { code, label, discountPct, offerIdCard, offerIdUpi, startsAt, expiresAt, maxRedemptions };
 }
 
 /* ─── Create ───────────────────────────────────────────────── */
@@ -32,13 +33,15 @@ export async function createPromo(form) {
   const { admin, error } = await requireAdmin();
   if (error) return { error };
 
-  const { code, label, discountPct, offerId, startsAt, expiresAt, maxRedemptions } = parseForm(form);
+  const { code, label, discountPct, offerIdCard, offerIdUpi, startsAt, expiresAt, maxRedemptions } = parseForm(form);
 
   if (!isValidCoupon(code)) return { error: 'Code must be 3–20 letters/numbers, no spaces or symbols.' };
   if (!Number.isFinite(discountPct) || discountPct <= 0 || discountPct > 100) {
     return { error: 'Discount % must be between 1 and 100.' };
   }
-  if (!offerId) return { error: 'Razorpay Offer Id is required (create the offer in the Razorpay Dashboard first).' };
+  if (!offerIdCard && !offerIdUpi) {
+    return { error: 'Enter at least one Razorpay Offer Id (Card and/or UPI). Create the offer in the Razorpay Dashboard first.' };
+  }
   if (startsAt && expiresAt && new Date(expiresAt) <= new Date(startsAt)) {
     return { error: 'Expiry must be after the start date.' };
   }
@@ -53,7 +56,8 @@ export async function createPromo(form) {
     code,
     label,
     discount_pct: discountPct,
-    razorpay_offer_id: offerId,
+    razorpay_offer_id: offerIdCard,
+    razorpay_offer_id_upi: offerIdUpi,
     active: true,
     starts_at: startsAt,
     expires_at: expiresAt,
@@ -70,11 +74,13 @@ export async function updatePromo(id, form) {
   const { admin, error } = await requireAdmin();
   if (error) return { error };
 
-  const { label, discountPct, offerId, startsAt, expiresAt, maxRedemptions } = parseForm(form);
+  const { label, discountPct, offerIdCard, offerIdUpi, startsAt, expiresAt, maxRedemptions } = parseForm(form);
   if (!Number.isFinite(discountPct) || discountPct <= 0 || discountPct > 100) {
     return { error: 'Discount % must be between 1 and 100.' };
   }
-  if (!offerId) return { error: 'Razorpay Offer Id is required.' };
+  if (!offerIdCard && !offerIdUpi) {
+    return { error: 'Enter at least one Razorpay Offer Id (Card and/or UPI).' };
+  }
   if (startsAt && expiresAt && new Date(expiresAt) <= new Date(startsAt)) {
     return { error: 'Expiry must be after the start date.' };
   }
@@ -84,7 +90,8 @@ export async function updatePromo(id, form) {
     .update({
       label,
       discount_pct: discountPct,
-      razorpay_offer_id: offerId,
+      razorpay_offer_id: offerIdCard,
+      razorpay_offer_id_upi: offerIdUpi,
       starts_at: startsAt,
       expires_at: expiresAt,
       max_redemptions: maxRedemptions,

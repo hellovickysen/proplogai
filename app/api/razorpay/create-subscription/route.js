@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createSubscription } from '@/lib/razorpay';
-import { resolveAffiliateByCoupon, resolvePromoCode, getPartnerOfferId } from '@/lib/affiliate';
+import { resolveAffiliateByCoupon, resolvePromoCode, getPartnerOfferId, promoOfferId } from '@/lib/affiliate';
 
 /**
  * POST /api/razorpay/create-subscription
@@ -32,10 +32,13 @@ export async function POST(request) {
       return NextResponse.json({ error: 'You must be signed in.' }, { status: 401 });
     }
 
-    const { billingCycle = 'monthly', couponCode } = await request.json();
+    const { billingCycle = 'monthly', couponCode, method: rawMethod } = await request.json();
     if (!['monthly', 'yearly'].includes(billingCycle)) {
       return NextResponse.json({ error: 'Invalid billing cycle.' }, { status: 400 });
     }
+    // Payment method the buyer chose on our checkout page (determines which
+    // per-method Razorpay offer to pin). Defaults to card.
+    const method = rawMethod === 'upi' ? 'upi' : 'card';
 
     const admin = getServiceClient();
 
@@ -51,13 +54,19 @@ export async function POST(request) {
         if (affiliate.user_id === user.id) {
           return NextResponse.json({ error: "You can't use your own coupon code." }, { status: 400 });
         }
-        offerId = getPartnerOfferId(); // may be null if the partner offer isn't configured yet
+        offerId = getPartnerOfferId(method); // per-method; may be null if not configured
       } else {
         promo = await resolvePromoCode(admin, code);
         if (!promo) {
           return NextResponse.json({ error: 'That code is invalid, expired, or inactive.' }, { status: 400 });
         }
-        offerId = promo.razorpay_offer_id || null;
+        offerId = promoOfferId(promo, method);
+        if (!offerId) {
+          return NextResponse.json(
+            { error: `This code isn't available for ${method === 'upi' ? 'UPI' : 'card'} payments. Try the other payment method.` },
+            { status: 400 }
+          );
+        }
       }
     }
 
