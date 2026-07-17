@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient, ADMIN_EMAIL } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { MAX_COMMISSION_RATE } from '@/lib/affiliate';
+import { sendEmail, isEmailConfigured } from '@/lib/email';
+import { buildAffiliateApprovedEmail } from '@/lib/subscription-emails';
 
 /** Verify the caller is the admin, return the service-role client. */
 async function requireAdmin() {
@@ -27,13 +29,33 @@ export async function setAffiliateStatus(affiliateId, status) {
   const patch = { status, updated_at: new Date().toISOString() };
   if (status === 'approved') patch.approved_at = new Date().toISOString();
 
-  const { error: e } = await admin.from('affiliates').update(patch).eq('id', affiliateId);
+  const { data: row, error: e } = await admin
+    .from('affiliates')
+    .update(patch)
+    .eq('id', affiliateId)
+    .select('email, name, referral_username, commission_rate')
+    .maybeSingle();
   if (e) return { error: e.message };
 
   // If suspended/rejected, stop future commissions by marking referrals cancelled.
   if (status === 'suspended' || status === 'rejected') {
     await admin.from('affiliate_referrals').update({ status: 'cancelled' }).eq('affiliate_id', affiliateId);
   }
+
+  // On approval, notify the affiliate (non-blocking; never fails the action).
+  if (status === 'approved' && row?.email && isEmailConfigured()) {
+    try {
+      const { subject, html } = buildAffiliateApprovedEmail({
+        name: row.name,
+        referralUsername: row.referral_username,
+        commissionPct: Math.round((Number(row.commission_rate) || 0.4) * 100),
+      });
+      await sendEmail({ to: row.email, subject, html });
+    } catch (mailErr) {
+      console.error('Affiliate approval email error (non-fatal):', mailErr?.message || mailErr);
+    }
+  }
+
   revalidatePath('/admin/affiliates');
   return { ok: true };
 }

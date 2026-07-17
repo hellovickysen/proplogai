@@ -24,7 +24,7 @@ function fmtDate(d) {
   catch { return '—'; }
 }
 
-export default function ReferralDashboard({ code, referrals, balance }) {
+export default function ReferralDashboard({ code, referrals, balance, embedded = false }) {
   const router = useRouter();
   const toast = useToast();
   const [refCode, setRefCode] = useState(code);
@@ -49,11 +49,13 @@ export default function ReferralDashboard({ code, referrals, balance }) {
   }
 
   return (
-    <div className="px-4 sm:px-6 py-8">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl font-bold">Referrals</h1>
-        <p className="mt-1 text-sm text-white/55">Invite traders and earn $1 when they log their first 3 trades</p>
-      </div>
+    <div className={embedded ? '' : 'px-4 sm:px-6 py-8'}>
+      {!embedded && (
+        <div className="mb-6">
+          <h1 className="font-display text-2xl font-bold">Referrals</h1>
+          <p className="mt-1 text-sm text-white/55">Invite traders and earn $1 when they log their first 3 trades</p>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">

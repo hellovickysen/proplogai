@@ -16,7 +16,7 @@ const NAV = [
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
   { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach', tourId: 'nav-coach' },
   { label: 'Tools',     icon: '🛠', href: '/dashboard/tools' },
-  { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },
+  { label: 'Rewards',   icon: '🎁', href: '/dashboard/rewards' },
 ];
 
 const SUPPORT_NAV = [
@@ -132,7 +132,7 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
           {/* Credits */}
           {credits != null && Number(credits) > 0 && !collapsed && (
             <Link
-              href="/dashboard/referrals"
+              href="/dashboard/rewards"
               className="mt-1.5 flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-all hover:bg-white/[0.04]"
             >
               <span className="flex items-center gap-2 text-white/45"><span className="w-5 text-center">💎</span> Credits</span>
@@ -140,7 +140,7 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
             </Link>
           )}
           {credits != null && Number(credits) > 0 && collapsed && (
-            <Link href="/dashboard/referrals" title={`Credits: $${Number(credits).toFixed(2)}`} className="mt-1 flex justify-center rounded-xl py-2 text-sm transition-all hover:bg-white/[0.04]">
+            <Link href="/dashboard/rewards" title={`Credits: $${Number(credits).toFixed(2)}`} className="mt-1 flex justify-center rounded-xl py-2 text-sm transition-all hover:bg-white/[0.04]">
               💎
             </Link>
           )}

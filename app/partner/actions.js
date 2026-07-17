@@ -67,6 +67,7 @@ export async function submitApplication(form) {
   if (error) return { error: error.message };
 
   revalidatePath('/partner/dashboard');
+  revalidatePath('/dashboard/rewards');
   return { ok: true };
 }
 
