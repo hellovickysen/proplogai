@@ -876,3 +876,57 @@ The dashboard layout (app/dashboard/layout.js) is the most critical file in the 
 ### ExpenseTracker crashes when opening a firm
 1. Check if scoped variables (dExpenses, dPayouts) are accidentally inside FirmDashboard instead of the main component
 2. This is a single 60KB+ file — be extra careful with search-replace edits
+
+
+---
+
+# Affiliate & Partner Program + Discount Coupons (added 2026-07-17)
+
+PropLogAI has **two separate referral systems**. Do not conflate them.
+
+## System 1 — User referral (unchanged, pre-existing)
+Normal users share `proplogai.com/r/<code>`; when a referred user logs 3 trades, both earn **$1 platform credit**. Tables: `referral_codes`, `referrals`; UI rebranded to **"Rewards"** (route `/dashboard/rewards`; old `/dashboard/referrals` 301-redirects). This is the "Refer a friend" tab.
+
+## System 2 — Partner program (new)
+Creators/influencers apply, get approved, and earn **lifetime recurring commission** (default 40%, admin-adjustable up to 60%) on referred paid subscriptions. **Attribution is coupon-only** — no referral links, cookies, or click tracking. A retired `/ref/[slug]` route + `plog_aff` cookie exist but are inert.
+
+**Flow:** user applies in-app at **Rewards → Partners** (tab on `/dashboard/rewards`) → admin approves at **/admin/affiliates** (sends approval email) → partner logs into **partner.proplogai.com**, sets a coupon code → a buyer enters that coupon at checkout → discount applies + buyer is bound to the partner (`affiliate_referrals`, first-touch, self-referral blocked) → the Razorpay webhook creates a commission on each charge.
+
+### Separate subdomain: partner.proplogai.com
+`middleware.js` detects a `partner.` host and rewrites requests onto a real `/partner/...` app segment (pretty URLs: `/`, `/login`, `/apply`, `/dashboard`, `/settings`). Shares the same Supabase auth (one identity). Partner portal pages live under `app/partner/`. Header (`app/partner/layout.js` + `components/partner/PartnerHeaderMenu.js`) shows, when signed in: trimmed email, pending-commission chip, Dashboard/Settings links, Log out; "Become an affiliate" only shows when logged out.
+
+## Admin promo codes (store-wide occasion discounts)
+Separate from partner coupons and carry **no commission**. Managed at **/admin/promos** (`promo_codes` table). Each code maps to a Razorpay offer id (Card and/or UPI) + display discount %, with active flag, date window, and max-redemptions cap. Codes are globally unique across partner coupons and promo codes.
+
+## Checkout & discounts
+- Dedicated branded checkout page: **`/dashboard/upgrade`** (`app/dashboard/upgrade/page.js` + `CheckoutClient.js`). It replaced the inline `UpgradeModal`, which is now a thin **redirector** to this page — so all prior upgrade entry points still work unchanged.
+- A typed code is resolved as **partner coupon** (commission) OR **admin promo** (no commission). Live price preview via **`POST /api/partner/validate-coupon`** (creates nothing).
+- **Discount-checkout behavior (owner decisions):** coupon/promo checkouts **skip the 14-day trial and charge the discounted amount immediately** (non-coupon checkouts keep the trial). Trial is skipped **only when a discount offer actually applies** (safeguard against "no trial + no discount").
+- **Per-method offers:** Razorpay subscription offers are per payment method. Each code holds up to two offer ids (Card + UPI). The checkout shows a Card/UPI toggle (auto-selected if only one), pins the matching offer, and **restricts the Razorpay modal to that method** (`config.display.blocks`) so the pinned offer reliably applies. In practice **UPI-only** is used, because Razorpay Card offers are per-issuer-bank (impractical for a general discount).
+
+## Commission engine (Razorpay webhook)
+In `app/api/razorpay/webhook/route.js`: on `subscription.activated` / `subscription.charged`, if the payer has an active `affiliate_referrals` row for an approved partner, insert an `affiliate_commissions` row (status `pending`), **amount = commission_rate × net charged (payment.amount/100)** — so first-charge discounts are reflected automatically; renewals pay on full price (lifetime recurring). Idempotent via a unique index on `razorpay_payment_id`. `subscription.cancelled/halted/completed` → mark the referral cancelled (stop future commissions; earned ones kept). `refund.created`/`refund.processed` → reverse the matching commission (requires those events enabled on the webhook).
+
+## Razorpay offers (manual, dashboard-only)
+Discounts require **Subscription offers** created in the Razorpay Dashboard (Subscriptions → Offers → "Offers on Subscriptions"; Percentage; Redemption Type = Single Use for first-charge-only; set **Max Usage** high; leave "Show Offer on Checkout" **unchecked** so the discount stays code-gated). Copy each `offer_...` id. Offers cannot be created via API.
+- Partner 5%: env `RAZORPAY_OFFER_ID_5` (Card), `RAZORPAY_OFFER_ID_5_UPI` (UPI).
+- Promo codes: paste offer id(s) into the code's Card/UPI fields in /admin/promos.
+
+## Database (migrations 0039–0042)
+- `0039_affiliate_system.sql`: `affiliates`, `affiliate_coupons`, `affiliate_referral_clicks`, `affiliate_referrals`, `affiliate_commissions`, `affiliate_payout_requests` (+ RLS SELECT-own, self-approval-guard trigger).
+- `0040_promo_codes.sql`: `promo_codes`.
+- `0041_promo_code_upi_offer.sql`: `promo_codes.razorpay_offer_id_upi` (existing `razorpay_offer_id` = Card).
+- `0042_affiliate_payout_method.sql`: `affiliates.payout_method`.
+All affiliate table writes go through the **service-role admin client** in server actions/webhook with explicit ownership scoping; RLS grants SELECT-own only.
+
+## Key files
+`lib/affiliate.js` (resolvers, per-method offer helpers, stats, commission math), `middleware.js` (subdomain rewrite), `app/partner/*` (portal: layout, dashboard, settings, apply, login, actions), `components/partner/PartnerHeaderMenu.js`, `app/dashboard/rewards/*` (Rewards tabs + Partners), `components/rewards/*`, `app/admin/affiliates/*`, `app/admin/promos/*`, `app/api/razorpay/create-subscription/route.js` (coupon validate + offer pin + binding + trial skip), `app/api/partner/validate-coupon/route.js`, `app/api/razorpay/webhook/route.js` (commission engine), `components/ui/BlurGate.js` (UpgradeModal → redirector).
+
+## KNOWN ISSUE (deferred): currency $ vs ₹
+The app displays USD ($9.99/mo, $7.99/mo yearly) but Razorpay bills **INR** (live monthly plan ₹952.35; e.g. EARLY70 70% off showed ₹952.35 → ₹285.70). The `$` labels are hardcoded and don't match the real charge. Affected: `/dashboard/upgrade` (CheckoutClient), `lib/plans.js` (PLANS prices), `lib/subscription-emails.js` (receipt formats amount/100 as `$`), partner/admin commission displays, and `affiliate_commissions.currency` stored as `'USD'` though amounts are effectively ₹. Percentage discounts are correct regardless. Fix later: switch displays to ₹ with real INR amounts and set commission currency to INR. Owner chose to leave as-is for now.
+
+## Go-live manual steps
+1. Run migrations **0039–0042** in Supabase.
+2. Add **partner.proplogai.com** domain in Vercel + DNS CNAME (done).
+3. Create Razorpay **Subscription offers** (UPI) and set `RAZORPAY_OFFER_ID_5_UPI` (partner) / paste into promo codes; redeploy.
+4. Add `refund.created` (+ `refund.processed`) events to the Razorpay webhook.

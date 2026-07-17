@@ -177,3 +177,21 @@ For the FULL detailed list of 12 critical bugs, 18 anti-patterns, and the safe e
 3. Cache results in ai_insights — never re-analyze unless user explicitly clicks.
 4. Summarize trades as text (not full JSON) to minimize tokens.
 5. No streaming — synchronous single-shot AI calls.
+
+
+---
+
+## Affiliate & Partner Program + Discount Coupons (added 2026-07-17)
+
+Two separate referral systems — keep them distinct:
+
+- **User referral (unchanged):** `/r/<code>` → referred user logs 3 trades → both get $1 credit. Rebranded to **"Rewards"** (`/dashboard/rewards`; old `/dashboard/referrals` redirects). It's the "Refer a friend" tab.
+- **Partner program (new):** creators apply → admin approves → they get a **coupon code** and earn **lifetime recurring commission** (default 40%, up to 60%). **Attribution is coupon-only** (no links/cookies/click tracking). Runs on its own subdomain **partner.proplogai.com** (middleware rewrites `partner.` host → `/partner` segment; same Supabase auth). Apply in-app at **Rewards → Partners**.
+
+**Admin promo codes** (store-wide occasion discounts, e.g. DIWALI50) are separate and carry **no commission** — managed at **/admin/promos** (`promo_codes` table); each maps to a Razorpay offer id + %.
+
+**Checkout:** dedicated page **`/dashboard/upgrade`** (the old `UpgradeModal` now just redirects there). A code resolves as partner coupon (commission) or admin promo (none). Coupon/promo checkouts **skip the trial and charge the discounted amount now** (only when a discount offer actually applies). Discounts use **Razorpay Subscription offers** (dashboard-created, pinned by `offer_id`); offers are **per payment method**, so codes store Card + UPI offer ids and the checkout pins the chosen method — **UPI-only in practice** (Card offers are per-bank). Commission is created by the Razorpay webhook on each charge, computed on the **net charged amount**, lifetime recurring, reversed on refund.
+
+**Migrations:** `0039` (affiliate tables), `0040` (promo_codes), `0041` (promo UPI offer), `0042` (affiliate payout_method). **Env:** `RAZORPAY_OFFER_ID_5` (Card), `RAZORPAY_OFFER_ID_5_UPI` (UPI). Admin pages: `/admin/affiliates`, `/admin/promos`.
+
+**KNOWN ISSUE (deferred):** app shows `$` but Razorpay charges `₹` (monthly plan ₹952.35). Percentages are correct; absolute amounts/labels are not. Fix later by switching displays + commission currency to INR. Leave as-is unless asked.
