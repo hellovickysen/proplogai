@@ -69,6 +69,23 @@ export default function AdminAffiliatesClient({ affiliates, payouts }) {
   );
 }
 
+/* Shows the affiliate's real login account, and flags a mismatch if the
+   originally-typed email differs (legacy rows before the email was locked). */
+function AccountEmail({ aff }) {
+  const login = aff.accountEmail || aff.email;
+  const mismatch = aff.email && aff.accountEmail && aff.email !== aff.accountEmail;
+  return (
+    <>
+      <p className="text-sm text-white/55">
+        <span className="text-white/35">Login:</span> {login}
+      </p>
+      {mismatch && (
+        <p className="mt-0.5 text-[11px] text-amber-300/80">Applied as: {aff.email} (label only)</p>
+      )}
+    </>
+  );
+}
+
 function ApplicationCard({ aff }) {
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState('');
@@ -83,7 +100,7 @@ function ApplicationCard({ aff }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className="font-display text-base font-semibold text-white">{aff.name || '—'}</p>
-          <p className="text-sm text-white/55">{aff.email}</p>
+          <AccountEmail aff={aff} />
           <p className="mt-1 text-xs text-white/45">Audience: {aff.audience_size || '—'}</p>
           {aff.social_links && (
             <p className="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] text-cyan-400/70">{aff.social_links}</p>
@@ -125,7 +142,7 @@ function AffiliateRow({ aff }) {
     });
   }
   function onDelete() {
-    if (!window.confirm(`Delete affiliate "${aff.referral_username || aff.email}"? This removes all their data and cannot be undone.`)) return;
+    if (!window.confirm(`Delete affiliate "${aff.referral_username || aff.accountEmail || aff.email}"? This removes all their data and cannot be undone.`)) return;
     act(() => deleteAffiliate(aff.id));
   }
 
@@ -137,7 +154,7 @@ function AffiliateRow({ aff }) {
             <p className="font-display text-base font-semibold text-white">{aff.referral_username || aff.name}</p>
             <StatusPill status={aff.status} />
           </div>
-          <p className="text-sm text-white/55">{aff.email}</p>
+          <AccountEmail aff={aff} />
           <p className="mt-1 font-mono text-[11px] text-white/45">
             Pending ${aff.pending.toFixed(2)} · Paid ${aff.paid.toFixed(2)}
           </p>

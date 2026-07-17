@@ -33,7 +33,7 @@ export async function setAffiliateStatus(affiliateId, status) {
     .from('affiliates')
     .update(patch)
     .eq('id', affiliateId)
-    .select('email, name, referral_username, commission_rate')
+    .select('user_id, email, name, referral_username, commission_rate')
     .maybeSingle();
   if (e) return { error: e.message };
 
@@ -42,15 +42,26 @@ export async function setAffiliateStatus(affiliateId, status) {
     await admin.from('affiliate_referrals').update({ status: 'cancelled' }).eq('affiliate_id', affiliateId);
   }
 
-  // On approval, notify the affiliate (non-blocking; never fails the action).
-  if (status === 'approved' && row?.email && isEmailConfigured()) {
+  // On approval, notify the affiliate at their ACTUAL login account email
+  // (looked up from auth by user_id). Non-blocking; never fails the action.
+  if (status === 'approved' && row?.user_id && isEmailConfigured()) {
     try {
-      const { subject, html } = buildAffiliateApprovedEmail({
-        name: row.name,
-        referralUsername: row.referral_username,
-        commissionPct: Math.round((Number(row.commission_rate) || 0.4) * 100),
-      });
-      await sendEmail({ to: row.email, subject, html });
+      let to = null;
+      try {
+        const { data: u } = await admin.auth.admin.getUserById(row.user_id);
+        to = u?.user?.email || null;
+      } catch (lookupErr) {
+        console.error('Affiliate email lookup failed:', lookupErr?.message || lookupErr);
+      }
+      to = to || row.email; // fallback to the stored email
+      if (to) {
+        const { subject, html } = buildAffiliateApprovedEmail({
+          name: row.name,
+          referralUsername: row.referral_username,
+          commissionPct: Math.round((Number(row.commission_rate) || 0.4) * 100),
+        });
+        await sendEmail({ to, subject, html });
+      }
     } catch (mailErr) {
       console.error('Affiliate approval email error (non-fatal):', mailErr?.message || mailErr);
     }

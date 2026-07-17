@@ -34,6 +34,20 @@ export default async function AdminAffiliatesPage() {
   const comms = commissions || [];
   const payList = payouts || [];
 
+  // Resolve each affiliate's real login account email (source of truth) from auth.
+  const accountEmailByUser = {};
+  await Promise.all(
+    affList.map(async (a) => {
+      if (!a.user_id) return;
+      try {
+        const { data: u } = await admin.auth.admin.getUserById(a.user_id);
+        accountEmailByUser[a.user_id] = u?.user?.email || null;
+      } catch (e) {
+        accountEmailByUser[a.user_id] = null;
+      }
+    })
+  );
+
   // Aggregate commission totals per affiliate + program-wide.
   const byAff = {};
   let totalOwed = 0;
@@ -64,6 +78,7 @@ export default async function AdminAffiliatesPage() {
   const payoutsView = payList.map((p) => ({ ...p, affiliateName: nameByAff[p.affiliate_id] || '—' }));
   const affView = affList.map((a) => ({
     ...a,
+    accountEmail: accountEmailByUser[a.user_id] || a.email,
     pending: Math.round((byAff[a.id]?.pending || 0) * 100) / 100,
     paid: Math.round((byAff[a.id]?.paid || 0) * 100) / 100,
   }));

@@ -24,7 +24,10 @@ export async function submitApplication(form) {
   if (!admin) return { error: 'Server not configured. Please try again later.' };
 
   const name = String(form?.name || '').trim().slice(0, 120);
-  const email = String(form?.email || user.email || '').trim().slice(0, 200);
+  // The affiliate is always tied to the signed-in account. The email is taken
+  // from the auth account (source of truth), NOT from anything typed in the
+  // form — this guarantees the person can log into the portal with it.
+  const email = String(user.email || '').trim().slice(0, 200);
   const socials = String(form?.social_links || '').trim().slice(0, 500);
   const audience = String(form?.audience_size || '').trim().slice(0, 60);
 

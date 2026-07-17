@@ -146,7 +146,7 @@ function EarningsPreview() {
 
 /* ─── Application form (reuses the partner submitApplication action) ─── */
 function ApplicationForm({ userEmail }) {
-  const [form, setForm] = useState({ name: '', email: userEmail || '', social_links: '', audience_size: AUDIENCE_OPTIONS[1] });
+  const [form, setForm] = useState({ name: '', social_links: '', audience_size: AUDIENCE_OPTIONS[1] });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
@@ -157,7 +157,8 @@ function ApplicationForm({ userEmail }) {
     e.preventDefault();
     setError('');
     setBusy(true);
-    const res = await submitApplication(form);
+    // Email is always the signed-in account (enforced server-side too).
+    const res = await submitApplication({ ...form, email: userEmail });
     setBusy(false);
     if (res?.error) { setError(res.error); return; }
     setDone(true);
@@ -182,8 +183,15 @@ function ApplicationForm({ userEmail }) {
         <Field label="Full name">
           <input required value={form.name} onChange={(e) => update('name', e.target.value)} className={FIELD} placeholder="Jane Trader" />
         </Field>
-        <Field label="Email">
-          <input type="email" required value={form.email} onChange={(e) => update('email', e.target.value)} className={FIELD} placeholder="you@example.com" />
+        <Field label="Account email" hint="Your partner account is tied to this — the email you're signed in with.">
+          <input
+            type="email"
+            value={userEmail || ''}
+            readOnly
+            aria-readonly="true"
+            tabIndex={-1}
+            className={FIELD + ' cursor-not-allowed text-white/55'}
+          />
         </Field>
         <Field label="Social links" hint="Telegram, YouTube, X, Instagram, Discord — one per line">
           <textarea required rows={3} value={form.social_links} onChange={(e) => update('social_links', e.target.value)} className={FIELD + ' resize-none'} placeholder="https://t.me/yourchannel" />
