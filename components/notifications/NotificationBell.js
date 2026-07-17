@@ -107,55 +107,75 @@ export default function NotificationBell({ initialCount = 0, typeFilter = null, 
 
   /* ── Supabase Realtime subscription ────────────────────────── */
   useEffect(() => {
-    const supabase = createClient();
-    let userId = null;
+    let channel = null;
 
-    // Get current user for filtering
-    supabase.auth.getUser().then(({ data }) => {
-      userId = data?.user?.id;
-    });
+    try {
+      const supabase = createClient();
+      let userId = null;
 
-    const channel = supabase
-      .channel('notifications-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-        },
-        (payload) => {
-          const newNotif = payload.new;
+      // Get current user for filtering
+      supabase.auth.getUser().then(({ data }) => {
+        userId = data?.user?.id;
+      });
 
-          // Filter: only process notifications for this user
-          if (userId && newNotif.user_id !== userId) return;
+      channel = supabase
+        .channel('notifications-realtime')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'notifications',
+          },
+          (payload) => {
+            const newNotif = payload.new;
 
-          // Filter by typeFilter (if set, only show matching types)
-          if (typeFilter && !typeFilter.includes(newNotif.type)) return;
+            // Filter: only process notifications for this user
+            if (userId && newNotif.user_id !== userId) return;
 
-          // Filter by excludeTypes (if set, skip excluded types)
-          if (excludeTypes && excludeTypes.includes(newNotif.type)) return;
+            // Filter by typeFilter (if set, only show matching types)
+            if (typeFilter && !typeFilter.includes(newNotif.type)) return;
 
-          // Increment unread count
-          setCount((c) => c + 1);
+            // Filter by excludeTypes (if set, skip excluded types)
+            if (excludeTypes && excludeTypes.includes(newNotif.type)) return;
 
-          // Prepend to items if dropdown is open
-          setItems((prev) => {
-            if (prev.length === 0) return prev; // Not loaded yet
-            // Avoid duplicate
-            if (prev.some((n) => n.id === newNotif.id)) return prev;
-            return [newNotif, ...prev].slice(0, 20);
-          });
+            // Increment unread count
+            setCount((c) => c + 1);
 
-          // Show toast
-          setRealtimeToast(newNotif);
+            // Prepend to items if dropdown is open
+            setItems((prev) => {
+              if (prev.length === 0) return prev; // Not loaded yet
+              // Avoid duplicate
+              if (prev.some((n) => n.id === newNotif.id)) return prev;
+              return [newNotif, ...prev].slice(0, 20);
+            });
+
+            // Show toast
+            setRealtimeToast(newNotif);
+          }
+        )
+        .subscribe((status, err) => {
+          // Gracefully handle subscription failures (e.g. WebSocket blocked by CSP)
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.warn('[NotificationBell] Realtime subscription failed:', status, err?.message);
+          }
+        });
+
+      return () => {
+        if (channel) {
+          try {
+            supabase.removeChannel(channel);
+          } catch (e) {
+            // Ignore cleanup errors
+          }
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+      };
+    } catch (err) {
+      // WebSocket may be unavailable (e.g. blocked by CSP on iOS Safari).
+      // Degrade gracefully — the 60s polling fallback still works.
+      console.warn('[NotificationBell] Realtime setup failed, falling back to polling:', err.message);
+      return () => {};
+    }
   }, [typeFilter, excludeTypes]);
 
   /* Poll unread count every 60s (fallback if Realtime drops) */

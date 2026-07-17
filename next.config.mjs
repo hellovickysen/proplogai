@@ -66,7 +66,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self'",
               "img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in https://*.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com",
-              "connect-src 'self' https://*.supabase.co https://*.supabase.in https://openrouter.ai https://*.razorpay.com https://api.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com",
+              "connect-src 'self' https://*.supabase.co https://*.supabase.in wss://*.supabase.co wss://*.supabase.in https://openrouter.ai https://*.razorpay.com https://api.razorpay.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com",
               "frame-src 'self' https://*.razorpay.com https://api.razorpay.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
