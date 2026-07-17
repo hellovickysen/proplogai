@@ -1,5 +1,8 @@
 import Link from 'next/link';
 import Logo from '@/components/Logo';
+import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import PartnerHeaderMenu from '@/components/partner/PartnerHeaderMenu';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,7 +11,37 @@ export const metadata = {
   description: 'Earn lifetime recurring commission for every trader you refer to PropLogAI.',
 };
 
-export default function PartnerLayout({ children }) {
+export default async function PartnerLayout({ children }) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // For signed-in partners, resolve approval + pending commission for the header.
+  let approved = false;
+  let pending = 0;
+  if (user) {
+    try {
+      const admin = createAdminClient();
+      if (admin) {
+        const { data: aff } = await admin
+          .from('affiliates')
+          .select('id, status')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        if (aff?.status === 'approved') {
+          approved = true;
+          const { data: comms } = await admin
+            .from('affiliate_commissions')
+            .select('amount, status')
+            .eq('affiliate_id', aff.id);
+          pending = (comms || [])
+            .filter((c) => c.status === 'pending' || c.status === 'approved')
+            .reduce((s, c) => s + (Number(c.amount) || 0), 0);
+          pending = Math.round(pending * 100) / 100;
+        }
+      }
+    } catch (e) {}
+  }
+
   return (
     <div className="flex min-h-screen flex-col" style={{ background: '#07070b' }}>
       <header className="sticky top-0 z-20 border-b border-white/10 bg-[#07070b]/85 backdrop-blur">
@@ -19,21 +52,26 @@ export default function PartnerLayout({ children }) {
               Partners
             </span>
           </Link>
-          <nav className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/dashboard"
-              className="rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-white/75 hover:bg-white/[0.08]"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/apply"
-              className="rounded-xl px-3.5 py-2 text-xs font-semibold text-[#08080f]"
-              style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
-            >
-              Become an affiliate
-            </Link>
-          </nav>
+
+          {user ? (
+            <PartnerHeaderMenu email={user.email} approved={approved} pending={pending} />
+          ) : (
+            <nav className="flex items-center gap-2 sm:gap-3">
+              <Link
+                href="/login"
+                className="rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2 text-xs font-medium text-white/75 hover:bg-white/[0.08]"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/apply"
+                className="rounded-xl px-3.5 py-2 text-xs font-semibold text-[#08080f]"
+                style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}
+              >
+                Become an affiliate
+              </Link>
+            </nav>
+          )}
         </div>
       </header>
 

@@ -141,6 +141,49 @@ export async function saveCoupon(rawCode) {
   return { ok: true };
 }
 
+/* ─── Save partner profile (Settings) ──────────────────────── */
+export async function saveProfile(form) {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: 'You must be signed in.' };
+
+  const admin = createAdminClient();
+  if (!admin) return { error: 'Server not configured.' };
+
+  const name = String(form?.name || '').trim().slice(0, 120);
+  const socials = String(form?.social_links || '').trim().slice(0, 500);
+  const audience = String(form?.audience_size || '').trim().slice(0, 60);
+  const payout = String(form?.payout_method || '').trim().slice(0, 200) || null;
+
+  if (!name) return { error: 'Please enter your name.' };
+  if (!socials) return { error: 'Please share at least one social link.' };
+
+  const { data: aff } = await admin
+    .from('affiliates')
+    .select('id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (!aff) return { error: 'You are not a partner yet.' };
+
+  const { error } = await admin
+    .from('affiliates')
+    .update({
+      name,
+      social_links: socials,
+      audience_size: audience,
+      payout_method: payout,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', aff.id);
+  if (error) return { error: error.message };
+
+  revalidatePath('/partner/settings');
+  revalidatePath('/partner/dashboard');
+  return { ok: true };
+}
+
 /* ─── Request a payout ─────────────────────────────────────── */
 export async function requestPayout(method) {
   const supabase = createClient();
@@ -154,7 +197,7 @@ export async function requestPayout(method) {
 
   const { data: aff } = await admin
     .from('affiliates')
-    .select('id, status')
+    .select('id, status, payout_method')
     .eq('user_id', user.id)
     .maybeSingle();
   if (!aff || aff.status !== 'approved') {
@@ -174,10 +217,13 @@ export async function requestPayout(method) {
   const available = stats.pendingCommission;
   if (available <= 0) return { error: 'You have no commission available to withdraw yet.' };
 
+  // Fall back to the saved profile payout method when none is provided.
+  const chosenMethod = String(method || '').slice(0, 200) || aff.payout_method || null;
+
   const { error } = await admin.from('affiliate_payout_requests').insert({
     affiliate_id: aff.id,
     amount: available,
-    method: String(method || '').slice(0, 80) || null,
+    method: chosenMethod,
     status: 'requested',
   });
   if (error) return { error: error.message };
