@@ -1,18 +1,23 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { resolveAffiliateByCoupon, getPartnerOfferId, PARTNER_DISCOUNT_PCT } from '@/lib/affiliate';
+import {
+  resolveAffiliateByCoupon,
+  resolvePromoCode,
+  getPartnerOfferId,
+  PARTNER_DISCOUNT_PCT,
+} from '@/lib/affiliate';
 
 /**
  * POST /api/partner/validate-coupon
  * Body: { code: string }
  *
- * Validates a partner coupon for the signed-in user WITHOUT creating anything.
- * Powers the live price preview on the checkout page.
+ * Validates a code (partner coupon OR admin promo) for the signed-in user
+ * WITHOUT creating anything. Powers the live price preview on checkout.
  *
- * Returns { valid: boolean, discountPct: number, error?: string }.
- * discountPct is 0 (even for a valid code) when the Razorpay discount offer
- * isn't configured yet — so the displayed price always matches the real charge.
+ * Returns { valid, discountPct, kind } where kind is 'partner' | 'promo'.
+ * discountPct is 0 (even for a valid code) when the underlying Razorpay offer
+ * isn't configured — so the displayed price always matches the real charge.
  */
 export async function POST(request) {
   try {
@@ -33,17 +38,24 @@ export async function POST(request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // Partner coupon first
     const affiliate = await resolveAffiliateByCoupon(admin, clean);
-    if (!affiliate) {
-      return NextResponse.json({ valid: false, error: 'That code is invalid or inactive.' });
-    }
-    if (affiliate.user_id === user.id) {
-      return NextResponse.json({ valid: false, error: "You can't use your own code." });
+    if (affiliate) {
+      if (affiliate.user_id === user.id) {
+        return NextResponse.json({ valid: false, error: "You can't use your own code." });
+      }
+      const discountPct = getPartnerOfferId() ? Math.round(PARTNER_DISCOUNT_PCT * 100) : 0;
+      return NextResponse.json({ valid: true, discountPct, kind: 'partner' });
     }
 
-    // Only advertise a discount if the Razorpay offer is actually configured.
-    const discountPct = getPartnerOfferId() ? Math.round(PARTNER_DISCOUNT_PCT * 100) : 0;
-    return NextResponse.json({ valid: true, discountPct });
+    // Admin promo code
+    const promo = await resolvePromoCode(admin, clean);
+    if (promo) {
+      const discountPct = promo.razorpay_offer_id ? Math.round(Number(promo.discount_pct) || 0) : 0;
+      return NextResponse.json({ valid: true, discountPct, kind: 'promo' });
+    }
+
+    return NextResponse.json({ valid: false, error: 'That code is invalid, expired, or inactive.' });
   } catch (err) {
     console.error('validate-coupon error:', err);
     return NextResponse.json({ valid: false, error: 'Could not validate the code.' }, { status: 500 });

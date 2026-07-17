@@ -13,6 +13,7 @@ const ADMIN_NAV = [
   { label: 'Overview', href: '/admin', icon: '▦' },
   { label: 'Users', href: '/admin/users', icon: '👥' },
   { label: 'Affiliates', href: '/admin/affiliates', icon: '🤝' },
+  { label: 'Promos', href: '/admin/promos', icon: '🏷️' },
   { label: 'Tickets', href: '/admin/tickets', icon: '📩' },
   { label: 'AI Usage', href: '/admin/ai-usage', icon: '✦' },
   { label: 'Revenue', href: '/admin/revenue', icon: '💰' },

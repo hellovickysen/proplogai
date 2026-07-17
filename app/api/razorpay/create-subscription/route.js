@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createSubscription } from '@/lib/razorpay';
-import { resolveAffiliateByCoupon, getPartnerOfferId } from '@/lib/affiliate';
+import { resolveAffiliateByCoupon, resolvePromoCode, getPartnerOfferId } from '@/lib/affiliate';
 
 /**
  * POST /api/razorpay/create-subscription
@@ -10,10 +10,11 @@ import { resolveAffiliateByCoupon, getPartnerOfferId } from '@/lib/affiliate';
  * Creates a Razorpay subscription and returns the hosted checkout URL.
  * Body: { billingCycle: 'monthly' | 'yearly', couponCode?: string }
  *
- * If a valid partner coupon is supplied, a Razorpay discount offer is attached
- * (5% off) AND the 14-day trial is skipped so the discounted amount is charged
- * immediately. The buyer is bound to that partner for commission.
- * Attribution is coupon-only — no links or cookies.
+ * A code can be either a PARTNER coupon (attaches the 5% partner offer + binds
+ * commission) or an ADMIN promo code (attaches that promo's Razorpay offer, no
+ * commission). Either way, when a discount offer applies the 14-day trial is
+ * skipped so the discounted amount is charged now. All resolution is wrapped so
+ * a bad/empty code never breaks a normal checkout.
  */
 
 function getServiceClient() {
@@ -25,7 +26,6 @@ function getServiceClient() {
 
 export async function POST(request) {
   try {
-    // Authenticate user via cookie-based client
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -37,29 +37,32 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Invalid billing cycle.' }, { status: 400 });
     }
 
-    // Use service-role client for DB operations (bypasses RLS)
     const admin = getServiceClient();
 
-    // Validate a partner coupon (if provided) BEFORE creating the subscription,
-    // so an invalid code doesn't leave a dangling Razorpay subscription.
+    // Resolve a code (partner coupon first, then admin promo) BEFORE creating
+    // the subscription, so an invalid code doesn't leave a dangling one.
     let affiliate = null;
+    let promo = null;
     let offerId = null;
     const code = typeof couponCode === 'string' ? couponCode.trim() : '';
     if (code) {
       affiliate = await resolveAffiliateByCoupon(admin, code);
-      if (!affiliate) {
-        return NextResponse.json({ error: 'That coupon code is invalid or inactive.' }, { status: 400 });
+      if (affiliate) {
+        if (affiliate.user_id === user.id) {
+          return NextResponse.json({ error: "You can't use your own coupon code." }, { status: 400 });
+        }
+        offerId = getPartnerOfferId(); // may be null if the partner offer isn't configured yet
+      } else {
+        promo = await resolvePromoCode(admin, code);
+        if (!promo) {
+          return NextResponse.json({ error: 'That code is invalid, expired, or inactive.' }, { status: 400 });
+        }
+        offerId = promo.razorpay_offer_id || null;
       }
-      if (affiliate.user_id === user.id) {
-        return NextResponse.json({ error: "You can't use your own coupon code." }, { status: 400 });
-      }
-      offerId = getPartnerOfferId(); // may be null if the offer isn't configured yet
     }
 
-    // Coupon checkout skips the free trial ONLY when a discount will actually
-    // apply (offer configured) — so a missing offer can never leave a coupon
-    // user with "no trial AND no discount". Without an offer, they keep the trial.
-    const discountApplies = !!(affiliate && offerId);
+    // Skip the trial only when a discount offer will actually apply.
+    const discountApplies = !!offerId;
     const useTrial = !discountApplies;
 
     // Check if user already has an active subscription
@@ -73,7 +76,6 @@ export async function POST(request) {
       return NextResponse.json({ error: 'You already have an active subscription.' }, { status: 400 });
     }
 
-    // Create Razorpay subscription (discount offer + immediate charge when a coupon applied)
     const sub = await createSubscription({
       billingCycle,
       email: user.email,
@@ -82,7 +84,6 @@ export async function POST(request) {
       trial: useTrial,
     });
 
-    // Store/update subscription record in DB
     const trialEndsAt = useTrial
       ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
       : null;
@@ -114,7 +115,7 @@ export async function POST(request) {
       subscriptionDbId = inserted?.id || null;
     }
 
-    // Bind the buyer to the partner (first-touch). Wrapped so it can never break checkout.
+    // Partner coupon → bind the buyer to the partner (first-touch). Never breaks checkout.
     if (affiliate) {
       try {
         const { data: existing } = await admin
@@ -133,6 +134,18 @@ export async function POST(request) {
         }
       } catch (e) {
         console.error('Affiliate bind error (non-fatal):', e?.message || e);
+      }
+    }
+
+    // Admin promo → count the redemption (best-effort). No commission.
+    if (promo) {
+      try {
+        await admin
+          .from('promo_codes')
+          .update({ redeemed_count: (promo.redeemed_count || 0) + 1 })
+          .eq('id', promo.id);
+      } catch (e) {
+        console.error('Promo redemption increment error (non-fatal):', e?.message || e);
       }
     }
 
