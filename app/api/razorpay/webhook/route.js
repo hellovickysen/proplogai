@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { verifyWebhookSignature } from '@/lib/razorpay';
 import { sendEmail, isEmailConfigured } from '@/lib/email';
 import { buildPaymentReceiptEmail, buildPaymentFailedEmail } from '@/lib/subscription-emails';
+import { commissionForCharge } from '@/lib/affiliate';
 
 /**
  * POST /api/razorpay/webhook
@@ -10,6 +11,10 @@ import { buildPaymentReceiptEmail, buildPaymentFailedEmail } from '@/lib/subscri
  * Handles Razorpay webhook events for subscription lifecycle.
  * Uses service role client since webhooks are not user-authenticated.
  * Includes idempotency protection to prevent duplicate event processing.
+ *
+ * Affiliate program: creates recurring commissions on paid events, stops
+ * commissions on cancel/halt/complete, and reverses on refund. Commission
+ * inserts are idempotent via a unique index on razorpay_payment_id.
  */
 
 function getAdminClient() {
@@ -86,11 +91,16 @@ export async function POST(request) {
       case 'subscription.activated': {
         // First payment successful, subscription is now active
         const sub = event.payload.subscription.entity;
+        const payment = event.payload.payment?.entity;
         const currentEnd = sub.current_end ? new Date(sub.current_end * 1000).toISOString() : null;
-        await updateSubscription(supabase, sub.id, {
+        const updatedSub = await updateSubscription(supabase, sub.id, {
           status: 'active',
           renews_at: currentEnd,
         });
+        // Affiliate commission on the first paid charge (idempotent by payment id)
+        if (updatedSub?.user_id && payment?.id) {
+          await recordAffiliateCommission(supabase, updatedSub.user_id, payment);
+        }
         break;
       }
 
@@ -120,6 +130,10 @@ export async function POST(request) {
             }
           } catch (e) { console.error('Receipt email error:', e); }
         }
+        // Affiliate recurring commission (idempotent by payment id)
+        if (updatedSub?.user_id && payment?.id) {
+          await recordAffiliateCommission(supabase, updatedSub.user_id, payment);
+        }
         break;
       }
 
@@ -135,10 +149,12 @@ export async function POST(request) {
       case 'subscription.halted': {
         // All retry attempts exhausted, subscription halted
         const sub = event.payload.subscription.entity;
-        await updateSubscription(supabase, sub.id, {
+        const updatedSub = await updateSubscription(supabase, sub.id, {
           status: 'halted',
           plan: 'basic', // Downgrade to basic
         });
+        // Stop future affiliate commissions for this referred user
+        if (updatedSub?.user_id) await cancelAffiliateReferral(supabase, updatedSub.user_id);
         break;
       }
 
@@ -147,22 +163,25 @@ export async function POST(request) {
         const sub = event.payload.subscription.entity;
         const endAt = sub.ended_at || sub.current_end;
         const endsAtDate = endAt ? new Date(endAt * 1000).toISOString() : null;
-        await updateSubscription(supabase, sub.id, {
+        const updatedSub = await updateSubscription(supabase, sub.id, {
           status: 'cancelled',
           cancelled_at: new Date().toISOString(),
           // Keep plan as 'elite' until the end date if cancel_at_cycle_end was true
           renews_at: endsAtDate,
         });
+        // Stop future affiliate commissions (earned commissions are kept)
+        if (updatedSub?.user_id) await cancelAffiliateReferral(supabase, updatedSub.user_id);
         break;
       }
 
       case 'subscription.completed': {
         // Subscription reached total_count — treat as expired
         const sub = event.payload.subscription.entity;
-        await updateSubscription(supabase, sub.id, {
+        const updatedSub = await updateSubscription(supabase, sub.id, {
           status: 'completed',
           plan: 'basic',
         });
+        if (updatedSub?.user_id) await cancelAffiliateReferral(supabase, updatedSub.user_id);
         break;
       }
 
@@ -187,6 +206,17 @@ export async function POST(request) {
               }
             } catch (e) { console.error('Failed payment email error:', e); }
           }
+        }
+        break;
+      }
+
+      case 'refund.created':
+      case 'refund.processed': {
+        // A payment was refunded — reverse the matching affiliate commission.
+        const refund = event.payload.refund?.entity;
+        const refundedPaymentId = refund?.payment_id || event.payload.payment?.entity?.id || null;
+        if (refundedPaymentId) {
+          await reverseAffiliateCommission(supabase, refundedPaymentId);
         }
         break;
       }
@@ -220,4 +250,79 @@ async function updateSubscription(supabase, razorpaySubId, updates) {
   }
 
   return data;
+}
+
+/* ─── Affiliate commission engine ──────────────────────────────
+ * Creates a pending commission for the referring affiliate when a referred
+ * user is charged. Idempotent: a unique index on razorpay_payment_id blocks
+ * duplicates. Never throws — commission failures must not fail the webhook.
+ */
+async function recordAffiliateCommission(supabase, userId, payment) {
+  try {
+    if (!userId || !payment?.id) return;
+
+    const { data: ref } = await supabase
+      .from('affiliate_referrals')
+      .select('id, affiliate_id, subscription_id, status')
+      .eq('referred_user_id', userId)
+      .maybeSingle();
+    if (!ref || ref.status !== 'active') return;
+
+    const { data: aff } = await supabase
+      .from('affiliates')
+      .select('id, commission_rate, status')
+      .eq('id', ref.affiliate_id)
+      .maybeSingle();
+    if (!aff || aff.status !== 'approved') return;
+
+    const { data: subRow } = await supabase
+      .from('subscriptions')
+      .select('billing_cycle')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const billingCycle = subRow?.billing_cycle === 'yearly' ? 'yearly' : 'monthly';
+    const amount = commissionForCharge(aff.commission_rate, billingCycle);
+
+    const { error } = await supabase.from('affiliate_commissions').insert({
+      affiliate_id: aff.id,
+      referred_user_id: userId,
+      subscription_id: ref.subscription_id || null,
+      razorpay_payment_id: payment.id,
+      cycle: billingCycle,
+      amount,
+      currency: 'USD',
+      status: 'pending',
+    });
+    if (error && error.code !== '23505') {
+      console.error('Affiliate commission insert error:', error.message);
+    }
+  } catch (e) {
+    console.error('recordAffiliateCommission error (non-fatal):', e?.message || e);
+  }
+}
+
+/** Stop future commissions by marking the user's referral cancelled. */
+async function cancelAffiliateReferral(supabase, userId) {
+  try {
+    if (!userId) return;
+    await supabase
+      .from('affiliate_referrals')
+      .update({ status: 'cancelled' })
+      .eq('referred_user_id', userId);
+  } catch (e) {
+    console.error('cancelAffiliateReferral error (non-fatal):', e?.message || e);
+  }
+}
+
+/** Reverse a commission tied to a refunded payment. */
+async function reverseAffiliateCommission(supabase, paymentId) {
+  try {
+    if (!paymentId) return;
+    await supabase
+      .from('affiliate_commissions')
+      .update({ status: 'reversed' })
+      .eq('razorpay_payment_id', paymentId);
+  } catch (e) {
+    console.error('reverseAffiliateCommission error (non-fatal):', e?.message || e);
+  }
 }

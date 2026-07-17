@@ -12,6 +12,7 @@ const ADMIN_TYPES = ['new_support_ticket', 'new_user_signup', 'ticket_user_repli
 const ADMIN_NAV = [
   { label: 'Overview', href: '/admin', icon: '▦' },
   { label: 'Users', href: '/admin/users', icon: '👥' },
+  { label: 'Affiliates', href: '/admin/affiliates', icon: '🤝' },
   { label: 'Tickets', href: '/admin/tickets', icon: '📩' },
   { label: 'AI Usage', href: '/admin/ai-usage', icon: '✦' },
   { label: 'Revenue', href: '/admin/revenue', icon: '💰' },

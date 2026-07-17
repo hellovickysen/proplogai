@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { createSubscription } from '@/lib/razorpay';
+import { AFF_COOKIE, resolveAffiliateBySlug } from '@/lib/affiliate';
 
 /**
  * POST /api/razorpay/create-subscription
@@ -67,6 +68,8 @@ export async function POST(request) {
       trial_ends_at: trialEndsAt,
     };
 
+    let subscriptionDbId = existingSub?.id || null;
+
     if (existingSub) {
       const { error: updateErr } = await admin
         .from('subscriptions')
@@ -74,11 +77,17 @@ export async function POST(request) {
         .eq('id', existingSub.id);
       if (updateErr) console.error('Subscription update error:', updateErr.message);
     } else {
-      const { error: insertErr } = await admin
+      const { data: inserted, error: insertErr } = await admin
         .from('subscriptions')
-        .insert(subRow);
+        .insert(subRow)
+        .select('id')
+        .maybeSingle();
       if (insertErr) console.error('Subscription insert error:', insertErr.message);
+      subscriptionDbId = inserted?.id || null;
     }
+
+    // Bind affiliate attribution from the plog_aff cookie (first-touch, never breaks checkout).
+    await bindAffiliateReferral(admin, request, user, subscriptionDbId);
 
     return NextResponse.json({
       shortUrl: sub.short_url,
@@ -91,5 +100,39 @@ export async function POST(request) {
       { error: err.message || 'Failed to create subscription.' },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Link the checkout user to the referring affiliate captured at click time.
+ * First-touch: if the user is already bound, we do nothing. Self-referrals are
+ * blocked. Any failure here is swallowed so it can never block a payment.
+ */
+async function bindAffiliateReferral(admin, request, user, subscriptionDbId) {
+  try {
+    const slug = request.cookies.get(AFF_COOKIE)?.value;
+    if (!slug) return;
+
+    const affiliate = await resolveAffiliateBySlug(admin, slug);
+    if (!affiliate) return;
+    if (affiliate.user_id === user.id) return; // no self-referrals
+
+    // First-touch lock: skip if this user is already attributed.
+    const { data: existing } = await admin
+      .from('affiliate_referrals')
+      .select('id')
+      .eq('referred_user_id', user.id)
+      .maybeSingle();
+    if (existing) return;
+
+    await admin.from('affiliate_referrals').insert({
+      affiliate_id: affiliate.id,
+      referred_user_id: user.id,
+      source: 'link',
+      subscription_id: subscriptionDbId,
+      status: 'active',
+    });
+  } catch (e) {
+    console.error('Affiliate bind error (non-fatal):', e?.message || e);
   }
 }
