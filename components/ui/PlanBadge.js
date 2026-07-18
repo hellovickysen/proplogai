@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Small inline plan badge: "Basic", "Elite", or "Beta" tag.
+ * Small inline plan badge: "Basic", "Trial · Nd", "Elite", or "Admin".
  * Used in sidebar, header, settings, profile.
  */
 export default function PlanBadge({ access }) {
@@ -15,15 +15,21 @@ export default function PlanBadge({ access }) {
     );
   }
 
-  if (access.isBeta) {
+  const isTrialing =
+    access.isTrialing && access.trialEndsAt && new Date(access.trialEndsAt) > new Date();
+  if (isTrialing) {
+    const daysLeft = Math.max(
+      0,
+      Math.ceil((new Date(access.trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24))
+    );
     return (
-      <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-        Beta
+      <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-300">
+        Trial · {daysLeft}d
       </span>
     );
   }
 
-  if (access.plan === 'elite') {
+  if (access.effectivePlan === 'elite' || access.plan === 'elite') {
     return (
       <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-300">
         Elite

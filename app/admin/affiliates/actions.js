@@ -58,7 +58,7 @@ export async function setAffiliateStatus(affiliateId, status) {
         const { subject, html } = buildAffiliateApprovedEmail({
           name: row.name,
           referralUsername: row.referral_username,
-          commissionPct: Math.round((Number(row.commission_rate) || 0.4) * 100),
+          commissionPct: Math.round((Number(row.commission_rate) || 0.2) * 100),
         });
         await sendEmail({ to, subject, html });
       }

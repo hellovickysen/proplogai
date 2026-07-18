@@ -27,13 +27,11 @@ export default async function AdminUsersPage({ searchParams }) {
       (trades || []).forEach((t) => { tradeMap[t.user_id] = (tradeMap[t.user_id] || 0) + 1; });
     } catch {}
     let nameMap = {};
-    let betaMap = {};
     try {
-      const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete, full_name, is_beta');
+      const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete, full_name');
       (prefs || []).forEach((p) => {
         onboardMap[p.user_id] = !!p.onboarding_complete;
         if (p.full_name) nameMap[p.user_id] = p.full_name;
-        betaMap[p.user_id] = p.is_beta === true;
       });
     } catch {}
 
@@ -45,7 +43,14 @@ export default async function AdminUsersPage({ searchParams }) {
         const isActive = ['active', 'authenticated', 'created'].includes(s.status);
         const isTrialing = s.trial_ends_at && new Date(s.trial_ends_at) > new Date();
         if (isActive || isTrialing) {
-          subMap[s.user_id] = { plan: s.plan || 'basic', status: s.status, isTrialing, billing_cycle: s.billing_cycle || null };
+          const p = s.plan === 'free' ? 'basic' : (s.plan || 'basic');
+          subMap[s.user_id] = {
+            plan: p,
+            status: s.status,
+            isTrialing,
+            billing_cycle: s.billing_cycle || null,
+            trialEndsAt: s.trial_ends_at || null,
+          };
         }
       });
     } catch {}
@@ -62,7 +67,6 @@ export default async function AdminUsersPage({ searchParams }) {
       banned: !!u.banned_until,
       banReason: u.user_metadata?.ban_reason || null,
       isAdmin: u.email === ADMIN_EMAIL,
-      isBeta: betaMap[u.id] || false,
       subscription: subMap[u.id] || null,
     }));
 

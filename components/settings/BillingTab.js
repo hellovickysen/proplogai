@@ -23,7 +23,6 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
   const [cancelled, setCancelled] = useState(false);
 
   const isElite = planAccess?.effectivePlan === 'elite';
-  const isBeta = planAccess?.isBeta;
   const isAdmin = planAccess?.isAdmin;
   const isTrialing = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
   const isActive = subscription?.status === 'active' || subscription?.status === 'authenticated';
@@ -87,8 +86,8 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
           <h3 className="font-semibold text-white">Current Plan</h3>
           {isAdmin ? (
             <span className="rounded-full px-3 py-1 text-xs font-semibold text-amber-300 border border-amber-400/30 bg-amber-500/10">Admin</span>
-          ) : isBeta ? (
-            <span className="rounded-full px-3 py-1 text-xs font-semibold text-cyan-300 border border-cyan-400/30 bg-cyan-500/10">Beta</span>
+          ) : isTrialing ? (
+            <span className="rounded-full px-3 py-1 text-xs font-semibold text-cyan-300 border border-cyan-400/30 bg-cyan-500/10">Trial · {trialDaysLeft}d</span>
           ) : isElite ? (
             <span className="rounded-full px-3 py-1 text-xs font-semibold text-violet-300 border border-violet-400/30 bg-violet-500/10">Elite</span>
           ) : (
@@ -98,24 +97,11 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
 
         {isAdmin ? (
           <p className="text-sm text-white/50">You have unrestricted admin access to all features.</p>
-        ) : isBeta ? (
-          <div>
-            <p className="text-sm text-white/50 mb-3">
-              You have full Elite access during the beta period. After beta ends, you'll need to subscribe to keep Elite features.
-            </p>
-            <button
-              onClick={() => setShowUpgrade(true)}
-              className="rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]"
-              style={gradientBtn}
-            >
-              Subscribe now to lock in your access
-            </button>
-          </div>
         ) : isElite && (isActive || isTrialing) ? (
           <div className="space-y-3">
             {isTrialing && (
-              <div className="rounded-xl border border-violet-400/20 bg-violet-500/5 px-4 py-3">
-                <p className="text-sm text-violet-300 font-medium">
+              <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/5 px-4 py-3">
+                <p className="text-sm text-cyan-300 font-medium">
                   Free trial · {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
                 </p>
                 <p className="text-xs text-white/40 mt-1">
@@ -171,7 +157,7 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
       </div>
 
       {/* Feature comparison (shown for Basic users) */}
-      {!isElite && !isBeta && !isAdmin && (
+      {!isElite && !isAdmin && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6">
           <h3 className="font-semibold text-white mb-4">What you get with Elite</h3>
           <div className="space-y-3">

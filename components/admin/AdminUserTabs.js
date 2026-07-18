@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import AdminBanButton from '@/components/admin/AdminBanButton';
-import { toggleBeta } from '@/app/admin/actions';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -11,30 +10,22 @@ function fmtDate(d) {
   catch { return '—'; }
 }
 
-function BetaToggle({ userId, initialBeta }) {
-  const [isBeta, setIsBeta] = useState(initialBeta);
-  const [loading, setLoading] = useState(false);
+function daysLeft(d) {
+  if (!d) return 0;
+  return Math.max(0, Math.ceil((new Date(d) - new Date()) / (1000 * 60 * 60 * 24)));
+}
 
-  async function handleToggle() {
-    setLoading(true);
-    const res = await toggleBeta(userId, !isBeta);
-    if (res.ok) setIsBeta(!isBeta);
-    setLoading(false);
+function PlanCell({ u }) {
+  if (u.isAdmin) {
+    return <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">Admin</span>;
   }
-
-  return (
-    <button
-      onClick={handleToggle}
-      disabled={loading}
-      className={'rounded-full border px-2 py-0.5 text-[10px] font-semibold transition-colors ' +
-        (isBeta
-          ? 'border-emerald-400/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20'
-          : 'border-white/15 bg-white/5 text-white/40 hover:text-white/60')}
-      title={isBeta ? 'Click to remove beta access' : 'Click to grant beta access'}
-    >
-      {loading ? '...' : isBeta ? 'Beta ✓' : 'Beta'}
-    </button>
-  );
+  if (u.subscription?.isTrialing) {
+    return <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold text-cyan-300">Trial · {daysLeft(u.subscription.trialEndsAt)}d</span>;
+  }
+  if (u.subscription?.plan === 'elite') {
+    return <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-300">Elite</span>;
+  }
+  return <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/60">Basic</span>;
 }
 
 export default function AdminUserTabs({ users, search }) {
@@ -101,14 +92,7 @@ export default function AdminUserTabs({ users, search }) {
                 <td className="px-4 py-3 font-mono">{u.trades}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-1.5">
-                    {u.isAdmin
-                      ? <span className="rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">Admin</span>
-                      : <BetaToggle userId={u.id} initialBeta={u.isBeta} />}
-                    {u.subscription?.plan === 'elite' && (
-                      <span className="rounded-full border border-violet-400/30 bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold text-violet-300">
-                        Elite{u.subscription.isTrialing ? ' (trial)' : ''}
-                      </span>
-                    )}
+                    <PlanCell u={u} />
                   </div>
                 </td>
                 <td className="px-4 py-3">

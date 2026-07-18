@@ -65,7 +65,7 @@ export default async function DashboardLayout({ children }) {
   ] = await Promise.all([
     supabase
       .from('user_preferences')
-      .select('onboarding_complete, referred_by, referral_balance, avatar_url, full_name, is_beta')
+      .select('onboarding_complete, referred_by, referral_balance, avatar_url, full_name')
       .eq('user_id', user.id)
       .maybeSingle(),
     supabase
@@ -106,11 +106,11 @@ export default async function DashboardLayout({ children }) {
   // its internal duplicate user_preferences + subscriptions queries.
   const rawPlan = subscription?.plan || 'basic';
   const plan = (rawPlan === 'free' ? 'basic' : rawPlan === 'pro' ? 'elite' : rawPlan) || 'basic';
-  const isBeta = prefs?.is_beta === true;
+  const isBeta = false; // beta program removed — access is driven purely by subscription
   const isActiveSub = subscription && (subscription.status === 'active' || subscription.status === 'authenticated');
   const isTrialing = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
   const effectivePlan =
-    isAdmin || isBeta || (plan === 'elite' && (isActiveSub || isTrialing))
+    isAdmin || (plan === 'elite' && (isActiveSub || isTrialing))
       ? 'elite'
       : plan === 'elite' && !isActiveSub && !isTrialing
         ? 'basic'
