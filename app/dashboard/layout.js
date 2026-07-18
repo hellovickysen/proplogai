@@ -104,21 +104,16 @@ export default async function DashboardLayout({ children }) {
 
   // Plan access — replicate getUserAccess() logic inline to avoid
   // its internal duplicate user_preferences + subscriptions queries.
-  const rawPlan = subscription?.plan || 'basic';
-  const plan = (rawPlan === 'free' ? 'basic' : rawPlan === 'pro' ? 'elite' : rawPlan) || 'basic';
-  const isBeta = false; // beta program removed — access is driven purely by subscription
-  const isActiveSub = subscription && (subscription.status === 'active' || subscription.status === 'authenticated');
-  const isTrialing = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
-  const effectivePlan =
-    isAdmin || (plan === 'elite' && (isActiveSub || isTrialing))
-      ? 'elite'
-      : plan === 'elite' && !isActiveSub && !isTrialing
-        ? 'basic'
-        : plan;
+  // Elite when: admin, an active DB-only (no-card) trial, or a real paid sub.
+  const isBeta = false; // beta program removed — access is driven by subscription
+  const hasRazorpaySub = !!subscription?.razorpay_subscription_id;
+  const isActiveSub = hasRazorpaySub && (subscription.status === 'active' || subscription.status === 'authenticated');
+  const isTrialing = !!(subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date());
+  const elite = isAdmin || isTrialing || isActiveSub;
 
-  const access = buildAccess(effectivePlan === 'elite' ? 'elite' : plan, isBeta, isAdmin, {
+  const access = buildAccess(elite ? 'elite' : 'basic', isBeta, isAdmin, {
     subscriptionStatus: subscription?.status || null,
-    isTrialing: !!isTrialing,
+    isTrialing,
     trialEndsAt: subscription?.trial_ends_at || null,
     renewsAt: subscription?.renews_at || null,
     razorpaySubscriptionId: subscription?.razorpay_subscription_id || null,
