@@ -51,6 +51,8 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
   const discounted = Math.round(chargeNow * (1 - effPct / 100) * 100) / 100;
   const hasDiscount = !!applied && effPct > 0;
   const cycleLabel = billingCycle === 'yearly' ? '/year' : '/month';
+  // The first amount actually charged (discounted if a code applies, else full).
+  const firstPayment = hasDiscount ? discounted : chargeNow;
 
   // What's charged the moment the user confirms:
   // - trialing → nothing today (first charge is pinned to the trial end date)
@@ -99,13 +101,13 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Trialing users must apply a code to convert (otherwise the trial just runs).
-  const payDisabled = loading || (isTrialing && !hasDiscount);
+  // A code is optional — subscribing is always allowed.
+  const payDisabled = loading;
 
   const payLabel = loading
     ? 'Opening checkout…'
     : isTrialing
-      ? (hasDiscount ? `Subscribe — first payment $${money(discounted)} on ${trialEndLabel}` : 'Apply a code to subscribe')
+      ? `Subscribe — first payment $${money(firstPayment)} on ${trialEndLabel}`
       : (hasDiscount ? `Pay $${money(discounted)} now` : 'Start 14-day free trial');
 
   async function handlePay() {
@@ -190,8 +192,7 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
             You're on a free trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left
           </p>
           <p className="mt-1 text-xs leading-relaxed text-white/55">
-            Subscribe now with a partner or promo code and we'll <strong className="text-white/80">add your remaining {trialDaysLeft} trial day{trialDaysLeft !== 1 ? 's' : ''}</strong> on top of your plan.
-            No charge today — your first {hasDiscount ? 'discounted ' : ''}payment lands on <strong className="text-white/80">{trialEndLabel}</strong>.
+            Subscribe any time and your <strong className="text-white/80">remaining {trialDaysLeft} trial day{trialDaysLeft !== 1 ? 's' : ''}</strong> are added on top of your plan — no charge today, first payment on <strong className="text-white/80">{trialEndLabel}</strong>.
           </p>
         </div>
       )}
@@ -248,12 +249,12 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
 
           {/* Coupon */}
           <div className="mt-4">
-            <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/45">Partner / promo code</label>
+            <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/45">Have a code? (optional)</label>
             <div className="flex items-center gap-2">
               <input
                 value={code}
                 onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20)); setApplied(null); setCouponMsg(''); setCouponErr(''); }}
-                placeholder={`Enter code for ${discountPct}% off`}
+                placeholder="Partner or promo code"
                 className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 font-mono text-sm uppercase tracking-wider text-white/90 outline-none focus:border-cyan-400/50"
               />
               <button
@@ -309,10 +310,10 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
                 ${money(dueToday)}
               </span>
             </div>
-            {isTrialing && hasDiscount && (
+            {isTrialing && (
               <div className="flex items-center justify-between pt-1">
                 <span className="text-white/55">First payment · {trialEndLabel}</span>
-                <span className="font-mono text-white/80">${money(discounted)}</span>
+                <span className="font-mono text-white/80">${money(firstPayment)}</span>
               </div>
             )}
           </div>
@@ -320,9 +321,7 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
           {/* Trial / charge note */}
           <p className="mt-2 text-[11px] leading-relaxed text-white/40">
             {isTrialing
-              ? (hasDiscount
-                  ? `No charge today. Your ${trialDaysLeft} remaining trial day${trialDaysLeft !== 1 ? 's' : ''} stay free — first payment $${money(discounted)} on ${trialEndLabel}, then $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
-                  : `Apply a partner or promo code to subscribe with a discount now. Otherwise your trial converts automatically on ${trialEndLabel} at $${money(chargeNow)} ${cycleLabel}.`)
+              ? `No charge today — your ${trialDaysLeft} remaining trial day${trialDaysLeft !== 1 ? 's' : ''} are added. First payment $${money(firstPayment)} on ${trialEndLabel}, then $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
               : (hasDiscount
                   ? `Discounted plans are billed today — no free trial. Renews at $${money(chargeNow)} ${cycleLabel}.`
                   : `Start with a 14-day free trial — $0 today. You'll be charged $${money(chargeNow)} ${cycleLabel} when it ends. Cancel anytime.`)}

@@ -136,14 +136,9 @@ export async function POST(request) {
       new Date(existingSub.trial_ends_at) > new Date();
 
     /* ── Mid-trial conversion: keep remaining trial days ──────────────────── */
+    // A code is NOT required. Converting mid-trial (with or without a discount)
+    // preserves the remaining trial days; a code simply discounts the first charge.
     if (isActiveTrial) {
-      if (!discountApplies) {
-        return NextResponse.json(
-          { error: "You're already on a free trial. Apply a partner or promo code to subscribe now with a discount — otherwise your trial converts automatically when it ends." },
-          { status: 400 }
-        );
-      }
-
       // Pin the new subscription's first charge to the existing trial end so the
       // remaining trial days stay free (e.g. buy on day 7 → 7 trial + 30 paid).
       const startAt = Math.floor(new Date(existingSub.trial_ends_at).getTime() / 1000);
