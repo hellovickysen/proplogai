@@ -74,14 +74,23 @@ export async function POST(request) {
     const discountApplies = !!offerId;
     const useTrial = !discountApplies;
 
-    // Check if user already has an active subscription
+    // Look up any existing subscription row for this user.
     const { data: existingSub } = await admin
       .from('subscriptions')
-      .select('id, status, razorpay_subscription_id')
+      .select('id, status, plan, razorpay_subscription_id')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (existingSub && (existingSub.status === 'active' || existingSub.status === 'authenticated')) {
+    // Only block when there is a REAL paid subscription — an active/authenticated
+    // row that has a Razorpay subscription id. A default "free/active" row (with
+    // no razorpay_subscription_id) must NOT block upgrading; it gets upgraded in
+    // place below.
+    const hasActivePaidSub =
+      existingSub &&
+      !!existingSub.razorpay_subscription_id &&
+      (existingSub.status === 'active' || existingSub.status === 'authenticated');
+
+    if (hasActivePaidSub) {
       return NextResponse.json({ error: 'You already have an active subscription.' }, { status: 400 });
     }
 
