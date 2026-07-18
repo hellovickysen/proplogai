@@ -23,7 +23,12 @@ function money(n) {
   return (Math.round((Number(n) || 0) * 100) / 100).toFixed(2);
 }
 
-export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal, discountPct, initialCoupon }) {
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal, discountPct, initialCoupon, isTrialing = false, trialEndsAt = null }) {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [code, setCode] = useState(initialCoupon || '');
   const [applying, setApplying] = useState(false);
@@ -34,12 +39,24 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
   const [loading, setLoading] = useState(false);
   const razorpayReady = useRazorpayScript();
 
+  const trialDaysLeft = isTrialing && trialEndsAt
+    ? Math.max(0, Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24)))
+    : 0;
+  const trialEndLabel = fmtDate(trialEndsAt);
+
   const availableMethods = (applied?.methods && applied.methods.length) ? applied.methods : [];
 
   const chargeNow = billingCycle === 'yearly' ? yearlyTotal : priceMonthly;
   const effPct = applied?.discountPct || 0;
   const discounted = Math.round(chargeNow * (1 - effPct / 100) * 100) / 100;
   const hasDiscount = !!applied && effPct > 0;
+  const cycleLabel = billingCycle === 'yearly' ? '/year' : '/month';
+
+  // What's charged the moment the user confirms:
+  // - trialing → nothing today (first charge is pinned to the trial end date)
+  // - discounted, not trialing → discounted amount now
+  // - plain trial → nothing today
+  const dueToday = (hasDiscount && !isTrialing) ? discounted : 0;
 
   const applyCoupon = useCallback(async () => {
     setCouponErr('');
@@ -62,15 +79,19 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
       const methods = Array.isArray(data.methods) ? data.methods : [];
       setApplied({ discountPct: data.discountPct || 0, methods });
       if (methods.length) setMethod(methods[0]);
-      setCouponMsg(data.discountPct > 0
-        ? `Code applied — ${data.discountPct}% off, billed today (no free trial).`
-        : 'Code applied.');
+      if (data.discountPct > 0) {
+        setCouponMsg(isTrialing
+          ? `Code applied — ${data.discountPct}% off your first payment on ${trialEndLabel}. Your ${trialDaysLeft} trial day${trialDaysLeft !== 1 ? 's' : ''} stay free.`
+          : `Code applied — ${data.discountPct}% off, billed today (no free trial).`);
+      } else {
+        setCouponMsg('Code applied.');
+      }
     } catch {
       setCouponErr('Could not validate the code. Try again.');
     } finally {
       setApplying(false);
     }
-  }, [code]);
+  }, [code, isTrialing, trialDaysLeft, trialEndLabel]);
 
   // Auto-apply a code passed in the URL.
   useEffect(() => {
@@ -78,7 +99,17 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Trialing users must apply a code to convert (otherwise the trial just runs).
+  const payDisabled = loading || (isTrialing && !hasDiscount);
+
+  const payLabel = loading
+    ? 'Opening checkout…'
+    : isTrialing
+      ? (hasDiscount ? `Subscribe — first payment $${money(discounted)} on ${trialEndLabel}` : 'Apply a code to subscribe')
+      : (hasDiscount ? `Pay $${money(discounted)} now` : 'Start 14-day free trial');
+
   async function handlePay() {
+    if (payDisabled) return;
     setLoading(true);
     try {
       const useMethod = hasDiscount && availableMethods.length ? method : undefined;
@@ -152,6 +183,19 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
         <p className="mt-1 text-sm text-white/50">Unlock AI coaching, calendar insights, exports, and more.</p>
       </div>
 
+      {/* Trial-in-progress prompt */}
+      {isTrialing && (
+        <div className="mb-6 rounded-2xl border border-cyan-400/20 bg-cyan-500/[0.06] px-5 py-4">
+          <p className="text-sm font-semibold text-cyan-300">
+            You're on a free trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-white/55">
+            Subscribe now with a partner or promo code and we'll <strong className="text-white/80">add your remaining {trialDaysLeft} trial day{trialDaysLeft !== 1 ? 's' : ''}</strong> on top of your plan.
+            No charge today — your first {hasDiscount ? 'discounted ' : ''}payment lands on <strong className="text-white/80">{trialEndLabel}</strong>.
+          </p>
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         {/* Left: plan + features */}
         <div className="space-y-4">
@@ -204,12 +248,12 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
 
           {/* Coupon */}
           <div className="mt-4">
-            <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/45">Partner code</label>
+            <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/45">Partner / promo code</label>
             <div className="flex items-center gap-2">
               <input
                 value={code}
                 onChange={(e) => { setCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20)); setApplied(null); setCouponMsg(''); setCouponErr(''); }}
-                placeholder="Enter code for 5% off"
+                placeholder={`Enter code for ${discountPct}% off`}
                 className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 font-mono text-sm uppercase tracking-wider text-white/90 outline-none focus:border-cyan-400/50"
               />
               <button
@@ -260,28 +304,38 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
               <Row label={`Discount (${effPct}%)`} value={`-$${money(chargeNow - discounted)}`} accent />
             )}
             <div className="flex items-center justify-between border-t border-white/10 pt-3">
-              <span className="font-semibold text-white">{hasDiscount ? 'Total due today' : 'Due today'}</span>
+              <span className="font-semibold text-white">Due today</span>
               <span className="font-display text-2xl font-bold" style={gradientText}>
-                ${hasDiscount ? money(discounted) : (billingCycle ? '0.00' : money(chargeNow))}
+                ${money(dueToday)}
               </span>
             </div>
+            {isTrialing && hasDiscount && (
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-white/55">First payment · {trialEndLabel}</span>
+                <span className="font-mono text-white/80">${money(discounted)}</span>
+              </div>
+            )}
           </div>
 
           {/* Trial / charge note */}
           <p className="mt-2 text-[11px] leading-relaxed text-white/40">
-            {hasDiscount
-              ? `Discounted plans are billed today — no free trial. Renews at $${money(chargeNow)} ${billingCycle === 'yearly' ? '/year' : '/month'}.`
-              : `Start with a 14-day free trial — $0 today. You'll be charged $${money(chargeNow)} ${billingCycle === 'yearly' ? '/year' : '/month'} when it ends. Cancel anytime.`}
+            {isTrialing
+              ? (hasDiscount
+                  ? `No charge today. Your ${trialDaysLeft} remaining trial day${trialDaysLeft !== 1 ? 's' : ''} stay free — first payment $${money(discounted)} on ${trialEndLabel}, then $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
+                  : `Apply a partner or promo code to subscribe with a discount now. Otherwise your trial converts automatically on ${trialEndLabel} at $${money(chargeNow)} ${cycleLabel}.`)
+              : (hasDiscount
+                  ? `Discounted plans are billed today — no free trial. Renews at $${money(chargeNow)} ${cycleLabel}.`
+                  : `Start with a 14-day free trial — $0 today. You'll be charged $${money(chargeNow)} ${cycleLabel} when it ends. Cancel anytime.`)}
           </p>
 
           {/* Pay */}
           <button
             onClick={handlePay}
-            disabled={loading}
-            className="mt-5 w-full rounded-xl py-3 text-sm font-bold text-[#08080f] shadow-lg transition-transform hover:scale-[1.02] disabled:opacity-50"
+            disabled={payDisabled}
+            className="mt-5 w-full rounded-xl py-3 text-sm font-bold text-[#08080f] shadow-lg transition-transform hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
             style={gradientBtn}
           >
-            {loading ? 'Opening checkout…' : hasDiscount ? `Pay $${money(discounted)} now` : 'Start 14-day free trial'}
+            {payLabel}
           </button>
           <p className="mt-3 text-center text-[11px] text-white/30">Secure payment via Razorpay · Cancel anytime</p>
         </div>

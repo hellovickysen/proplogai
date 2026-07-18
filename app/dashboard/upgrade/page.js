@@ -12,8 +12,11 @@ export default async function UpgradePage({ searchParams }) {
   if (!user) redirect('/login');
 
   const access = await getUserAccess(supabase, user);
-  // Already on Elite (active/trialing/beta/admin) — nothing to buy.
-  if (access.effectivePlan === 'elite') {
+
+  // Admins and users who already pay for Elite (active, non-trial) have nothing
+  // to buy. Trialing users ARE allowed here so they can convert with a code and
+  // keep their remaining trial days.
+  if (access.isAdmin || (access.effectivePlan === 'elite' && !access.isTrialing)) {
     redirect('/dashboard/settings?tab=billing');
   }
 
@@ -28,6 +31,8 @@ export default async function UpgradePage({ searchParams }) {
       yearlyTotal={Math.round(PLANS.elite.priceYearly * 12 * 100) / 100}
       discountPct={Math.round(PARTNER_DISCOUNT_PCT * 100)}
       initialCoupon={initialCoupon}
+      isTrialing={!!access.isTrialing}
+      trialEndsAt={access.trialEndsAt || null}
     />
   );
 }
