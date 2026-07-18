@@ -244,6 +244,7 @@ export default async function DashboardPage() {
           coreCompleted={onboardingProgress.coreCompleted}
           coreTotal={onboardingProgress.coreTotal}
           userName={onboardingName}
+          userId={user.id}
         />
       </div>
     );
@@ -283,6 +284,7 @@ export default async function DashboardPage() {
         completed={onboardingProgress.completed}
         total={onboardingProgress.total}
         userName={onboardingName}
+        userId={user.id}
       />
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Dashboard</h1>

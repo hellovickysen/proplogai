@@ -64,12 +64,16 @@ function StepBadge({ step, done, locked }) {
   );
 }
 
-export default function OnboardingChecklist({ milestones: rawMilestones, completed: rawCompleted, total, coreCompleted, coreTotal, userName }) {
+export default function OnboardingChecklist({ milestones: rawMilestones, completed: rawCompleted, total, coreCompleted, coreTotal, userName, userId }) {
   const [dismissed, setDismissed] = useState(false);
   const [prevCompleted, setPrevCompleted] = useState(null);
   const [celebrating, setCelebrating] = useState(null);
   const [hasShared, setHasShared] = useState(false);
   const celebrationTimer = useRef(null);
+
+  // User-scoped localStorage keys
+  const storageKey = userId ? `pl_checklist_dismissed_${userId}` : STORAGE_KEY;
+  const completedKey = userId ? `pl_checklist_completed_${userId}` : COMPLETED_KEY;
 
   // Check localStorage for bonus step (PnL card share)
   const milestones = rawMilestones.map((m) =>
@@ -81,9 +85,9 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
   useEffect(() => {
     try {
       if (localStorage.getItem('pl_first_share') === '1') setHasShared(true);
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(storageKey);
       setDismissed(stored === '1');
-      const prev = localStorage.getItem(COMPLETED_KEY);
+      const prev = localStorage.getItem(completedKey);
       setPrevCompleted(prev ? Number(prev) : null);
     } catch {
       setDismissed(false);
@@ -97,7 +101,7 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
 
   useEffect(() => {
     if (prevCompleted === null) {
-      try { localStorage.setItem(COMPLETED_KEY, String(completed)); } catch {}
+      try { localStorage.setItem(completedKey, String(completed)); } catch {}
       setPrevCompleted(completed);
       return;
     }
@@ -107,7 +111,7 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
         setCelebrating(justDone);
         celebrationTimer.current = setTimeout(() => setCelebrating(null), 6000);
       }
-      try { localStorage.setItem(COMPLETED_KEY, String(completed)); } catch {}
+      try { localStorage.setItem(completedKey, String(completed)); } catch {}
       setPrevCompleted(completed);
     }
   }, [completed, prevCompleted, milestones]);
@@ -118,7 +122,7 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
 
   function dismiss() {
     setDismissed(true);
-    try { localStorage.setItem(STORAGE_KEY, '1'); } catch {}
+    try { localStorage.setItem(storageKey, '1'); } catch {}
   }
 
   if (dismissed) return null;
