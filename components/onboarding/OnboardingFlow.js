@@ -94,8 +94,9 @@ export default function OnboardingFlow({ userEmail }) {
     if (typeof window !== 'undefined' && window.posthog) {
       window.posthog.capture('onboarding_completed');
     }
-    router.push('/dashboard');
-    router.refresh();
+    // Full page reload ensures fresh server-rendered dashboard content.
+    // Client-side router.push can serve stale cached data on iOS Safari.
+    window.location.href = '/dashboard';
   }
 
   const total = 4;

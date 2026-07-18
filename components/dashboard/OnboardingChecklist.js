@@ -65,7 +65,7 @@ function StepBadge({ step, done, locked }) {
 }
 
 export default function OnboardingChecklist({ milestones: rawMilestones, completed: rawCompleted, total, coreCompleted, coreTotal, userName }) {
-  const [dismissed, setDismissed] = useState(true);
+  const [dismissed, setDismissed] = useState(false);
   const [prevCompleted, setPrevCompleted] = useState(null);
   const [celebrating, setCelebrating] = useState(null);
   const [hasShared, setHasShared] = useState(false);
