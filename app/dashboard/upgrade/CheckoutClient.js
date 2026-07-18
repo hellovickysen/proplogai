@@ -79,21 +79,18 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
         return;
       }
       const methods = Array.isArray(data.methods) ? data.methods : [];
-      setApplied({ discountPct: data.discountPct || 0, methods });
+      setApplied({ discountPct: data.discountPct || 0, methods, label: data.label || '' });
       if (methods.length) setMethod(methods[0]);
-      if (data.discountPct > 0) {
-        setCouponMsg(isTrialing
-          ? `Code applied — ${data.discountPct}% off your first payment on ${trialEndLabel}. Your ${trialDaysLeft} trial day${trialDaysLeft !== 1 ? 's' : ''} stay free.`
-          : `Code applied — ${data.discountPct}% off, billed today (no free trial).`);
-      } else {
-        setCouponMsg('Code applied.');
-      }
+      // The server returns the exact rate + a plain-English reason (trial vs
+      // post-trial), so a partner-referred user always sees why they got a
+      // given rate rather than being surprised by 15% vs 30%.
+      setCouponMsg(data.label || (data.discountPct > 0 ? `${data.discountPct}% off applied.` : 'Code applied.'));
     } catch {
       setCouponErr('Could not validate the code. Try again.');
     } finally {
       setApplying(false);
     }
-  }, [code, isTrialing, trialDaysLeft, trialEndLabel]);
+  }, [code]);
 
   // Auto-apply a code passed in the URL.
   useEffect(() => {
