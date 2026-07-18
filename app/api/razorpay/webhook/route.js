@@ -101,6 +101,8 @@ export async function POST(request) {
         if (updatedSub?.user_id && payment?.id) {
           await recordAffiliateCommission(supabase, updatedSub.user_id, payment);
         }
+        // A user who actually pays is no longer a beta user — convert to paid Elite.
+        if (updatedSub?.user_id) await convertBetaToPaid(supabase, updatedSub.user_id);
         break;
       }
 
@@ -134,6 +136,8 @@ export async function POST(request) {
         if (updatedSub?.user_id && payment?.id) {
           await recordAffiliateCommission(supabase, updatedSub.user_id, payment);
         }
+        // Ensure a paying user is no longer flagged beta.
+        if (updatedSub?.user_id) await convertBetaToPaid(supabase, updatedSub.user_id);
         break;
       }
 
@@ -334,5 +338,23 @@ async function reverseAffiliateCommission(supabase, paymentId) {
       .eq('razorpay_payment_id', paymentId);
   } catch (e) {
     console.error('reverseAffiliateCommission error (non-fatal):', e?.message || e);
+  }
+}
+
+/**
+ * Convert a beta user to a real paid Elite: clear is_beta once they pay.
+ * Uses the service-role client, which the protect_is_beta trigger allows.
+ * Only touches rows still flagged beta. Never throws.
+ */
+async function convertBetaToPaid(supabase, userId) {
+  try {
+    if (!userId) return;
+    await supabase
+      .from('user_preferences')
+      .update({ is_beta: false })
+      .eq('user_id', userId)
+      .eq('is_beta', true);
+  } catch (e) {
+    console.error('convertBetaToPaid error (non-fatal):', e?.message || e);
   }
 }

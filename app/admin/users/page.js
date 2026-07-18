@@ -40,12 +40,12 @@ export default async function AdminUsersPage({ searchParams }) {
     // Fetch subscription data for plan badges
     let subMap = {};
     try {
-      const { data: subs } = await sb.from('subscriptions').select('user_id, plan, status, trial_ends_at');
+      const { data: subs } = await sb.from('subscriptions').select('user_id, plan, status, trial_ends_at, billing_cycle');
       (subs || []).forEach((s) => {
         const isActive = ['active', 'authenticated', 'created'].includes(s.status);
         const isTrialing = s.trial_ends_at && new Date(s.trial_ends_at) > new Date();
         if (isActive || isTrialing) {
-          subMap[s.user_id] = { plan: s.plan || 'basic', status: s.status, isTrialing };
+          subMap[s.user_id] = { plan: s.plan || 'basic', status: s.status, isTrialing, billing_cycle: s.billing_cycle || null };
         }
       });
     } catch {}

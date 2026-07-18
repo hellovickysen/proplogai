@@ -74,6 +74,7 @@ export default function AdminUserTabs({ users, search }) {
               <th className="px-4 py-3">Onboarded</th>
               <th className="px-4 py-3">Trades</th>
               <th className="px-4 py-3">Plan</th>
+              <th className="px-4 py-3">Billing</th>
               {tab === 'banned' && <th className="px-4 py-3">Ban reason</th>}
               <th className="px-4 py-3"></th>
             </tr>
@@ -110,6 +111,18 @@ export default function AdminUserTabs({ users, search }) {
                     )}
                   </div>
                 </td>
+                <td className="px-4 py-3">
+                  {u.subscription?.billing_cycle ? (
+                    <span className="capitalize text-white/70">
+                      {u.subscription.billing_cycle}
+                      {u.subscription.status && u.subscription.status !== 'active' && (
+                        <span className="ml-1 font-mono text-[10px] text-white/40">· {u.subscription.status}</span>
+                      )}
+                    </span>
+                  ) : (
+                    <span className="text-white/30">—</span>
+                  )}
+                </td>
                 {tab === 'banned' && (
                   <td className="max-w-[200px] px-4 py-3 text-xs text-white/50">
                     {u.banReason || <span className="text-white/40">No reason</span>}
@@ -124,7 +137,7 @@ export default function AdminUserTabs({ users, search }) {
               </tr>
             ))}
             {list.length === 0 && (
-              <tr><td colSpan={tab === 'banned' ? 9 : 8} className="px-4 py-8 text-center text-white/40">
+              <tr><td colSpan={tab === 'banned' ? 10 : 9} className="px-4 py-8 text-center text-white/40">
                 {tab === 'banned' ? 'No banned users.' : 'No users found.'}
               </td></tr>
             )}
