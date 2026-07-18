@@ -71,11 +71,19 @@ export async function middleware(request) {
     partnerProtected(effectivePath, partner);
 
   try {
+    // Use getSession() instead of getUser() to avoid a network round-trip
+    // to Supabase on every request. getSession() validates the JWT locally
+    // from cookies — no external call needed. The full getUser() verification
+    // still happens in dashboard/layout.js Server Component.
+    //
+    // This prevents MIDDLEWARE_INVOCATION_TIMEOUT (504) on Vercel Edge,
+    // which occurred when Supabase was slow to respond (especially from
+    // Mumbai/India edge nodes).
     const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      data: { session },
+    } = await supabase.auth.getSession();
 
-    if (!user && isProtectedRoute) {
+    if (!session && isProtectedRoute) {
       const url = request.nextUrl.clone();
       url.pathname = '/login'; // on partner host this rewrites to /partner/login
       return NextResponse.redirect(url);
