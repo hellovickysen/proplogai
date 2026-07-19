@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -123,6 +123,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   const [lesson, setLesson] = useState('');
   const [tradeTags, setTradeTags] = useState([]);
   const [screenshotUrls, setScreenshotUrls] = useState([]);
+  const uploadedThisSessionRef = useRef([]);
   const [uploading, setUploading] = useState(false);
 
   // Risk:Reward state
@@ -383,6 +384,21 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     setScreenshotUrls((cur) => cur.filter((_, idx) => idx !== i));
   }
 
+  // Clean up orphaned uploads (uploaded during session but removed before save)
+  async function cleanupOrphanedUploads(savedUrls) {
+    const orphaned = uploadedThisSessionRef.current.filter(u => !savedUrls.includes(u));
+    if (orphaned.length > 0) {
+      try {
+        const supabase = createClient();
+        const paths = orphaned.map(u => u.split('/screenshots/')[1]).filter(Boolean);
+        if (paths.length > 0) {
+          await supabase.storage.from('screenshots').remove(paths);
+        }
+      } catch (e) {}
+    }
+    uploadedThisSessionRef.current = [];
+  }
+
   async function onFiles(e) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -429,6 +445,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       newUrls.push(url);
     }
 
+    uploadedThisSessionRef.current.push(...newUrls);
     setScreenshotUrls((cur) => [...cur, ...newUrls]);
     setUploading(false);
     e.target.value = '';
@@ -493,6 +510,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       if (toast) toast.error(res.error);
       setSaving(false);
     } else {
+      // Clean up any screenshots that were uploaded then removed before save
+      await cleanupOrphanedUploads(screenshotUrls);
       if (toast) toast.success(mode === 'edit' ? 'Trade updated!' : 'Trade saved!');
       if (typeof window !== 'undefined' && window.posthog) {
         window.posthog.capture(mode === 'edit' ? 'trade_updated' : 'trade_created', {
