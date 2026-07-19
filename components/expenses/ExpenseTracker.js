@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createExpense, updateExpense, deleteExpense, createPayout, updatePayout, deletePayout, renameFirm } from '@/app/dashboard/prop-expenses/actions';
 import { createTrophy } from '@/app/dashboard/trophies/actions';
+import { UploadTrophyForm } from '@/components/trophies/TrophyWall';
 import { createClient } from '@/lib/supabase/client';
 import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
@@ -589,7 +590,7 @@ function FirmDashboard({
   firmName, expenses, payouts, trophies,
   onBack, onDeleteExpense, onDeletePayout,
   onEditExpense, onEditPayout,
-  onAddExpense, onAddPayout,
+  onAddExpense, onAddPayout, onAddTrophy,
   onRenameFirm
 }) {
   const [isEditingName, setIsEditingName] = useState(false);
@@ -791,7 +792,7 @@ function FirmDashboard({
       </div>
 
       {/* Trophies Section */}
-      {trophies.length > 0 && (() => {
+      {(() => {
         const filteredTrophies = trophyCategoryFilter === 'all' ? trophies : trophies.filter((t) => t.category === trophyCategoryFilter);
         return (
         <div>
@@ -799,7 +800,15 @@ function FirmDashboard({
             <h2 className="font-display text-base font-semibold">
               Trophies <span className="ml-1 font-mono text-xs text-white/40">({trophies.length})</span>
             </h2>
+            <button onClick={onAddTrophy} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-[#08080f]" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
+              + Add Trophy
+            </button>
           </div>
+          {trophies.length === 0 ? (
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-8 text-center">
+              <p className="text-sm text-white/40">No trophies for {firmName} yet. Upload your first!</p>
+            </div>
+          ) : (<>
           {trophies.length > 1 && (
             <div className="mb-3 flex items-center gap-1">
               {[{ key: 'all', label: 'All' }, { key: 'payout', label: 'Payout' }, { key: 'challenge_pass', label: 'Challenge' }, { key: 'funded', label: 'Funded' }, { key: 'other', label: 'Other' }].map((f) => (
@@ -835,6 +844,7 @@ function FirmDashboard({
             })}
           </div>
           )}
+          </>)}
         </div>
         );
       })()}
@@ -850,6 +860,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
   const [tab, setTab] = useState('Dashboard');
   const [showExpenseForm, setShowExpenseForm] = useState(false);
   const [showPayoutForm, setShowPayoutForm] = useState(false);
+  const [showTrophyForm, setShowTrophyForm] = useState(false);
   const [expandedFirm, setExpandedFirm] = useState(null);
   const [selectedFirm, setSelectedFirm] = useState(null);
   const [editingExpense, setEditingExpense] = useState(null);
@@ -937,6 +948,12 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
     else { if (toast) toast.success('Prop expense updated!'); setEditingExpense(null); router.refresh(); }
   }
 
+  async function handleAddTrophy(data) {
+    const res = await createTrophy(data);
+    if (res.error) { if (toast) toast.error(res.error); }
+    else { if (toast) toast.success('Trophy added!'); setShowTrophyForm(false); router.refresh(); }
+  }
+
   function handleDeleteExpense(id) {
     setPendingDelete({ type: 'expense', id });
   }
@@ -1020,6 +1037,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           onEditPayout={setEditingPayout}
           onAddExpense={() => setShowExpenseForm(true)}
           onAddPayout={() => setShowPayoutForm(true)}
+          onAddTrophy={() => setShowTrophyForm(true)}
           onRenameFirm={handleRenameFirm}
         />
       ) : (
@@ -1249,6 +1267,10 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
 
       <Modal open={showPayoutForm} onClose={() => setShowPayoutForm(false)} title={selectedFirm ? `Add Payout — ${selectedFirm}` : 'Add Payout'}>
         <AddPayoutForm onSave={handleAddPayout} onCancel={() => setShowPayoutForm(false)} existingFirms={firmNames} defaultFirmName={selectedFirm} />
+      </Modal>
+
+      <Modal open={showTrophyForm} onClose={() => setShowTrophyForm(false)} title={selectedFirm ? `Add Trophy — ${selectedFirm}` : 'Add Trophy'}>
+        <UploadTrophyForm onSave={handleAddTrophy} onCancel={() => setShowTrophyForm(false)} firmNames={firmNames} initialFirmName={selectedFirm} />
       </Modal>
 
       <Modal open={!!editingExpense} onClose={() => setEditingExpense(null)} title="Edit Expense">

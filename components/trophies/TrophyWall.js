@@ -115,10 +115,10 @@ function Lightbox({ trophy, onClose }) {
 
 /* --- Upload Form ---------------------------------------------------- */
 
-function UploadTrophyForm({ onSave, onCancel, firmNames }) {
+export function UploadTrophyForm({ onSave, onCancel, firmNames, initialFirmName }) {
   const uploadedUrlRef = useRef(null);
   const toast = useToast();
-  const [firmName, setFirmName] = useState('');
+  const [firmName, setFirmName] = useState(initialFirmName || '');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('payout');
   const [description, setDescription] = useState('');
@@ -205,7 +205,11 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className={labelCls}>Prop firm name *</label>
-        <FirmNameInput value={firmName} onChange={setFirmName} firmNames={firmNames || []} />
+        {initialFirmName ? (
+          <input value={firmName} disabled className={field + ' opacity-60 cursor-not-allowed'} />
+        ) : (
+          <FirmNameInput value={firmName} onChange={setFirmName} firmNames={firmNames || []} />
+        )}
       </div>
 
       <div>
