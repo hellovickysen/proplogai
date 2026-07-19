@@ -50,6 +50,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   // Screenshot state
   const [screenshotUrls, setScreenshotUrls] = useState(initialScreenshots);
   const [uploading, setUploading] = useState(false);
+  const uploadedThisSessionRef = useRef([]);
 
   async function handleScreenshotUpload(e) {
     const files = Array.from(e.target.files || []);
@@ -73,6 +74,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         if (upErr) { toast.error?.('Upload failed'); continue; }
         const { data: { publicUrl } } = supabase.storage.from('screenshots').getPublicUrl(path);
         setScreenshotUrls(prev => [...prev, publicUrl]);
+        uploadedThisSessionRef.current.push(publicUrl);
         setDirty(true);
       } catch (err) {
         toast.error?.('Upload failed');
@@ -90,8 +92,8 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   }
 
   async function cancelEditing() {
-    // Clean up any newly uploaded screenshots that won't be saved
-    const newUploads = screenshotUrls.filter(u => !initialScreenshots.includes(u));
+    // Clean up all screenshots uploaded during this session
+    const newUploads = uploadedThisSessionRef.current;
     if (newUploads.length > 0) {
       try {
         const supabase = createClient();
@@ -101,7 +103,8 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         }
       } catch (e) {}
     }
-    // Reset state to initial values
+    // Reset state and session tracker
+    uploadedThisSessionRef.current = [];
     setScreenshotUrls(initialScreenshots);
     setDirty(false);
     setEditing(false);
@@ -204,7 +207,10 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
       }
 
       // Clean up removed screenshots from storage (after DB save succeeds)
-      const removedUrls = initialScreenshots.filter(u => !screenshotUrls.includes(u));
+      // Check both: initial screenshots removed + session uploads removed before save
+      const removedInitial = initialScreenshots.filter(u => !screenshotUrls.includes(u));
+      const removedSessionUploads = uploadedThisSessionRef.current.filter(u => !screenshotUrls.includes(u));
+      const removedUrls = [...removedInitial, ...removedSessionUploads];
       if (removedUrls.length > 0) {
         try {
           const paths = removedUrls.map(u => u.split('/screenshots/')[1]).filter(Boolean);
@@ -214,6 +220,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
         } catch (e) {}
       }
 
+      uploadedThisSessionRef.current = [];
       toast.success?.('Journal saved');
       setDirty(false);
       setEditing(startInEditMode); // stay in edit mode if started there
