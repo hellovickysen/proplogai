@@ -11,21 +11,30 @@ export default async function AdminUsersPage({ searchParams }) {
   const search = (searchParams && searchParams.q) || '';
 
   try {
-    let authUsers = [];
-    let authError = null;
-    const authRes = await sb.auth.admin.listUsers({ page: 1, perPage: 500 });
-    if (authRes.error) {
-      authError = authRes.error.message;
-    } else {
-      authUsers = authRes.data?.users || [];
+    // Query auth.users directly via service-role (more reliable than listUsers API)
+    const { data: authUsers, error: authError } = await sb
+      .from('users')
+      .select('id, email, created_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, banned_until')
+      .order('created_at', { ascending: false });
+
+    if (authError) {
+      return (
+        <div className="rounded-2xl border border-red-400/20 bg-red-500/5 p-8">
+          <h2 className="font-display text-lg font-bold text-red-300">Error loading users</h2>
+          <p className="mt-2 text-sm text-white/55">{authError.message}</p>
+        </div>
+      );
     }
 
+    // Enrich with trade counts
     let tradeMap = {};
-    let onboardMap = {};
     try {
       const { data: trades } = await sb.from('trades').select('user_id');
       (trades || []).forEach((t) => { tradeMap[t.user_id] = (tradeMap[t.user_id] || 0) + 1; });
     } catch {}
+
+    // Enrich with onboarding status and names
+    let onboardMap = {};
     let nameMap = {};
     try {
       const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete, full_name');
@@ -55,26 +64,29 @@ export default async function AdminUsersPage({ searchParams }) {
       });
     } catch {}
 
-    let users = authUsers.map((u) => ({
-      id: u.id,
-      email: u.email || '(no email)',
-      full_name: nameMap[u.id] || null,
-      created_at: u.created_at,
-      last_sign_in: u.last_sign_in_at,
-      provider: u.app_metadata?.provider || 'email',
-      trades: tradeMap[u.id] || 0,
-      onboarded: onboardMap[u.id] || false,
-      banned: !!u.banned_until,
-      banReason: u.user_metadata?.ban_reason || null,
-      isAdmin: u.email === ADMIN_EMAIL,
-      subscription: subMap[u.id] || null,
-    }));
+    let users = (authUsers || []).map((u) => {
+      const provider = u.raw_app_meta_data?.provider || 'email';
+      const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
+      return {
+        id: u.id,
+        email: u.email || '(no email)',
+        full_name: nameMap[u.id] || u.raw_user_meta_data?.full_name || null,
+        created_at: u.created_at,
+        last_sign_in: u.last_sign_in_at,
+        provider,
+        trades: tradeMap[u.id] || 0,
+        onboarded: onboardMap[u.id] || false,
+        banned: !!isBanned,
+        banReason: u.raw_user_meta_data?.ban_reason || null,
+        isAdmin: u.email === ADMIN_EMAIL,
+        subscription: subMap[u.id] || null,
+      };
+    });
 
     if (search) {
       const q = search.toLowerCase();
       users = users.filter((u) => u.email.toLowerCase().includes(q) || (u.full_name && u.full_name.toLowerCase().includes(q)));
     }
-    users.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
     return (
       <div>
@@ -88,12 +100,6 @@ export default async function AdminUsersPage({ searchParams }) {
             <button type="submit" className="rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-white/60 hover:text-white">Search</button>
           </form>
         </div>
-
-        {authError && (
-          <div className="mb-4 rounded-xl border border-amber-400/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-300">
-            Auth API warning: {authError}
-          </div>
-        )}
 
         <AdminUserTabs users={users} search={search} />
       </div>
