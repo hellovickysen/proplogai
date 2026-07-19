@@ -104,7 +104,7 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
   const payLabel = loading
     ? 'Opening checkout…'
     : isTrialing
-      ? `Subscribe — first payment $${money(firstPayment)} on ${trialEndLabel}`
+      ? 'Subscribe now'
       : `Pay $${money(hasDiscount ? discounted : chargeNow)} now`;
 
   async function handlePay() {
