@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import AdminBanButton from '@/components/admin/AdminBanButton';
+import AdminDeleteButton from '@/components/admin/AdminDeleteButton';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -116,6 +117,7 @@ export default function AdminUserTabs({ users, search }) {
                   <div className="flex items-center gap-2">
                     <Link href={'/admin/users/' + u.id} className="font-mono text-xs text-cyan-400 hover:underline">View</Link>
                     {!u.isAdmin && <AdminBanButton userId={u.id} isBanned={u.banned} email={u.email} />}
+                    {!u.isAdmin && <AdminDeleteButton email={u.email} />}
                   </div>
                 </td>
               </tr>

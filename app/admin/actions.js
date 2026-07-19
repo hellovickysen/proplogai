@@ -27,3 +27,32 @@ export async function toggleBeta(userId, newValue) {
   revalidatePath('/admin/users');
   return { ok: true };
 }
+
+/**
+ * Permanently delete a user and all their data. Admin-only action.
+ * Calls the admin_delete_user_by_email SQL function in Supabase.
+ */
+export async function deleteUser(targetEmail) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user || user.email !== ADMIN_EMAIL) {
+    return { error: 'Unauthorized.' };
+  }
+
+  // Prevent deleting the admin account
+  if (targetEmail === ADMIN_EMAIL) {
+    return { error: 'Cannot delete admin account.' };
+  }
+
+  const adminSb = createAdminClient();
+  if (!adminSb) return { error: 'Admin client not configured.' };
+
+  const { data, error } = await adminSb.rpc('admin_delete_user_by_email', {
+    target_email: targetEmail,
+  });
+
+  if (error) return { error: error.message };
+
+  revalidatePath('/admin/users');
+  return { ok: true, message: data };
+}
