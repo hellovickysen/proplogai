@@ -89,6 +89,24 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     setDirty(true);
   }
 
+  async function cancelEditing() {
+    // Clean up any newly uploaded screenshots that won't be saved
+    const newUploads = screenshotUrls.filter(u => !initialScreenshots.includes(u));
+    if (newUploads.length > 0) {
+      try {
+        const supabase = createClient();
+        const paths = newUploads.map(u => u.split('/screenshots/')[1]).filter(Boolean);
+        if (paths.length > 0) {
+          await supabase.storage.from('screenshots').remove(paths);
+        }
+      } catch (e) {}
+    }
+    // Reset state to initial values
+    setScreenshotUrls(initialScreenshots);
+    setDirty(false);
+    setEditing(false);
+  }
+
   // Mutable options lists — start from prefs, grow when user adds inline
   const [emotionOptions, setEmotionOptions] = useState(allEmotions);
   const [tagOptions, setTagOptions] = useState(allTags);
@@ -316,7 +334,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     <div className="rounded-2xl border border-violet-400/20 bg-violet-400/[0.03] p-5 sm:p-6 mb-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-mono text-xs uppercase tracking-wider text-violet-300/70">✎ Editing Journal</h2>
-        <button onClick={() => setEditing(false)} className="text-xs text-white/40 hover:text-white/60 transition-colors">
+        <button onClick={cancelEditing} className="text-xs text-white/40 hover:text-white/60 transition-colors">
           Cancel
         </button>
       </div>
@@ -481,7 +499,7 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
             {saving ? 'Saving...' : (journal?.id ? 'Save Changes' : 'Add Journal')}
           </button>
           <button
-            onClick={() => setEditing(false)}
+            onClick={cancelEditing}
             className="px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/50 hover:text-white/70 transition-colors"
           >
             Cancel
