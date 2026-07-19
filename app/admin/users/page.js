@@ -11,11 +11,8 @@ export default async function AdminUsersPage({ searchParams }) {
   const search = (searchParams && searchParams.q) || '';
 
   try {
-    // Query auth.users directly via service-role (more reliable than listUsers API)
-    const { data: authUsers, error: authError } = await sb
-      .from('users')
-      .select('id, email, created_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data, banned_until')
-      .order('created_at', { ascending: false });
+    // Query auth.users directly via SQL function (more reliable than listUsers API)
+    const { data: authUsers, error: authError } = await sb.rpc('admin_list_users');
 
     if (authError) {
       return (
@@ -33,14 +30,14 @@ export default async function AdminUsersPage({ searchParams }) {
       (trades || []).forEach((t) => { tradeMap[t.user_id] = (tradeMap[t.user_id] || 0) + 1; });
     } catch {}
 
-    // Enrich with onboarding status and names
+    // Enrich with onboarding status
     let onboardMap = {};
-    let nameMap = {};
+    let prefNameMap = {};
     try {
       const { data: prefs } = await sb.from('user_preferences').select('user_id, onboarding_complete, full_name');
       (prefs || []).forEach((p) => {
         onboardMap[p.user_id] = !!p.onboarding_complete;
-        if (p.full_name) nameMap[p.user_id] = p.full_name;
+        if (p.full_name) prefNameMap[p.user_id] = p.full_name;
       });
     } catch {}
 
@@ -65,19 +62,18 @@ export default async function AdminUsersPage({ searchParams }) {
     } catch {}
 
     let users = (authUsers || []).map((u) => {
-      const provider = u.raw_app_meta_data?.provider || 'email';
       const isBanned = u.banned_until && new Date(u.banned_until) > new Date();
       return {
         id: u.id,
         email: u.email || '(no email)',
-        full_name: nameMap[u.id] || u.raw_user_meta_data?.full_name || null,
+        full_name: prefNameMap[u.id] || u.full_name || null,
         created_at: u.created_at,
         last_sign_in: u.last_sign_in_at,
-        provider,
+        provider: u.provider || 'email',
         trades: tradeMap[u.id] || 0,
         onboarded: onboardMap[u.id] || false,
         banned: !!isBanned,
-        banReason: u.raw_user_meta_data?.ban_reason || null,
+        banReason: u.ban_reason || null,
         isAdmin: u.email === ADMIN_EMAIL,
         subscription: subMap[u.id] || null,
       };
