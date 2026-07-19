@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { createTrophy, deleteTrophy, togglePublic } from '@/app/dashboard/trophies/actions';
@@ -116,6 +116,7 @@ function Lightbox({ trophy, onClose }) {
 /* --- Upload Form ---------------------------------------------------- */
 
 function UploadTrophyForm({ onSave, onCancel, firmNames }) {
+  const uploadedUrlRef = useRef(null);
   const toast = useToast();
   const [firmName, setFirmName] = useState('');
   const [title, setTitle] = useState('');
@@ -156,6 +157,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
       return;
     }
     const pub = supabase.storage.from('trophies').getPublicUrl(path);
+    uploadedUrlRef.current = pub.data.publicUrl;
     setFileUrl(pub.data.publicUrl);
     setPreview(processed.preview);
     setUploading(false);
@@ -166,9 +168,38 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
     e.preventDefault();
     if (!fileUrl) return;
     setSaving(true);
+    uploadedUrlRef.current = null; // Clear so unmount cleanup skips
     await onSave({ firm_name: firmName.trim(), title, category, description, file_url: fileUrl, trophy_date: trophyDate });
     setSaving(false);
   }
+
+  async function handleCancel() {
+    // Clean up uploaded file from storage if user cancels
+    if (uploadedUrlRef.current) {
+      try {
+        const supabase = createClient();
+        const path = uploadedUrlRef.current.split('/trophies/')[1];
+        if (path) {
+          await supabase.storage.from('trophies').remove([path]);
+        }
+      } catch (e) {}
+      uploadedUrlRef.current = null;
+    }
+    onCancel();
+  }
+
+  // Clean up on unmount (modal close via X or clicking outside)
+  useEffect(() => {
+    return () => {
+      if (uploadedUrlRef.current) {
+        const supabase = createClient();
+        const path = uploadedUrlRef.current.split('/trophies/')[1];
+        if (path) {
+          supabase.storage.from('trophies').remove([path]).catch(() => {});
+        }
+      }
+    };
+  }, []);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -221,7 +252,7 @@ function UploadTrophyForm({ onSave, onCancel, firmNames }) {
       </div>
 
       <div className="flex gap-3 pt-2">
-        <button type="button" onClick={onCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
+        <button type="button" onClick={handleCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
         <button type="submit" disabled={saving || uploading || !fileUrl || !firmName.trim()} className="flex-1 rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f] disabled:opacity-60" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>
           {saving ? 'Saving...' : 'Add Trophy'}
         </button>
