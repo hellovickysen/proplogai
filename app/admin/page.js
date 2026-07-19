@@ -96,19 +96,11 @@ export default async function AdminOverviewPage() {
   if (!sb) return <SetupMessage />;
 
   try {
-    // ── Total users (paginated to count beyond 1000) ──
+    // ── Total users (direct SQL via RPC — reliable) ──
     let totalUsers = 0;
-    let firstPageUsers = [];
     try {
-      let page = 1;
-      while (true) {
-        const { data: authData } = await sb.auth.admin.listUsers({ page, perPage: 1000 });
-        const users = authData?.users || [];
-        if (page === 1) firstPageUsers = users;
-        totalUsers += users.length;
-        if (users.length < 1000) break;
-        page++;
-      }
+      const { data: allUsers } = await sb.rpc('admin_list_users');
+      totalUsers = (allUsers || []).length;
     } catch { totalUsers = 0; }
 
     // ── Aggregate counts ──
