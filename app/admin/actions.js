@@ -55,8 +55,29 @@ export async function unbanUser(userId) {
 }
 
 /**
+ * Delete all files in a storage bucket for a given user.
+ * Files are stored as userId/... so we list by prefix and remove.
+ */
+async function cleanupUserStorage(adminSb, bucket, userId) {
+  try {
+    const { data: files } = await adminSb.storage
+      .from(bucket)
+      .list(userId, { limit: 1000 });
+
+    if (files && files.length > 0) {
+      const paths = files.map((f) => `${userId}/${f.name}`);
+      await adminSb.storage.from(bucket).remove(paths);
+    }
+  } catch (e) {
+    // Best effort — don't block user deletion if storage cleanup fails
+    console.error(`Storage cleanup failed for ${bucket}/${userId}:`, e.message);
+  }
+}
+
+/**
  * Permanently delete a user and all their data. Admin-only action.
- * Calls the admin_delete_user_by_email SQL function in Supabase.
+ * 1. Deletes storage files (screenshots + trophies)
+ * 2. Calls admin_delete_user_by_email SQL function (DB + auth cleanup)
  */
 export async function deleteUser(targetEmail) {
   const supabase = createClient();
@@ -72,6 +93,17 @@ export async function deleteUser(targetEmail) {
   const adminSb = createAdminClient();
   if (!adminSb) return { error: 'Admin client not configured.' };
 
+  // Resolve email to user ID for storage cleanup
+  const { data: targetUser } = await adminSb.rpc('admin_list_users');
+  const match = (targetUser || []).find((u) => u.email === targetEmail);
+
+  if (match) {
+    // Clean up storage files before deleting DB rows
+    await cleanupUserStorage(adminSb, 'screenshots', match.id);
+    await cleanupUserStorage(adminSb, 'trophies', match.id);
+  }
+
+  // Delete DB rows + auth user via SQL function
   const { data, error } = await adminSb.rpc('admin_delete_user_by_email', {
     target_email: targetEmail,
   });
