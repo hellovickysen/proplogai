@@ -56,9 +56,9 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
 
   // What's charged the moment the user confirms:
   // - trialing → nothing today (first charge is pinned to the trial end date)
-  // - discounted, not trialing → discounted amount now
-  // - plain trial → nothing today
-  const dueToday = (hasDiscount && !isTrialing) ? discounted : 0;
+  // - not trialing → the discounted amount if a code applies, else full price
+  //   (trials are auto-granted at signup; checkout never starts a new trial)
+  const dueToday = isTrialing ? 0 : (hasDiscount ? discounted : chargeNow);
 
   const applyCoupon = useCallback(async () => {
     setCouponErr('');
@@ -105,7 +105,7 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
     ? 'Opening checkout…'
     : isTrialing
       ? `Subscribe — first payment $${money(firstPayment)} on ${trialEndLabel}`
-      : (hasDiscount ? `Pay $${money(discounted)} now` : 'Start 14-day free trial');
+      : `Pay $${money(hasDiscount ? discounted : chargeNow)} now`;
 
   async function handlePay() {
     if (payDisabled) return;
@@ -320,8 +320,8 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
             {isTrialing
               ? `No charge today — your ${trialDaysLeft} remaining trial day${trialDaysLeft !== 1 ? 's' : ''} are added. First payment $${money(firstPayment)} on ${trialEndLabel}, then $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
               : (hasDiscount
-                  ? `Discounted plans are billed today — no free trial. Renews at $${money(chargeNow)} ${cycleLabel}.`
-                  : `Start with a 14-day free trial — $0 today. You'll be charged $${money(chargeNow)} ${cycleLabel} when it ends. Cancel anytime.`)}
+                  ? `Billed today at the discounted rate. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
+                  : `Billed today. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`)}
           </p>
 
           {/* Pay */}
