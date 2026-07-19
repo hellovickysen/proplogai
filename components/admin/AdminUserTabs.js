@@ -97,7 +97,7 @@ export default function AdminUserTabs({ users, search }) {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  {u.subscription?.billing_cycle ? (
+                  {u.subscription?.plan === 'elite' && u.subscription?.billing_cycle ? (
                     <span className="capitalize text-white/70">
                       {u.subscription.billing_cycle}
                       {u.subscription.status && u.subscription.status !== 'active' && (
