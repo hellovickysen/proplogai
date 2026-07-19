@@ -32,6 +32,20 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [editing, dirty]);
 
+  // Clean up orphaned uploads if user navigates away without saving
+  useEffect(() => {
+    return () => {
+      if (uploadedThisSessionRef.current.length > 0) {
+        const supabase = createClient();
+        const orphaned = uploadedThisSessionRef.current;
+        const paths = orphaned.map(u => u.split('/screenshots/')[1]).filter(Boolean);
+        if (paths.length > 0) {
+          supabase.storage.from('screenshots').remove(paths).catch(() => {});
+        }
+      }
+    };
+  }, []);
+
   // Emotion & tag options — use user's saved list; only fall back to defaults if never configured
   const defaultEmotions = ['Disciplined', 'Confident', 'FOMO', 'Greed', 'Boredom', 'Revenge'];
   const defaultTags = ['news', 'high-impact', 'low-volume', 'scalp', 'swing'];
