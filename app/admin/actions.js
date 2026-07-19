@@ -60,17 +60,16 @@ export async function unbanUser(userId) {
  */
 async function cleanupUserStorage(adminSb, bucket, userId) {
   try {
-    const { data: files } = await adminSb.storage
+    const { data: files, error: listErr } = await adminSb.storage
       .from(bucket)
-      .list(userId, { limit: 1000 });
+      .list(String(userId), { limit: 1000 });
 
-    if (files && files.length > 0) {
-      const paths = files.map((f) => `${userId}/${f.name}`);
-      await adminSb.storage.from(bucket).remove(paths);
-    }
+    if (listErr || !files || files.length === 0) return;
+
+    const paths = files.map((f) => `${String(userId)}/${f.name}`);
+    await adminSb.storage.from(bucket).remove(paths);
   } catch (e) {
     // Best effort — don't block user deletion if storage cleanup fails
-    console.error(`Storage cleanup failed for ${bucket}/${userId}:`, e.message);
   }
 }
 
@@ -99,8 +98,10 @@ export async function deleteUser(targetEmail) {
 
   if (match) {
     // Clean up storage files before deleting DB rows
-    await cleanupUserStorage(adminSb, 'screenshots', match.id);
-    await cleanupUserStorage(adminSb, 'trophies', match.id);
+    // Ensure userId is a string (RPC returns uuid type which can cause type mismatches)
+    const userId = String(match.id);
+    await cleanupUserStorage(adminSb, 'screenshots', userId);
+    await cleanupUserStorage(adminSb, 'trophies', userId);
   }
 
   // Delete DB rows + auth user via SQL function
