@@ -60,14 +60,41 @@ export async function unbanUser(userId) {
  */
 async function cleanupUserStorage(adminSb, bucket, userId) {
   try {
-    const { data: files, error: listErr } = await adminSb.storage
-      .from(bucket)
-      .list(String(userId), { limit: 1000 });
+    const uid = String(userId);
+    const storage = adminSb.storage.from(bucket);
 
-    if (listErr || !files || files.length === 0) return;
+    // List top-level items in the user's folder
+    const { data: items } = await storage.list(uid, { limit: 1000 });
+    if (!items || items.length === 0) return;
 
-    const paths = files.map((f) => `${String(userId)}/${f.name}`);
-    await adminSb.storage.from(bucket).remove(paths);
+    // Separate files and subfolders
+    const filePaths = [];
+    const subfolders = [];
+
+    for (const item of items) {
+      if (item.id) {
+        // Has an id = it's a file
+        filePaths.push(`${uid}/${item.name}`);
+      } else {
+        // No id = it's a folder (e.g. tradeId subfolder)
+        subfolders.push(`${uid}/${item.name}`);
+      }
+    }
+
+    // List files inside each subfolder (e.g. userId/tradeId/screenshot.webp)
+    for (const folder of subfolders) {
+      const { data: subItems } = await storage.list(folder, { limit: 1000 });
+      if (subItems) {
+        for (const f of subItems) {
+          filePaths.push(`${folder}/${f.name}`);
+        }
+      }
+    }
+
+    // Delete all files in one call
+    if (filePaths.length > 0) {
+      await storage.remove(filePaths);
+    }
   } catch (e) {
     // Best effort — don't block user deletion if storage cleanup fails
   }
