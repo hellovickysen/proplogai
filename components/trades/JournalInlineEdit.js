@@ -82,15 +82,9 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     e.target.value = '';
   }
 
-  async function removeScreenshot(url, idx) {
-    // Extract path from public URL for deletion
-    try {
-      const supabase = createClient();
-      const match = url.match(/screenshots\/(.+)$/);
-      if (match) {
-        await supabase.storage.from('screenshots').remove([match[1]]);
-      }
-    } catch (e) {}
+  function removeScreenshot(url, idx) {
+    // Only remove from local state — storage cleanup happens on save
+    // This prevents broken images if user cancels or navigates away without saving
     setScreenshotUrls(prev => prev.filter((_, i) => i !== idx));
     setDirty(true);
   }
@@ -189,6 +183,17 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
           .from('journal_entries')
           .insert({ ...data, trade_id: tradeId, user_id: userId });
         if (error) throw error;
+      }
+
+      // Clean up removed screenshots from storage (after DB save succeeds)
+      const removedUrls = initialScreenshots.filter(u => !screenshotUrls.includes(u));
+      if (removedUrls.length > 0) {
+        try {
+          const paths = removedUrls.map(u => u.split('/screenshots/')[1]).filter(Boolean);
+          if (paths.length > 0) {
+            await supabase.storage.from('screenshots').remove(paths);
+          }
+        } catch (e) {}
       }
 
       toast.success?.('Journal saved');
