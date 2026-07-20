@@ -104,26 +104,21 @@ export default function QuickLogModal({ onClose }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Pair */}
+          {/* Pair — text input with datalist autocomplete */}
           <div>
             <label className={labelCls}>Pair</label>
-            <div className="flex flex-wrap gap-1.5">
+            <input
+              className={field}
+              list="quick-log-pairs"
+              value={pair}
+              onChange={(e) => setPair(e.target.value)}
+              placeholder="e.g. XAU/USD"
+            />
+            <datalist id="quick-log-pairs">
               {PAIRS.map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPair(p)}
-                  className={
-                    'rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ' +
-                    (pair === p
-                      ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300'
-                      : 'border-white/10 bg-black/30 text-white/50 hover:text-white')
-                  }
-                >
-                  {p}
-                </button>
+                <option key={p} value={p} />
               ))}
-            </div>
+            </datalist>
           </div>
 
           {/* Direction + Date row */}
