@@ -91,7 +91,8 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
 
       {/* Backdrop */}
       <div
-        className={'fixed inset-0 z-40 bg-black/60 backdrop-blur-md transition-opacity duration-300 ' + (open ? 'opacity-100' : 'pointer-events-none opacity-0')}
+        style={{ WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)' }}
+        className={'fixed inset-0 z-40 bg-black/70 transition-opacity duration-300 ' + (open ? 'opacity-100' : 'pointer-events-none opacity-0')}
         onClick={close}
       />
 
