@@ -89,12 +89,21 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
         &#9776;
       </button>
 
-      {/* Backdrop */}
-      <div
-        style={{ WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)' }}
-        className={'fixed inset-0 z-40 bg-black/70 transition-opacity duration-300 ' + (open ? 'opacity-100' : 'pointer-events-none opacity-0')}
-        onClick={close}
-      />
+      {/* Backdrop — only rendered when open */}
+      {open && (
+        <div
+          onClick={close}
+          onTouchEnd={(e) => { e.preventDefault(); close(); }}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 40,
+            backgroundColor: 'rgba(0,0,0,0.75)',
+            WebkitBackdropFilter: 'blur(24px)',
+            backdropFilter: 'blur(24px)',
+          }}
+        />
+      )}
 
       {/* Slide-from-left drawer */}
       <div
