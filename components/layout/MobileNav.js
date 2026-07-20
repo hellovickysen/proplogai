@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Logo from '@/components/Logo';
@@ -21,8 +22,12 @@ const NAV = [
 export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits, fullName = '', planAccess = null }) {
   const [open, setOpen] = useState(false);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  // Portal requires document.body — only available after mount
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (open) document.body.style.overflow = 'hidden';
@@ -78,26 +83,17 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
     );
   }
 
-  return (
-    <div className="sm:hidden">
-      {/* Hamburger button */}
-      <button
-        onClick={() => setOpen(true)}
-        aria-label="Menu"
-        className="grid h-11 w-11 place-items-center rounded-lg border border-white/10 bg-white/5 text-lg text-white/70"
-      >
-        &#9776;
-      </button>
-
-      {/* Backdrop — only rendered when open */}
+  /* ── Drawer + Backdrop (portalled to document.body) ── */
+  const drawerContent = (
+    <>
+      {/* Backdrop */}
       {open && (
         <div
           onClick={close}
-          onTouchEnd={(e) => { e.preventDefault(); close(); }}
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 40,
+            zIndex: 9998,
             backgroundColor: 'rgba(0,0,0,0.75)',
             WebkitBackdropFilter: 'blur(24px)',
             backdropFilter: 'blur(24px)',
@@ -110,7 +106,21 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
-        className={'fixed left-0 top-0 z-50 flex h-dvh w-[280px] flex-col border-r border-white/10 bg-[#0b0b14] shadow-2xl transition-transform duration-300 ease-in-out ' + (open ? 'translate-x-0' : '-translate-x-full')}
+        style={{
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          zIndex: 9999,
+          height: '100dvh',
+          width: 280,
+          display: 'flex',
+          flexDirection: 'column',
+          borderRight: '1px solid rgba(255,255,255,0.1)',
+          backgroundColor: '#0b0b14',
+          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
+          transform: open ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 300ms ease-in-out',
+        }}
       >
         {/* -- Logo + Close -- */}
         <div className="flex items-center justify-between px-4 pt-5 pb-4">
@@ -236,6 +246,22 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
           </div>
         </div>
       </div>
+    </>
+  );
+
+  return (
+    <div className="sm:hidden">
+      {/* Hamburger button — stays in the header */}
+      <button
+        onClick={() => setOpen(true)}
+        aria-label="Menu"
+        className="grid h-11 w-11 place-items-center rounded-lg border border-white/10 bg-white/5 text-lg text-white/70"
+      >
+        &#9776;
+      </button>
+
+      {/* Portal: render backdrop + drawer on document.body to escape SmartHeader transform */}
+      {mounted && createPortal(drawerContent, document.body)}
     </div>
   );
 }
