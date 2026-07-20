@@ -18,14 +18,9 @@ const NAV = [
   { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },
 ];
 
-const SUPPORT_NAV = [
-  { label: 'Settings',       icon: '⚙', href: '/dashboard/settings' },
-  { label: 'Help & Support', icon: '?', href: '/dashboard/support' },
-  { label: 'Subscription',   icon: '💎', href: '/dashboard/settings?tab=billing' },
-];
-
 export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits, fullName = '', planAccess = null }) {
   const [open, setOpen] = useState(false);
+  const [accountOpen, setAccountOpen] = useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -33,6 +28,11 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
     if (open) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
     return () => { document.body.style.overflow = ''; };
+  }, [open]);
+
+  // Collapse account menu when drawer closes
+  useEffect(() => {
+    if (!open) setAccountOpen(false);
   }, [open]);
 
   const initial = fullName ? fullName.charAt(0).toUpperCase() : email ? email.charAt(0).toUpperCase() : '?';
@@ -123,34 +123,19 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
           </div>
         </nav>
 
-        {/* -- Support Section -- */}
-        <div className="border-t border-white/[0.06] px-3 pt-3 pb-1">
-          <div className="mb-1.5 px-3 font-mono text-[9px] uppercase tracking-widest text-white/25">Support</div>
-          <div className="flex flex-col gap-0.5">
-            {SUPPORT_NAV.map((item) => <NavItem key={item.href} item={item} />)}
-          </div>
-
-          {/* Credits */}
+        {/* -- Bottom: Credits + Admin + Expandable Avatar -- */}
+        <div className="border-t border-white/[0.06] px-3 py-3">
+          {/* Credits — always visible (FOMO) */}
           {credits != null && Number(credits) > 0 && (
             <Link
               href="/dashboard/referrals"
               onClick={close}
-              className="mt-1.5 flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-all hover:bg-white/[0.04]"
+              className="mb-2 flex items-center justify-between rounded-xl px-3 py-2 text-xs transition-all hover:bg-white/[0.04]"
             >
-              <span className="flex items-center gap-2 text-white/45"><span className="w-5 text-center">💎</span> Credits</span>
+              <span className="flex items-center gap-2 text-white/45"><span className="w-5 text-center text-sm">💎</span> Credits</span>
               <span className="font-mono text-xs font-semibold text-emerald-400">${Number(credits).toFixed(2)}</span>
             </Link>
           )}
-        </div>
-
-        {/* -- Bottom: Sign Out + Admin + Avatar Card -- */}
-        <div className="border-t border-white/[0.06] px-3 py-3">
-          {/* Sign out — placed above avatar for easy access */}
-          <form action="/auth/signout" method="post" className="mb-2">
-            <button className="flex w-full items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-left text-sm text-red-400/60 transition-colors hover:bg-red-400/[0.06] hover:text-red-400">
-              <span className="w-5 text-center">↪</span> Sign Out
-            </button>
-          </form>
 
           {/* Admin Panel */}
           {isAdmin && (
@@ -170,30 +155,67 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
             </Link>
           )}
 
-          {/* User Avatar Card */}
-          <Link
-            href="/dashboard/settings"
-            onClick={close}
-            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
-          >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="h-9 w-9 flex-shrink-0 rounded-lg object-cover border border-white/10" />
-            ) : (
-              <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg text-sm font-bold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}>
-                {initial}
+          {/* Expandable Avatar Card */}
+          <div className="rounded-xl border border-white/[0.06] bg-white/[0.02]">
+            {/* Avatar row — tap to toggle */}
+            <button
+              onClick={() => setAccountOpen(o => !o)}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-white/[0.04]"
+            >
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="h-9 w-9 flex-shrink-0 rounded-lg object-cover border border-white/10" />
+              ) : (
+                <div className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-lg text-sm font-bold text-[#08080f]" style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}>
+                  {initial}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
+                  <PlanBadge access={planAccess} />
+                </div>
+                <div className="truncate text-[11px] text-white/40">{email || 'Account'}</div>
+              </div>
+              <svg
+                width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
+                className={'flex-shrink-0 transition-transform duration-200 ' + (accountOpen ? 'rotate-90 text-white/50' : 'text-white/25')}
+              >
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+
+            {/* Expanded menu items */}
+            {accountOpen && (
+              <div className="border-t border-white/[0.06] px-2 py-1.5 flex flex-col gap-0.5">
+                <Link
+                  href="/dashboard/settings"
+                  onClick={close}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/55 transition-colors hover:bg-white/[0.04] hover:text-white/80"
+                >
+                  <span className="w-5 text-center text-sm">⚙</span> Settings
+                </Link>
+                <Link
+                  href="/dashboard/support"
+                  onClick={close}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/55 transition-colors hover:bg-white/[0.04] hover:text-white/80"
+                >
+                  <span className="w-5 text-center text-sm">💬</span> Help & Support
+                </Link>
+                <Link
+                  href="/dashboard/settings?tab=billing"
+                  onClick={close}
+                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-white/55 transition-colors hover:bg-white/[0.04] hover:text-white/80"
+                >
+                  <span className="w-5 text-center text-sm">💎</span> Subscription
+                </Link>
+                <form action="/auth/signout" method="post">
+                  <button className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm text-red-400/60 transition-colors hover:bg-red-400/[0.06] hover:text-red-400">
+                    <span className="w-5 text-center">↪</span> Sign Out
+                  </button>
+                </form>
               </div>
             )}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1.5">
-                {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
-                <PlanBadge access={planAccess} />
-              </div>
-              <div className="truncate text-[11px] text-white/40">{email || 'Account'}</div>
-            </div>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/25 flex-shrink-0">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </Link>
+          </div>
         </div>
       </div>
     </div>
