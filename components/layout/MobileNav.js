@@ -117,10 +117,17 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
         </div>
 
         {/* -- Main Nav (scrollable) -- */}
-        <nav className="flex-1 overflow-y-auto px-3 py-1">
+        <nav className="relative flex-1 overflow-y-auto px-3 py-1">
           <div className="flex flex-col gap-0.5">
             {NAV.map((item) => <NavItem key={item.href} item={item} />)}
           </div>
+          {/* Blur overlay when account menu is expanded — tap to close */}
+          {accountOpen && (
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-200"
+              onClick={() => setAccountOpen(false)}
+            />
+          )}
         </nav>
 
         {/* -- Bottom: Credits + Admin + Expandable Avatar -- */}
