@@ -143,8 +143,15 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
           )}
         </div>
 
-        {/* -- Bottom: Avatar Card + Admin + Sign Out -- */}
+        {/* -- Bottom: Sign Out + Admin + Avatar Card -- */}
         <div className="border-t border-white/[0.06] px-3 py-3">
+          {/* Sign out — placed above avatar for easy access */}
+          <form action="/auth/signout" method="post" className="mb-2">
+            <button className="flex w-full items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-left text-sm text-red-400/60 transition-colors hover:bg-red-400/[0.06] hover:text-red-400">
+              <span className="w-5 text-center">↪</span> Sign Out
+            </button>
+          </form>
+
           {/* Admin Panel */}
           {isAdmin && (
             <Link
@@ -167,7 +174,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
           <Link
             href="/dashboard/settings"
             onClick={close}
-            className="mb-2 flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
+            className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
           >
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="h-9 w-9 flex-shrink-0 rounded-lg object-cover border border-white/10" />
@@ -187,13 +194,6 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
               <path d="M9 18l6-6-6-6" />
             </svg>
           </Link>
-
-          {/* Sign out */}
-          <form action="/auth/signout" method="post">
-            <button className="flex w-full items-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2.5 text-left text-sm text-red-400/60 transition-colors hover:bg-red-400/[0.06] hover:text-red-400">
-              <span className="w-5 text-center">↪</span> Sign Out
-            </button>
-          </form>
         </div>
       </div>
     </div>
