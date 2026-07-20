@@ -632,7 +632,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               {!quickMode && <TimeframeDropdown value={form.timeframe} onChange={(v) => set('timeframe', v)} labelCls={labelCls} fieldCls={field} />}
 
               {/* Setup — multi-select toggle buttons or legacy dropdown */}
-              {!quickMode && (<div className="sm:col-span-2">
+              {!quickMode && (
+              <div className="sm:col-span-2">
                 <label className={labelCls}>
                   Setup <span className="text-white/30">(up to {MAX_SETUPS})</span>
                 </label>
@@ -799,7 +800,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
-              {!quickMode && <div>
+              {!quickMode && (
+              <div>
                 <label className={labelCls}>Risk : Reward <span className="text-white/30">(auto)</span></label>
                 <div className="flex items-center gap-2">
                   <input
@@ -825,7 +827,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             </div>
           </div>
 
-          {/* Journal section — create mode only, hidden in quick mode */}
+          {/* Journal section — create mode only */}
           {mode === 'create' && !quickMode && (
             <div className="mt-6 border-t border-white/10 pt-5">
               <button
