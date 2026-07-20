@@ -632,7 +632,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               {!quickMode && <TimeframeDropdown value={form.timeframe} onChange={(v) => set('timeframe', v)} labelCls={labelCls} fieldCls={field} />}
 
               {/* Setup — multi-select toggle buttons or legacy dropdown */}
-              {!quickMode && <div className="sm:col-span-2">
+              {!quickMode && (<div className="sm:col-span-2">
                 <label className={labelCls}>
                   Setup <span className="text-white/30">(up to {MAX_SETUPS})</span>
                 </label>
@@ -703,10 +703,11 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   </select>
                 )}
               </div>
+              )}
             </div>
 
             {/* Setup cards with directions + inline follow tracking */}
-            {selectedSetups.length > 0 && (
+            {!quickMode && selectedSetups.length > 0 && (
               <div className="mt-4 rounded-xl border border-white/10 bg-white/[0.02] p-4">
                 {/* Each setup: direction + follow buttons in one card */}
                 {!hasNoSetup && (
@@ -771,7 +772,6 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               </div>
             )}
           </div>
-          )}
 
           {/* Section 2: Price Data — hidden in quick mode */}
           {!quickMode && (
