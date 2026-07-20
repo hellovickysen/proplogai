@@ -75,7 +75,7 @@ function TimeframeDropdown({ value, onChange, labelCls, fieldCls }) {
   );
 }
 
-export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, hideButtons = false }) {
+export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, hideButtons = false, quickMode = false }) {
   const router = useRouter();
 
   // Resolve initial setup_ids from setup_ids array, or single setup_id, or empty
@@ -456,21 +456,23 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     setSaving(true);
     setError(null);
 
-    // Validate required fields
-    if (!form.entry_price && form.entry_price !== 0) {
-      setError('Entry price is required');
-      setSaving(false);
-      return;
-    }
-    if (!form.exit_price && form.exit_price !== 0) {
-      setError('Exit price is required');
-      setSaving(false);
-      return;
-    }
-    if (!form.lot_size && form.lot_size !== 0) {
-      setError('Lot / Contract size is required');
-      setSaving(false);
-      return;
+    // Validate required fields (skip price/lot in quick mode)
+    if (!quickMode) {
+      if (!form.entry_price && form.entry_price !== 0) {
+        setError('Entry price is required');
+        setSaving(false);
+        return;
+      }
+      if (!form.exit_price && form.exit_price !== 0) {
+        setError('Exit price is required');
+        setSaving(false);
+        return;
+      }
+      if (!form.lot_size && form.lot_size !== 0) {
+        setError('Lot / Contract size is required');
+        setSaving(false);
+        return;
+      }
     }
     if (!form.pnl && form.pnl !== 0) {
       setError('P&L is required');
@@ -478,8 +480,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       return;
     }
 
-    // Validate: each selected regular setup must have a follow status
-    const regularSetups = selectedSetups.filter((s) => !s.is_default);
+    // Validate: each selected regular setup must have a follow status (skip in quick mode)
+    const regularSetups = !quickMode ? selectedSetups.filter((s) => !s.is_default) : [];
     if (regularSetups.length > 0) {
       const missing = regularSetups.filter((s) => !form.setup_follow_map[s.id]);
       if (missing.length > 0) {
@@ -609,6 +611,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   </button>
                 </div>
               </div>
+              {!quickMode && (
               <div>
                 <label className={labelCls}>Session</label>
                 <div className="grid grid-cols-3 gap-1.5">
@@ -624,11 +627,12 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   ))}
                 </div>
               </div>
+              )}
               <div><label htmlFor="field-trade_date" className={labelCls}>Trade date</label><input id="field-trade_date" type="date" className={field + ' cursor-pointer'} style={{ colorScheme: 'dark' }} value={form.trade_date} onChange={(e) => set('trade_date', e.target.value)} /></div>
-              <TimeframeDropdown value={form.timeframe} onChange={(v) => set('timeframe', v)} labelCls={labelCls} fieldCls={field} />
+              {!quickMode && <TimeframeDropdown value={form.timeframe} onChange={(v) => set('timeframe', v)} labelCls={labelCls} fieldCls={field} />}
 
               {/* Setup — multi-select toggle buttons or legacy dropdown */}
-              <div className="sm:col-span-2">
+              {!quickMode && <div className="sm:col-span-2">
                 <label className={labelCls}>
                   Setup <span className="text-white/30">(up to {MAX_SETUPS})</span>
                 </label>
@@ -766,9 +770,10 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                 )}
               </div>
             )}
-          </div>
+          </div>}
 
-          {/* Section 2: Price Data */}
+          {/* Section 2: Price Data — hidden in quick mode */}
+          {!quickMode && (
           <div className="mb-5 border-t border-white/[0.06] pt-5">
             <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/50">
               <span className="grid h-5 w-5 place-items-center rounded-md text-[10px]" style={{ background: 'linear-gradient(135deg,rgba(139,92,246,0.3),rgba(34,211,238,0.2))' }}>2</span>
@@ -781,16 +786,19 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               <div><label htmlFor="field-lot_size" className={labelCls}>Lot / Contract size *</label><input id="field-lot_size" className={field} value={form.lot_size} onChange={(e) => set('lot_size', e.target.value)} inputMode="decimal" required /></div>
             </div>
           </div>
+          )}
 
           {/* Section 3: Result */}
-          <div className="border-t border-white/[0.06] pt-5">
+          <div className={quickMode ? 'pt-3' : 'border-t border-white/[0.06] pt-5'}>
+            {!quickMode && (
             <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/50">
               <span className="grid h-5 w-5 place-items-center rounded-md text-[10px]" style={{ background: 'linear-gradient(135deg,rgba(139,92,246,0.3),rgba(34,211,238,0.2))' }}>3</span>
               Result
             </h3>
+            )}
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
-              <div>
+              {!quickMode && <div>
                 <label className={labelCls}>Risk : Reward <span className="text-white/30">(auto)</span></label>
                 <div className="flex items-center gap-2">
                   <input
@@ -811,12 +819,12 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     maxLength={4}
                   />
                 </div>
-              </div>
+              </div>}
             </div>
           </div>
 
-          {/* Journal section — create mode only */}
-          {mode === 'create' && (
+          {/* Journal section — create mode only, hidden in quick mode */}
+          {mode === 'create' && !quickMode && (
             <div className="mt-6 border-t border-white/10 pt-5">
               <button
                 type="button"
