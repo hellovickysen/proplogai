@@ -11,6 +11,7 @@ const labelCls = 'mb-1.5 block font-mono text-[11px] uppercase tracking-wider te
 export default function DiscountSettingsClient({ settings }) {
   const [partnerPct, setPartnerPct] = useState(String(settings?.partnerPct ?? 30));
   const [trialAutoPct, setTrialAutoPct] = useState(String(settings?.trialAutoPct ?? 10));
+  const [trialAutoCode, setTrialAutoCode] = useState(settings?.trialAutoCode || 'TRIAL10');
   const [partnerOffer, setPartnerOffer] = useState(settings?.partnerOfferUpi || '');
   const [partnerTrialOffer, setPartnerTrialOffer] = useState(settings?.partnerTrialOfferUpi || '');
   const [trialAutoOffer, setTrialAutoOffer] = useState(settings?.trialAutoOfferUpi || '');
@@ -30,6 +31,7 @@ export default function DiscountSettingsClient({ settings }) {
       const res = await saveDiscountSettings({
         partner_pct: partnerPct,
         trial_auto_pct: trialAutoPct,
+        trial_auto_code: trialAutoCode,
         partner_offer_upi: partnerOffer,
         partner_trial_offer_upi: partnerTrialOffer,
         trial_auto_offer_upi: trialAutoOffer,
@@ -59,6 +61,18 @@ export default function DiscountSettingsClient({ settings }) {
           <div>
             <label className={labelCls}>Trial auto-bonus %</label>
             <input type="number" min="0" max="100" value={trialAutoPct} onChange={(e) => setTrialAutoPct(e.target.value)} className={inputCls} />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls}>Trial bonus name (shown at checkout)</label>
+            <input
+              value={trialAutoCode}
+              onChange={(e) => setTrialAutoCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20))}
+              placeholder="TRIAL10"
+              className={inputCls + ' font-mono uppercase tracking-wider'}
+            />
+            <p className="mt-1 text-[11px] text-white/35">
+              Appears in checkout as “TRIAL BONUS ({trialAutoCode || 'TRIAL10'}) — {pT}%”.
+            </p>
           </div>
         </div>
       </div>

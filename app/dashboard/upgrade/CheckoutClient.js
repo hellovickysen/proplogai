@@ -23,7 +23,7 @@ function money(n) {
   return (Math.round((Number(n) || 0) * 100) / 100).toFixed(2);
 }
 
-export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal, initialCoupon, isTrialing = false, trialEndsAt = null, trialAutoPct = 0, trialAutoConfigured = false }) {
+export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal, initialCoupon, isTrialing = false, trialEndsAt = null, trialAutoPct = 0, trialAutoConfigured = false, trialAutoCode = 'TRIAL10' }) {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [code, setCode] = useState(initialCoupon || '');
   const [applying, setApplying] = useState(false);
@@ -50,7 +50,10 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
   const useAuto = !explicitApplied && isTrialing && trialAutoConfigured && trialAutoPct > 0;
   const effPct = explicitApplied ? codePct : (useAuto ? trialAutoPct : 0);
   const discountActive = effPct > 0;
-  const methods = explicitApplied ? (applied.methods || []) : (useAuto ? ['upi'] : []);
+
+  // Display name for the trial auto-bonus, e.g. "TRIAL BONUS (TRIAL10) — 10%".
+  const trialBonusName = `TRIAL BONUS (${trialAutoCode})`;
+  const trialBonusLabel = `${trialBonusName} — ${trialAutoPct}%`;
 
   const discounted = Math.round(chargeNow * (1 - effPct / 100) * 100) / 100;
   const dueToday = discounted; // always charged today
@@ -173,7 +176,7 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
           <p className="mt-1 text-xs leading-relaxed text-white/55">
             Subscribe any time — you'll be charged today and your plan starts now.
             {trialAutoConfigured && trialAutoPct > 0
-              ? ` A ${trialAutoPct}% trial discount is applied automatically${' '}— add a partner or promo code to stack even more off.`
+              ? ` ${trialBonusLabel} is applied automatically — add a partner or promo code to stack even more off.`
               : ''}
           </p>
         </div>
@@ -250,7 +253,7 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
             {couponErr && <p className="mt-1.5 text-[11px] text-red-300">{couponErr}</p>}
             {couponMsg && <p className="mt-1.5 text-[11px] text-emerald-300">{couponMsg}</p>}
             {!explicitApplied && useAuto && (
-              <p className="mt-1.5 text-[11px] text-cyan-300">{trialAutoPct}% trial discount applied automatically.</p>
+              <p className="mt-1.5 text-[11px] text-cyan-300">{trialBonusLabel} applied automatically.</p>
             )}
           </div>
 
@@ -258,7 +261,11 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
           <div className="mt-5 space-y-2 border-t border-white/10 pt-4 text-sm">
             <Row label={`Elite (${billingCycle})`} value={`$${money(chargeNow)}`} />
             {discountActive && (
-              <Row label={`Discount (${effPct}%)`} value={`-$${money(chargeNow - discounted)}`} accent />
+              <Row
+                label={useAuto ? `${trialBonusName} — ${effPct}%` : `Discount (${effPct}%)`}
+                value={`-$${money(chargeNow - discounted)}`}
+                accent
+              />
             )}
             <div className="flex items-center justify-between border-t border-white/10 pt-3">
               <span className="font-semibold text-white">Due today</span>
@@ -271,7 +278,7 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
           {/* Charge note */}
           <p className="mt-2 text-[11px] leading-relaxed text-white/40">
             {discountActive
-              ? `Billed today at the discounted rate${useAuto ? ` (${trialAutoPct}% trial discount)` : ''} via UPI. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
+              ? `Billed today${useAuto ? ` with your ${trialBonusLabel}` : ' at the discounted rate'} via UPI. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
               : `Billed today. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`}
           </p>
 

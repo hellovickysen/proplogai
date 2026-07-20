@@ -37,6 +37,7 @@ export default async function UpgradePage({ searchParams }) {
       trialEndsAt={access.trialEndsAt || null}
       trialAutoPct={discount.trialAutoPct}
       trialAutoConfigured={!!discount.trialAutoOfferUpi}
+      trialAutoCode={discount.trialAutoCode}
     />
   );
 }
