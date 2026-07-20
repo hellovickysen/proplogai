@@ -9,7 +9,7 @@ const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 te
 const PAGE_SIZE = 20;
 
 /* ─── Custom themed dropdown (single-select) ──────────────── */
-function FilterDropdown({ label, value, onChange, placeholder, options }) {
+function FilterDropdown({ label, value, onChange, placeholder, options, counts }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -50,10 +50,13 @@ function FilterDropdown({ label, value, onChange, placeholder, options }) {
               key={opt}
               type="button"
               onClick={() => { onChange(opt); setOpen(false); }}
-              className={'flex w-full items-center whitespace-nowrap px-3.5 py-2 text-sm transition-colors ' +
+              className={'flex w-full items-center justify-between whitespace-nowrap px-3.5 py-2 text-sm transition-colors ' +
                 (opt === value ? 'bg-cyan-500/15 text-cyan-300 font-semibold' : 'text-white/70 hover:bg-white/[0.06] hover:text-white')}
             >
-              {opt}
+              <span>{opt}</span>
+              {counts && counts[opt] != null && (
+                <span className="ml-3 font-mono text-[11px] text-white/30">{counts[opt]}</span>
+              )}
             </button>
           ))}
         </div>
@@ -63,7 +66,7 @@ function FilterDropdown({ label, value, onChange, placeholder, options }) {
 }
 
 /* ─── Multi-select dropdown (toggle tags on/off) ──────────── */
-function MultiFilterDropdown({ label, selected, onChange, placeholder, options }) {
+function MultiFilterDropdown({ label, selected, onChange, placeholder, options, counts }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -151,7 +154,10 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options }
                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
                   )}
                 </span>
-                {opt}
+                <span className="flex-1 text-left">{opt}</span>
+                {counts && counts[opt] != null && (
+                  <span className="ml-2 font-mono text-[11px] text-white/30">{counts[opt]}</span>
+                )}
               </button>
             );
           })}
@@ -225,6 +231,44 @@ export default function TradeFilters({ trades, prefs }) {
   const tagOptions = useMemo(() => {
     const fromTrades = trades.flatMap((t) => (t._journal && t._journal.tags) || []);
     return [...new Set(fromTrades)].sort();
+  }, [trades]);
+
+  // Usage counts for filter dropdowns
+  const setupCounts = useMemo(() => {
+    const counts = {};
+    trades.forEach((t) => {
+      if (!t.setup) return;
+      t.setup.split(', ').filter(Boolean).forEach((s) => {
+        counts[s] = (counts[s] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [trades]);
+
+  const tagCounts = useMemo(() => {
+    const counts = {};
+    trades.forEach((t) => {
+      const tags = (t._journal && t._journal.tags) || [];
+      tags.forEach((tag) => { counts[tag] = (counts[tag] || 0) + 1; });
+    });
+    return counts;
+  }, [trades]);
+
+  const emotionCounts = useMemo(() => {
+    const counts = {};
+    trades.forEach((t) => {
+      const emotions = (t._journal && t._journal.emotions) || [];
+      emotions.forEach((em) => { counts[em] = (counts[em] || 0) + 1; });
+    });
+    return counts;
+  }, [trades]);
+
+  const sessionCounts = useMemo(() => {
+    const counts = {};
+    trades.forEach((t) => {
+      if (t.session) counts[t.session] = (counts[t.session] || 0) + 1;
+    });
+    return counts;
   }, [trades]);
 
   /* Resolve URL params to actual stored values — only once per mount */
@@ -330,11 +374,11 @@ export default function TradeFilters({ trades, prefs }) {
           <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">Result</label>
           <div className="flex gap-1">{resultButtons}</div>
         </div>
-        <FilterDropdown label="Setup" value={setupFilter} onChange={setSetupFilter} placeholder="All setups" options={setupOptions} />
-        <FilterDropdown label="Emotion" value={emotionFilter} onChange={setEmotionFilter} placeholder="All emotions" options={emotionOptions} />
-        <FilterDropdown label="Session" value={sessionFilter} onChange={setSessionFilter} placeholder="All sessions" options={sessionOptions} />
+        <FilterDropdown label="Setup" value={setupFilter} onChange={setSetupFilter} placeholder="All setups" options={setupOptions} counts={setupCounts} />
+        <FilterDropdown label="Emotion" value={emotionFilter} onChange={setEmotionFilter} placeholder="All emotions" options={emotionOptions} counts={emotionCounts} />
+        <FilterDropdown label="Session" value={sessionFilter} onChange={setSessionFilter} placeholder="All sessions" options={sessionOptions} counts={sessionCounts} />
         {tagOptions.length > 0 && (
-          <MultiFilterDropdown label="Tags" selected={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} />
+          <MultiFilterDropdown label="Tags" selected={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} counts={tagCounts} />
         )}
         <div className="flex items-end pb-0.5">
           <button type="button" onClick={() => setHasLesson(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (hasLesson ? 'border-violet-400/30 bg-violet-400/[0.08]' : 'border-white/10 bg-black/30 hover:border-white/20')}>
@@ -377,7 +421,7 @@ export default function TradeFilters({ trades, prefs }) {
             <FilterDropdown label="Setup" value={setupFilter} onChange={setSetupFilter} placeholder="All setups" options={setupOptions} />
             <FilterDropdown label="Emotion" value={emotionFilter} onChange={setEmotionFilter} placeholder="All emotions" options={emotionOptions} />
             <FilterDropdown label="Session" value={sessionFilter} onChange={setSessionFilter} placeholder="All sessions" options={sessionOptions} />
-            {tagOptions.length > 0 && <MultiFilterDropdown label="Tags" selected={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} />}
+            {tagOptions.length > 0 && <MultiFilterDropdown label="Tags" selected={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} counts={tagCounts} />}
             <div className="flex items-end pb-0.5">
               <button type="button" onClick={() => setHasLesson(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (hasLesson ? 'border-violet-400/30 bg-violet-400/[0.08]' : 'border-white/10 bg-black/30 hover:border-white/20')}>
                 <span className={'flex h-4 w-4 items-center justify-center rounded border transition-all ' + (hasLesson ? 'border-violet-400 bg-violet-400' : 'border-white/30 bg-transparent')}>
