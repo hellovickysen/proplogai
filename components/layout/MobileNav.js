@@ -116,7 +116,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
           </button>
         </div>
 
-        {/* -- Main Nav -- */}
+        {/* -- Main Nav (scrollable) -- */}
         <nav className="flex-1 overflow-y-auto px-3 py-1">
           <div className="flex flex-col gap-0.5">
             {NAV.map((item) => <NavItem key={item.href} item={item} />)}
@@ -124,7 +124,8 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
         </nav>
 
         {/* -- Bottom: Credits + Admin + Expandable Avatar -- */}
-        <div className="border-t border-white/[0.06] px-3 py-3">
+        {/* pb-20 clears the MobileBottomNav sticky bar + safe-area */}
+        <div className="border-t border-white/[0.06] px-3 pt-3 pb-20">
           {/* Credits — always visible (FOMO) */}
           {credits != null && Number(credits) > 0 && (
             <Link
