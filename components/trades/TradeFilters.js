@@ -167,6 +167,20 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options, 
   );
 }
 
+/* Helpers: persist filters in sessionStorage so they survive page navigation */
+const FILTER_KEY = 'proplog_trade_filters';
+function loadSavedFilters() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(FILTER_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+function saveFilters(obj) {
+  if (typeof window === 'undefined') return;
+  try { sessionStorage.setItem(FILTER_KEY, JSON.stringify(obj)); } catch {}
+}
+
 export default function TradeFilters({ trades, prefs }) {
   const searchParams = useSearchParams();
   const urlEmotion = searchParams.get('emotion') || '';
@@ -176,14 +190,18 @@ export default function TradeFilters({ trades, prefs }) {
   const urlResult = searchParams.get('result') || '';
   const highlightTradeId = searchParams.get('tradeId') || '';
 
-  const [result, setResult] = useState(urlResult || 'all'); // all | win | loss
-  const [setupFilter, setSetupFilter] = useState(urlSetup);
+  // URL params take priority, then sessionStorage, then defaults
+  const saved = useRef(loadSavedFilters()).current;
+  const hasUrlParams = !!(urlResult || urlSetup || urlSession || urlEmotion || urlTag);
+
+  const [result, setResult] = useState(urlResult || (hasUrlParams ? 'all' : saved?.result) || 'all');
+  const [setupFilter, setSetupFilter] = useState(urlSetup || (hasUrlParams ? '' : saved?.setupFilter) || '');
   const [emotionFilter, setEmotionFilter] = useState(''); // resolved below after options computed
-  const [sessionFilter, setSessionFilter] = useState(urlSession);
-  const [tagFilter, setTagFilter] = useState([]); // multi-select: array of tag strings
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [hasLesson, setHasLesson] = useState(false);
+  const [sessionFilter, setSessionFilter] = useState(urlSession || (hasUrlParams ? '' : saved?.sessionFilter) || '');
+  const [tagFilter, setTagFilter] = useState((hasUrlParams ? [] : saved?.tagFilter) || []);
+  const [dateFrom, setDateFrom] = useState((hasUrlParams ? '' : saved?.dateFrom) || '');
+  const [dateTo, setDateTo] = useState((hasUrlParams ? '' : saved?.dateTo) || '');
+  const [hasLesson, setHasLesson] = useState((hasUrlParams ? false : saved?.hasLesson) || false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -279,6 +297,12 @@ export default function TradeFilters({ trades, prefs }) {
         setEmotionFilter(match);
         emotionUrlApplied.current = true;
       }
+    } else if (!urlEmotion && !emotionUrlApplied.current && saved?.emotionFilter && emotionOptions.length > 0) {
+      // Restore from sessionStorage if no URL param
+      if (emotionOptions.includes(saved.emotionFilter)) {
+        setEmotionFilter(saved.emotionFilter);
+      }
+      emotionUrlApplied.current = true;
     }
   }, [urlEmotion, emotionOptions]);
 
@@ -292,6 +316,11 @@ export default function TradeFilters({ trades, prefs }) {
       }
     }
   }, [urlTag, tagOptions]);
+
+  /* Persist filters to sessionStorage on change */
+  useEffect(() => {
+    saveFilters({ result, setupFilter, emotionFilter, sessionFilter, tagFilter, dateFrom, dateTo, hasLesson });
+  }, [result, setupFilter, emotionFilter, sessionFilter, tagFilter, dateFrom, dateTo, hasLesson]);
 
   /* Stamp absolute trade number BEFORE filtering so it survives filters */
   const numberedTrades = useMemo(() =>
