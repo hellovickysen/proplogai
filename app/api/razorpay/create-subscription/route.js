@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { createSubscription } from '@/lib/razorpay';
+import { createSubscription, cancelSubscription } from '@/lib/razorpay';
 import { resolveDiscount, getDiscountSettings } from '@/lib/affiliate';
 
 /**
@@ -20,6 +20,8 @@ import { resolveDiscount, getDiscountSettings } from '@/lib/affiliate';
  *     no code, in trial → the 10% trial auto-bonus alone (if configured),
  *     no code, not in trial → full price.
  * - Each combined rate is one pre-made Razorpay UPI offer (see lib/affiliate).
+ * - A trialing user may carry a stale Razorpay sub id from an earlier attempt;
+ *   we cancel it before creating the charge-now sub so it can't charge later.
  */
 
 function getServiceClient() {
@@ -105,13 +107,31 @@ export async function POST(request) {
       if (s.trialAutoOfferUpi) offerId = s.trialAutoOfferUpi;
     }
 
-    // Block only a real, already-paying subscription.
-    const hasActivePaidSub =
-      existingSub &&
-      !!existingSub.razorpay_subscription_id &&
-      (existingSub.status === 'active' || existingSub.status === 'authenticated');
-    if (hasActivePaidSub) {
-      return NextResponse.json({ error: 'You already have an active subscription.' }, { status: 400 });
+    if (isTrialing) {
+      // The user is still in their free trial. Any Razorpay sub id on the row is
+      // a leftover from an earlier attempt (paying converts off the trial and
+      // clears it) — cancel it so it can't charge later, then charge now.
+      if (existingSub?.razorpay_subscription_id) {
+        try {
+          await cancelSubscription(existingSub.razorpay_subscription_id, false);
+        } catch (e) {
+          const m = (e?.message || '').toLowerCase();
+          if (!m.includes('cancel') && !m.includes('already')) {
+            console.error('Abort — leftover trial sub cancel failed:', e?.message || e);
+            return NextResponse.json({ error: 'Could not update your subscription right now. Please try again.' }, { status: 500 });
+          }
+          console.warn('Leftover trial sub cancel returned (continuing):', e?.message || e);
+        }
+      }
+    } else {
+      // Block only a real, already-paying subscription.
+      const hasActivePaidSub =
+        existingSub &&
+        !!existingSub.razorpay_subscription_id &&
+        (existingSub.status === 'active' || existingSub.status === 'authenticated');
+      if (hasActivePaidSub) {
+        return NextResponse.json({ error: 'You already have an active subscription.' }, { status: 400 });
+      }
     }
 
     // Always charge now — subscription starts today, cycle counts from today.

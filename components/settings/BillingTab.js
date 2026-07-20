@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { PLANS, ELITE_FEATURES } from '@/lib/plans';
-import { UpgradeModal } from '@/components/ui/BlurGate';
 
 const gradientBtn = { background: 'linear-gradient(120deg, #a78bfa, #22d3ee)' };
 
@@ -17,7 +16,6 @@ const gradientBtn = { background: 'linear-gradient(120deg, #a78bfa, #22d3ee)' };
  * paymentStatus - 'success' | 'failed' | 'cancelled' | null (from Razorpay callback redirect)
  */
 export default function BillingTab({ planAccess, subscription, paymentStatus }) {
-  const [showUpgrade, setShowUpgrade] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [cancelError, setCancelError] = useState(null);
@@ -28,10 +26,12 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
   const isTrialing = subscription?.trial_ends_at && new Date(subscription.trial_ends_at) > new Date();
   const isActive = subscription?.status === 'active' || subscription?.status === 'authenticated';
   const isCancelled = subscription?.status === 'cancelled' || cancelled;
-  // A real Razorpay subscription exists only once the user has actually
-  // subscribed. The no-card trial has none — so we must not show a billing
-  // amount, a "first charge" date, or a cancel button for it.
   const hasPaidSub = !!subscription?.razorpay_subscription_id;
+  // A real, paying subscription: has a Razorpay id, is active, and is NOT in a
+  // free-trial window. (Paying converts a user off the trial, so trial_ends_at
+  // is cleared — while trialing we always show the trial state below, even if a
+  // stale sub id lingers from an earlier attempt.)
+  const isPaidActive = hasPaidSub && isActive && !isTrialing;
 
   const trialDaysLeft = isTrialing
     ? Math.max(0, Math.ceil((new Date(subscription.trial_ends_at) - new Date()) / (1000 * 60 * 60 * 24)))
@@ -93,7 +93,7 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
             <span className="rounded-full px-3 py-1 text-xs font-semibold text-amber-300 border border-amber-400/30 bg-amber-500/10">Admin</span>
           ) : isTrialing ? (
             <span className="rounded-full px-3 py-1 text-xs font-semibold text-cyan-300 border border-cyan-400/30 bg-cyan-500/10">Trial · {trialDaysLeft}d</span>
-          ) : isElite ? (
+          ) : isPaidActive ? (
             <span className="rounded-full px-3 py-1 text-xs font-semibold text-violet-300 border border-violet-400/30 bg-violet-500/10">Elite</span>
           ) : (
             <span className="rounded-full px-3 py-1 text-xs font-semibold text-white/60 border border-white/15 bg-white/5">Basic</span>
@@ -102,19 +102,31 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
 
         {isAdmin ? (
           <p className="text-sm text-white/50">You have unrestricted admin access to all features.</p>
-        ) : hasPaidSub && (isActive || isTrialing) ? (
-          /* Real subscription: converted mid-trial (first charge scheduled) or active paid */
+        ) : isTrialing ? (
+          /* Free trial (no charge until they subscribe) — always offer a Subscribe button */
           <div className="space-y-3">
-            {isTrialing && (
-              <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/5 px-4 py-3">
-                <p className="text-sm text-cyan-300 font-medium">
-                  Elite · trial ends in {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''}
-                </p>
-                <p className="text-xs text-white/40 mt-1">
-                  First charge on {fmtDate(subscription.trial_ends_at)} — your remaining trial days are included.
-                </p>
-              </div>
-            )}
+            <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/5 px-4 py-3">
+              <p className="text-sm text-cyan-300 font-medium">
+                Free trial · {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
+              </p>
+              <p className="text-xs text-white/40 mt-1">
+                No card required — you won't be charged until you subscribe. When your trial ends you'll move to the Basic plan.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/upgrade"
+              className="inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]"
+              style={gradientBtn}
+            >
+              Subscribe now
+            </Link>
+            <p className="text-xs text-white/30">
+              Pick monthly or yearly at checkout. You'll be charged today and Elite starts right away.
+            </p>
+          </div>
+        ) : isPaidActive ? (
+          /* Real, active paid subscription */
+          <div className="space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-mono uppercase tracking-wider text-white/40 mb-1">Billing</p>
@@ -146,28 +158,6 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
                 Cancel subscription
               </button>
             )}
-          </div>
-        ) : isTrialing ? (
-          /* No-card DB trial: no scheduled charge, no cycle chosen, nothing to cancel */
-          <div className="space-y-3">
-            <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/5 px-4 py-3">
-              <p className="text-sm text-cyan-300 font-medium">
-                Free trial · {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} remaining
-              </p>
-              <p className="text-xs text-white/40 mt-1">
-                No card required — you won't be charged automatically. When your trial ends you'll move to the Basic plan unless you subscribe.
-              </p>
-            </div>
-            <Link
-              href="/dashboard/upgrade"
-              className="inline-block rounded-xl px-5 py-2.5 text-sm font-semibold text-[#08080f]"
-              style={gradientBtn}
-            >
-              Choose a plan &amp; subscribe
-            </Link>
-            <p className="text-xs text-white/30">
-              Pick monthly or yearly at checkout. Subscribe during your trial and your remaining {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} are added on top.
-            </p>
           </div>
         ) : (
           <div>
@@ -227,8 +217,6 @@ export default function BillingTab({ planAccess, subscription, paymentStatus }) 
           </div>
         </div>
       )}
-
-      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </div>
   );
 }
