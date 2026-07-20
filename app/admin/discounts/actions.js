@@ -15,31 +15,34 @@ async function requireAdmin() {
 
 /**
  * Save the global discount settings into site_settings.
- * Each rate is paired with its Razorpay UPI offer id — the actual charge is
- * enforced by the offer, so the % and the offer id must match.
+ * Rates: partner_pct, trial_auto_pct. Offer slots (Razorpay UPI): the offer for
+ * the partner rate, the offer for partner + trial (in-trial), and the offer for
+ * the trial auto-bonus alone. The % must match the % the offer was created at.
  */
 export async function saveDiscountSettings(form) {
   const { admin, error } = await requireAdmin();
   if (error) return { error };
 
-  const partnerPct = Math.round(Number(form?.partner_trial_pct));
-  const defaultPct = Math.round(Number(form?.default_pct));
-  const partnerOffer = String(form?.partner_trial_offer_id_upi || '').trim().slice(0, 120);
-  const defaultOffer = String(form?.default_offer_id_upi || '').trim().slice(0, 120);
+  const partnerPct = Math.round(Number(form?.partner_pct));
+  const trialAutoPct = Math.round(Number(form?.trial_auto_pct));
+  const partnerOffer = String(form?.partner_offer_upi || '').trim().slice(0, 120);
+  const partnerTrialOffer = String(form?.partner_trial_offer_upi || '').trim().slice(0, 120);
+  const trialAutoOffer = String(form?.trial_auto_offer_upi || '').trim().slice(0, 120);
 
-  if (!Number.isFinite(partnerPct) || partnerPct < 30 || partnerPct > 50) {
-    return { error: 'Partner (trial) discount must be between 30% and 50%.' };
+  if (!Number.isFinite(partnerPct) || partnerPct < 1 || partnerPct > 100) {
+    return { error: 'Partner discount must be between 1% and 100%.' };
   }
-  if (!Number.isFinite(defaultPct) || defaultPct < 1 || defaultPct > 100) {
-    return { error: 'Default (post-trial) discount must be between 1% and 100%.' };
+  if (!Number.isFinite(trialAutoPct) || trialAutoPct < 0 || trialAutoPct > 100) {
+    return { error: 'Trial auto-discount must be between 0% and 100%.' };
   }
 
   const now = new Date().toISOString();
   const rows = [
-    { key: 'partner_trial_pct', value: String(partnerPct), updated_at: now },
-    { key: 'partner_trial_offer_id_upi', value: partnerOffer, updated_at: now },
-    { key: 'default_pct', value: String(defaultPct), updated_at: now },
-    { key: 'default_offer_id_upi', value: defaultOffer, updated_at: now },
+    { key: 'partner_pct', value: String(partnerPct), updated_at: now },
+    { key: 'trial_auto_pct', value: String(trialAutoPct), updated_at: now },
+    { key: 'partner_offer_upi', value: partnerOffer, updated_at: now },
+    { key: 'partner_trial_offer_upi', value: partnerTrialOffer, updated_at: now },
+    { key: 'trial_auto_offer_upi', value: trialAutoOffer, updated_at: now },
   ];
 
   const { error: e } = await admin.from('site_settings').upsert(rows, { onConflict: 'key' });

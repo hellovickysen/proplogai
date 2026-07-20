@@ -7,12 +7,13 @@ import { resolveDiscount } from '@/lib/affiliate';
  * POST /api/partner/validate-coupon
  * Body: { code: string }
  *
- * Validates a code (partner coupon OR admin promo) for the signed-in user
- * WITHOUT creating anything, and returns the discount that WILL actually apply
- * given the user's trial context — so the checkout preview matches the charge.
+ * Validates an explicit code for the signed-in user WITHOUT creating anything,
+ * and returns the discount that WILL actually apply given the trial context
+ * (during the trial the +trial-auto-bonus is already stacked in), so the
+ * checkout preview matches the charge.
  *
  * Returns { valid, discountPct, kind, methods, label, isTrialing }.
- * discountPct is 0 when no matching Razorpay offer is configured.
+ * discountPct is 0 when the matching combined Razorpay offer isn't configured.
  */
 export async function POST(request) {
   try {
@@ -33,7 +34,7 @@ export async function POST(request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
-    // Trial context drives the partner tier (30% in trial vs 15% after).
+    // Trial context adds the trial auto-bonus on top of the code's base rate.
     const { data: sub } = await admin
       .from('subscriptions')
       .select('trial_ends_at')

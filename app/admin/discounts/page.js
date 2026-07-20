@@ -24,11 +24,11 @@ export default async function AdminDiscountsPage() {
       <div>
         <h1 className="font-display text-2xl font-bold text-white">Discounts</h1>
         <p className="mt-1 max-w-2xl text-sm text-white/50">
-          Global partner discount rates. During a trial, partner codes give the partner rate
-          (30–50%); once the trial ends, partner codes fall back to the default rate. Each rate is
-          charged via a Razorpay UPI subscription offer you create in the Razorpay Dashboard — paste
-          its Offer Id so the displayed % matches the real charge. Sitewide / occasion codes are
-          managed under <span className="text-white/70">Promos</span>.
+          Partner (influencer) discount and the trial auto-bonus. During a free trial the auto-bonus
+          stacks on top of any code (partner or promo); after the trial, codes give their normal rate.
+          Everyone is charged on the day they subscribe. Each rate is charged via a Razorpay UPI
+          subscription offer you create and paste below — sitewide / occasion codes live under{' '}
+          <span className="text-white/70">Promos</span>.
         </p>
       </div>
 

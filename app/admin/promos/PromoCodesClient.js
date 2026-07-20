@@ -5,7 +5,7 @@ import { createPromo, updatePromo, togglePromo, deletePromo } from './actions';
 
 const FIELD = 'w-full rounded-xl border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm text-white outline-none focus:border-cyan-400/50';
 
-export default function PromoCodesClient({ promos }) {
+export default function PromoCodesClient({ promos, trialAutoPct = 0 }) {
   const [showCreate, setShowCreate] = useState(false);
 
   return (
@@ -23,6 +23,7 @@ export default function PromoCodesClient({ promos }) {
       {showCreate && (
         <PromoForm
           mode="create"
+          trialAutoPct={trialAutoPct}
           onDone={() => setShowCreate(false)}
         />
       )}
@@ -33,14 +34,14 @@ export default function PromoCodesClient({ promos }) {
             No promo codes yet. Create one above.
           </p>
         ) : (
-          promos.map((p) => <PromoRow key={p.id} promo={p} />)
+          promos.map((p) => <PromoRow key={p.id} promo={p} trialAutoPct={trialAutoPct} />)
         )}
       </div>
     </div>
   );
 }
 
-function PromoRow({ promo }) {
+function PromoRow({ promo, trialAutoPct }) {
   const [editing, setEditing] = useState(false);
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState('');
@@ -62,7 +63,7 @@ function PromoRow({ promo }) {
     return (
       <div className="rounded-2xl border border-cyan-400/25 bg-white/[0.03] p-5">
         <p className="mb-3 font-mono text-xs uppercase tracking-wider text-white/55">Edit {promo.code}</p>
-        <PromoForm mode="edit" promo={promo} onDone={() => setEditing(false)} />
+        <PromoForm mode="edit" promo={promo} trialAutoPct={trialAutoPct} onDone={() => setEditing(false)} />
       </div>
     );
   }
@@ -88,7 +89,9 @@ function PromoRow({ promo }) {
           </div>
           {promo.label && <p className="mt-1 text-sm text-white/55">{promo.label}</p>}
           <p className="mt-1 font-mono text-[11px] text-white/40">
-            Methods: {methods.length ? methods.join(' + ') : '— none —'} · Used {promo.redeemed_count || 0}{promo.max_redemptions != null ? ` / ${promo.max_redemptions}` : ''}
+            Methods: {methods.length ? methods.join(' + ') : '— none —'}
+            {promo.razorpay_offer_id_upi_trial ? ' · in-trial UPI ✓' : ' · in-trial UPI —'}
+            {' '}· Used {promo.redeemed_count || 0}{promo.max_redemptions != null ? ` / ${promo.max_redemptions}` : ''}
           </p>
           <p className="mt-0.5 font-mono text-[11px] text-white/35">
             {fmtWindow(promo.starts_at, promo.expires_at)}
@@ -127,13 +130,14 @@ function PromoRow({ promo }) {
   );
 }
 
-function PromoForm({ mode, promo, onDone }) {
+function PromoForm({ mode, promo, trialAutoPct = 0, onDone }) {
   const [form, setForm] = useState({
     code: promo?.code || '',
     label: promo?.label || '',
     discount_pct: promo?.discount_pct != null ? String(Math.round(Number(promo.discount_pct))) : '',
     razorpay_offer_id: promo?.razorpay_offer_id || '',
     razorpay_offer_id_upi: promo?.razorpay_offer_id_upi || '',
+    razorpay_offer_id_upi_trial: promo?.razorpay_offer_id_upi_trial || '',
     starts_at: promo?.starts_at ? String(promo.starts_at).slice(0, 10) : '',
     expires_at: promo?.expires_at ? String(promo.expires_at).slice(0, 10) : '',
     max_redemptions: promo?.max_redemptions != null ? String(promo.max_redemptions) : '',
@@ -142,6 +146,9 @@ function PromoForm({ mode, promo, onDone }) {
   const [err, setErr] = useState('');
 
   function u(k, v) { setForm((f) => ({ ...f, [k]: v })); }
+
+  const basePct = Math.round(Number(form.discount_pct)) || 0;
+  const inTrialPct = basePct + (Math.round(Number(trialAutoPct)) || 0);
 
   async function submit(e) {
     e.preventDefault();
@@ -178,11 +185,15 @@ function PromoForm({ mode, promo, onDone }) {
           <input value={form.razorpay_offer_id} onChange={(e) => u('razorpay_offer_id', e.target.value)} placeholder="offer_XXXX (Card)" className={FIELD + ' font-mono'} />
         </div>
         <div>
-          <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Razorpay Offer Id — UPI</label>
+          <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Razorpay Offer Id — UPI ({basePct}%)</label>
           <input value={form.razorpay_offer_id_upi} onChange={(e) => u('razorpay_offer_id_upi', e.target.value)} placeholder="offer_XXXX (UPI)" className={FIELD + ' font-mono'} />
         </div>
+        <div className="sm:col-span-2">
+          <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Razorpay Offer Id — UPI in-trial ({inTrialPct}% = code + {Math.round(Number(trialAutoPct)) || 0}% trial bonus)</label>
+          <input value={form.razorpay_offer_id_upi_trial} onChange={(e) => u('razorpay_offer_id_upi_trial', e.target.value)} placeholder="offer_XXXX (UPI, used during a trial)" className={FIELD + ' font-mono'} />
+        </div>
         <p className="sm:col-span-2 -mt-1 text-[11px] text-white/35">
-          Create a subscription offer in Razorpay → Subscriptions → Offers for each payment method (Card and/or UPI), then paste the Offer Id(s) here. Enter at least one. The % above should match the offer(s).
+          Create a subscription offer in Razorpay → Subscriptions → Offers for each payment method, then paste the Offer Id(s). Enter at least one of Card/UPI. The in-trial UPI offer (optional) is used when someone redeems this code while still in their free trial, where the {Math.round(Number(trialAutoPct)) || 0}% trial bonus stacks on top — create it at {inTrialPct}%.
         </p>
         <div className="sm:col-span-2">
           <label className="mb-1 block font-mono text-[11px] uppercase tracking-wider text-white/50">Label (internal, optional)</label>

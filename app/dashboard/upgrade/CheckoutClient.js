@@ -23,17 +23,11 @@ function money(n) {
   return (Math.round((Number(n) || 0) * 100) / 100).toFixed(2);
 }
 
-function fmtDate(d) {
-  if (!d) return '';
-  return new Date(d).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
-}
-
-export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal, discountPct, initialCoupon, isTrialing = false, trialEndsAt = null }) {
+export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal, initialCoupon, isTrialing = false, trialEndsAt = null, trialAutoPct = 0, trialAutoConfigured = false }) {
   const [billingCycle, setBillingCycle] = useState('monthly');
   const [code, setCode] = useState(initialCoupon || '');
   const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(null); // { discountPct, methods } once validated
-  const [method, setMethod] = useState('card'); // chosen payment method when a discount applies
+  const [applied, setApplied] = useState(null); // explicit code result: { discountPct, methods, label }
   const [couponMsg, setCouponMsg] = useState('');
   const [couponErr, setCouponErr] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,23 +36,24 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
   const trialDaysLeft = isTrialing && trialEndsAt
     ? Math.max(0, Math.ceil((new Date(trialEndsAt) - new Date()) / (1000 * 60 * 60 * 24)))
     : 0;
-  const trialEndLabel = fmtDate(trialEndsAt);
-
-  const availableMethods = (applied?.methods && applied.methods.length) ? applied.methods : [];
 
   const chargeNow = billingCycle === 'yearly' ? yearlyTotal : priceMonthly;
-  const effPct = applied?.discountPct || 0;
-  const discounted = Math.round(chargeNow * (1 - effPct / 100) * 100) / 100;
-  const hasDiscount = !!applied && effPct > 0;
   const cycleLabel = billingCycle === 'yearly' ? '/year' : '/month';
-  // The first amount actually charged (discounted if a code applies, else full).
-  const firstPayment = hasDiscount ? discounted : chargeNow;
 
-  // What's charged the moment the user confirms:
-  // - trialing → nothing today (first charge is pinned to the trial end date)
-  // - not trialing → the discounted amount if a code applies, else full price
-  //   (trials are auto-granted at signup; checkout never starts a new trial)
-  const dueToday = isTrialing ? 0 : (hasDiscount ? discounted : chargeNow);
+  // Effective discount:
+  // - an explicit code (once validated) wins, at whatever rate the server returns
+  //   (already includes the +trial bonus during the trial);
+  // - otherwise, during the trial the auto-bonus applies on its own (if configured);
+  // - otherwise full price.
+  const explicitApplied = !!applied;
+  const codePct = applied?.discountPct || 0;
+  const useAuto = !explicitApplied && isTrialing && trialAutoConfigured && trialAutoPct > 0;
+  const effPct = explicitApplied ? codePct : (useAuto ? trialAutoPct : 0);
+  const discountActive = effPct > 0;
+  const methods = explicitApplied ? (applied.methods || []) : (useAuto ? ['upi'] : []);
+
+  const discounted = Math.round(chargeNow * (1 - effPct / 100) * 100) / 100;
+  const dueToday = discounted; // always charged today
 
   const applyCoupon = useCallback(async () => {
     setCouponErr('');
@@ -78,12 +73,8 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
         setCouponErr(data.error || 'That code is invalid.');
         return;
       }
-      const methods = Array.isArray(data.methods) ? data.methods : [];
-      setApplied({ discountPct: data.discountPct || 0, methods, label: data.label || '' });
-      if (methods.length) setMethod(methods[0]);
-      // The server returns the exact rate + a plain-English reason (trial vs
-      // post-trial), so a partner-referred user always sees why they got a
-      // given rate rather than being surprised by 15% vs 30%.
+      const m = Array.isArray(data.methods) ? data.methods : [];
+      setApplied({ discountPct: data.discountPct || 0, methods: m, label: data.label || '' });
       setCouponMsg(data.label || (data.discountPct > 0 ? `${data.discountPct}% off applied.` : 'Code applied.'));
     } catch {
       setCouponErr('Could not validate the code. Try again.');
@@ -98,20 +89,15 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // A code is optional — subscribing is always allowed.
   const payDisabled = loading;
-
-  const payLabel = loading
-    ? 'Opening checkout…'
-    : isTrialing
-      ? 'Subscribe now'
-      : `Pay $${money(hasDiscount ? discounted : chargeNow)} now`;
+  const payLabel = loading ? 'Opening checkout…' : `Pay $${money(discounted)} now`;
 
   async function handlePay() {
     if (payDisabled) return;
     setLoading(true);
     try {
-      const useMethod = hasDiscount && availableMethods.length ? method : undefined;
+      // Discount offers are UPI; restrict the modal to UPI so the offer applies.
+      const useMethod = discountActive ? 'upi' : undefined;
       const res = await fetch('/api/razorpay/create-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -143,16 +129,12 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
         },
       };
 
-      // When a discount applies, restrict the Razorpay modal to the chosen
-      // method so the pinned per-method offer actually applies.
-      if (useMethod === 'upi' || useMethod === 'card') {
+      // A discount offer is UPI-only — restrict the modal so it actually applies.
+      if (useMethod === 'upi') {
         options.config = {
           display: {
             blocks: {
-              chosen: {
-                name: useMethod === 'upi' ? 'Pay via UPI' : 'Pay via Card',
-                instruments: [{ method: useMethod }],
-              },
+              chosen: { name: 'Pay via UPI', instruments: [{ method: 'upi' }] },
             },
             sequence: ['block.chosen'],
             preferences: { show_default_blocks: false },
@@ -189,7 +171,10 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
             You're on a free trial — {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''} left
           </p>
           <p className="mt-1 text-xs leading-relaxed text-white/55">
-            Subscribe any time and your <strong className="text-white/80">remaining {trialDaysLeft} trial day{trialDaysLeft !== 1 ? 's' : ''}</strong> are added on top of your plan — no charge today, first payment on <strong className="text-white/80">{trialEndLabel}</strong>.
+            Subscribe any time — you'll be charged today and your plan starts now.
+            {trialAutoConfigured && trialAutoPct > 0
+              ? ` A ${trialAutoPct}% trial discount is applied automatically${' '}— add a partner or promo code to stack even more off.`
+              : ''}
           </p>
         </div>
       )}
@@ -264,41 +249,15 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
             </div>
             {couponErr && <p className="mt-1.5 text-[11px] text-red-300">{couponErr}</p>}
             {couponMsg && <p className="mt-1.5 text-[11px] text-emerald-300">{couponMsg}</p>}
+            {!explicitApplied && useAuto && (
+              <p className="mt-1.5 text-[11px] text-cyan-300">{trialAutoPct}% trial discount applied automatically.</p>
+            )}
           </div>
-
-          {/* Payment method (only when a discount applies — the pinned offer is per-method) */}
-          {hasDiscount && availableMethods.length > 0 && (
-            <div className="mt-4">
-              <label className="mb-1.5 block font-mono text-[11px] uppercase tracking-wider text-white/45">Pay with</label>
-              {availableMethods.length > 1 ? (
-                <div className="grid grid-cols-2 gap-2">
-                  {availableMethods.map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setMethod(m)}
-                      className={`rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
-                        method === m
-                          ? 'border-cyan-400/50 bg-white/[0.06] text-white'
-                          : 'border-white/10 bg-white/[0.02] text-white/60 hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      {m === 'upi' ? 'UPI' : 'Card'}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-white/70">
-                  {availableMethods[0] === 'upi' ? 'UPI' : 'Card'}
-                  <span className="text-white/40"> — required to apply this discount</span>
-                </p>
-              )}
-            </div>
-          )}
 
           {/* Breakdown */}
           <div className="mt-5 space-y-2 border-t border-white/10 pt-4 text-sm">
             <Row label={`Elite (${billingCycle})`} value={`$${money(chargeNow)}`} />
-            {hasDiscount && (
+            {discountActive && (
               <Row label={`Discount (${effPct}%)`} value={`-$${money(chargeNow - discounted)}`} accent />
             )}
             <div className="flex items-center justify-between border-t border-white/10 pt-3">
@@ -307,21 +266,13 @@ export default function CheckoutClient({ priceMonthly, priceYearly, yearlyTotal,
                 ${money(dueToday)}
               </span>
             </div>
-            {isTrialing && (
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-white/55">First payment · {trialEndLabel}</span>
-                <span className="font-mono text-white/80">${money(firstPayment)}</span>
-              </div>
-            )}
           </div>
 
-          {/* Trial / charge note */}
+          {/* Charge note */}
           <p className="mt-2 text-[11px] leading-relaxed text-white/40">
-            {isTrialing
-              ? `No charge today — your ${trialDaysLeft} remaining trial day${trialDaysLeft !== 1 ? 's' : ''} are added. First payment $${money(firstPayment)} on ${trialEndLabel}, then $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
-              : (hasDiscount
-                  ? `Billed today at the discounted rate. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
-                  : `Billed today. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`)}
+            {discountActive
+              ? `Billed today at the discounted rate${useAuto ? ` (${trialAutoPct}% trial discount)` : ''} via UPI. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`
+              : `Billed today. Renews at $${money(chargeNow)} ${cycleLabel}. Cancel anytime.`}
           </p>
 
           {/* Pay */}

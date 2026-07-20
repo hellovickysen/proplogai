@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
-import { createSubscription, cancelSubscription } from '@/lib/razorpay';
-import { resolveDiscount, promoOfferId } from '@/lib/affiliate';
+import { createSubscription } from '@/lib/razorpay';
+import { resolveDiscount, getDiscountSettings } from '@/lib/affiliate';
 
 /**
  * POST /api/razorpay/create-subscription
@@ -10,13 +10,16 @@ import { resolveDiscount, promoOfferId } from '@/lib/affiliate';
  * Creates a Razorpay subscription and returns the hosted checkout details.
  * Body: { billingCycle: 'monthly' | 'yearly', couponCode?: string, method?: 'card'|'upi' }
  *
- * Model (see lib/affiliate.resolveDiscount):
- * - Discounts REQUIRE a code. No code = full price.
- * - Partner code: 30% during trial, 15% (default) after trial.
- * - Promo/occasion code: its own % whenever active.
- * - Trials are DB-only (no card). Converting mid-trial pins the first charge to
- *   the current trial_ends_at so remaining trial days are preserved (no charge
- *   today). Post-trial conversions charge now.
+ * Model:
+ * - Always charge NOW; the 30-day cycle counts from the subscribe day (no
+ *   start_at deferral, no "days added"). This also keeps Razorpay offers valid
+ *   (offers only apply to an immediate first charge).
+ * - Discounts (additive stacking during trial):
+ *     partner code → 30% (+10% trial bonus during trial),
+ *     promo code   → its own % (+10% trial bonus during trial),
+ *     no code, in trial → the 10% trial auto-bonus alone (if configured),
+ *     no code, not in trial → full price.
+ * - Each combined rate is one pre-made Razorpay UPI offer (see lib/affiliate).
  */
 
 function getServiceClient() {
@@ -68,11 +71,10 @@ export async function POST(request) {
       return NextResponse.json({ error: 'You must be signed in.' }, { status: 401 });
     }
 
-    const { billingCycle = 'monthly', couponCode, method: rawMethod } = await request.json();
+    const { billingCycle = 'monthly', couponCode } = await request.json();
     if (!['monthly', 'yearly'].includes(billingCycle)) {
       return NextResponse.json({ error: 'Invalid billing cycle.' }, { status: 400 });
     }
-    const method = rawMethod === 'upi' ? 'upi' : 'card';
 
     const admin = getServiceClient();
 
@@ -85,7 +87,7 @@ export async function POST(request) {
 
     const isTrialing = !!(existingSub?.trial_ends_at && new Date(existingSub.trial_ends_at) > new Date());
 
-    // Resolve the code → the discount that actually applies for this context.
+    // Resolve an explicit code → the (possibly stacked) discount for this context.
     const code = typeof couponCode === 'string' ? couponCode.trim() : '';
     const disc = await resolveDiscount(admin, code, { isTrialing });
     if (!disc.valid) {
@@ -95,76 +97,30 @@ export async function POST(request) {
       return NextResponse.json({ error: "You can't use your own coupon code." }, { status: 400 });
     }
 
-    // Offer id for the chosen method (partner tiers are UPI-only).
-    let offerId = null;
-    if (disc.kind === 'partner') offerId = method === 'upi' ? disc.offerIdUpi : null;
-    else if (disc.kind === 'promo') offerId = promoOfferId(disc.promo, method);
-
-    /* ── Mid-trial conversion: preserve remaining trial days ─────────────── */
-    if (isTrialing) {
-      const startAt = Math.floor(new Date(existingSub.trial_ends_at).getTime() / 1000);
-
-      // If a legacy mandate sub is attached, cancel it first so it can't also
-      // charge at the same date. DB-only trials have no Razorpay sub → skip.
-      if (existingSub.razorpay_subscription_id) {
-        try {
-          await cancelSubscription(existingSub.razorpay_subscription_id, false);
-        } catch (e) {
-          const msg = (e?.message || '').toLowerCase();
-          if (!msg.includes('cancel') && !msg.includes('already')) {
-            console.error('Abort mid-trial convert — old sub cancel failed:', e?.message || e);
-            return NextResponse.json({ error: 'Could not update your trial right now. Please try again.' }, { status: 500 });
-          }
-          console.warn('Old trial sub cancel returned (continuing):', e?.message || e);
-        }
-      }
-
-      const sub = await createSubscription({
-        billingCycle,
-        email: user.email,
-        userId: user.id,
-        offerId,
-        trial: false,
-        startAt,
-      });
-
-      const { error: convErr } = await admin
-        .from('subscriptions')
-        .update({
-          plan: 'elite',
-          status: 'created',
-          razorpay_subscription_id: sub.id,
-          billing_cycle: billingCycle,
-          trial_ends_at: existingSub.trial_ends_at, // keep remaining trial days
-        })
-        .eq('id', existingSub.id);
-      if (convErr) console.error('Mid-trial convert DB update error:', convErr.message);
-
-      await bindCodeEffects(admin, { affiliate: disc.affiliate, promo: disc.promo, userId: user.id, subscriptionDbId: existingSub.id });
-
-      return NextResponse.json({
-        shortUrl: sub.short_url,
-        subscriptionId: sub.id,
-        keyId: process.env.RAZORPAY_KEY_ID || '',
-      });
+    // Offer to pin (UPI). Explicit code → its resolved offer. No code + still in
+    // trial → the trial auto-bonus offer (compensation for the unused trial).
+    let offerId = disc.offerIdUpi || null;
+    if (disc.kind === 'none' && isTrialing) {
+      const s = await getDiscountSettings(admin);
+      if (s.trialAutoOfferUpi) offerId = s.trialAutoOfferUpi;
     }
 
-    /* ── Post-trial / no active trial: charge now ───────────────────────── */
+    // Block only a real, already-paying subscription.
     const hasActivePaidSub =
       existingSub &&
       !!existingSub.razorpay_subscription_id &&
       (existingSub.status === 'active' || existingSub.status === 'authenticated');
-
     if (hasActivePaidSub) {
       return NextResponse.json({ error: 'You already have an active subscription.' }, { status: 400 });
     }
 
+    // Always charge now — subscription starts today, cycle counts from today.
     const sub = await createSubscription({
       billingCycle,
       email: user.email,
       userId: user.id,
       offerId,
-      trial: false, // trials are DB-only now; checkout never starts a mandate trial
+      trial: false,
     });
 
     const subRow = {
@@ -173,7 +129,7 @@ export async function POST(request) {
       status: 'created',
       razorpay_subscription_id: sub.id,
       billing_cycle: billingCycle,
-      trial_ends_at: null,
+      trial_ends_at: null, // paying converts them off the trial
     };
 
     let subscriptionDbId = existingSub?.id || null;
