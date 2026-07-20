@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import QuickLogModal from '@/components/trades/QuickLogModal';
 
 const ACTIONS = [
   { label: 'Log Trade', icon: '📈', href: '/dashboard/trades/new' },
-  { label: 'Quick Log', icon: '⚡', href: '/dashboard/trades/new?quick=true' },
+  { label: 'Quick Log', icon: '⚡', action: 'quick-log' },
   { label: 'Add Expense', icon: '💳', href: '/dashboard/expenses?action=add' },
   { label: 'Add Payout', icon: '💰', href: '/dashboard/expenses?tab=payouts&action=add' },
   { label: 'Add Trophy', icon: '🏆', href: '/dashboard/trophies?action=add' },
@@ -14,6 +15,7 @@ const ACTIONS = [
 
 export default function QuickActions() {
   const [open, setOpen] = useState(false);
+  const [showQuickLog, setShowQuickLog] = useState(false);
   const ref = useRef(null);
 
   useEffect(() => {
@@ -25,16 +27,23 @@ export default function QuickActions() {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [open]);
 
-  // Prevent body scroll when open on mobile
+  // Prevent body scroll when FAB menu or quick log modal is open
   useEffect(() => {
-    if (open) document.body.style.overflow = 'hidden';
+    if (open || showQuickLog) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
     return () => { document.body.style.overflow = ''; };
-  }, [open]);
+  }, [open, showQuickLog]);
+
+  function handleAction(a) {
+    if (a.action === 'quick-log') {
+      setOpen(false);
+      setShowQuickLog(true);
+    }
+  }
 
   return (
     <>
-      {/* Fullscreen backdrop blur when open */}
+      {/* Fullscreen backdrop blur when FAB menu is open */}
       {open && (
         <div
           className="fixed inset-0 z-[998] bg-black/50 backdrop-blur-sm"
@@ -56,17 +65,28 @@ export default function QuickActions() {
             <div className="px-4 py-2 font-mono text-[10px] uppercase tracking-wider text-white/35">
               Quick Actions
             </div>
-            {ACTIONS.map(a => (
-              <Link
-                key={a.href}
-                href={a.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-sm text-white/75 hover:bg-white/[0.08] hover:text-white transition-colors"
-              >
-                <span className="text-lg w-6 text-center">{a.icon}</span>
-                <span className="font-medium">{a.label}</span>
-              </Link>
-            ))}
+            {ACTIONS.map(a =>
+              a.action ? (
+                <button
+                  key={a.label}
+                  onClick={() => handleAction(a)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm text-white/75 hover:bg-white/[0.08] hover:text-white transition-colors text-left"
+                >
+                  <span className="text-lg w-6 text-center">{a.icon}</span>
+                  <span className="font-medium">{a.label}</span>
+                </button>
+              ) : (
+                <Link
+                  key={a.href}
+                  href={a.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm text-white/75 hover:bg-white/[0.08] hover:text-white transition-colors"
+                >
+                  <span className="text-lg w-6 text-center">{a.icon}</span>
+                  <span className="font-medium">{a.label}</span>
+                </Link>
+              )
+            )}
           </div>
         )}
 
@@ -85,6 +105,11 @@ export default function QuickActions() {
           <span className={'transition-transform duration-200 inline-block ' + (open ? 'rotate-45' : '')}>+</span>
         </button>
       </div>
+
+      {/* Quick Log Modal */}
+      {showQuickLog && (
+        <QuickLogModal onClose={() => setShowQuickLog(false)} />
+      )}
     </>
   );
 }
