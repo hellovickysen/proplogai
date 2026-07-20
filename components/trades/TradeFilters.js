@@ -6,6 +6,7 @@ import TradeTable from '@/components/trades/TradeTable';
 import { num } from '@/lib/stats';
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-cyan-400/60 sm:w-auto';
+const PAGE_SIZE = 20;
 
 /* ─── Custom themed dropdown (single-select) ──────────────── */
 function FilterDropdown({ label, value, onChange, placeholder, options }) {
@@ -178,6 +179,7 @@ export default function TradeFilters({ trades, prefs }) {
   const [dateTo, setDateTo] = useState('');
   const [hasLesson, setHasLesson] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [page, setPage] = useState(1);
 
   /* Refs to ensure URL params are only applied once (not re-applied after clear) */
   const emotionUrlApplied = useRef(false);
@@ -296,6 +298,12 @@ export default function TradeFilters({ trades, prefs }) {
     });
   }, [numberedTrades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo]);
 
+  // Reset to page 1 when filters change
+  useEffect(() => { setPage(1); }, [result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginatedTrades = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter.length > 0 || hasLesson || dateFrom || dateTo;
   const activeFilterCount = [setupFilter, emotionFilter, sessionFilter, tagFilter.length > 0, hasLesson, dateFrom, dateTo].filter(Boolean).length;
 
@@ -400,7 +408,69 @@ export default function TradeFilters({ trades, prefs }) {
         </p>
       )}
 
-      <TradeTable rows={filtered} totalCount={trades ? trades.length : 0} />
+      <TradeTable rows={paginatedTrades} totalCount={trades ? trades.length : 0} />
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3">
+          <span className="font-mono text-xs text-white/40">
+            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} of {filtered.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => { setPage(1); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              disabled={page === 1}
+              className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              &laquo;
+            </button>
+            <button
+              onClick={() => { setPage(p => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              disabled={page === 1}
+              className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              &lsaquo; Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce((acc, p, i, arr) => {
+                if (i > 0 && p - arr[i - 1] > 1) acc.push('...');
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, i) =>
+                p === '...' ? (
+                  <span key={'dot-' + i} className="px-1 text-xs text-white/25">...</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => { setPage(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className={'rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-colors ' +
+                      (p === page
+                        ? 'border-cyan-400/50 bg-cyan-500/15 text-cyan-300'
+                        : 'border-white/10 text-white/50 hover:bg-white/[0.06]')}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+            <button
+              onClick={() => { setPage(p => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              disabled={page === totalPages}
+              className="rounded-lg border border-white/10 px-2.5 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next &rsaquo;
+            </button>
+            <button
+              onClick={() => { setPage(totalPages); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              disabled={page === totalPages}
+              className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-white/50 transition-colors hover:bg-white/[0.06] disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              &raquo;
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
