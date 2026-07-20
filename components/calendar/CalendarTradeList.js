@@ -60,10 +60,11 @@ function DetailPanel({ trade, colSpan, onImageClick }) {
   const emotions = j.emotions || [];
   const tags = j.tags || [];
   const note = j.note || '';
+  const lesson = j.lesson || '';
   const confidence = j.confidence;
   const screenshots = j.screenshotUrls || [];
 
-  const hasContent = note || emotions.length > 0 || tags.length > 0 || screenshots.length > 0 || confidence != null;
+  const hasContent = note || lesson || emotions.length > 0 || tags.length > 0 || screenshots.length > 0 || confidence != null;
 
   return (
     <tr>
@@ -102,6 +103,14 @@ function DetailPanel({ trade, colSpan, onImageClick }) {
             <div>
               <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">Journal note</span>
               <p className="mt-1 text-sm text-white/70 leading-relaxed whitespace-pre-line">{note}</p>
+            </div>
+          )}
+
+          {/* Lesson learned */}
+          {lesson && (
+            <div>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">Lesson learned</span>
+              <p className="mt-1 text-sm text-white/70 leading-relaxed whitespace-pre-line">{lesson}</p>
             </div>
           )}
 
@@ -187,9 +196,10 @@ export default function CalendarTradeList({ trades }) {
                     const emotions = j.emotions || [];
                     const tags = j.tags || [];
                     const note = j.note || '';
+                    const lesson = j.lesson || '';
                     const confidence = j.confidence;
                     const screenshots = j.screenshotUrls || [];
-                    const hasContent = note || emotions.length > 0 || tags.length > 0 || screenshots.length > 0 || confidence != null;
+                    const hasContent = note || lesson || emotions.length > 0 || tags.length > 0 || screenshots.length > 0 || confidence != null;
                     return (
                       <>
                         {!hasContent && <p className="text-xs text-white/30 italic">No journal entry for this trade.</p>}
@@ -209,6 +219,12 @@ export default function CalendarTradeList({ trades }) {
                           <div>
                             <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">Journal note</span>
                             <p className="mt-1 text-sm text-white/70 leading-relaxed whitespace-pre-line">{note}</p>
+                          </div>
+                        )}
+                        {lesson && (
+                          <div>
+                            <span className="font-mono text-[10px] uppercase tracking-wider text-white/40">Lesson learned</span>
+                            <p className="mt-1 text-sm text-white/70 leading-relaxed whitespace-pre-line">{lesson}</p>
                           </div>
                         )}
                         {screenshots.length > 0 && (

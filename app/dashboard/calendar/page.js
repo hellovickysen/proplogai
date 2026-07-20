@@ -120,7 +120,7 @@ export default async function CalendarPage({ searchParams }) {
   if (tradeIds.length > 0) {
     const { data: journals, error: journalError } = await supabase
       .from('journal_entries')
-      .select('trade_id, emotions, tags, note, screenshot_url, screenshot_urls, confidence')
+      .select('trade_id, emotions, tags, note, lesson, screenshot_url, screenshot_urls, confidence')
       .in('trade_id', tradeIds);
     if (journalError) console.error('journal entries error', journalError);
     (journals || []).forEach((j) => {
@@ -145,8 +145,10 @@ export default async function CalendarPage({ searchParams }) {
         emotions: j.emotions || [],
         tags: j.tags || [],
         note: j.note || '',
+        lesson: j.lesson || '',
         screenshotUrls,
         hasNote: !!(j.note && j.note.trim()),
+        hasLesson: !!(j.lesson && j.lesson.trim()),
         hasImages: screenshotUrls.length > 0,
         confidence: j.confidence != null ? j.confidence : null,
       },
