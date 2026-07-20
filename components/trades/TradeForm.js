@@ -770,7 +770,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                 )}
               </div>
             )}
-          </div>}
+          </div>
+          )}
 
           {/* Section 2: Price Data — hidden in quick mode */}
           {!quickMode && (
@@ -819,7 +820,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                     maxLength={4}
                   />
                 </div>
-              </div>}
+              </div>
+              )}
             </div>
           </div>
 
