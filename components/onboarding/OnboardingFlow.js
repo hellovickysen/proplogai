@@ -48,7 +48,7 @@ const FEATURES = [
   },
   {
     icon: '💰',
-    title: 'Expense Tracker',
+    title: 'Prop Firm Expense Tracker',
     desc: 'Track prop firm fees, renewals, and payouts. Know your real ROI.',
     accent: 'border-yellow-400/30 bg-yellow-500/[0.06]',
     iconBg: 'bg-yellow-500/15',
