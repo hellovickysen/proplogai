@@ -72,25 +72,12 @@ const FEATURES = [
 export default function OnboardingFlow({ userEmail }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [emotions, setEmotions] = useState([...DEFAULT_EMOTIONS]);
-  const [newEmotion, setNewEmotion] = useState('');
-  const [defaultConfidence, setDefaultConfidence] = useState(0);
   const [saving, setSaving] = useState(false);
-
-  function toggleEmotion(e) {
-    setEmotions((cur) => cur.includes(e) ? cur.filter((x) => x !== e) : [...cur, e]);
-  }
-
-  function addEmotion() {
-    const t = newEmotion.trim();
-    if (!t || emotions.map((e) => e.toLowerCase()).includes(t.toLowerCase())) return;
-    setEmotions([...emotions, t]);
-    setNewEmotion('');
-  }
 
   async function finish() {
     setSaving(true);
-    await completeOnboarding({ custom_emotions: emotions, default_confidence: defaultConfidence });
+    // Pass sensible defaults — user can customize emotions/confidence in Settings later
+    await completeOnboarding({ custom_emotions: DEFAULT_EMOTIONS, default_confidence: 0 });
     if (typeof window !== 'undefined' && window.posthog) {
       window.posthog.capture('onboarding_completed');
     }
@@ -99,7 +86,7 @@ export default function OnboardingFlow({ userEmail }) {
     window.location.href = '/dashboard';
   }
 
-  const total = 4;
+  const total = 3;
   const pct = ((step + 1) / total) * 100;
 
   return (
@@ -193,101 +180,8 @@ export default function OnboardingFlow({ userEmail }) {
           </div>
         )}
 
-        {/* ─── Step 2: Journal Setup ─── */}
+        {/* ─── Step 2: Ready ─── */}
         {step === 2 && (
-          <div>
-            <h2 className="mb-1 text-center font-display text-xl font-bold text-white sm:text-2xl">
-              Set up your journal
-            </h2>
-            <p className="mb-5 text-center text-sm text-white/45">
-              Pick the emotions you want to track. You can always change these later in Settings.
-            </p>
-
-            <label className="mb-2 block font-mono text-xs uppercase tracking-wider text-white/55">
-              Your emotion tags
-            </label>
-            <div className="mb-4 flex flex-wrap gap-2">
-              {emotions.map((em, i) => (
-                <button
-                  key={i}
-                  onClick={() => toggleEmotion(em)}
-                  className="rounded-full border border-violet-400/30 bg-violet-500/10 px-3 py-1.5 text-xs text-violet-200 transition-colors hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200"
-                >
-                  {em} ✕
-                </button>
-              ))}
-            </div>
-
-            <div className="mb-6 flex gap-2">
-              <input
-                value={newEmotion}
-                onChange={(e) => setNewEmotion(e.target.value)}
-                placeholder="Add a feeling (e.g. Anxious, Excited)…"
-                maxLength={50}
-                className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white placeholder-white/25 outline-none focus:border-violet-500/50"
-                onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addEmotion())}
-              />
-              <button
-                onClick={addEmotion}
-                className="rounded-lg border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/70 hover:bg-white/10"
-              >
-                Add
-              </button>
-            </div>
-
-            <label className="mb-2 block font-mono text-xs uppercase tracking-wider text-white/55">
-              Default confidence
-            </label>
-            <div className="mb-6 flex items-center gap-2">
-              {[0, 1, 2, 3, 4, 5].map((i) =>
-                i === 0 ? (
-                  <button
-                    key={i}
-                    onClick={() => setDefaultConfidence(0)}
-                    className={
-                      'rounded-lg border px-2.5 py-1 text-xs transition-colors ' +
-                      (defaultConfidence === 0
-                        ? 'border-cyan-400/50 bg-cyan-500/10 text-cyan-300'
-                        : 'border-white/10 text-white/30 hover:text-white/50')
-                    }
-                  >
-                    None
-                  </button>
-                ) : (
-                  <button
-                    key={i}
-                    onClick={() => setDefaultConfidence(i)}
-                    className={
-                      'text-xl transition-colors ' +
-                      (i <= defaultConfidence ? 'text-amber-400' : 'text-white/20 hover:text-white/35')
-                    }
-                  >
-                    &#9733;
-                  </button>
-                )
-              )}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setStep(1)}
-                className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70 hover:bg-white/10"
-              >
-                Back
-              </button>
-              <button
-                onClick={() => setStep(3)}
-                className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f] transition-transform hover:scale-[1.02] active:scale-[0.98]"
-                style={gradientBtn}
-              >
-                Next →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ─── Step 3: Ready ─── */}
-        {step === 3 && (
           <div className="flex flex-col items-center text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15 text-3xl">
               🚀
@@ -321,12 +215,12 @@ export default function OnboardingFlow({ userEmail }) {
             </div>
 
             <p className="mb-5 text-xs text-white/35">
-              You&apos;ll see a checklist on your dashboard to help you explore every feature.
+              You can customize your emotion tags and confidence settings anytime in Settings.
             </p>
 
             <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
               <button
-                onClick={() => setStep(2)}
+                onClick={() => setStep(1)}
                 className="order-2 rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm text-white/70 hover:bg-white/10 sm:order-1"
               >
                 Back
