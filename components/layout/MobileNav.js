@@ -94,9 +94,9 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
             position: 'fixed',
             inset: 0,
             zIndex: 9998,
-            backgroundColor: 'rgba(0,0,0,0.75)',
-            WebkitBackdropFilter: 'blur(24px)',
-            backdropFilter: 'blur(24px)',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            WebkitBackdropFilter: 'blur(10px)',
+            backdropFilter: 'blur(10px)',
           }}
         />
       )}
@@ -151,8 +151,8 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
         </nav>
 
         {/* -- Bottom: Credits + Admin + Expandable Avatar -- */}
-        {/* pb-20 clears the MobileBottomNav sticky bar + safe-area */}
-        <div className="border-t border-white/[0.06] px-3 pt-3 pb-20">
+        {/* Bottom section — pinned to bottom of drawer */}
+        <div className="border-t border-white/[0.06] px-3 py-3" style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom))' }}>
           {/* Credits — always visible (FOMO) */}
           {credits != null && Number(credits) > 0 && (
             <Link
