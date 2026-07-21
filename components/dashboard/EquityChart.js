@@ -1,71 +1,56 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 const W = 800;
-const H = 300;
-const PAD = { top: 20, right: 0, bottom: 36, left: 0 };
-const CHART_W = W;
-const CHART_H = H - PAD.top - PAD.bottom;
+const H = 280;
+const PAD = { top: 16, right: 8, bottom: 32, left: 52 };
+const CW = W - PAD.left - PAD.right;
+const CH = H - PAD.top - PAD.bottom;
 
 function fmtVal(v) {
-  const sign = v >= 0 ? '+' : '-';
-  return sign + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const s = v >= 0 ? '+' : '-';
+  return s + '$' + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function fmtYLabel(v) {
+function fmtY(v) {
   if (v === 0) return '$0';
-  const sign = v < 0 ? '-' : '';
-  const abs = Math.abs(v);
-  if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1) + 'K';
-  return sign + '$' + abs.toFixed(0);
+  const s = v < 0 ? '-' : '';
+  const a = Math.abs(v);
+  if (a >= 1000) return s + '$' + (a / 1000).toFixed(1) + 'K';
+  return s + '$' + a.toFixed(0);
 }
 
-function fmtFullDate(dateStr) {
-  const d = new Date(dateStr + 'T00:00:00');
-  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return days[d.getDay()] + ', ' + months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
+function fmtDate(ds) {
+  const d = new Date(ds + 'T00:00:00');
+  return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()] + ', ' +
+    ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] +
+    ' ' + d.getDate() + ', ' + d.getFullYear();
 }
 
-function niceStep(range, targetTicks) {
-  const raw = range / targetTicks;
-  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
-  const residual = raw / mag;
-  let nice;
-  if (residual <= 1.5) nice = 1;
-  else if (residual <= 3) nice = 2;
-  else if (residual <= 7) nice = 5;
-  else nice = 10;
-  return nice * mag;
+function niceStep(r, t) {
+  const raw = r / t, mag = Math.pow(10, Math.floor(Math.log10(raw))), res = raw / mag;
+  return (res <= 1.5 ? 1 : res <= 3 ? 2 : res <= 7 ? 5 : 10) * mag;
 }
 
-function yTicks(min, max) {
-  const range = max - min || 1;
-  const step = niceStep(range, 5);
-  const start = Math.floor(min / step) * step;
-  const end = Math.ceil(max / step) * step;
-  const ticks = [];
-  for (let v = start; v <= end + step * 0.01; v += step) {
-    ticks.push(Math.round(v * 100) / 100);
-  }
-  return ticks;
+function getTicks(min, max) {
+  const r = max - min || 1, step = niceStep(r, 5);
+  const s = Math.floor(min / step) * step, e = Math.ceil(max / step) * step;
+  const t = [];
+  for (let v = s; v <= e + step * 0.01; v += step) t.push(Math.round(v * 100) / 100);
+  return t;
 }
 
-/* ── Smooth cubic bezier (Catmull-Rom) ── */
-function smoothPath(points) {
-  const n = points.length;
+/* Catmull-Rom spline — ultra smooth with low tension */
+function curve(pts) {
+  const n = pts.length;
   if (n < 2) return '';
-  if (n === 2) return 'M' + points[0][0].toFixed(2) + ',' + points[0][1].toFixed(2) + 'L' + points[1][0].toFixed(2) + ',' + points[1][1].toFixed(2);
-
-  let d = 'M' + points[0][0].toFixed(2) + ',' + points[0][1].toFixed(2);
+  if (n === 2) return `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}L${pts[1][0].toFixed(1)},${pts[1][1].toFixed(1)}`;
+  const T = 0.2;
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
   for (let i = 0; i < n - 1; i++) {
-    const p0 = points[Math.max(0, i - 1)];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[Math.min(n - 1, i + 2)];
-    const t = 0.25;
-    d += ' C' + (p1[0] + (p2[0] - p0[0]) * t).toFixed(2) + ',' + (p1[1] + (p2[1] - p0[1]) * t).toFixed(2) + ' ' + (p2[0] - (p3[0] - p1[0]) * t).toFixed(2) + ',' + (p2[1] - (p3[1] - p1[1]) * t).toFixed(2) + ' ' + p2[0].toFixed(2) + ',' + p2[1].toFixed(2);
+    const a = pts[Math.max(0, i - 1)], b = pts[i], c = pts[i + 1], e = pts[Math.min(n - 1, i + 2)];
+    d += ` C${(b[0] + (c[0] - a[0]) * T).toFixed(1)},${(b[1] + (c[1] - a[1]) * T).toFixed(1)} ${(c[0] - (e[0] - b[0]) * T).toFixed(1)},${(c[1] - (e[1] - b[1]) * T).toFixed(1)} ${c[0].toFixed(1)},${c[1].toFixed(1)}`;
   }
   return d;
 }
@@ -73,216 +58,119 @@ function smoothPath(points) {
 export default function EquityChart({ data }) {
   const [mode, setMode] = useState('cumulative');
   const svgRef = useRef(null);
-  const hoverRef = useRef(null);
-  const rafId = useRef(0);
-  const ptsCacheRef = useRef([]);
+  const hRef = useRef(null);
+  const raf = useRef(0);
+  const cache = useRef([]);
 
-  const hasData = data && data.length >= 2;
+  const ok = data && data.length >= 2;
+  const vals = ok ? data.map(d => mode === 'cumulative' ? d.cumulative : d.daily) : [];
+  const mn = ok ? Math.min(0, ...vals) : 0;
+  const mx = ok ? Math.max(0, ...vals) : 0;
+  const ticks = ok ? getTicks(mn, mx) : [];
+  const tMin = ticks[0] || 0, tMax = ticks[ticks.length - 1] || 1, tR = tMax - tMin || 1;
 
-  /* ── Compute scales ── */
-  const vals = hasData ? data.map((d) => (mode === 'cumulative' ? d.cumulative : d.daily)) : [];
-  const minVal = hasData ? Math.min(0, ...vals) : 0;
-  const maxVal = hasData ? Math.max(0, ...vals) : 0;
-  const ticks = hasData ? yTicks(minVal, maxVal) : [];
-  const tickMin = ticks[0] || 0;
-  const tickMax = ticks[ticks.length - 1] || 1;
-  const tickRange = tickMax - tickMin || 1;
+  const sx = i => PAD.left + (i / ((data ? data.length : 2) - 1)) * CW;
+  const sy = v => PAD.top + CH * (1 - (v - tMin) / tR);
 
-  const sx = (i) => (i / ((data ? data.length : 2) - 1)) * CHART_W;
-  const sy = (v) => PAD.top + CHART_H * (1 - (v - tickMin) / tickRange);
-  const zeroY = hasData ? sy(0) : H / 2;
+  if (ok) cache.current = data.map((d, i) => ({ x: sx(i), y: sy(vals[i]), v: vals[i], date: d.date, label: d.label }));
 
-  /* Cache points for hover lookup */
-  if (hasData) {
-    ptsCacheRef.current = data.map((d, i) => ({ x: sx(i), y: sy(vals[i]), val: vals[i], date: d.date, label: d.label }));
-  }
+  const zeroY = ok ? sy(0) : H / 2;
 
-  /* ── Native event listeners for zero-lag hover ── */
+  /* Native event listeners — zero-lag hover */
   useEffect(() => {
-    const svg = svgRef.current;
-    if (!svg || !hasData) return;
+    const svg = svgRef.current, hg = hRef.current;
+    if (!svg || !hg || !ok) return;
+    const pts = cache.current;
+    const q = s => hg.querySelector(s);
+    const el = { vl: q('.vl'), hl: q('.hl'), d1: q('.d1'), d2: q('.d2'), d3: q('.d3'), bg: q('.bg'), td: q('.td'), tv: q('.tv'), tl: q('.tl') };
 
-    const pts = ptsCacheRef.current;
-    const hg = hoverRef.current;
-    if (!hg) return;
-
-    const els = {
-      vl: hg.querySelector('.hv'),
-      hl: hg.querySelector('.hh'),
-      d1: hg.querySelector('.d1'),
-      d2: hg.querySelector('.d2'),
-      d3: hg.querySelector('.d3'),
-      bg: hg.querySelector('.tb'),
-      td: hg.querySelector('.td'),
-      tv: hg.querySelector('.tv'),
-      tl: hg.querySelector('.tl'),
-    };
-
-    function update(clientX) {
+    function upd(cx) {
       const r = svg.getBoundingClientRect();
-      const mx = ((clientX - r.left) / r.width) * W;
-      const ci = Math.max(0, Math.min(pts.length - 1, Math.round((mx / CHART_W) * (pts.length - 1))));
-      const p = pts[ci];
-      if (!p) return;
-
-      const pos = p.val >= 0;
-      const col = pos ? '#22d3ee' : '#f87171';
-
-      els.vl.setAttribute('x1', p.x); els.vl.setAttribute('x2', p.x);
-      els.hl.setAttribute('y1', p.y); els.hl.setAttribute('y2', p.y);
-      els.d1.setAttribute('cx', p.x); els.d1.setAttribute('cy', p.y);
-      els.d1.setAttribute('fill', pos ? 'rgba(34,211,238,0.12)' : 'rgba(248,113,113,0.12)');
-      els.d2.setAttribute('cx', p.x); els.d2.setAttribute('cy', p.y); els.d2.setAttribute('stroke', col);
-      els.d3.setAttribute('cx', p.x); els.d3.setAttribute('cy', p.y);
-
-      const tw = 170, th = 62;
-      const tx = p.x + tw + 20 > W ? p.x - tw - 16 : p.x + 16;
+      const mx = ((cx - r.left) / r.width) * W;
+      const ci = Math.max(0, Math.min(pts.length - 1, Math.round(((mx - PAD.left) / CW) * (pts.length - 1))));
+      const p = pts[ci]; if (!p) return;
+      const pos = p.v >= 0, col = pos ? '#22d3ee' : '#f87171';
+      el.vl.setAttribute('x1', p.x); el.vl.setAttribute('x2', p.x);
+      el.hl.setAttribute('y1', p.y); el.hl.setAttribute('y2', p.y);
+      [el.d1, el.d2, el.d3].forEach(c => { c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); });
+      el.d1.setAttribute('fill', pos ? 'rgba(34,211,238,0.12)' : 'rgba(248,113,113,0.12)');
+      el.d2.setAttribute('stroke', col);
+      const tw = 164, th = 58, tx = p.x + tw + 20 > W ? p.x - tw - 12 : p.x + 12;
       const ty = Math.max(PAD.top, Math.min(p.y - th / 2, H - PAD.bottom - th));
-      els.bg.setAttribute('x', tx); els.bg.setAttribute('y', ty);
-      els.td.setAttribute('x', tx + tw / 2); els.td.setAttribute('y', ty + 18); els.td.textContent = fmtFullDate(p.date);
-      els.tv.setAttribute('x', tx + tw / 2); els.tv.setAttribute('y', ty + 39); els.tv.setAttribute('fill', col); els.tv.textContent = fmtVal(p.val);
-      els.tl.setAttribute('x', tx + tw / 2); els.tl.setAttribute('y', ty + 54);
-
+      el.bg.setAttribute('x', tx); el.bg.setAttribute('y', ty);
+      el.td.setAttribute('x', tx + tw / 2); el.td.setAttribute('y', ty + 17); el.td.textContent = fmtDate(p.date);
+      el.tv.setAttribute('x', tx + tw / 2); el.tv.setAttribute('y', ty + 37); el.tv.setAttribute('fill', col); el.tv.textContent = fmtVal(p.v);
+      el.tl.setAttribute('x', tx + tw / 2); el.tl.setAttribute('y', ty + 51);
       hg.style.display = '';
     }
+    function onM(e) { if (!raf.current) { const cx = e.clientX; raf.current = requestAnimationFrame(() => { raf.current = 0; upd(cx); }); } }
+    function onT(e) { if (!raf.current && e.touches[0]) { const cx = e.touches[0].clientX; raf.current = requestAnimationFrame(() => { raf.current = 0; upd(cx); }); } }
+    function off() { if (raf.current) { cancelAnimationFrame(raf.current); raf.current = 0; } hg.style.display = 'none'; }
 
-    function onMove(e) {
-      if (rafId.current) return;
-      const cx = e.clientX;
-      rafId.current = requestAnimationFrame(() => { rafId.current = 0; update(cx); });
-    }
-    function onTouch(e) {
-      if (rafId.current || !e.touches[0]) return;
-      const cx = e.touches[0].clientX;
-      rafId.current = requestAnimationFrame(() => { rafId.current = 0; update(cx); });
-    }
-    function onLeave() {
-      if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = 0; }
-      hg.style.display = 'none';
-    }
-
-    svg.addEventListener('mousemove', onMove, { passive: true });
-    svg.addEventListener('touchmove', onTouch, { passive: true });
-    svg.addEventListener('mouseleave', onLeave);
-    svg.addEventListener('touchend', onLeave);
-
-    return () => {
-      svg.removeEventListener('mousemove', onMove);
-      svg.removeEventListener('touchmove', onTouch);
-      svg.removeEventListener('mouseleave', onLeave);
-      svg.removeEventListener('touchend', onLeave);
-      if (rafId.current) cancelAnimationFrame(rafId.current);
-    };
+    svg.addEventListener('mousemove', onM, { passive: true });
+    svg.addEventListener('touchmove', onT, { passive: true });
+    svg.addEventListener('mouseleave', off);
+    svg.addEventListener('touchend', off);
+    return () => { svg.removeEventListener('mousemove', onM); svg.removeEventListener('touchmove', onT); svg.removeEventListener('mouseleave', off); svg.removeEventListener('touchend', off); if (raf.current) cancelAnimationFrame(raf.current); };
   });
 
-  if (!hasData) {
-    return (
-      <div className="flex h-[200px] items-center justify-center text-sm text-white/55">
-        Log at least two trades to see your equity curve.
-      </div>
-    );
-  }
+  if (!ok) return <div className="flex h-[200px] items-center justify-center text-sm text-white/55">Log at least two trades to see your equity curve.</div>;
 
-  const labelStep = Math.max(1, Math.ceil(data.length / 7));
-  const xLabels = data.filter((_, i) => i % labelStep === 0 || i === data.length - 1);
-  const pts = data.map((d, i) => [sx(i), sy(vals[i])]);
-  const curvePath = smoothPath(pts);
-  const areaPath = curvePath + ' L' + pts[pts.length - 1][0].toFixed(2) + ',' + zeroY.toFixed(2) + ' L' + pts[0][0].toFixed(2) + ',' + zeroY.toFixed(2) + ' Z';
-  const yLabelX = W - 6;
-  const modeLabel = mode === 'cumulative' ? 'CUMULATIVE P&L' : 'DAILY P&L';
+  const ls = Math.max(1, Math.ceil(data.length / 7));
+  const xLbls = data.filter((_, i) => i % ls === 0 || i === data.length - 1);
+  const pts = data.map((_, i) => [sx(i), sy(vals[i])]);
+  const cp = curve(pts);
+  const ap = cp + ` L${pts[pts.length-1][0].toFixed(1)},${zeroY.toFixed(1)} L${pts[0][0].toFixed(1)},${zeroY.toFixed(1)} Z`;
+  const ml = mode === 'cumulative' ? 'CUMULATIVE P&L' : 'DAILY P&L';
 
   return (
     <div>
-      {/* Header */}
-      <div className="mb-3 flex items-center justify-between gap-2">
+      <div className="mb-2 flex items-center justify-between gap-2">
         <div className="min-w-0 truncate font-display text-base font-semibold">P&amp;L Performance</div>
         <div className="flex shrink-0 gap-0.5 rounded-lg border border-white/10 bg-black/30 p-0.5">
-          {[{ key: 'cumulative', label: 'Cumulative' }, { key: 'daily', label: 'Daily' }].map((m) => (
-            <button key={m.key} onClick={() => setMode(m.key)}
-              className={'rounded-md px-2 py-1 text-[11px] font-semibold transition-all duration-200 sm:px-3 sm:py-1.5 sm:text-xs ' + (mode === m.key ? 'bg-white/[0.1] text-white shadow-sm' : 'text-white/40 hover:text-white/60')}>
-              {m.label}
+          {[{k:'cumulative',l:'Cumulative'},{k:'daily',l:'Daily'}].map(m=>(
+            <button key={m.k} onClick={()=>setMode(m.k)}
+              className={'rounded-md px-2 py-1 text-[11px] font-semibold transition-all duration-200 sm:px-3 sm:py-1.5 sm:text-xs '+(mode===m.k?'bg-white/[0.1] text-white shadow-sm':'text-white/40 hover:text-white/60')}>
+              {m.l}
             </button>
           ))}
         </div>
       </div>
-
-      {/* Chart — bleeds past card padding */}
       <div className="-mx-5 -mb-5">
-        <svg
-          ref={svgRef}
-          viewBox={'0 0 ' + W + ' ' + H}
-          className="block h-[220px] w-full select-none sm:h-[300px]"
-          preserveAspectRatio="none"
-          style={{ shapeRendering: 'geometricPrecision' }}
-        >
+        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="block h-[210px] w-full select-none sm:h-[280px]" style={{shapeRendering:'geometricPrecision'}}>
           <defs>
-            <linearGradient id="eqAreaCyan" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stopColor="#22d3ee" stopOpacity="0.22" />
-              <stop offset="0.5" stopColor="#22d3ee" stopOpacity="0.08" />
-              <stop offset="1" stopColor="#22d3ee" stopOpacity="0.01" />
-            </linearGradient>
-            <linearGradient id="eqAreaRed" x1="0" y1="1" x2="0" y2="0">
-              <stop offset="0" stopColor="#f87171" stopOpacity="0.22" />
-              <stop offset="0.5" stopColor="#f87171" stopOpacity="0.08" />
-              <stop offset="1" stopColor="#f87171" stopOpacity="0.01" />
-            </linearGradient>
-            <clipPath id="clipAbove"><rect x="0" y={PAD.top} width={W} height={Math.max(0, zeroY - PAD.top)} /></clipPath>
-            <clipPath id="clipBelow"><rect x="0" y={zeroY} width={W} height={Math.max(0, PAD.top + CHART_H - zeroY)} /></clipPath>
+            <linearGradient id="ac" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#22d3ee" stopOpacity=".18"/><stop offset=".6" stopColor="#22d3ee" stopOpacity=".05"/><stop offset="1" stopColor="#22d3ee" stopOpacity=".01"/></linearGradient>
+            <linearGradient id="ar" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#f87171" stopOpacity=".18"/><stop offset=".6" stopColor="#f87171" stopOpacity=".05"/><stop offset="1" stopColor="#f87171" stopOpacity=".01"/></linearGradient>
+            <clipPath id="ca"><rect x="0" y={PAD.top} width={W} height={Math.max(0,zeroY-PAD.top)}/></clipPath>
+            <clipPath id="cb"><rect x="0" y={zeroY} width={W} height={Math.max(0,PAD.top+CH-zeroY)}/></clipPath>
           </defs>
 
-          {/* Grid + Y labels */}
-          {ticks.map((v, i) => {
-            const y = sy(v);
-            return (
-              <g key={i}>
-                <line x1={0} y1={y} x2={W} y2={y}
-                  stroke={v === 0 ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)'}
-                  strokeWidth={v === 0 ? 1 : 0.5}
-                  strokeDasharray={v === 0 ? '4 3' : 'none'} />
-                <text x={yLabelX} y={y - 5} textAnchor="end"
-                  fill={v > 0 ? 'rgba(34,211,238,0.5)' : v < 0 ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.3)'}
-                  fontSize="10" fontFamily="JetBrains Mono, monospace">
-                  {fmtYLabel(v)}
-                </text>
-              </g>
-            );
-          })}
+          {ticks.map((v,i)=>{const y=sy(v);return(
+            <g key={i}>
+              <line x1={PAD.left} y1={y} x2={W-PAD.right} y2={y} stroke={v===0?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)'} strokeWidth={v===0?1:.5} strokeDasharray={v===0?'4 3':'none'}/>
+              <text x={PAD.left-8} y={y+4} textAnchor="end" fill={v>0?'rgba(34,211,238,.45)':v<0?'rgba(248,113,113,.45)':'rgba(255,255,255,.3)'} fontSize="10" fontFamily="JetBrains Mono,monospace">{fmtY(v)}</text>
+            </g>
+          );})}
 
-          {/* X labels */}
-          {xLabels.map((d) => {
-            const i = data.indexOf(d);
-            return (
-              <text key={d.date} x={sx(i)} y={H - 4} textAnchor="middle"
-                fill="rgba(255,255,255,0.25)" fontSize="10" fontFamily="JetBrains Mono, monospace">
-                {d.label}
-              </text>
-            );
-          })}
+          {xLbls.map(d=>{const i=data.indexOf(d);return(
+            <text key={d.date} x={sx(i)} y={H-6} textAnchor="middle" fill="rgba(255,255,255,.22)" fontSize="10" fontFamily="JetBrains Mono,monospace">{d.label}</text>
+          );})}
 
-          {/* Areas */}
-          <path d={areaPath} fill="url(#eqAreaCyan)" clipPath="url(#clipAbove)" />
-          <path d={areaPath} fill="url(#eqAreaRed)" clipPath="url(#clipBelow)" />
+          <path d={ap} fill="url(#ac)" clipPath="url(#ca)"/>
+          <path d={ap} fill="url(#ar)" clipPath="url(#cb)"/>
+          <g clipPath="url(#ca)"><path d={cp} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
+          <g clipPath="url(#cb)"><path d={cp} fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
 
-          {/* Line above zero (cyan) */}
-          <g clipPath="url(#clipAbove)">
-            <path d={curvePath} fill="none" stroke="#22d3ee" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-          </g>
-          {/* Line below zero (red) */}
-          <g clipPath="url(#clipBelow)">
-            <path d={curvePath} fill="none" stroke="#f87171" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-          </g>
-
-          {/* Hover layer — DOM-only, no React re-renders */}
-          <g ref={hoverRef} style={{ display: 'none' }}>
-            <line className="hv" x1="0" y1={PAD.top} x2="0" y2={H - PAD.bottom} stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="4 3" />
-            <line className="hh" x1="0" y1="0" x2={W} y2="0" stroke="rgba(255,255,255,0.10)" strokeWidth="1" strokeDasharray="4 3" />
-            <circle className="d1" cx="0" cy="0" r="8" fill="rgba(34,211,238,0.12)" />
-            <circle className="d2" cx="0" cy="0" r="5" fill="#0b0b14" stroke="#22d3ee" strokeWidth="2" />
-            <circle className="d3" cx="0" cy="0" r="2" fill="#fff" />
-            <rect className="tb" x="0" y="0" width="170" height="62" rx="10" fill="rgba(18,18,30,0.90)" stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
-            <text className="td" x="0" y="0" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10.5" fontWeight="600" fontFamily="Poppins, sans-serif" />
-            <text className="tv" x="0" y="0" textAnchor="middle" fill="#22d3ee" fontSize="16" fontWeight="700" fontFamily="Poppins, sans-serif" />
-            <text className="tl" x="0" y="0" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="8" fontWeight="600" fontFamily="JetBrains Mono, monospace" letterSpacing="1.2">{modeLabel}</text>
+          <g ref={hRef} style={{display:'none'}}>
+            <line className="vl" x1="0" y1={PAD.top} x2="0" y2={H-PAD.bottom} stroke="rgba(255,255,255,.12)" strokeWidth="1" strokeDasharray="4 3"/>
+            <line className="hl" x1={PAD.left} y1="0" x2={W-PAD.right} y2="0" stroke="rgba(255,255,255,.08)" strokeWidth="1" strokeDasharray="4 3"/>
+            <circle className="d1" cx="0" cy="0" r="7" fill="rgba(34,211,238,.12)"/>
+            <circle className="d2" cx="0" cy="0" r="4" fill="#0b0b14" stroke="#22d3ee" strokeWidth="1.5"/>
+            <circle className="d3" cx="0" cy="0" r="1.5" fill="#fff"/>
+            <rect className="bg" x="0" y="0" width="164" height="58" rx="8" fill="rgba(14,14,24,.92)" stroke="rgba(255,255,255,.08)" strokeWidth="1"/>
+            <text className="td" x="0" y="0" textAnchor="middle" fill="rgba(255,255,255,.55)" fontSize="10" fontWeight="600" fontFamily="Poppins,sans-serif"/>
+            <text className="tv" x="0" y="0" textAnchor="middle" fill="#22d3ee" fontSize="15" fontWeight="700" fontFamily="Poppins,sans-serif"/>
+            <text className="tl" x="0" y="0" textAnchor="middle" fill="rgba(255,255,255,.25)" fontSize="7.5" fontWeight="600" fontFamily="JetBrains Mono,monospace" letterSpacing="1">{ml}</text>
           </g>
         </svg>
       </div>
