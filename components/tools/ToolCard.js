@@ -7,6 +7,7 @@ export default function ToolCard({
   icon,
   href,
   color = 'linear-gradient(120deg, #a78bfa, #22d3ee)',
+  tag,
 }) {
   return (
     <Link
@@ -29,9 +30,16 @@ export default function ToolCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-base font-semibold text-white">
-            {title}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-display text-base font-semibold text-white">
+              {title}
+            </h3>
+            {tag && (
+              <span className="rounded-md bg-emerald-400/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                {tag}
+              </span>
+            )}
+          </div>
           <p className="mt-1 text-sm leading-snug text-white/55">
             {subtitle}
           </p>

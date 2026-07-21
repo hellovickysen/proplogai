@@ -4,6 +4,15 @@ export const metadata = { title: 'Tools | PropLogAI' };
 
 const TOOLS = [
   {
+    title: 'Prop Test Pass Probability',
+    subtitle:
+      'Calculate your probability of passing a prop firm challenge using Monte Carlo simulation on your real trading data',
+    icon: '🎯',
+    href: '/dashboard/tools/probability-analyzer',
+    color: 'linear-gradient(120deg, #a78bfa, #22d3ee)',
+    tag: 'Free',
+  },
+  {
     title: 'Consistency Calculator',
     subtitle:
       'Check if your largest winning trade satisfies the consistency rule before requesting a payout',
