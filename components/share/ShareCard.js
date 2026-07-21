@@ -143,7 +143,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote, avat
             fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em',
             color: 'rgba(255,255,255,0.7)', fontFamily: "'JetBrains Mono', monospace",
           }}>
-            {type === 'daily' ? "Today's P&L" : type === 'total' ? 'Total P&L' : (data.pair || 'Trade') + ' ' + ((data.direction || '').toUpperCase())}
+            {data.pair ? (data.pair + ' ' + ((data.direction || '').toUpperCase())) : type === 'daily' ? "Today's P&L" : type === 'total' ? 'Total P&L' : 'Trade'}
           </div>
 
           <div style={{
@@ -188,19 +188,9 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote, avat
             gap: isSquare ? 8 : isStory ? 8 : 10, flexWrap: 'nowrap',
             marginBottom: isSquare ? 14 : isStory ? 16 : 10,
           }}>
-            {(type === 'daily' || type === 'total') ? (
-              <>
-                {data.trades != null && <StatChip label="Trades" value={String(data.trades)} isStory={isStory} />}
-                {data.winRate != null && <StatChip label="Win Rate" value={data.winRate + '%'} isStory={isStory} />}
-                {data.bestTrade != null && <StatChip label="Best" value={fmtMoneyShort(data.bestTrade)} accent isStory={isStory} />}
-              </>
-            ) : (
-              <>
-                {data.entry_price != null && <StatChip label="Entry" value={String(data.entry_price)} isStory={isStory} />}
-                {data.exit_price != null && <StatChip label="Exit" value={String(data.exit_price)} isStory={isStory} />}
-                {data.session && <StatChip label="Session" value={data.session} isStory={isStory} />}
-              </>
-            )}
+            {data.entry_price != null && <StatChip label="Entry" value={String(data.entry_price)} isStory={isStory} />}
+            {data.exit_price != null && <StatChip label="Exit" value={String(data.exit_price)} isStory={isStory} />}
+            {data.direction && <StatChip label="Direction" value={(data.direction || '').toUpperCase()} isStory={isStory} />}
           </div>
 
           <div style={{ textAlign: 'center' }}>

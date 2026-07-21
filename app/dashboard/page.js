@@ -272,7 +272,8 @@ export default async function DashboardPage() {
   const todayWorst = todayTrades.length > 0 ? Math.min(...todayTrades.map((t) => num(t.pnl))) : null;
   const shareAvatar = userProfile?.avatar_url || null;
   const shareName = userProfile?.full_name || '';
-  const dailyShareData = { pnl: todayPnl, date: today, trades: todayTrades.length, winRate: todayWinRate, bestTrade: todayBest, worstTrade: todayWorst, avatarUrl: shareAvatar, fullName: shareName };
+  const singleTrade = todayTrades.length === 1 ? todayTrades[0] : null;
+  const dailyShareData = { pnl: todayPnl, date: today, pair: singleTrade?.pair || null, direction: singleTrade?.direction || null, entry_price: singleTrade?.entry_price ?? null, exit_price: singleTrade?.exit_price ?? null, avatarUrl: shareAvatar, fullName: shareName };
   const totalShareData = { pnl: s.net, date: today, trades: s.n, winRate: Math.round(s.winRate), bestTrade: null, worstTrade: null, avatarUrl: shareAvatar, fullName: shareName };
 
   return (
