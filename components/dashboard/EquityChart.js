@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 
 const W = 800;
 const H = 300;
-const PAD = { top: 20, right: 56, bottom: 36, left: 12 };
+const PAD = { top: 20, right: 0, bottom: 36, left: 0 };
 const CHART_W = W - PAD.left - PAD.right;
 const CHART_H = H - PAD.top - PAD.bottom;
 
@@ -52,40 +52,26 @@ function yTicks(min, max) {
   return ticks;
 }
 
-/* ── Monotone cubic interpolation (Fritsch-Carlson) ── */
-function monotonePath(points) {
+/* ── Smooth cubic bezier (Catmull-Rom, low tension for extra smoothness) ── */
+function smoothPath(points) {
   const n = points.length;
   if (n < 2) return '';
-  if (n === 2) return 'M' + points[0][0] + ',' + points[0][1] + 'L' + points[1][0] + ',' + points[1][1];
+  if (n === 2) return 'M' + points[0][0].toFixed(2) + ',' + points[0][1].toFixed(2) + 'L' + points[1][0].toFixed(2) + ',' + points[1][1].toFixed(2);
 
-  /* 1. Compute secants */
-  const dx = [], dy = [], m = [];
-  for (let i = 0; i < n - 1; i++) {
-    dx.push(points[i + 1][0] - points[i][0]);
-    dy.push(points[i + 1][1] - points[i][1]);
-    m.push(dy[i] / dx[i]);
-  }
-
-  /* 2. Tangent slopes (Fritsch-Carlson) */
-  const t = [m[0]];
-  for (let i = 1; i < n - 1; i++) {
-    if (m[i - 1] * m[i] <= 0) {
-      t.push(0);
-    } else {
-      t.push(3 * (dx[i - 1] + dx[i]) / ((2 * dx[i] + dx[i - 1]) / m[i - 1] + (dx[i] + 2 * dx[i - 1]) / m[i]));
-    }
-  }
-  t.push(m[n - 2]);
-
-  /* 3. Build cubic bezier path */
   let d = 'M' + points[0][0].toFixed(2) + ',' + points[0][1].toFixed(2);
   for (let i = 0; i < n - 1; i++) {
-    const seg = dx[i] / 3;
-    const cp1x = points[i][0] + seg;
-    const cp1y = points[i][1] + t[i] * seg;
-    const cp2x = points[i + 1][0] - seg;
-    const cp2y = points[i + 1][1] - t[i + 1] * seg;
-    d += ' C' + cp1x.toFixed(2) + ',' + cp1y.toFixed(2) + ' ' + cp2x.toFixed(2) + ',' + cp2y.toFixed(2) + ' ' + points[i + 1][0].toFixed(2) + ',' + points[i + 1][1].toFixed(2);
+    const p0 = points[Math.max(0, i - 1)];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[Math.min(n - 1, i + 2)];
+
+    const t = 0.25;
+    const cp1x = p1[0] + (p2[0] - p0[0]) * t;
+    const cp1y = p1[1] + (p2[1] - p0[1]) * t;
+    const cp2x = p2[0] - (p3[0] - p1[0]) * t;
+    const cp2y = p2[1] - (p3[1] - p1[1]) * t;
+
+    d += ' C' + cp1x.toFixed(2) + ',' + cp1y.toFixed(2) + ' ' + cp2x.toFixed(2) + ',' + cp2y.toFixed(2) + ' ' + p2[0].toFixed(2) + ',' + p2[1].toFixed(2);
   }
   return d;
 }
@@ -115,17 +101,19 @@ export default function EquityChart({ data }) {
   function scaleX(i) { return PAD.left + (i / (data.length - 1)) * CHART_W; }
   function scaleY(v) { return PAD.top + CHART_H * (1 - (v - tickMin) / tickRange); }
 
-  const barWidth = Math.max(4, Math.min(40, (CHART_W / data.length) * 0.6));
   const zeroY = scaleY(0);
 
   const labelStep = Math.max(1, Math.ceil(data.length / 7));
   const xLabels = data.filter((_, i) => i % labelStep === 0 || i === data.length - 1);
 
-  const pts = data.map((d, i) => [scaleX(i), scaleY(mode === 'cumulative' ? d.cumulative : d.daily)]);
-  const curvePath = monotonePath(pts);
+  const vals = data.map((d) => (mode === 'cumulative' ? d.cumulative : d.daily));
+  const pts = data.map((d, i) => [scaleX(i), scaleY(vals[i])]);
+  const curvePath = smoothPath(pts);
 
-  /* Area: close path to zero line */
-  const areaPath = curvePath + ' L' + pts[pts.length - 1][0].toFixed(2) + ',' + zeroY.toFixed(2) + ' L' + pts[0][0].toFixed(2) + ',' + zeroY.toFixed(2) + ' Z';
+  /* Area path: close to zero line */
+  const areaPath = curvePath
+    + ' L' + pts[pts.length - 1][0].toFixed(2) + ',' + zeroY.toFixed(2)
+    + ' L' + pts[0][0].toFixed(2) + ',' + zeroY.toFixed(2) + ' Z';
 
   const handleMouseMove = useCallback((e) => {
     const svg = svgRef.current;
@@ -149,6 +137,9 @@ export default function EquityChart({ data }) {
 
   const hoverItem = hoverIdx !== null ? data[hoverIdx] : null;
   const hoverVal = hoverItem ? (mode === 'cumulative' ? hoverItem.cumulative : hoverItem.daily) : 0;
+
+  /* Y-axis label x position — overlaid near right edge */
+  const yLabelX = W - 6;
 
   return (
     <div className="overflow-hidden">
@@ -180,43 +171,44 @@ export default function EquityChart({ data }) {
         style={{ shapeRendering: 'geometricPrecision' }}
       >
         <defs>
-          {/* Area fill — subtle top-to-bottom fade */}
-          <linearGradient id="eqAreaFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#22d3ee" stopOpacity="0.18" />
-            <stop offset="0.6" stopColor="#22d3ee" stopOpacity="0.06" />
+          {/* Cyan area fill (above zero) */}
+          <linearGradient id="eqAreaCyan" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#22d3ee" stopOpacity="0.22" />
+            <stop offset="0.5" stopColor="#22d3ee" stopOpacity="0.08" />
             <stop offset="1" stopColor="#22d3ee" stopOpacity="0.01" />
           </linearGradient>
+          {/* Red area fill (below zero) */}
           <linearGradient id="eqAreaRed" x1="0" y1="1" x2="0" y2="0">
-            <stop offset="0" stopColor="#f87171" stopOpacity="0.15" />
-            <stop offset="0.6" stopColor="#f87171" stopOpacity="0.04" />
+            <stop offset="0" stopColor="#f87171" stopOpacity="0.22" />
+            <stop offset="0.5" stopColor="#f87171" stopOpacity="0.08" />
             <stop offset="1" stopColor="#f87171" stopOpacity="0.01" />
           </linearGradient>
-          {/* Clip regions */}
+          {/* Clip above zero */}
           <clipPath id="clipAbove">
-            <rect x={PAD.left} y={PAD.top} width={CHART_W} height={Math.max(0, zeroY - PAD.top)} />
+            <rect x="0" y={PAD.top} width={W} height={Math.max(0, zeroY - PAD.top)} />
           </clipPath>
+          {/* Clip below zero */}
           <clipPath id="clipBelow">
-            <rect x={PAD.left} y={zeroY} width={CHART_W} height={Math.max(0, PAD.top + CHART_H - zeroY)} />
+            <rect x="0" y={zeroY} width={W} height={Math.max(0, PAD.top + CHART_H - zeroY)} />
           </clipPath>
         </defs>
 
-        {/* ── Grid lines ── */}
+        {/* ── Grid lines + Y labels (overlaid on right edge) ── */}
         {ticks.map((v, i) => {
           const y = scaleY(v);
           const isZero = v === 0;
           return (
             <g key={i}>
               <line
-                x1={PAD.left} y1={y} x2={W - PAD.right} y2={y}
+                x1={0} y1={y} x2={W} y2={y}
                 stroke={isZero ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.04)'}
                 strokeWidth={isZero ? 1 : 0.5}
                 strokeDasharray={isZero ? '4 3' : 'none'}
               />
-              {/* Y-axis labels on RIGHT side */}
               <text
-                x={W - PAD.right + 8} y={y + 4}
-                textAnchor="start"
-                fill={v > 0 ? 'rgba(34,211,238,0.55)' : v < 0 ? 'rgba(248,113,113,0.55)' : 'rgba(255,255,255,0.35)'}
+                x={yLabelX} y={y - 5}
+                textAnchor="end"
+                fill={v > 0 ? 'rgba(34,211,238,0.5)' : v < 0 ? 'rgba(248,113,113,0.5)' : 'rgba(255,255,255,0.3)'}
                 fontSize="10"
                 fontFamily="JetBrains Mono, monospace"
               >
@@ -242,55 +234,45 @@ export default function EquityChart({ data }) {
           );
         })}
 
-        {/* ── Cumulative mode ── */}
-        {mode === 'cumulative' && (
-          <>
-            {/* Area fills */}
-            <path d={areaPath} fill="url(#eqAreaFill)" clipPath="url(#clipAbove)" />
-            <path d={areaPath} fill="url(#eqAreaRed)" clipPath="url(#clipBelow)" />
+        {/* ── Area fills ── */}
+        <path d={areaPath} fill="url(#eqAreaCyan)" clipPath="url(#clipAbove)" />
+        <path d={areaPath} fill="url(#eqAreaRed)" clipPath="url(#clipBelow)" />
 
-            {/* Main line — crisp, no filters */}
-            <path
-              d={curvePath}
-              fill="none"
-              stroke="#22d3ee"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          </>
-        )}
+        {/* ── Line: cyan above zero ── */}
+        <g clipPath="url(#clipAbove)">
+          <path
+            d={curvePath}
+            fill="none"
+            stroke="#22d3ee"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        </g>
 
-        {/* ── Daily mode ── */}
-        {mode === 'daily' && (
-          <>
-            {/* Area fills for daily line chart */}
-            <path d={areaPath} fill="url(#eqAreaFill)" clipPath="url(#clipAbove)" />
-            <path d={areaPath} fill="url(#eqAreaRed)" clipPath="url(#clipBelow)" />
+        {/* ── Line: red below zero ── */}
+        <g clipPath="url(#clipBelow)">
+          <path
+            d={curvePath}
+            fill="none"
+            stroke="#f87171"
+            strokeWidth="2.5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+        </g>
 
-            {/* Daily line — crisp */}
-            <path
-              d={curvePath}
-              fill="none"
-              stroke="#22d3ee"
-              strokeWidth="2"
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-          </>
-        )}
-
-        {/* ── Hover crosshair + tooltip ── */}
+        {/* ── Hover crosshair + dot + tooltip ── */}
         {hoverIdx !== null && hoverItem && (() => {
           const hx = scaleX(hoverIdx);
           const val = mode === 'cumulative' ? hoverItem.cumulative : hoverItem.daily;
           const hy = scaleY(val);
           const isPositive = val >= 0;
+          const dotColor = isPositive ? '#22d3ee' : '#f87171';
 
-          /* Tooltip positioning */
           const tooltipW = 170;
           const tooltipH = 62;
-          const tooltipX = hx + tooltipW + 20 > W - PAD.right ? hx - tooltipW - 16 : hx + 16;
+          const tooltipX = hx + tooltipW + 20 > W ? hx - tooltipW - 16 : hx + 16;
           const tooltipY = Math.max(PAD.top, Math.min(hy - tooltipH / 2, H - PAD.bottom - tooltipH));
 
           return (
@@ -305,32 +287,28 @@ export default function EquityChart({ data }) {
               />
               {/* Horizontal dashed crosshair */}
               <line
-                x1={PAD.left} y1={hy}
-                x2={W - PAD.right} y2={hy}
+                x1={0} y1={hy}
+                x2={W} y2={hy}
                 stroke="rgba(255,255,255,0.10)"
                 strokeWidth="1"
                 strokeDasharray="4 3"
               />
 
-              {/* Hover dot — outer ring */}
-              <circle cx={hx} cy={hy} r="8" fill={isPositive ? 'rgba(34,211,238,0.15)' : 'rgba(248,113,113,0.15)'} />
-              {/* Hover dot — solid ring */}
-              <circle cx={hx} cy={hy} r="5" fill="#0b0b14" stroke={isPositive ? '#22d3ee' : '#f87171'} strokeWidth="2" />
-              {/* Hover dot — white core */}
+              {/* Hover dot */}
+              <circle cx={hx} cy={hy} r="8" fill={isPositive ? 'rgba(34,211,238,0.12)' : 'rgba(248,113,113,0.12)'} />
+              <circle cx={hx} cy={hy} r="5" fill="#0b0b14" stroke={dotColor} strokeWidth="2" />
               <circle cx={hx} cy={hy} r="2" fill="#fff" />
 
-              {/* Glassmorphic tooltip */}
+              {/* Tooltip */}
               <g>
-                {/* Background */}
                 <rect
                   x={tooltipX} y={tooltipY}
                   width={tooltipW} height={tooltipH}
                   rx={10}
-                  fill="rgba(18, 18, 30, 0.88)"
+                  fill="rgba(18, 18, 30, 0.90)"
                   stroke="rgba(255,255,255,0.10)"
                   strokeWidth="1"
                 />
-                {/* Date — full format */}
                 <text
                   x={tooltipX + tooltipW / 2} y={tooltipY + 18}
                   textAnchor="middle"
@@ -341,18 +319,16 @@ export default function EquityChart({ data }) {
                 >
                   {fmtFullDate(hoverItem.date)}
                 </text>
-                {/* P&L value — large */}
                 <text
                   x={tooltipX + tooltipW / 2} y={tooltipY + 39}
                   textAnchor="middle"
-                  fill={isPositive ? '#22d3ee' : '#f87171'}
+                  fill={dotColor}
                   fontSize="16"
                   fontWeight="700"
                   fontFamily="Poppins, sans-serif"
                 >
                   {fmtVal(val)}
                 </text>
-                {/* Label */}
                 <text
                   x={tooltipX + tooltipW / 2} y={tooltipY + 54}
                   textAnchor="middle"
