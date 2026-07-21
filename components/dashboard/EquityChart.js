@@ -7,6 +7,7 @@ const H = 280;
 const PAD = { top: 16, right: 8, bottom: 32, left: 52 };
 const CW = W - PAD.left - PAD.right;
 const CH = H - PAD.top - PAD.bottom;
+const T = 0.2; /* Catmull-Rom tension */
 
 function fmtVal(v) {
   const s = v >= 0 ? '+' : '-';
@@ -28,8 +29,8 @@ function fmtDate(ds) {
     ' ' + d.getDate() + ', ' + d.getFullYear();
 }
 
-function niceStep(r, t) {
-  const raw = r / t, mag = Math.pow(10, Math.floor(Math.log10(raw))), res = raw / mag;
+function niceStep(r, tgt) {
+  const raw = r / tgt, mag = Math.pow(10, Math.floor(Math.log10(raw))), res = raw / mag;
   return (res <= 1.5 ? 1 : res <= 3 ? 2 : res <= 7 ? 5 : 10) * mag;
 }
 
@@ -41,18 +42,41 @@ function getTicks(min, max) {
   return t;
 }
 
-/* Catmull-Rom spline — ultra smooth with low tension */
-function curve(pts) {
-  const n = pts.length;
-  if (n < 2) return '';
-  if (n === 2) return `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}L${pts[1][0].toFixed(1)},${pts[1][1].toFixed(1)}`;
-  const T = 0.2;
-  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
-  for (let i = 0; i < n - 1; i++) {
-    const a = pts[Math.max(0, i - 1)], b = pts[i], c = pts[i + 1], e = pts[Math.min(n - 1, i + 2)];
-    d += ` C${(b[0] + (c[0] - a[0]) * T).toFixed(1)},${(b[1] + (c[1] - a[1]) * T).toFixed(1)} ${(c[0] - (e[0] - b[0]) * T).toFixed(1)},${(c[1] - (e[1] - b[1]) * T).toFixed(1)} ${c[0].toFixed(1)},${c[1].toFixed(1)}`;
+/* ── Build Catmull-Rom path + store bezier segments for interpolation ── */
+function buildCurve(points) {
+  const n = points.length;
+  const segments = []; /* Each: { p0, cp1, cp2, p3 } for cubic bezier eval */
+  if (n < 2) return { path: '', segments };
+  if (n === 2) {
+    segments.push({ p0: points[0], cp1: points[0], cp2: points[1], p3: points[1] });
+    return { path: `M${points[0][0].toFixed(1)},${points[0][1].toFixed(1)}L${points[1][0].toFixed(1)},${points[1][1].toFixed(1)}`, segments };
   }
-  return d;
+
+  let d = `M${points[0][0].toFixed(1)},${points[0][1].toFixed(1)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const a = points[Math.max(0, i - 1)];
+    const b = points[i];
+    const c = points[i + 1];
+    const e = points[Math.min(n - 1, i + 2)];
+
+    const cp1 = [b[0] + (c[0] - a[0]) * T, b[1] + (c[1] - a[1]) * T];
+    const cp2 = [c[0] - (e[0] - b[0]) * T, c[1] - (e[1] - b[1]) * T];
+
+    segments.push({ p0: b, cp1, cp2, p3: c });
+    d += ` C${cp1[0].toFixed(1)},${cp1[1].toFixed(1)} ${cp2[0].toFixed(1)},${cp2[1].toFixed(1)} ${c[0].toFixed(1)},${c[1].toFixed(1)}`;
+  }
+  return { path: d, segments };
+}
+
+/* ── Evaluate cubic bezier at parameter t ── */
+function bezierY(seg, t) {
+  const u = 1 - t;
+  return u * u * u * seg.p0[1] + 3 * u * u * t * seg.cp1[1] + 3 * u * t * t * seg.cp2[1] + t * t * t * seg.p3[1];
+}
+
+function bezierX(seg, t) {
+  const u = 1 - t;
+  return u * u * u * seg.p0[0] + 3 * u * u * t * seg.cp1[0] + 3 * u * t * t * seg.cp2[0] + t * t * t * seg.p3[0];
 }
 
 export default function EquityChart({ data }) {
@@ -60,7 +84,7 @@ export default function EquityChart({ data }) {
   const svgRef = useRef(null);
   const hRef = useRef(null);
   const raf = useRef(0);
-  const cache = useRef([]);
+  const cacheRef = useRef({ pts: [], segs: [], data: [] });
 
   const ok = data && data.length >= 2;
   const vals = ok ? data.map(d => mode === 'cumulative' ? d.cumulative : d.daily) : [];
@@ -71,38 +95,90 @@ export default function EquityChart({ data }) {
 
   const sx = i => PAD.left + (i / ((data ? data.length : 2) - 1)) * CW;
   const sy = v => PAD.top + CH * (1 - (v - tMin) / tR);
-
-  if (ok) cache.current = data.map((d, i) => ({ x: sx(i), y: sy(vals[i]), v: vals[i], date: d.date, label: d.label }));
-
+  const syInv = y => tMin + (1 - (y - PAD.top) / CH) * tR; /* pixel Y → data value */
   const zeroY = ok ? sy(0) : H / 2;
 
-  /* Native event listeners — zero-lag hover */
+  /* Build curve + cache segments */
+  let curvePath = '', areaPath = '', curveSegs = [];
+  if (ok) {
+    const pts = data.map((_, i) => [sx(i), sy(vals[i])]);
+    const built = buildCurve(pts);
+    curvePath = built.path;
+    curveSegs = built.segments;
+    areaPath = curvePath + ` L${pts[pts.length-1][0].toFixed(1)},${zeroY.toFixed(1)} L${pts[0][0].toFixed(1)},${zeroY.toFixed(1)} Z`;
+
+    cacheRef.current = {
+      pts: data.map((d, i) => ({ x: sx(i), y: sy(vals[i]), v: vals[i], date: d.date, label: d.label })),
+      segs: curveSegs,
+      data: data,
+    };
+  }
+
+  /* ── Native hover — interpolates along the bezier curve ── */
   useEffect(() => {
     const svg = svgRef.current, hg = hRef.current;
     if (!svg || !hg || !ok) return;
-    const pts = cache.current;
+
     const q = s => hg.querySelector(s);
     const el = { vl: q('.vl'), hl: q('.hl'), d1: q('.d1'), d2: q('.d2'), d3: q('.d3'), bg: q('.bg'), td: q('.td'), tv: q('.tv'), tl: q('.tl') };
 
-    function upd(cx) {
+    function upd(clientX) {
+      const c = cacheRef.current;
+      const n = c.pts.length;
+      if (!n) return;
+
       const r = svg.getBoundingClientRect();
-      const mx = ((cx - r.left) / r.width) * W;
-      const ci = Math.max(0, Math.min(pts.length - 1, Math.round(((mx - PAD.left) / CW) * (pts.length - 1))));
-      const p = pts[ci]; if (!p) return;
-      const pos = p.v >= 0, col = pos ? '#22d3ee' : '#f87171';
-      el.vl.setAttribute('x1', p.x); el.vl.setAttribute('x2', p.x);
-      el.hl.setAttribute('y1', p.y); el.hl.setAttribute('y2', p.y);
-      [el.d1, el.d2, el.d3].forEach(c => { c.setAttribute('cx', p.x); c.setAttribute('cy', p.y); });
+      const mouseX = ((clientX - r.left) / r.width) * W;
+
+      /* Clamp to chart bounds */
+      const clampedX = Math.max(PAD.left, Math.min(PAD.left + CW, mouseX));
+
+      /* Find fractional index */
+      const frac = ((clampedX - PAD.left) / CW) * (n - 1);
+      const segIdx = Math.min(Math.floor(frac), n - 2);
+      const t = frac - segIdx;
+
+      /* Evaluate bezier curve at this point */
+      const seg = c.segs[segIdx];
+      let dotX, dotY;
+      if (seg) {
+        dotX = bezierX(seg, t);
+        dotY = bezierY(seg, t);
+      } else {
+        dotX = clampedX;
+        dotY = c.pts[Math.round(frac)].y;
+      }
+
+      /* Get interpolated data value from Y position */
+      const dotVal = syInv(dotY);
+
+      /* Nearest data point for date display */
+      const nearIdx = Math.round(frac);
+      const nearPt = c.pts[nearIdx];
+
+      const pos = dotVal >= 0;
+      const col = pos ? '#22d3ee' : '#f87171';
+
+      el.vl.setAttribute('x1', dotX); el.vl.setAttribute('x2', dotX);
+      el.hl.setAttribute('y1', dotY); el.hl.setAttribute('y2', dotY);
+      [el.d1, el.d2, el.d3].forEach(e => { e.setAttribute('cx', dotX); e.setAttribute('cy', dotY); });
       el.d1.setAttribute('fill', pos ? 'rgba(34,211,238,0.12)' : 'rgba(248,113,113,0.12)');
       el.d2.setAttribute('stroke', col);
-      const tw = 164, th = 58, tx = p.x + tw + 20 > W ? p.x - tw - 12 : p.x + 12;
-      const ty = Math.max(PAD.top, Math.min(p.y - th / 2, H - PAD.bottom - th));
+
+      const tw = 164, th = 58;
+      const tx = dotX + tw + 20 > W ? dotX - tw - 12 : dotX + 12;
+      const ty = Math.max(PAD.top, Math.min(dotY - th / 2, H - PAD.bottom - th));
       el.bg.setAttribute('x', tx); el.bg.setAttribute('y', ty);
-      el.td.setAttribute('x', tx + tw / 2); el.td.setAttribute('y', ty + 17); el.td.textContent = fmtDate(p.date);
-      el.tv.setAttribute('x', tx + tw / 2); el.tv.setAttribute('y', ty + 37); el.tv.setAttribute('fill', col); el.tv.textContent = fmtVal(p.v);
+      el.td.setAttribute('x', tx + tw / 2); el.td.setAttribute('y', ty + 17);
+      el.td.textContent = nearPt ? fmtDate(nearPt.date) : '';
+      el.tv.setAttribute('x', tx + tw / 2); el.tv.setAttribute('y', ty + 37);
+      el.tv.setAttribute('fill', col);
+      el.tv.textContent = fmtVal(dotVal);
       el.tl.setAttribute('x', tx + tw / 2); el.tl.setAttribute('y', ty + 51);
+
       hg.style.display = '';
     }
+
     function onM(e) { if (!raf.current) { const cx = e.clientX; raf.current = requestAnimationFrame(() => { raf.current = 0; upd(cx); }); } }
     function onT(e) { if (!raf.current && e.touches[0]) { const cx = e.touches[0].clientX; raf.current = requestAnimationFrame(() => { raf.current = 0; upd(cx); }); } }
     function off() { if (raf.current) { cancelAnimationFrame(raf.current); raf.current = 0; } hg.style.display = 'none'; }
@@ -118,9 +194,6 @@ export default function EquityChart({ data }) {
 
   const ls = Math.max(1, Math.ceil(data.length / 7));
   const xLbls = data.filter((_, i) => i % ls === 0 || i === data.length - 1);
-  const pts = data.map((_, i) => [sx(i), sy(vals[i])]);
-  const cp = curve(pts);
-  const ap = cp + ` L${pts[pts.length-1][0].toFixed(1)},${zeroY.toFixed(1)} L${pts[0][0].toFixed(1)},${zeroY.toFixed(1)} Z`;
   const ml = mode === 'cumulative' ? 'CUMULATIVE P&L' : 'DAILY P&L';
 
   return (
@@ -156,10 +229,10 @@ export default function EquityChart({ data }) {
             <text key={d.date} x={sx(i)} y={H-6} textAnchor="middle" fill="rgba(255,255,255,.22)" fontSize="10" fontFamily="JetBrains Mono,monospace">{d.label}</text>
           );})}
 
-          <path d={ap} fill="url(#ac)" clipPath="url(#ca)"/>
-          <path d={ap} fill="url(#ar)" clipPath="url(#cb)"/>
-          <g clipPath="url(#ca)"><path d={cp} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
-          <g clipPath="url(#cb)"><path d={cp} fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
+          <path d={areaPath} fill="url(#ac)" clipPath="url(#ca)"/>
+          <path d={areaPath} fill="url(#ar)" clipPath="url(#cb)"/>
+          <g clipPath="url(#ca)"><path d={curvePath} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
+          <g clipPath="url(#cb)"><path d={curvePath} fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
 
           <g ref={hRef} style={{display:'none'}}>
             <line className="vl" x1="0" y1={PAD.top} x2="0" y2={H-PAD.bottom} stroke="rgba(255,255,255,.12)" strokeWidth="1" strokeDasharray="4 3"/>
