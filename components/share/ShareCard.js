@@ -143,7 +143,7 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote, avat
             fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.2em',
             color: 'rgba(255,255,255,0.7)', fontFamily: "'JetBrains Mono', monospace",
           }}>
-            {data.pair ? (data.pair + ' ' + ((data.direction || '').toUpperCase())) : type === 'daily' ? "Today's P&L" : type === 'total' ? 'Total P&L' : 'Trade'}
+            {data.pair ? (data.pair + ' ' + (data.direction === 'long' ? '↑' : data.direction === 'short' ? '↓' : '') + ' ' + ((data.direction || '').toUpperCase())) : type === 'daily' ? "Today's P&L" : type === 'total' ? 'Total P&L' : 'Trade'}
           </div>
 
           <div style={{
@@ -190,7 +190,6 @@ const ShareCard = forwardRef(function ShareCard({ type, ratio, data, quote, avat
           }}>
             {data.entry_price != null && <StatChip label="Entry" value={String(data.entry_price)} isStory={isStory} />}
             {data.exit_price != null && <StatChip label="Exit" value={String(data.exit_price)} isStory={isStory} />}
-            {data.direction && <StatChip label="Direction" value={(data.direction || '').toUpperCase()} isStory={isStory} />}
           </div>
 
           <div style={{ textAlign: 'center' }}>
