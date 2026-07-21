@@ -1,6 +1,8 @@
 {
   "rewrites": [
     { "source": "/blogs", "destination": "https://proplogai-blog.vercel.app/" },
-    { "source": "/blogs/:path*", "destination": "https://proplogai-blog.vercel.app/:path*" }
+    { "source": "/blogs/:path*", "destination": "https://proplogai-blog.vercel.app/:path*" },
+    { "source": "/glossary", "destination": "https://proplogai-glossary.vercel.app/" },
+    { "source": "/glossary/:path*", "destination": "https://proplogai-glossary.vercel.app/:path*" }
   ]
 }
