@@ -265,6 +265,17 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     setForm((f) => ({ ...f, [k]: v }));
   }
 
+  /* Allow only numbers, decimal point, and leading minus for price fields */
+  function setNumeric(k, raw) {
+    let v = raw.replace(/[^0-9.\-]/g, '');
+    /* Only allow minus at the start */
+    if (v.indexOf('-') > 0) v = v[0] + v.slice(1).replace(/-/g, '');
+    /* Only allow one decimal point */
+    const parts = v.split('.');
+    if (parts.length > 2) v = parts[0] + '.' + parts.slice(1).join('');
+    set(k, v);
+  }
+
   // Resolve active setups from DB — Good SL + Bad SL always included, sorted: regular A-Z → Good SL → Bad SL → No Setup
   const PINNED_SETUPS = ['Good SL', 'Bad SL'];
   const setupSource = localSetups || setups;
@@ -775,10 +786,10 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               Price data
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><label htmlFor="field-entry_price" className={labelCls}>Entry price *</label><input id="field-entry_price" className={field} value={form.entry_price} onChange={(e) => set('entry_price', e.target.value)} inputMode="decimal" required /></div>
-              <div><label htmlFor="field-exit_price" className={labelCls}>Exit price *</label><input id="field-exit_price" className={field} value={form.exit_price} onChange={(e) => set('exit_price', e.target.value)} inputMode="decimal" required /></div>
-              <div><label htmlFor="field-stop_loss" className={labelCls}>Stop loss <span className="text-white/30">(optional)</span></label><input id="field-stop_loss" className={field} value={form.stop_loss} onChange={(e) => set('stop_loss', e.target.value)} inputMode="decimal" /></div>
-              <div><label htmlFor="field-lot_size" className={labelCls}>Lot / Contract size *</label><input id="field-lot_size" className={field} value={form.lot_size} onChange={(e) => set('lot_size', e.target.value)} inputMode="decimal" required /></div>
+              <div><label htmlFor="field-entry_price" className={labelCls}>Entry price *</label><input id="field-entry_price" className={field} value={form.entry_price} onChange={(e) => setNumeric('entry_price', e.target.value)} inputMode="decimal" required /></div>
+              <div><label htmlFor="field-exit_price" className={labelCls}>Exit price *</label><input id="field-exit_price" className={field} value={form.exit_price} onChange={(e) => setNumeric('exit_price', e.target.value)} inputMode="decimal" required /></div>
+              <div><label htmlFor="field-stop_loss" className={labelCls}>Stop loss <span className="text-white/30">(optional)</span></label><input id="field-stop_loss" className={field} value={form.stop_loss} onChange={(e) => setNumeric('stop_loss', e.target.value)} inputMode="decimal" /></div>
+              <div><label htmlFor="field-lot_size" className={labelCls}>Lot / Contract size *</label><input id="field-lot_size" className={field} value={form.lot_size} onChange={(e) => setNumeric('lot_size', e.target.value)} inputMode="decimal" required /></div>
             </div>
           </div>
 
@@ -789,7 +800,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               Result
             </h3>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => set('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
+              <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => setNumeric('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
               <div>
                 <label className={labelCls}>Risk : Reward <span className="text-white/30">(auto)</span></label>
                 <div className="flex items-center gap-2">
