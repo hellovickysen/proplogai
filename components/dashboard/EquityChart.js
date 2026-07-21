@@ -62,6 +62,7 @@ export default function EquityChart({ data }) {
   const containerRef = useRef(null);
   const svgRef = useRef(null);
   const hRef = useRef(null);
+  const latestDotRef = useRef(null);
   const raf = useRef(0);
   const cacheRef = useRef({ pts: [], segs: [] });
 
@@ -111,7 +112,8 @@ export default function EquityChart({ data }) {
     const svg = svgRef.current, hg = hRef.current;
     if (!svg || !hg || !ok) return;
     const q = s => hg.querySelector(s);
-    const el = { vl: q('.vl'), hl: q('.hl'), d1: q('.d1'), d2: q('.d2'), d3: q('.d3'), bg: q('.bg'), td: q('.td'), tv: q('.tv'), tl: q('.tl') };
+    const el = { vl: q('.vl'), hl: q('.hl'), d1: q('.d1'), d2: q('.d2'), d3: q('.d3'), dp: q('.dp'), bg: q('.bg'), td: q('.td'), tv: q('.tv'), tl: q('.tl') };
+    const latDot = latestDotRef.current;
 
     function upd(clientX) {
       const c = cacheRef.current;
@@ -131,6 +133,11 @@ export default function EquityChart({ data }) {
       [el.d1, el.d2, el.d3].forEach(e => { e.setAttribute('cx', p.x); e.setAttribute('cy', p.y); });
       el.d1.setAttribute('fill', pos ? 'rgba(34,211,238,0.12)' : 'rgba(248,113,113,0.12)');
       el.d2.setAttribute('stroke', col);
+      /* Pulse ring on hover dot */
+      el.dp.setAttribute('cx', p.x); el.dp.setAttribute('cy', p.y);
+      el.dp.setAttribute('stroke', col);
+      /* Hide the static latest dot while hovering */
+      if (latDot) latDot.style.display = 'none';
 
       /* Tooltip — responsive width */
       const isMobile = W < 500;
@@ -150,7 +157,7 @@ export default function EquityChart({ data }) {
 
     function onM(e) { if (!raf.current) { const cx = e.clientX; raf.current = requestAnimationFrame(() => { raf.current = 0; upd(cx); }); } }
     function onT(e) { if (!raf.current && e.touches[0]) { const cx = e.touches[0].clientX; raf.current = requestAnimationFrame(() => { raf.current = 0; upd(cx); }); } }
-    function off() { if (raf.current) { cancelAnimationFrame(raf.current); raf.current = 0; } hg.style.display = 'none'; }
+    function off() { if (raf.current) { cancelAnimationFrame(raf.current); raf.current = 0; } hg.style.display = 'none'; if (latDot) latDot.style.display = ''; }
 
     svg.addEventListener('mousemove', onM, { passive: true });
     svg.addEventListener('touchmove', onT, { passive: true });
@@ -213,13 +220,13 @@ export default function EquityChart({ data }) {
             <g clipPath="url(#ca)"><path d={curvePath} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
             <g clipPath="url(#cb)"><path d={curvePath} fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
 
-            {/* Pulsing dot on latest data point */}
+            {/* Pulsing dot on latest data point (hidden during hover) */}
             {(() => {
               const lastPt = pts[pts.length - 1];
               const lastVal = vals[vals.length - 1];
               const col = lastVal >= 0 ? '#22d3ee' : '#f87171';
               return (
-                <g>
+                <g ref={latestDotRef}>
                   {/* Pulse ring */}
                   <circle cx={lastPt[0]} cy={lastPt[1]} r="3" fill="none" stroke={col} strokeWidth="1.5" opacity="0.6">
                     <animate attributeName="r" values="3;10;3" dur="2s" repeatCount="indefinite" />
@@ -235,6 +242,10 @@ export default function EquityChart({ data }) {
             <g ref={hRef} style={{display:'none'}}>
               <line className="vl" x1="0" y1={PAD.top} x2="0" y2={H-PAD.bottom} stroke="rgba(255,255,255,.12)" strokeWidth="1" strokeDasharray="4 3"/>
               <line className="hl" x1={PAD.left} y1="0" x2={W-PAD.right} y2="0" stroke="rgba(255,255,255,.08)" strokeWidth="1" strokeDasharray="4 3"/>
+              <circle className="dp" cx="0" cy="0" r="3" fill="none" stroke="#22d3ee" strokeWidth="1.5" opacity="0.6">
+                <animate attributeName="r" values="3;10;3" dur="2s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite" />
+              </circle>
               <circle className="d1" cx="0" cy="0" r="7" fill="rgba(34,211,238,.12)"/>
               <circle className="d2" cx="0" cy="0" r="4" fill="#0b0b14" stroke="#22d3ee" strokeWidth="1.5"/>
               <circle className="d3" cx="0" cy="0" r="1.5" fill="#fff"/>
