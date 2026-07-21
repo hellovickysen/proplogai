@@ -7,6 +7,7 @@ import CalendarInsights from '@/components/calendar/CalendarInsights';
 import BlurGate from '@/components/ui/BlurGate';
 import { getUserAccess } from '@/lib/plans';
 import { getActiveAccountId, applyAccountFilter } from '@/lib/accounts';
+import YearlyPerformance from '@/components/calendar/YearlyPerformance';
 
 export const dynamic = 'force-dynamic';
 
@@ -231,6 +232,9 @@ export default async function CalendarPage({ searchParams }) {
           <CalendarTradeList trades={selectedTrades} />
         </div>
       )}
+
+      {/* Yearly Performance table — desktop only */}
+      <YearlyPerformance trades={allTrades || []} />
     </div>
   );
 }
