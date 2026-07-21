@@ -132,31 +132,16 @@ export default function EquityChart({ data }) {
       if (!ctm) return;
       const mouseX = (clientX - ctm.e) / ctm.a;
 
-      /* Clamp to chart bounds */
+      /* Snap to nearest data point (1 point = 1 day) */
       const clampedX = Math.max(PAD.left, Math.min(PAD.left + CW, mouseX));
+      const idx = Math.max(0, Math.min(n - 1, Math.round(((clampedX - PAD.left) / CW) * (n - 1))));
+      const p = c.pts[idx];
+      if (!p) return;
 
-      /* Find fractional index */
-      const frac = ((clampedX - PAD.left) / CW) * (n - 1);
-      const segIdx = Math.min(Math.floor(frac), n - 2);
-      const t = frac - segIdx;
-
-      /* Evaluate bezier curve at this point */
-      const seg = c.segs[segIdx];
-      let dotX, dotY;
-      if (seg) {
-        dotX = bezierX(seg, t);
-        dotY = bezierY(seg, t);
-      } else {
-        dotX = clampedX;
-        dotY = c.pts[Math.round(frac)].y;
-      }
-
-      /* Get interpolated data value from Y position */
-      const dotVal = syInv(dotY);
-
-      /* Nearest data point for date display */
-      const nearIdx = Math.round(frac);
-      const nearPt = c.pts[nearIdx];
+      const dotX = p.x;
+      const dotY = p.y;
+      const dotVal = p.v;
+      const nearPt = p;
 
       const pos = dotVal >= 0;
       const col = pos ? '#22d3ee' : '#f87171';
