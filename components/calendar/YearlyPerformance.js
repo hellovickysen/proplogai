@@ -51,7 +51,7 @@ export default function YearlyPerformance({ trades }) {
         </div>
 
         <div className="overflow-x-auto px-4 pb-5">
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse table-fixed">
             <thead>
               <tr>
                 <th className="px-4 py-3 text-left font-mono text-xs uppercase tracking-wider text-white/30 w-16" />
@@ -84,21 +84,14 @@ export default function YearlyPerformance({ trades }) {
                     </td>
                     {Array.from({ length: 12 }, (_, m) => {
                       const cell = row[m];
-                      if (!cell) {
-                        return (
-                          <td key={m} className="px-2 py-4 text-center">
-                            <span className="text-sm text-white/15">-</span>
-                          </td>
-                        );
-                      }
                       return (
-                        <td key={m} className="px-2 py-4 text-center">
-                          <div className="inline-flex flex-col items-center rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2.5 min-w-[76px]">
-                            <span className={`font-mono text-sm font-bold ${pnlColor(cell.pnl)}`}>
-                              {fmtPnl(cell.pnl)}
+                        <td key={m} className="py-4 text-center">
+                          <div className={`flex flex-col items-center rounded-xl px-3 py-2.5 ${cell ? 'border border-white/8 bg-white/[0.03]' : ''}`}>
+                            <span className={`font-mono text-sm font-bold ${cell ? pnlColor(cell.pnl) : 'text-white/15'}`}>
+                              {cell ? fmtPnl(cell.pnl) : '-'}
                             </span>
                             <span className="font-mono text-[11px] text-white/30 mt-1">
-                              {cell.count} trade{cell.count !== 1 ? 's' : ''}
+                              {cell ? `${cell.count} trade${cell.count !== 1 ? 's' : ''}` : ' '}
                             </span>
                           </div>
                         </td>
