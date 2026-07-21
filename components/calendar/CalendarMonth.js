@@ -178,7 +178,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                         return (
                           <td key={di} className={todayBorder + ' p-0'}>
                             {e && dateStr ? (
-                              <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr}>{satContent}</Link>
+                              <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>{satContent}</Link>
                             ) : satContent}
                           </td>
                         );
@@ -212,7 +212,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       return (
                         <td key={di} className={todayBorder + ' p-0'}>
                           {e && dateStr ? (
-                            <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr}>
+                            <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>
                               {cellContent}
                             </Link>
                           ) : (
@@ -311,7 +311,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   return (
                     <div key={cell.overflow ? 'overflow-' + di : 'day-' + cell.day} className={'overflow-hidden border bg-white/[0.02] ' + (isToday ? 'border-2 border-cyan-400/50' : 'border-white/[0.08]')}>
                       {e && dateStr ? (
-                        <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr}>{cellContent}</Link>
+                        <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>{cellContent}</Link>
                       ) : cellContent}
                     </div>
                   );

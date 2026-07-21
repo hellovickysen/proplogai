@@ -8,6 +8,7 @@ import BlurGate from '@/components/ui/BlurGate';
 import { getUserAccess } from '@/lib/plans';
 import { getActiveAccountId, applyAccountFilter } from '@/lib/accounts';
 import YearlyPerformance from '@/components/calendar/YearlyPerformance';
+import ScrollIntoView from '@/components/ui/ScrollIntoView';
 
 export const dynamic = 'force-dynamic';
 
@@ -221,6 +222,7 @@ export default async function CalendarPage({ searchParams }) {
       {/* Day trades section below the calendar — expandable accordion */}
       {selected && (
         <div className="mt-6">
+          <ScrollIntoView />
           <div className="flex items-center gap-3 mb-4">
             <h2 className="text-lg font-semibold">Trades on {selected}</h2>
             {dayMap[selected] && (
