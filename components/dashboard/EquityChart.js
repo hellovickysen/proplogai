@@ -84,7 +84,7 @@ export default function EquityChart({ data }) {
   /* ── Layout constants derived from measured width ── */
   const W = viewW;
   const H = VIEW_H;
-  const PAD = { top: 16, right: 8, bottom: 32, left: W < 500 ? 42 : 52 };
+  const PAD = { top: 16, right: W < 500 ? 12 : 24, bottom: 32, left: W < 500 ? 42 : 52 };
   const CW = W - PAD.left - PAD.right;
   const CH = H - PAD.top - PAD.bottom;
 
@@ -187,7 +187,7 @@ export default function EquityChart({ data }) {
           ))}
         </div>
       </div>
-      <div ref={containerRef} className="-mx-5 -mb-3 sm:-mb-5">
+      <div ref={containerRef} className="-mx-3 sm:mx-0 -mb-3 sm:-mb-3">
         {viewW > 0 && (
           <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="block w-full select-none" style={{shapeRendering:'geometricPrecision', height: 'auto', aspectRatio: `${W} / ${H}`}}>
             <defs>
