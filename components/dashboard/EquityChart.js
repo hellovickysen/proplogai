@@ -196,8 +196,8 @@ export default function EquityChart({ data }) {
           ))}
         </div>
       </div>
-      <div className="-mx-5 -mb-5">
-        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="block h-[210px] w-full select-none sm:h-[280px]" style={{shapeRendering:'geometricPrecision'}}>
+      <div className="-mx-5 -mb-3 sm:-mb-5">
+        <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="block aspect-[800/280] w-full select-none" style={{shapeRendering:'geometricPrecision'}}>
           <defs>
             <linearGradient id="ac" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#22d3ee" stopOpacity=".18"/><stop offset=".6" stopColor="#22d3ee" stopOpacity=".05"/><stop offset="1" stopColor="#22d3ee" stopOpacity=".01"/></linearGradient>
             <linearGradient id="ar" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stopColor="#f87171" stopOpacity=".18"/><stop offset=".6" stopColor="#f87171" stopOpacity=".05"/><stop offset="1" stopColor="#f87171" stopOpacity=".01"/></linearGradient>
