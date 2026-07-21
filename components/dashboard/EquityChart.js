@@ -127,8 +127,10 @@ export default function EquityChart({ data }) {
       const n = c.pts.length;
       if (!n) return;
 
-      const r = svg.getBoundingClientRect();
-      const mouseX = ((clientX - r.left) / r.width) * W;
+      /* Use SVG's CTM for pixel-perfect coordinate mapping */
+      const ctm = svg.getScreenCTM();
+      if (!ctm) return;
+      const mouseX = (clientX - ctm.e) / ctm.a;
 
       /* Clamp to chart bounds */
       const clampedX = Math.max(PAD.left, Math.min(PAD.left + CW, mouseX));
