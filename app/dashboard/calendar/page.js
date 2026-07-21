@@ -219,7 +219,10 @@ export default async function CalendarPage({ searchParams }) {
         <CalendarMonth trades={enrichedTrades} year={year} month={month} selected={selected} monthlyPnl={monthlyPnl} journalDays={journalDays} monthParam={monthParam} />
       </div>
 
-      {/* Day trades section below the calendar — expandable accordion */}
+      {/* Yearly Performance table — desktop only */}
+      <YearlyPerformance trades={allTrades || []} />
+
+      {/* Day trades section — after yearly performance, at the bottom */}
       {selected && (
         <div className="mt-6">
           <ScrollIntoView />
@@ -234,9 +237,6 @@ export default async function CalendarPage({ searchParams }) {
           <CalendarTradeList trades={selectedTrades} />
         </div>
       )}
-
-      {/* Yearly Performance table — desktop only */}
-      <YearlyPerformance trades={allTrades || []} />
     </div>
   );
 }
