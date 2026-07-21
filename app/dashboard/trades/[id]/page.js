@@ -95,7 +95,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
         </Link>
         <TradeShareMenu
           tradeId={trade.id}
-          tradeData={{ pair: trade.pair, direction: trade.direction, pnl, trade_date: trade.trade_date, session: trade.session, setup: trade.setup, avatarUrl: prefs?.avatar_url || null, fullName: prefs?.full_name || '' }}
+          tradeData={{ pair: trade.pair, direction: trade.direction, pnl, trade_date: trade.trade_date, entry_price: trade.entry_price, exit_price: trade.exit_price, session: trade.session, setup: trade.setup, avatarUrl: prefs?.avatar_url || null, fullName: prefs?.full_name || '' }}
           initialShareId={trade.share_id}
           initialSharedUntil={trade.shared_until}
         />
