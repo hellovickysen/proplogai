@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 const W = 800;
 const H = 300;
@@ -52,7 +52,7 @@ function yTicks(min, max) {
   return ticks;
 }
 
-/* ── Smooth cubic bezier (Catmull-Rom, low tension for extra smoothness) ── */
+/* ── Smooth cubic bezier (Catmull-Rom, low tension) ── */
 function smoothPath(points) {
   const n = points.length;
   if (n < 2) return '';
@@ -78,10 +78,122 @@ function smoothPath(points) {
 
 export default function EquityChart({ data }) {
   const [mode, setMode] = useState('cumulative');
-  const [hoverIdx, setHoverIdx] = useState(null);
   const svgRef = useRef(null);
+  const hoverGroupRef = useRef(null);
+  const rafRef = useRef(null);
 
-  if (!data || data.length < 2) {
+  /* ── Precompute chart data for current mode ── */
+  const hasData = data && data.length >= 2;
+
+  const vals = hasData ? data.map((d) => (mode === 'cumulative' ? d.cumulative : d.daily)) : [];
+  const minVal = hasData ? Math.min(0, ...vals) : 0;
+  const maxVal = hasData ? Math.max(0, ...vals) : 0;
+
+  const ticks = hasData ? yTicks(minVal, maxVal) : [];
+  const tickMin = ticks.length ? ticks[0] : 0;
+  const tickMax = ticks.length ? ticks[ticks.length - 1] : 1;
+  const tickRange = tickMax - tickMin || 1;
+
+  const scaleX = useCallback((i) => PAD.left + (i / (data ? data.length - 1 : 1)) * CHART_W, [data]);
+  const scaleY = useCallback((v) => PAD.top + CHART_H * (1 - (v - tickMin) / tickRange), [tickMin, tickRange]);
+
+  const zeroY = hasData ? scaleY(0) : H / 2;
+
+  /* ── Precompute points array for hover lookup ── */
+  const ptsRef = useRef([]);
+  if (hasData) {
+    ptsRef.current = data.map((d, i) => ({
+      x: scaleX(i),
+      y: scaleY(vals[i]),
+      val: vals[i],
+      date: d.date,
+      label: d.label,
+    }));
+  }
+
+  /* ── Direct DOM hover handler (no React state updates) ── */
+  const updateHover = useCallback((mouseX) => {
+    const pts = ptsRef.current;
+    if (!pts.length) return;
+    const group = hoverGroupRef.current;
+    if (!group) return;
+
+    const relX = mouseX - PAD.left;
+    const idx = Math.round((relX / CHART_W) * (pts.length - 1));
+    const ci = Math.max(0, Math.min(pts.length - 1, idx));
+    const p = pts[ci];
+
+    const isPositive = p.val >= 0;
+    const dotColor = isPositive ? '#22d3ee' : '#f87171';
+
+    /* Position crosshairs */
+    const vLine = group.querySelector('.h-vline');
+    const hLine = group.querySelector('.h-hline');
+    if (vLine) { vLine.setAttribute('x1', p.x); vLine.setAttribute('x2', p.x); }
+    if (hLine) { hLine.setAttribute('y1', p.y); hLine.setAttribute('y2', p.y); }
+
+    /* Position dot */
+    const dOuter = group.querySelector('.h-dot-outer');
+    const dMid = group.querySelector('.h-dot-mid');
+    const dCore = group.querySelector('.h-dot-core');
+    if (dOuter) { dOuter.setAttribute('cx', p.x); dOuter.setAttribute('cy', p.y); dOuter.setAttribute('fill', isPositive ? 'rgba(34,211,238,0.12)' : 'rgba(248,113,113,0.12)'); }
+    if (dMid) { dMid.setAttribute('cx', p.x); dMid.setAttribute('cy', p.y); dMid.setAttribute('stroke', dotColor); }
+    if (dCore) { dCore.setAttribute('cx', p.x); dCore.setAttribute('cy', p.y); }
+
+    /* Position tooltip */
+    const tooltipW = 170;
+    const tooltipH = 62;
+    const tooltipX = p.x + tooltipW + 20 > W ? p.x - tooltipW - 16 : p.x + 16;
+    const tooltipY = Math.max(PAD.top, Math.min(p.y - tooltipH / 2, H - PAD.bottom - tooltipH));
+
+    const tBg = group.querySelector('.h-tip-bg');
+    const tDate = group.querySelector('.h-tip-date');
+    const tVal = group.querySelector('.h-tip-val');
+    const tLabel = group.querySelector('.h-tip-label');
+    if (tBg) { tBg.setAttribute('x', tooltipX); tBg.setAttribute('y', tooltipY); }
+    if (tDate) { tDate.setAttribute('x', tooltipX + tooltipW / 2); tDate.setAttribute('y', tooltipY + 18); tDate.textContent = fmtFullDate(p.date); }
+    if (tVal) { tVal.setAttribute('x', tooltipX + tooltipW / 2); tVal.setAttribute('y', tooltipY + 39); tVal.setAttribute('fill', dotColor); tVal.textContent = fmtVal(p.val); }
+    if (tLabel) { tLabel.setAttribute('x', tooltipX + tooltipW / 2); tLabel.setAttribute('y', tooltipY + 54); tLabel.textContent = mode === 'cumulative' ? 'CUMULATIVE P&L' : 'DAILY P&L'; }
+
+    group.style.display = '';
+  }, [mode, scaleX, scaleY]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const svg = svgRef.current;
+      if (!svg) return;
+      const rect = svg.getBoundingClientRect();
+      const mouseX = ((e.clientX - rect.left) / rect.width) * W;
+      updateHover(mouseX);
+    });
+  }, [updateHover]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      const svg = svgRef.current;
+      if (!svg || !e.touches || !e.touches[0]) return;
+      const rect = svg.getBoundingClientRect();
+      const mouseX = ((e.touches[0].clientX - rect.left) / rect.width) * W;
+      updateHover(mouseX);
+    });
+  }, [updateHover]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    const group = hoverGroupRef.current;
+    if (group) group.style.display = 'none';
+  }, []);
+
+  /* Clean up RAF on unmount */
+  useEffect(() => {
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, []);
+
+  if (!hasData) {
     return (
       <div className="flex h-[200px] items-center justify-center text-sm text-white/55">
         Log at least two trades to see your equity curve.
@@ -89,56 +201,16 @@ export default function EquityChart({ data }) {
     );
   }
 
-  const values = data.map((d) => (mode === 'cumulative' ? d.cumulative : d.daily));
-  const minVal = Math.min(0, ...values);
-  const maxVal = Math.max(0, ...values);
-
-  const ticks = yTicks(minVal, maxVal);
-  const tickMin = ticks[0];
-  const tickMax = ticks[ticks.length - 1];
-  const tickRange = tickMax - tickMin || 1;
-
-  function scaleX(i) { return PAD.left + (i / (data.length - 1)) * CHART_W; }
-  function scaleY(v) { return PAD.top + CHART_H * (1 - (v - tickMin) / tickRange); }
-
-  const zeroY = scaleY(0);
-
   const labelStep = Math.max(1, Math.ceil(data.length / 7));
   const xLabels = data.filter((_, i) => i % labelStep === 0 || i === data.length - 1);
 
-  const vals = data.map((d) => (mode === 'cumulative' ? d.cumulative : d.daily));
   const pts = data.map((d, i) => [scaleX(i), scaleY(vals[i])]);
   const curvePath = smoothPath(pts);
 
-  /* Area path: close to zero line */
   const areaPath = curvePath
     + ' L' + pts[pts.length - 1][0].toFixed(2) + ',' + zeroY.toFixed(2)
     + ' L' + pts[0][0].toFixed(2) + ',' + zeroY.toFixed(2) + ' Z';
 
-  const handleMouseMove = useCallback((e) => {
-    const svg = svgRef.current;
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    const mouseX = ((e.clientX - rect.left) / rect.width) * W;
-    const relX = mouseX - PAD.left;
-    const idx = Math.round((relX / CHART_W) * (data.length - 1));
-    setHoverIdx(Math.max(0, Math.min(data.length - 1, idx)));
-  }, [data.length]);
-
-  const handleTouchMove = useCallback((e) => {
-    const svg = svgRef.current;
-    if (!svg || !e.touches[0]) return;
-    const rect = svg.getBoundingClientRect();
-    const mouseX = ((e.touches[0].clientX - rect.left) / rect.width) * W;
-    const relX = mouseX - PAD.left;
-    const idx = Math.round((relX / CHART_W) * (data.length - 1));
-    setHoverIdx(Math.max(0, Math.min(data.length - 1, idx)));
-  }, [data.length]);
-
-  const hoverItem = hoverIdx !== null ? data[hoverIdx] : null;
-  const hoverVal = hoverItem ? (mode === 'cumulative' ? hoverItem.cumulative : hoverItem.daily) : 0;
-
-  /* Y-axis label x position — overlaid near right edge */
   const yLabelX = W - 6;
 
   return (
@@ -150,7 +222,7 @@ export default function EquityChart({ data }) {
           {[{ key: 'cumulative', label: 'Cumulative' }, { key: 'daily', label: 'Daily' }].map((m) => (
             <button
               key={m.key}
-              onClick={() => setMode(m.key)}
+              onClick={() => { setMode(m.key); handleMouseLeave(); }}
               className={'rounded-md px-2 py-1 text-[11px] font-semibold transition-all duration-200 sm:px-3 sm:py-1.5 sm:text-xs ' + (mode === m.key ? 'bg-white/[0.1] text-white shadow-sm' : 'text-white/40 hover:text-white/60')}
             >
               {m.label}
@@ -159,41 +231,37 @@ export default function EquityChart({ data }) {
         </div>
       </div>
 
-      {/* Chart */}
+      {/* Chart — negative margins to bleed past card padding */}
       <svg
         ref={svgRef}
         viewBox={'0 0 ' + W + ' ' + H}
-        className="h-[220px] w-full select-none sm:h-[300px]"
+        className="-mx-5 h-[220px] w-[calc(100%+2.5rem)] select-none sm:h-[300px]"
         onMouseMove={handleMouseMove}
-        onMouseLeave={() => setHoverIdx(null)}
+        onMouseLeave={handleMouseLeave}
         onTouchMove={handleTouchMove}
-        onTouchEnd={() => setHoverIdx(null)}
+        onTouchEnd={handleMouseLeave}
         style={{ shapeRendering: 'geometricPrecision' }}
       >
         <defs>
-          {/* Cyan area fill (above zero) */}
           <linearGradient id="eqAreaCyan" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#22d3ee" stopOpacity="0.22" />
             <stop offset="0.5" stopColor="#22d3ee" stopOpacity="0.08" />
             <stop offset="1" stopColor="#22d3ee" stopOpacity="0.01" />
           </linearGradient>
-          {/* Red area fill (below zero) */}
           <linearGradient id="eqAreaRed" x1="0" y1="1" x2="0" y2="0">
             <stop offset="0" stopColor="#f87171" stopOpacity="0.22" />
             <stop offset="0.5" stopColor="#f87171" stopOpacity="0.08" />
             <stop offset="1" stopColor="#f87171" stopOpacity="0.01" />
           </linearGradient>
-          {/* Clip above zero */}
           <clipPath id="clipAbove">
             <rect x="0" y={PAD.top} width={W} height={Math.max(0, zeroY - PAD.top)} />
           </clipPath>
-          {/* Clip below zero */}
           <clipPath id="clipBelow">
             <rect x="0" y={zeroY} width={W} height={Math.max(0, PAD.top + CHART_H - zeroY)} />
           </clipPath>
         </defs>
 
-        {/* ── Grid lines + Y labels (overlaid on right edge) ── */}
+        {/* Grid lines + Y labels */}
         {ticks.map((v, i) => {
           const y = scaleY(v);
           const isZero = v === 0;
@@ -218,7 +286,7 @@ export default function EquityChart({ data }) {
           );
         })}
 
-        {/* ── X labels ── */}
+        {/* X labels */}
         {xLabels.map((d) => {
           const i = data.indexOf(d);
           return (
@@ -234,116 +302,33 @@ export default function EquityChart({ data }) {
           );
         })}
 
-        {/* ── Area fills ── */}
+        {/* Area fills */}
         <path d={areaPath} fill="url(#eqAreaCyan)" clipPath="url(#clipAbove)" />
         <path d={areaPath} fill="url(#eqAreaRed)" clipPath="url(#clipBelow)" />
 
-        {/* ── Line: cyan above zero ── */}
+        {/* Line: cyan above zero */}
         <g clipPath="url(#clipAbove)">
-          <path
-            d={curvePath}
-            fill="none"
-            stroke="#22d3ee"
-            strokeWidth="2.5"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
+          <path d={curvePath} fill="none" stroke="#22d3ee" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
         </g>
-
-        {/* ── Line: red below zero ── */}
+        {/* Line: red below zero */}
         <g clipPath="url(#clipBelow)">
-          <path
-            d={curvePath}
-            fill="none"
-            stroke="#f87171"
-            strokeWidth="2.5"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
+          <path d={curvePath} fill="none" stroke="#f87171" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
         </g>
 
-        {/* ── Hover crosshair + dot + tooltip ── */}
-        {hoverIdx !== null && hoverItem && (() => {
-          const hx = scaleX(hoverIdx);
-          const val = mode === 'cumulative' ? hoverItem.cumulative : hoverItem.daily;
-          const hy = scaleY(val);
-          const isPositive = val >= 0;
-          const dotColor = isPositive ? '#22d3ee' : '#f87171';
-
-          const tooltipW = 170;
-          const tooltipH = 62;
-          const tooltipX = hx + tooltipW + 20 > W ? hx - tooltipW - 16 : hx + 16;
-          const tooltipY = Math.max(PAD.top, Math.min(hy - tooltipH / 2, H - PAD.bottom - tooltipH));
-
-          return (
-            <>
-              {/* Vertical dashed crosshair */}
-              <line
-                x1={hx} y1={PAD.top}
-                x2={hx} y2={H - PAD.bottom}
-                stroke="rgba(255,255,255,0.15)"
-                strokeWidth="1"
-                strokeDasharray="4 3"
-              />
-              {/* Horizontal dashed crosshair */}
-              <line
-                x1={0} y1={hy}
-                x2={W} y2={hy}
-                stroke="rgba(255,255,255,0.10)"
-                strokeWidth="1"
-                strokeDasharray="4 3"
-              />
-
-              {/* Hover dot */}
-              <circle cx={hx} cy={hy} r="8" fill={isPositive ? 'rgba(34,211,238,0.12)' : 'rgba(248,113,113,0.12)'} />
-              <circle cx={hx} cy={hy} r="5" fill="#0b0b14" stroke={dotColor} strokeWidth="2" />
-              <circle cx={hx} cy={hy} r="2" fill="#fff" />
-
-              {/* Tooltip */}
-              <g>
-                <rect
-                  x={tooltipX} y={tooltipY}
-                  width={tooltipW} height={tooltipH}
-                  rx={10}
-                  fill="rgba(18, 18, 30, 0.90)"
-                  stroke="rgba(255,255,255,0.10)"
-                  strokeWidth="1"
-                />
-                <text
-                  x={tooltipX + tooltipW / 2} y={tooltipY + 18}
-                  textAnchor="middle"
-                  fill="rgba(255,255,255,0.6)"
-                  fontSize="10.5"
-                  fontWeight="600"
-                  fontFamily="Poppins, sans-serif"
-                >
-                  {fmtFullDate(hoverItem.date)}
-                </text>
-                <text
-                  x={tooltipX + tooltipW / 2} y={tooltipY + 39}
-                  textAnchor="middle"
-                  fill={dotColor}
-                  fontSize="16"
-                  fontWeight="700"
-                  fontFamily="Poppins, sans-serif"
-                >
-                  {fmtVal(val)}
-                </text>
-                <text
-                  x={tooltipX + tooltipW / 2} y={tooltipY + 54}
-                  textAnchor="middle"
-                  fill="rgba(255,255,255,0.3)"
-                  fontSize="8"
-                  fontWeight="600"
-                  fontFamily="JetBrains Mono, monospace"
-                  letterSpacing="1.2"
-                >
-                  {mode === 'cumulative' ? 'CUMULATIVE P&L' : 'DAILY P&L'}
-                </text>
-              </g>
-            </>
-          );
-        })()}
+        {/* ── Hover layer (manipulated via refs, no React re-renders) ── */}
+        <g ref={hoverGroupRef} style={{ display: 'none' }}>
+          <line className="h-vline" x1="0" y1={PAD.top} x2="0" y2={H - PAD.bottom} stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="4 3" />
+          <line className="h-hline" x1="0" y1="0" x2={W} y2="0" stroke="rgba(255,255,255,0.10)" strokeWidth="1" strokeDasharray="4 3" />
+          <circle className="h-dot-outer" cx="0" cy="0" r="8" fill="rgba(34,211,238,0.12)" />
+          <circle className="h-dot-mid" cx="0" cy="0" r="5" fill="#0b0b14" stroke="#22d3ee" strokeWidth="2" />
+          <circle className="h-dot-core" cx="0" cy="0" r="2" fill="#fff" />
+          <g>
+            <rect className="h-tip-bg" x="0" y="0" width="170" height="62" rx="10" fill="rgba(18,18,30,0.90)" stroke="rgba(255,255,255,0.10)" strokeWidth="1" />
+            <text className="h-tip-date" x="0" y="0" textAnchor="middle" fill="rgba(255,255,255,0.6)" fontSize="10.5" fontWeight="600" fontFamily="Poppins, sans-serif" />
+            <text className="h-tip-val" x="0" y="0" textAnchor="middle" fill="#22d3ee" fontSize="16" fontWeight="700" fontFamily="Poppins, sans-serif" />
+            <text className="h-tip-label" x="0" y="0" textAnchor="middle" fill="rgba(255,255,255,0.3)" fontSize="8" fontWeight="600" fontFamily="JetBrains Mono, monospace" letterSpacing="1.2" />
+          </g>
+        </g>
       </svg>
     </div>
   );
