@@ -213,6 +213,25 @@ export default function EquityChart({ data }) {
             <g clipPath="url(#ca)"><path d={curvePath} fill="none" stroke="#22d3ee" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
             <g clipPath="url(#cb)"><path d={curvePath} fill="none" stroke="#f87171" strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round"/></g>
 
+            {/* Pulsing dot on latest data point */}
+            {(() => {
+              const lastPt = pts[pts.length - 1];
+              const lastVal = vals[vals.length - 1];
+              const col = lastVal >= 0 ? '#22d3ee' : '#f87171';
+              return (
+                <g>
+                  {/* Pulse ring */}
+                  <circle cx={lastPt[0]} cy={lastPt[1]} r="3" fill="none" stroke={col} strokeWidth="1.5" opacity="0.6">
+                    <animate attributeName="r" values="3;10;3" dur="2s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.6;0;0.6" dur="2s" repeatCount="indefinite" />
+                  </circle>
+                  {/* Solid dot */}
+                  <circle cx={lastPt[0]} cy={lastPt[1]} r="3.5" fill={col} />
+                  <circle cx={lastPt[0]} cy={lastPt[1]} r="1.5" fill="#fff" />
+                </g>
+              );
+            })()}
+
             <g ref={hRef} style={{display:'none'}}>
               <line className="vl" x1="0" y1={PAD.top} x2="0" y2={H-PAD.bottom} stroke="rgba(255,255,255,.12)" strokeWidth="1" strokeDasharray="4 3"/>
               <line className="hl" x1={PAD.left} y1="0" x2={W-PAD.right} y2="0" stroke="rgba(255,255,255,.08)" strokeWidth="1" strokeDasharray="4 3"/>
