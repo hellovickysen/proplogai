@@ -1,30 +1,92 @@
-import { FEATURES } from '@/components/landing/LandingData';
+const CAPABILITY_PILLARS = [
+  {
+    icon: '✦',
+    label: 'Understand',
+    title: 'AI Coach',
+    description: 'Propol learns from your trading history to find the recurring mistakes and psychology patterns you cannot see alone.',
+    capabilities: ['Per-trade analysis', 'Psychology patterns', 'Performance reviews'],
+    accent: 'border-violet-300/20 bg-violet-300/[0.07] text-violet-200',
+    dot: 'bg-violet-300',
+  },
+  {
+    icon: '◎',
+    label: 'Measure',
+    title: 'Discipline System',
+    description: 'Turn your rulebook into something measurable. Track adherence, score consistency, and reinforce better behavior.',
+    capabilities: ['Rulebook adherence', 'Discipline score', 'Streaks and achievements'],
+    accent: 'border-cyan-300/20 bg-cyan-300/[0.07] text-cyan-200',
+    dot: 'bg-cyan-300',
+  },
+  {
+    icon: '▦',
+    label: 'Control',
+    title: 'Prop Firm Command Center',
+    description: 'See the complete prop-firm picture—from challenge costs and account progress to payouts and real return on investment.',
+    capabilities: ['Challenge and account tracking', 'Expenses, payouts, and ROI', 'P&L calendar'],
+    accent: 'border-amber-300/20 bg-amber-300/[0.07] text-amber-200',
+    dot: 'bg-amber-300',
+  },
+  {
+    icon: '◇',
+    label: 'Prove',
+    title: 'Proof & Progress',
+    description: 'Turn consistent behavior into visible progress with verified achievements, payout proof, and a trader story you control.',
+    capabilities: ['Trophy wall and certificates', 'Public trader profile', 'Shareable P&L proof'],
+    accent: 'border-emerald-300/20 bg-emerald-300/[0.07] text-emerald-200',
+    dot: 'bg-emerald-300',
+  },
+];
+
+const INCLUDED_TOOLS = ['30-second trade logging', 'Smart filters', 'Chart screenshots', 'Referral rewards'];
 
 export default function FeaturesSection() {
   return (
     <>
-      {/* ═══════════════ FEATURES ═══════════════ */}
-      <section className="px-4 py-16 sm:px-10" data-reveal>
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center">
-            <h2 className="font-display text-2xl font-bold sm:text-3xl">Everything you need to stop failing challenges</h2>
-            <p className="mx-auto mt-3 max-w-lg text-sm text-white/50">12 live features. Zero fluff. Built by a trader who was tired of paying for the same mistakes.</p>
+      {/* ═══════════════ CAPABILITY PILLARS ═══════════════ */}
+      <section className="px-4 py-20 sm:px-10" data-reveal>
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-3xl text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-300/[0.07] px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-violet-200">
+              Four connected systems
+            </div>
+            <h2 className="font-display text-2xl font-bold sm:text-3xl lg:text-4xl">
+              Every capability works toward{' '}
+              <span className="gradient-shimmer">better discipline.</span>
+            </h2>
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-white/55 sm:text-base">
+              Not a collection of journal features. One connected system for understanding behavior, measuring discipline, managing the prop-firm journey, and proving progress.
+            </p>
           </div>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {FEATURES.map((f, i) => (
-              <div key={i} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-5" style={{ '--reveal-delay': `${(i % 8) * 70}ms` }} data-reveal>
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <span className="text-xl">{f.icon}</span>
-                  {f.coming ? (
-                    <span className="shrink-0 rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">Coming soon</span>
-                  ) : (
-                    <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">Live</span>
-                  )}
+          <div className="mt-12 grid gap-5 md:grid-cols-2">
+            {CAPABILITY_PILLARS.map((pillar, index) => (
+              <article key={pillar.title} className="landing-card rounded-2xl border border-white/10 bg-white/[0.03] p-6" style={{ '--reveal-delay': `${index * 90}ms` }} data-reveal>
+                <div className="flex items-start justify-between gap-4">
+                  <div className={`grid h-11 w-11 place-items-center rounded-xl border font-mono text-lg ${pillar.accent}`} aria-hidden="true">
+                    {pillar.icon}
+                  </div>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-white/35">{pillar.label}</span>
                 </div>
-                <h3 className="font-display text-sm font-semibold">{f.title}</h3>
-                <p className="mt-1.5 text-xs leading-relaxed text-white/50">{f.desc}</p>
-              </div>
+                <h3 className="mt-5 font-display text-lg font-bold text-white">{pillar.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/50">{pillar.description}</p>
+                <ul className="mt-5 grid gap-2 border-t border-white/[0.08] pt-5 sm:grid-cols-3">
+                  {pillar.capabilities.map((capability) => (
+                    <li key={capability} className="flex items-start gap-2 text-xs leading-relaxed text-white/[0.65]">
+                      <span className={`mt-1 h-1.5 w-1.5 shrink-0 rounded-full ${pillar.dot}`} />
+                      {capability}
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5" data-reveal>
+            <span className="mr-1 font-mono text-[10px] uppercase tracking-[0.15em] text-white/35">Also included</span>
+            {INCLUDED_TOOLS.map((tool) => (
+              <span key={tool} className="rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/55">
+                {tool}
+              </span>
             ))}
           </div>
         </div>
