@@ -19,10 +19,10 @@ export type {
   SimulatorOutput,
   ProbabilityBreakdown,
   TradingPersonality,
-  Badge,
-  IndustryComparison,
   BiggestMistake,
   TraderLevel,
+  RiskMeter,
+  WeekProjection,
 } from './types';
 
 export type { FirmWithMeta } from './firmLoader';

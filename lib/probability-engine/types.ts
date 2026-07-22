@@ -78,6 +78,8 @@ export interface Improvement {
 
 export interface ProbabilityBreakdown {
   factor: string;
+  current: string;
+  ideal: string;
   impact: number;                  // positive = helping, negative = hurting
   status: 'positive' | 'negative';
 }
@@ -89,11 +91,16 @@ export interface TradingPersonality {
   description: string;
 }
 
-export interface Badge {
-  id: string;
-  emoji: string;
-  title: string;
-  unlocked: boolean;
+export interface RiskMeter {
+  currentRisk: number;
+  idealRisk: number;
+  level: 'Low' | 'Medium' | 'High';
+}
+
+export interface WeekProjection {
+  week: number;
+  label: string;
+  outcome: string;
 }
 
 export interface IndustryComparison {
@@ -117,9 +124,10 @@ export interface TraderLevel {
 
 export interface AnalysisReport {
   overallProbability: number;
+  propPassScore: number;           // 0-100 composite score
   confidence: 'High' | 'Medium' | 'Low';
   confidenceReasons: string[];
-  percentile: number;              // "better than X% of traders"
+  percentile: number;
   traderLevel: TraderLevel;
   bestChallenge: {
     profileId: string;
@@ -127,12 +135,15 @@ export interface AnalysisReport {
     reason: string;
     rating: number;
   };
-  expectedDays: { label: string; days: number }[];
+  expectedDays: { label: string; days: number }[];  // Best Case / Most Likely / Worst Case
   challengeSuitability: SimulationResult[];
   probabilityBreakdown: ProbabilityBreakdown[];
   personality: TradingPersonality;
-  badges: Badge[];
-  biggestMistake: BiggestMistake;
+  riskMeter: RiskMeter;
+  biggestKiller: BiggestMistake;   // renamed from biggestMistake
+  readyToday: boolean;
+  weekProjection: WeekProjection[];
+  simulationSummary: { total: number; passed: number; failed: number };
   strengths: string[];
   weaknesses: string[];
   improvements: Improvement[];

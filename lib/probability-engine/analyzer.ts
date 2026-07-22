@@ -3,8 +3,8 @@
 import type {
   Trade, Statistics, SimulationResult, Improvement,
   AnalysisReport, ParseResult, SimulatorInput,
-  ProbabilityBreakdown, TradingPersonality, Badge,
-  IndustryComparison, BiggestMistake, TraderLevel,
+  ProbabilityBreakdown, TradingPersonality,
+  IndustryComparison, BiggestMistake, TraderLevel, RiskMeter, WeekProjection,
 } from './types';
 import { parseTrades }        from './parser';
 import { computeStatistics }  from './statistics';
@@ -66,11 +66,14 @@ export async function analyzeStatement(
   const improvements = getImprovements(stats);
   const probabilityBreakdown = getBreakdown(stats);
   const personality = getPersonality(stats);
-  const badges = getBadges(stats);
-  const biggestMistake = getBiggestMistake(stats);
+  const biggestKiller = getBiggestMistake(stats);
   const traderLevel = getTraderLevel(best.passRate, stats);
+  const propPassScore = traderLevel.score;
   const percentile = getPercentile(best.passRate, stats);
-  const verdict = getVerdict(best.passRate, stats, bestProfile.name, biggestMistake);
+  const verdict = getVerdict(best.passRate, stats, bestProfile.name, biggestKiller);
+  const riskMeter = getRiskMeter(stats);
+  const readyToday = best.passRate >= 60;
+  const weekProjection = getWeekProjection(best.passRate, best.medianDaysToPass ?? best.avgDaysToPass ?? 20);
 
   const failureReasons = [
     { reason: 'Daily Drawdown',    percentage: best.failReasons.dailyDrawdown },
@@ -80,15 +83,21 @@ export async function analyzeStatement(
   ].filter((f) => f.percentage > 0)
    .sort((a, b) => b.percentage - a.percentage);
 
+  // Best/Most Likely/Worst case days
   const baseDays = best.medianDaysToPass ?? best.avgDaysToPass ?? 20;
   const expectedDays = [
-    { label: '50k Challenge',  days: baseDays },
-    { label: '100k Challenge', days: baseDays + 1 },
-    { label: '150k Challenge', days: baseDays + 2 },
+    { label: 'Best Case',   days: Math.max(5, Math.round(baseDays * 0.7)) },
+    { label: 'Most Likely', days: baseDays },
+    { label: 'Worst Case',  days: Math.round(baseDays * 1.6) },
   ];
+
+  // Simulation summary
+  const totalSims = SIMULATIONS;
+  const passedSims = Math.round((best.passRate / 100) * totalSims);
 
   return {
     overallProbability: best.passRate,
+    propPassScore,
     confidence,
     confidenceReasons,
     percentile,
@@ -103,8 +112,11 @@ export async function analyzeStatement(
     challengeSuitability: suitability,
     probabilityBreakdown,
     personality,
-    badges,
-    biggestMistake,
+    riskMeter,
+    biggestKiller,
+    readyToday,
+    weekProjection,
+    simulationSummary: { total: totalSims, passed: passedSims, failed: totalSims - passedSims },
     strengths,
     weaknesses,
     improvements,
@@ -172,31 +184,61 @@ function getBreakdown(s: Statistics): ProbabilityBreakdown[] {
 
   // Win Rate
   const wrImpact = s.winRate >= 55 ? Math.round((s.winRate - 45) * 2.5) : -Math.round((55 - s.winRate) * 2);
-  items.push({ factor: 'Win Rate', impact: clamp(wrImpact, -30, 35), status: wrImpact >= 0 ? 'positive' : 'negative' });
+  items.push({ factor: 'Win Rate', current: `${s.winRate.toFixed(1)}%`, ideal: '50%+', impact: clamp(wrImpact, -30, 35), status: wrImpact >= 0 ? 'positive' : 'negative' });
 
   // Risk Management
   const rmScore = (s.riskConsistency + s.positionSizeConsistency) / 2;
   const rmImpact = rmScore >= 60 ? Math.round((rmScore - 40) * 0.5) : -Math.round((60 - rmScore) * 0.4);
-  items.push({ factor: 'Risk Management', impact: clamp(rmImpact, -25, 30), status: rmImpact >= 0 ? 'positive' : 'negative' });
+  items.push({ factor: 'Risk Management', current: `${Math.round(rmScore)}/100`, ideal: '70+/100', impact: clamp(rmImpact, -25, 30), status: rmImpact >= 0 ? 'positive' : 'negative' });
 
   // Reward Ratio
   const rrImpact = s.avgRR >= 1.5 ? Math.round((s.avgRR - 1) * 20) : -Math.round((1.5 - s.avgRR) * 15);
-  items.push({ factor: 'Reward Ratio', impact: clamp(rrImpact, -20, 25), status: rrImpact >= 0 ? 'positive' : 'negative' });
+  items.push({ factor: 'Reward Ratio', current: `${s.avgRR.toFixed(1)}:1`, ideal: '1.5:1+', impact: clamp(rrImpact, -20, 25), status: rrImpact >= 0 ? 'positive' : 'negative' });
 
   // Consistency
   const consImpact = s.riskConsistency >= 60 ? Math.round((s.riskConsistency - 40) * 0.3) : -Math.round((60 - s.riskConsistency) * 0.25);
-  items.push({ factor: 'Consistency', impact: clamp(consImpact, -15, 20), status: consImpact >= 0 ? 'positive' : 'negative' });
+  items.push({ factor: 'Consistency', current: `${s.riskConsistency}/100`, ideal: '60+/100', impact: clamp(consImpact, -15, 20), status: consImpact >= 0 ? 'positive' : 'negative' });
 
   // Drawdown Control
   const ddImpact = s.maxDrawdown < 3 ? 18 : s.maxDrawdown < 5 ? 10 : s.maxDrawdown < 8 ? -5 : -Math.round(s.maxDrawdown * 1.5);
-  items.push({ factor: 'Drawdown Control', impact: clamp(ddImpact, -25, 20), status: ddImpact >= 0 ? 'positive' : 'negative' });
+  items.push({ factor: 'Drawdown Control', current: `${s.maxDrawdown.toFixed(1)}%`, ideal: 'Under 3%', impact: clamp(ddImpact, -25, 20), status: ddImpact >= 0 ? 'positive' : 'negative' });
 
   // Overtrading
   const otImpact = s.avgTradesPerDay > 8 ? -Math.round((s.avgTradesPerDay - 4) * 2.5) : s.avgTradesPerDay > 5 ? -Math.round((s.avgTradesPerDay - 4) * 1.5) : 5;
-  items.push({ factor: 'Overtrading', impact: clamp(otImpact, -20, 8), status: otImpact >= 0 ? 'positive' : 'negative' });
+  items.push({ factor: 'Trade Frequency', current: `${s.avgTradesPerDay.toFixed(1)}/day`, ideal: '3-5/day', impact: clamp(otImpact, -20, 8), status: otImpact >= 0 ? 'positive' : 'negative' });
 
   items.sort((a, b) => Math.abs(b.impact) - Math.abs(a.impact));
   return items;
+}
+
+/* ── Risk Meter ────────────────────────────────────────────── */
+
+function getRiskMeter(s: Statistics): { currentRisk: number; idealRisk: number; level: 'Low' | 'Medium' | 'High' } {
+  // Estimate average risk % from avg loss relative to typical account
+  const avgRiskPct = s.avgRisk > 0 ? Math.min(5, s.avgRisk / 1000) : 1;
+  const level = avgRiskPct > 2 ? 'High' : avgRiskPct > 1 ? 'Medium' : 'Low';
+  return { currentRisk: Math.round(avgRiskPct * 10) / 10, idealRisk: 0.5, level };
+}
+
+/* ── Week Projection ───────────────────────────────────────── */
+
+function getWeekProjection(passRate: number, daysToPass: number): { week: number; label: string; outcome: string }[] {
+  const weeks = [];
+  const totalWeeks = Math.ceil(daysToPass / 5); // 5 trading days per week
+
+  if (passRate >= 60) {
+    weeks.push({ week: 1, label: 'Week 1', outcome: 'Build momentum' });
+    if (totalWeeks >= 2) weeks.push({ week: 2, label: 'Week 2', outcome: `Reach ${Math.round(passRate * 0.4)}% of target` });
+    if (totalWeeks >= 3) weeks.push({ week: 3, label: 'Week 3', outcome: totalWeeks <= 3 ? 'Pass' : `Reach ${Math.round(passRate * 0.7)}% of target` });
+    if (totalWeeks >= 4) weeks.push({ week: 4, label: 'Week 4', outcome: 'Pass' });
+  } else {
+    weeks.push({ week: 1, label: 'Week 1', outcome: 'Survive drawdown limits' });
+    weeks.push({ week: 2, label: 'Week 2', outcome: 'Build small gains' });
+    weeks.push({ week: 3, label: 'Week 3', outcome: 'Assess progress' });
+    if (totalWeeks >= 4) weeks.push({ week: 4, label: 'Week 4', outcome: passRate >= 40 ? 'Push for target' : 'Likely need extension' });
+  }
+
+  return weeks;
 }
 
 function clamp(v: number, min: number, max: number): number {
@@ -206,13 +248,14 @@ function clamp(v: number, min: number, max: number): number {
 /* ── Trading Personality ───────────────────────────────────── */
 
 function getPersonality(s: Statistics): TradingPersonality {
-  if (s.avgTradesPerDay >= 8) return { id: 'hft', emoji: '🔥', title: 'High Frequency Trader', description: 'You take many trades per day, relying on volume and quick execution.' };
-  if (s.avgRR >= 2 && s.winRate < 45) return { id: 'sniper', emoji: '🎯', title: 'Precision Sniper', description: 'You wait for high R:R setups, accepting a lower win rate for bigger winners.' };
-  if (s.riskConsistency >= 75 && s.positionSizeConsistency >= 75) return { id: 'systematic', emoji: '🧠', title: 'Systematic Trader', description: 'Your consistent risk and position sizing suggest a rule-based approach.' };
-  if (s.maxDrawdown < 3 && s.riskConsistency >= 60) return { id: 'conservative', emoji: '🛡', title: 'Conservative Risk Manager', description: 'You prioritize capital preservation with tight risk controls.' };
-  if (s.avgTradesPerDay >= 5 && s.avgHoldingTime < 30) return { id: 'scalper', emoji: '⚔', title: 'Aggressive Scalper', description: 'You trade frequently with short holding times, capturing quick moves.' };
-  if (s.avgHoldingTime > 240) return { id: 'swing', emoji: '📈', title: 'Trend Rider', description: 'You hold positions for extended periods, riding larger market moves.' };
-  return { id: 'balanced', emoji: '⚖️', title: 'Balanced Trader', description: 'You have a well-rounded approach across risk, reward, and frequency.' };
+  // Data-based, professional labels
+  if (s.avgTradesPerDay >= 8 && s.avgHoldingTime < 15) return { id: 'hft', emoji: '⚡', title: 'High-Volume Scalper', description: `${s.avgTradesPerDay.toFixed(0)} trades/day with ${Math.round(s.avgHoldingTime)}min avg hold time. High frequency, short duration.` };
+  if (s.avgRR >= 2 && s.winRate < 45) return { id: 'sniper', emoji: '🎯', title: 'High RR Swing Trader', description: `${s.avgRR.toFixed(1)}:1 avg R:R with ${s.winRate.toFixed(0)}% win rate. Fewer wins but larger payoffs.` };
+  if (s.riskConsistency >= 75 && s.positionSizeConsistency >= 75) return { id: 'systematic', emoji: '🧠', title: 'Systematic Rule-Based Trader', description: `Risk consistency ${s.riskConsistency}/100, position consistency ${s.positionSizeConsistency}/100. Highly disciplined execution.` };
+  if (s.maxDrawdown < 3 && s.riskConsistency >= 60) return { id: 'conservative', emoji: '🛡', title: 'Conservative Risk Manager', description: `Max drawdown ${s.maxDrawdown.toFixed(1)}% with ${s.riskConsistency}/100 risk consistency. Capital preservation first.` };
+  if (s.avgTradesPerDay >= 5 && s.avgHoldingTime < 60) return { id: 'scalper', emoji: '⚔', title: 'Active Scalper', description: `${s.avgTradesPerDay.toFixed(1)} trades/day with ${Math.round(s.avgHoldingTime)}min avg hold. Quick entries and exits.` };
+  if (s.avgHoldingTime > 240) return { id: 'swing', emoji: '📈', title: 'Position Trader', description: `${Math.round(s.avgHoldingTime / 60)}h avg hold time. Lets trades run for larger moves.` };
+  return { id: 'balanced', emoji: '⚖️', title: 'Balanced Day Trader', description: `${s.avgTradesPerDay.toFixed(1)} trades/day, ${s.avgRR.toFixed(1)}:1 R:R, ${s.winRate.toFixed(0)}% win rate. Well-rounded approach.` };
 }
 
 /* ── Badges ─────────────────────────────────────────────────── */
