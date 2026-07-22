@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { addFirm, updateFirm, deleteFirm, reorderFirms } from './actions';
 
@@ -8,8 +8,8 @@ const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 te
 const label = 'mb-1 block font-mono text-[10px] uppercase tracking-wider text-white/40';
 
 const EMPTY_FORM = {
-  name: '', profit_target: 8, daily_drawdown: 2, overall_drawdown: 4,
-  min_trading_days: 5, challenge_days: 30, max_risk_per_trade: '',
+  name: '', profit_target: '', daily_drawdown: '', overall_drawdown: '',
+  min_trading_days: '', challenge_days: '', max_risk_per_trade: '',
   consistency_requirement: '', affiliate_link: '', logo_url: '',
 };
 
@@ -72,10 +72,10 @@ export default function PropFirmAdmin({ initialFirms, leadStats, adminEmail }) {
   function startEdit(firm) {
     setEditId(firm.id);
     setForm({
-      name: firm.name, profit_target: firm.profit_target, daily_drawdown: firm.daily_drawdown,
-      overall_drawdown: firm.overall_drawdown, min_trading_days: firm.min_trading_days,
-      challenge_days: firm.challenge_days, max_risk_per_trade: firm.max_risk_per_trade || '',
-      consistency_requirement: firm.consistency_requirement || '',
+      name: firm.name || '', profit_target: firm.profit_target ?? '', daily_drawdown: firm.daily_drawdown ?? '',
+      overall_drawdown: firm.overall_drawdown ?? '', min_trading_days: firm.min_trading_days ?? '',
+      challenge_days: firm.challenge_days ?? '', max_risk_per_trade: firm.max_risk_per_trade ?? '',
+      consistency_requirement: firm.consistency_requirement ?? '',
       affiliate_link: firm.affiliate_link || '', logo_url: firm.logo_url || '',
     });
     setShowAdd(false);
@@ -91,8 +91,8 @@ export default function PropFirmAdmin({ initialFirms, leadStats, adminEmail }) {
         <div className="flex items-center gap-4 text-xs">
           <div className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
             <span className="text-white/40">Leads: </span>
-            <span className="font-semibold text-emerald-400">{leadStats.verified || 0}</span>
-            <span className="text-white/30"> / {leadStats.total || 0}</span>
+            <span className="font-semibold text-emerald-400">{leadStats?.verified || 0}</span>
+            <span className="text-white/30"> / {leadStats?.total || 0}</span>
           </div>
         </div>
       </div>
@@ -122,9 +122,9 @@ export default function PropFirmAdmin({ initialFirms, leadStats, adminEmail }) {
                       {!firm.active && <span className="rounded bg-white/5 px-1.5 py-0.5 text-[10px] text-white/30">Inactive</span>}
                     </div>
                     <div className="mt-0.5 flex gap-3 font-mono text-[10px] text-white/35">
-                      <span>Target: {firm.profit_target}%</span>
-                      <span>DD: {firm.daily_drawdown}%/{firm.overall_drawdown}%</span>
-                      <span>Days: {firm.min_trading_days}+</span>
+                      {firm.profit_target != null && <span>Target: {firm.profit_target}%</span>}
+                      {firm.daily_drawdown != null && <span>DD: {firm.daily_drawdown}%/{firm.overall_drawdown}%</span>}
+                      {firm.min_trading_days != null && <span>Days: {firm.min_trading_days}+</span>}
                       {firm.affiliate_link && <span className="text-cyan-400/50">Affiliate ✓</span>}
                     </div>
                   </div>
@@ -158,7 +158,52 @@ export default function PropFirmAdmin({ initialFirms, leadStats, adminEmail }) {
   );
 }
 
+/* ── Edit / Add Form ───────────────────────────────────────── */
+
 function EditForm({ form, set, onSave, onCancel, saving, isNew }) {
+  const [uploading, setUploading] = useState(false);
+  const [preview, setPreview] = useState(form.logo_url || '');
+  const fileRef = useRef(null);
+
+  async function handleLogoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 500 * 1024) {
+      alert('Logo must be under 500KB.');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Convert to WebP using canvas
+      const webpBlob = await convertToWebP(file);
+      const slug = (form.name || 'firm').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'logo';
+      const fileName = `${slug}-${Date.now()}.webp`;
+
+      // Upload to Supabase Storage via API
+      const formData = new FormData();
+      formData.append('file', webpBlob, fileName);
+      formData.append('bucket', 'prop-firm-logos');
+      formData.append('path', fileName);
+
+      const res = await fetch('/api/admin/upload-logo', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+      set('logo_url', data.url);
+      setPreview(data.url);
+    } catch (err) {
+      alert('Logo upload failed: ' + err.message);
+    }
+    setUploading(false);
+    e.target.value = '';
+  }
+
   return (
     <div className="rounded-xl border border-violet-400/20 bg-violet-500/[0.03] p-5 space-y-4">
       <h3 className="text-sm font-semibold text-white">{isNew ? 'Add Prop Firm' : 'Edit Prop Firm'}</h3>
@@ -170,35 +215,70 @@ function EditForm({ form, set, onSave, onCancel, saving, isNew }) {
         </div>
         <div>
           <label className={label}>Profit Target %</label>
-          <input className={field} type="number" value={form.profit_target} onChange={(e) => set('profit_target', Number(e.target.value))} />
+          <input className={field} type="number" value={form.profit_target} onChange={(e) => set('profit_target', e.target.value)} placeholder="e.g. 8" />
         </div>
         <div>
           <label className={label}>Daily Drawdown %</label>
-          <input className={field} type="number" value={form.daily_drawdown} onChange={(e) => set('daily_drawdown', Number(e.target.value))} />
+          <input className={field} type="number" value={form.daily_drawdown} onChange={(e) => set('daily_drawdown', e.target.value)} placeholder="e.g. 2" />
         </div>
         <div>
           <label className={label}>Overall Drawdown %</label>
-          <input className={field} type="number" value={form.overall_drawdown} onChange={(e) => set('overall_drawdown', Number(e.target.value))} />
+          <input className={field} type="number" value={form.overall_drawdown} onChange={(e) => set('overall_drawdown', e.target.value)} placeholder="e.g. 4" />
         </div>
         <div>
           <label className={label}>Min Trading Days</label>
-          <input className={field} type="number" value={form.min_trading_days} onChange={(e) => set('min_trading_days', Number(e.target.value))} />
+          <input className={field} type="number" value={form.min_trading_days} onChange={(e) => set('min_trading_days', e.target.value)} placeholder="e.g. 5" />
         </div>
         <div>
           <label className={label}>Challenge Days</label>
-          <input className={field} type="number" value={form.challenge_days} onChange={(e) => set('challenge_days', Number(e.target.value))} />
+          <input className={field} type="number" value={form.challenge_days} onChange={(e) => set('challenge_days', e.target.value)} placeholder="e.g. 30" />
         </div>
         <div>
-          <label className={label}>Max Risk/Trade % (optional)</label>
-          <input className={field} type="number" value={form.max_risk_per_trade} onChange={(e) => set('max_risk_per_trade', e.target.value)} />
+          <label className={label}>Max Risk/Trade %</label>
+          <input className={field} type="number" value={form.max_risk_per_trade} onChange={(e) => set('max_risk_per_trade', e.target.value)} placeholder="Optional" />
         </div>
         <div className="col-span-2">
           <label className={label}>Affiliate Link</label>
           <input className={field} value={form.affiliate_link} onChange={(e) => set('affiliate_link', e.target.value)} placeholder="https://..." />
         </div>
+
+        {/* Logo upload */}
         <div className="col-span-2">
-          <label className={label}>Logo URL</label>
-          <input className={field} value={form.logo_url} onChange={(e) => set('logo_url', e.target.value)} placeholder="https://... or upload to Supabase Storage" />
+          <label className={label}>Logo</label>
+          <div className="flex items-center gap-3">
+            {preview ? (
+              <div className="relative">
+                <img src={preview} alt="Logo" className="h-12 w-12 rounded-lg border border-white/10 object-contain bg-white/5 p-1" />
+                <button
+                  onClick={() => { set('logo_url', ''); setPreview(''); }}
+                  className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-dashed border-white/15 bg-white/[0.02] text-lg text-white/20">
+                🏢
+              </div>
+            )}
+            <div>
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/50 hover:text-white/80 disabled:opacity-50"
+              >
+                {uploading ? 'Converting to WebP...' : preview ? 'Replace Logo' : 'Upload Logo'}
+              </button>
+              <p className="mt-1 text-[10px] text-white/25">PNG or WebP, max 500KB. Auto-converted to WebP.</p>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".png,.webp,.jpg,.jpeg"
+              onChange={handleLogoUpload}
+              className="hidden"
+            />
+          </div>
         </div>
       </div>
 
@@ -212,4 +292,34 @@ function EditForm({ form, set, onSave, onCancel, saving, isNew }) {
       </div>
     </div>
   );
+}
+
+/* ── WebP conversion via canvas ────────────────────────────── */
+
+function convertToWebP(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Cap at 200x200 for logos
+      const max = 200;
+      let w = img.width, h = img.height;
+      if (w > max || h > max) {
+        const ratio = Math.min(max / w, max / h);
+        w = Math.round(w * ratio);
+        h = Math.round(h * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(
+        (blob) => (blob ? resolve(blob) : reject(new Error('WebP conversion failed'))),
+        'image/webp',
+        0.85,
+      );
+    };
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = URL.createObjectURL(file);
+  });
 }
