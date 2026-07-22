@@ -405,7 +405,7 @@ export default function AccountManager({ accounts = [], archivedAccounts = [], s
             <div className="flex items-center gap-3 mb-4">
               <div className="grid h-10 w-10 place-items-center rounded-xl bg-red-500/10 border border-red-400/20">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-red-400">
-                  <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-1 0v12a2 2 0 01-2 2H9a2 2 0 01-2-2V6h10z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m-1 0v12a2 2 0 01-2 2H9a2 2 0 01-2-2V6h10z" />
                 </svg>
               </div>
               <div>
