@@ -9,21 +9,21 @@ export default function HeroSection() {
         <div className="text-center lg:text-left">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-300/20 bg-red-300/8 px-4 py-1.5 text-xs font-semibold text-red-200/90">
             <span className="h-1.5 w-1.5 rounded-full bg-red-400 shadow-[0_0_12px_rgba(248,113,113,0.85)]" />
-            Built for prop firm traders
+            30-day trader discipline system
           </div>
 
           <h1 className="font-display text-3xl font-extrabold leading-[1.05] tracking-tight sm:text-4xl md:text-5xl lg:text-[3.55rem]">
-            Stop repeating the mistakes{' '}
-            <span className="text-red-400" style={redGlow}>costing you funded accounts.</span>
+            Become a disciplined prop trader{' '}
+            <span className="text-red-400" style={redGlow}>in 30 days.</span>
           </h1>
 
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg lg:mx-0">
-            PropLogAI turns your trade journal into an AI performance coach that finds recurring psychology and discipline patterns — then shows you what to fix next.
+            PropLogAI isn&apos;t another trading journal. It turns your rulebook, behavior, and trade data into daily AI coaching that trains consistency, control, and discipline.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
             <Link href="/login?mode=signup" className="cta-glow rounded-xl px-8 py-3.5 text-base font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5" style={gradientBtn}>
-              Train your AI coach — free →
+              Start your 30-day discipline build →
             </Link>
             <Link href="#the-pattern" className="rounded-xl border border-white/15 bg-white/5 px-8 py-3.5 text-base font-semibold text-white/72 transition hover:border-white/25 hover:bg-white/10 hover:text-white">
               See how it works ↓
