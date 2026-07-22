@@ -60,6 +60,7 @@ export interface SimulationResult {
   passRate: number;                // 0–100
   avgDaysToPass: number | null;
   medianDaysToPass: number | null;
+  difficulty: string;              // Easy, Medium, Hard, Very Hard
   failReasons: {
     dailyDrawdown: number;
     overallDrawdown: number;
@@ -75,21 +76,68 @@ export interface Improvement {
   estimatedImpact: string;
 }
 
+export interface ProbabilityBreakdown {
+  factor: string;
+  impact: number;                  // positive = helping, negative = hurting
+  status: 'positive' | 'negative';
+}
+
+export interface TradingPersonality {
+  id: string;
+  emoji: string;
+  title: string;
+  description: string;
+}
+
+export interface Badge {
+  id: string;
+  emoji: string;
+  title: string;
+  unlocked: boolean;
+}
+
+export interface IndustryComparison {
+  metric: string;
+  yours: string;
+  average: string;
+  percentile: number;              // 0–100 (top X%)
+  verdict: 'above' | 'below' | 'average';
+}
+
+export interface BiggestMistake {
+  title: string;
+  description: string;
+  impact: string;
+}
+
+export interface TraderLevel {
+  level: string;                   // Beginner, Intermediate, Advanced, Professional, Elite
+  score: number;                   // 0–100
+}
+
 export interface AnalysisReport {
-  overallProbability: number;      // best profile pass rate
+  overallProbability: number;
   confidence: 'High' | 'Medium' | 'Low';
+  confidenceReasons: string[];
+  percentile: number;              // "better than X% of traders"
+  traderLevel: TraderLevel;
   bestChallenge: {
     profileId: string;
     name: string;
     reason: string;
-    rating: number;                // 1–5
+    rating: number;
   };
   expectedDays: { label: string; days: number }[];
   challengeSuitability: SimulationResult[];
+  probabilityBreakdown: ProbabilityBreakdown[];
+  personality: TradingPersonality;
+  badges: Badge[];
+  biggestMistake: BiggestMistake;
   strengths: string[];
   weaknesses: string[];
   improvements: Improvement[];
   failureReasons: { reason: string; percentage: number }[];
+  verdict: string;
   statistics: Statistics;
 }
 
@@ -102,7 +150,7 @@ export interface ParseResult {
 /* ── Simulator input (used by Web Worker too) ──────────────── */
 
 export interface SimulatorInput {
-  winRate: number;              // decimal 0–1
+  winRate: number;
   avgWin: number;
   avgLoss: number;
   tradesPerDay: number;

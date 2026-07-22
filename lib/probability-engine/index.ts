@@ -16,4 +16,10 @@ export type {
   ParseResult,
   SimulatorInput,
   SimulatorOutput,
+  ProbabilityBreakdown,
+  TradingPersonality,
+  Badge,
+  IndustryComparison,
+  BiggestMistake,
+  TraderLevel,
 } from './types';
