@@ -6,7 +6,7 @@ const TOOLS = [
   {
     title: 'Prop Test Pass Probability',
     subtitle:
-      'Calculate your probability of passing a prop firm challenge using Monte Carlo simulation on your real trading data',
+      'Find out your realistic probability of passing a prop firm challenge based on your real trading data',
     icon: '🎯',
     href: '/dashboard/tools/probability-analyzer',
     color: 'linear-gradient(120deg, #a78bfa, #22d3ee)',
