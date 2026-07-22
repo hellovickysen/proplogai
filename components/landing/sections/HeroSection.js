@@ -25,17 +25,17 @@ export default function HeroSection() {
             Your AI coach remembers the recurring mistakes in every trade you log — and helps you stop repeating them. No signals. No market predictions.
           </p>
 
-          <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-            <Link href="/login?mode=signup" className="cta-glow rounded-xl px-8 py-3.5 text-base font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5" style={gradientBtn}>
-              Start your 30-day discipline build →
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+            <Link href="/login?mode=signup" className="cta-glow whitespace-nowrap rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5 sm:text-base" style={gradientBtn}>
+              Start your 30-day build →
             </Link>
-            <Link href="#the-pattern" className="rounded-xl border border-white/15 bg-white/5 px-8 py-3.5 text-base font-semibold text-white/72 transition hover:border-white/25 hover:bg-white/10 hover:text-white">
+            <Link href="#the-pattern" className="whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/72 transition hover:border-white/25 hover:bg-white/10 hover:text-white sm:text-base">
               See how it works ↓
             </Link>
           </div>
 
-          <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.12em] text-white/35 sm:text-xs lg:text-left">
-            14-day Elite trial · No credit card · Private by design
+          <p className="mt-3 text-[10px] text-white/35 sm:text-xs lg:text-left">
+            14-day trial · No credit card
           </p>
         </div>
 
