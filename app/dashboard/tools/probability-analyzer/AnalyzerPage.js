@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import UploadZone from '@/components/probability-analyzer/UploadZone';
 import Report from '@/components/probability-analyzer/Report';
 
@@ -11,8 +11,7 @@ function SimulationReveal({ onComplete, report }) {
   const [checks, setChecks] = useState({ drawdown: false, target: false, consistency: false, days: false });
   const [revealed, setRevealed] = useState(false);
 
-  useEffect(() => {
-    // Animate simulation count from 0 to 10000
+  useState(() => {
     const duration = 3000;
     const start = performance.now();
     let raf;
@@ -23,7 +22,6 @@ function SimulationReveal({ onComplete, report }) {
       const eased = 1 - Math.pow(1 - progress, 2);
       setSimCount(Math.round(eased * 10000));
 
-      // Trigger checkmarks at intervals
       if (progress > 0.25) setChecks(c => ({ ...c, drawdown: true }));
       if (progress > 0.45) setChecks(c => ({ ...c, target: true }));
       if (progress > 0.65) setChecks(c => ({ ...c, consistency: true }));
@@ -32,7 +30,6 @@ function SimulationReveal({ onComplete, report }) {
       if (progress < 1) {
         raf = requestAnimationFrame(tick);
       } else {
-        // Brief pause then reveal
         setTimeout(() => setRevealed(true), 600);
         setTimeout(() => onComplete(), 1200);
       }
@@ -40,16 +37,15 @@ function SimulationReveal({ onComplete, report }) {
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [onComplete]);
+  });
 
   const pct = (simCount / 10000) * 100;
 
   if (revealed && report) {
-    // Big reveal
     const prob = report.overallProbability;
     const color = prob >= 65 ? '#34d399' : prob >= 40 ? '#fbbf24' : '#f87171';
     return (
-      <div className="flex flex-col items-center py-16 animate-[fadeIn_0.6s_ease-out]">
+      <div className="flex flex-col items-center py-16">
         <div className="text-6xl font-bold mb-2" style={{ color }}>{prob}%</div>
         <div className="text-sm text-white/50">Pass Probability</div>
       </div>
@@ -65,18 +61,11 @@ function SimulationReveal({ onComplete, report }) {
         </p>
       </div>
 
-      {/* Progress bar */}
       <div className="h-2 w-full rounded-full bg-white/5 overflow-hidden mb-8">
-        <div
-          className="h-full rounded-full transition-all duration-100"
-          style={{
-            width: `${pct}%`,
-            background: 'linear-gradient(90deg, #a78bfa, #22d3ee)',
-          }}
-        />
+        <div className="h-full rounded-full transition-all duration-100"
+          style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #a78bfa, #22d3ee)' }} />
       </div>
 
-      {/* Checkmarks */}
       <div className="space-y-3">
         <Check label="Checking drawdown limits" done={checks.drawdown} />
         <Check label="Checking profit targets" done={checks.target} />
@@ -90,9 +79,7 @@ function SimulationReveal({ onComplete, report }) {
 function Check({ label, done }) {
   return (
     <div className={`flex items-center gap-3 text-sm transition-all duration-300 ${done ? 'text-emerald-400' : 'text-white/25'}`}>
-      <span className="w-5 text-center">
-        {done ? '✓' : '○'}
-      </span>
+      <span className="w-5 text-center">{done ? '✓' : '○'}</span>
       <span>{label}</span>
     </div>
   );
@@ -101,22 +88,117 @@ function Check({ label, done }) {
 /* ── Main Page ─────────────────────────────────────────────── */
 
 export default function AnalyzerPage() {
-  const [state, setState] = useState('idle'); // idle | processing | simulating | done | error
+  const [state, setState] = useState('idle'); // idle | processing | reading | simulating | done | error
   const [report, setReport] = useState(null);
   const [error, setError] = useState('');
+  const [processingMsg, setProcessingMsg] = useState('');
 
+  /* ── Handle CSV/Excel upload ─────────────────────────────── */
   const handleFile = useCallback(async ({ content, fileName }) => {
     setState('processing');
+    setProcessingMsg('Parsing your trading statement...');
     setError('');
 
     try {
       const { analyzeStatement } = await import('@/lib/probability-engine');
       const result = await analyzeStatement(content, fileName);
       setReport(result);
-      setState('simulating'); // show animation before revealing results
+      setState('simulating');
     } catch (err) {
       console.error('Analysis error:', err);
       setError(err.message || 'An unexpected error occurred.');
+      setState('error');
+    }
+  }, []);
+
+  /* ── Handle screenshot upload ────────────────────────────── */
+  const handleImages = useCallback(async (dataUrls) => {
+    setState('reading');
+    setProcessingMsg('Reading your screenshots with AI...');
+    setError('');
+
+    try {
+      // Send to API route for AI vision parsing
+      const res = await fetch('/api/parse-screenshot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: dataUrls }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to parse screenshots.');
+      }
+
+      if (!data.trades || data.trades.length < 10) {
+        throw new Error(
+          `Found ${data.trades?.length || 0} trades in your screenshots. ` +
+          'A minimum of 10 closed trades is required. Try uploading more screenshots.'
+        );
+      }
+
+      // Now run the analysis pipeline on the parsed trades
+      setProcessingMsg('Running analysis...');
+      setState('processing');
+
+      const { computeStatistics } = await import('@/lib/probability-engine/statistics');
+      const { PROFILES } = await import('@/lib/probability-engine/profiles');
+      const { simulate } = await import('@/lib/probability-engine/simulator');
+
+      // Sort trades by date
+      const trades = data.trades.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      // Compute duration
+      trades.forEach((t) => {
+        if (t.openDate && t.closeDate) {
+          t.duration = (new Date(t.closeDate) - new Date(t.openDate)) / 60000;
+        }
+      });
+
+      const stats = computeStatistics(trades);
+
+      // Import analyzer to build full report
+      const { analyzeStatement } = await import('@/lib/probability-engine');
+
+      // We need to go through the full pipeline but with pre-parsed trades
+      // The simplest approach: create a fake CSV from the trades and analyze it
+      // Better approach: directly call the analyzer internals
+
+      // Actually, let me import the analyzer module and call it differently
+      // Since analyzeStatement expects file content, let me restructure
+
+      // Build the report using the same logic as the analyzer
+      const analyzerModule = await import('@/lib/probability-engine/analyzer');
+
+      // We'll build a minimal CSV string from the trades so we can reuse analyzeStatement
+      const csvLines = ['Ticket,Open Time,Close Time,Type,Volume,Symbol,Open Price,Close Price,S/L,T/P,Commission,Swap,Profit'];
+      trades.forEach((t, i) => {
+        csvLines.push([
+          t.id || i + 1,
+          t.openDate || t.date || '',
+          t.closeDate || t.date || '',
+          t.direction,
+          t.lotSize,
+          t.symbol,
+          t.entry,
+          t.exit,
+          t.stopLoss || 0,
+          t.takeProfit || 0,
+          t.commission || 0,
+          t.swap || 0,
+          t.profit,
+        ].join(','));
+      });
+
+      const csvContent = csvLines.join('\n');
+      const result = await analyzerModule.analyzeStatement(csvContent, 'screenshot.csv');
+
+      setReport(result);
+      setState('simulating');
+    } catch (err) {
+      console.error('Screenshot analysis error:', err);
+      setError(err.message || 'Failed to analyze screenshots.');
       setState('error');
     }
   }, []);
@@ -125,6 +207,7 @@ export default function AnalyzerPage() {
     setState('idle');
     setReport(null);
     setError('');
+    setProcessingMsg('');
   };
 
   /* ── Simulation reveal ──────────────────────────────────── */
@@ -132,10 +215,7 @@ export default function AnalyzerPage() {
     return (
       <div className="min-h-screen p-4 md:p-8">
         <div className="mx-auto max-w-3xl">
-          <SimulationReveal
-            report={report}
-            onComplete={() => setState('done')}
-          />
+          <SimulationReveal report={report} onComplete={() => setState('done')} />
         </div>
       </div>
     );
@@ -168,18 +248,25 @@ export default function AnalyzerPage() {
           </p>
         </div>
 
-        {/* Processing state */}
-        {state === 'processing' && (
+        {/* Processing / Reading state */}
+        {(state === 'processing' || state === 'reading') && (
           <div className="flex flex-col items-center py-16">
             <div className="mb-4 h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-cyan-400" />
-            <p className="text-sm text-white/50">Parsing your trading statement...</p>
+            <p className="text-sm text-white/50">{processingMsg}</p>
+            {state === 'reading' && (
+              <p className="mt-2 text-xs text-white/30">This may take 10-15 seconds for screenshots</p>
+            )}
           </div>
         )}
 
         {/* Upload */}
-        {state !== 'processing' && (
+        {state !== 'processing' && state !== 'reading' && (
           <>
-            <UploadZone onFileLoaded={handleFile} disabled={state === 'processing'} />
+            <UploadZone
+              onFileLoaded={handleFile}
+              onImagesLoaded={handleImages}
+              disabled={state === 'processing' || state === 'reading'}
+            />
 
             {state === 'error' && error && (
               <div className="mt-4 rounded-xl border border-red-400/20 bg-red-400/5 p-4">
@@ -194,7 +281,7 @@ export default function AnalyzerPage() {
             <div className="mt-8 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
               <h3 className="mb-3 font-mono text-xs uppercase tracking-wider text-white/35">How It Works</h3>
               <div className="space-y-2 text-sm text-white/45">
-                <p>1. Upload your MT4 or MT5 trade history (CSV or Excel)</p>
+                <p>1. Upload your trade history (CSV, Excel, or screenshots)</p>
                 <p>2. We calculate your key performance statistics</p>
                 <p>3. 10,000 Monte Carlo simulations run against industry-standard challenge rules</p>
                 <p>4. Get your probability, best challenge type, and improvement suggestions</p>
