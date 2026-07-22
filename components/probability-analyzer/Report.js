@@ -18,8 +18,8 @@ export default function Report({ report, onReset, firms }) {
         <EmailGate onVerified={() => setVerified(true)} />
       )}
 
-      {/* Blurred content wrapper */}
-      <div className={!verified ? 'pointer-events-none select-none blur-md' : ''}>
+      {/* Blurred content wrapper — blur-2xl + low opacity so nothing is readable */}
+      <div className={!verified ? 'pointer-events-none select-none blur-2xl opacity-40 transition-all duration-500' : 'transition-all duration-500'}>
 
       {/* Header */}
       <div className="flex items-center justify-between">
