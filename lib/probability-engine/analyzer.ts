@@ -258,22 +258,7 @@ function getPersonality(s: Statistics): TradingPersonality {
   return { id: 'balanced', emoji: '⚖️', title: 'Balanced Day Trader', description: `${s.avgTradesPerDay.toFixed(1)} trades/day, ${s.avgRR.toFixed(1)}:1 R:R, ${s.winRate.toFixed(0)}% win rate. Well-rounded approach.` };
 }
 
-/* ── Badges ─────────────────────────────────────────────────── */
-
-function getBadges(s: Statistics): Badge[] {
-  return [
-    { id: 'risk-master',        emoji: '🏆', title: 'Risk Master',        unlocked: s.riskConsistency >= 70 },
-    { id: 'drawdown-defender',  emoji: '🛡', title: 'Drawdown Defender',  unlocked: s.maxDrawdown < 4 },
-    { id: 'consistency-king',   emoji: '👑', title: 'Consistency King',   unlocked: s.positionSizeConsistency >= 70 && s.riskConsistency >= 70 },
-    { id: 'rr-expert',          emoji: '🎯', title: 'R:R Expert',         unlocked: s.avgRR >= 1.5 },
-    { id: 'patience-trader',    emoji: '🧘', title: 'Patience Trader',    unlocked: s.avgTradesPerDay <= 4 },
-    { id: 'win-streak',         emoji: '🔥', title: 'Win Streak Hero',    unlocked: s.largestWinningStreak >= 7 },
-    { id: 'profit-machine',     emoji: '💰', title: 'Profit Machine',     unlocked: s.profitFactor >= 2 },
-    { id: 'iron-discipline',    emoji: '⚔️', title: 'Iron Discipline',    unlocked: s.riskConsistency >= 80 },
-  ];
-}
-
-/* ── Biggest Mistake ───────────────────────────────────────── */
+/* ── Biggest Probability Killer ─────────────────────────────── */
 
 function getBiggestMistake(s: Statistics): BiggestMistake {
   const candidates: { score: number; mistake: BiggestMistake }[] = [];
