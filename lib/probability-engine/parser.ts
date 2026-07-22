@@ -8,21 +8,33 @@ interface BrokerSignature {
   id: string;
   name: string;
   match: (cols: string[]) => boolean;
-  multiRow: boolean;
 }
 
 const SIGNATURES: BrokerSignature[] = [
   {
-    id: 'mt5',
+    // MT5 Positions export (single-row: open+close on same line)
+    // Columns: Time, Position, Symbol, Type, Volume, Price, S/L, T/P, Time, Price, Commission, Swap, Profit
+    id: 'mt5-positions',
+    name: 'MetaTrader 5',
+    match: (cols) =>
+      cols.includes('symbol') &&
+      cols.includes('type') &&
+      cols.includes('volume') &&
+      (cols.includes('position') || cols.includes('ticket')) &&
+      cols.includes('profit'),
+  },
+  {
+    // MT5 Deals export (multi-row: separate open/close rows)
+    id: 'mt5-deals',
     name: 'MetaTrader 5',
     match: (cols) =>
       cols.includes('ticket') &&
       cols.includes('type') &&
       cols.includes('volume') &&
       cols.includes('entry'),
-    multiRow: true,
   },
   {
+    // MT4 export (single-row)
     id: 'mt4',
     name: 'MetaTrader 4',
     match: (cols) =>
@@ -31,7 +43,6 @@ const SIGNATURES: BrokerSignature[] = [
       cols.includes('close time') &&
       cols.includes('open price') &&
       cols.includes('close price'),
-    multiRow: false,
   },
 ];
 
@@ -39,15 +50,27 @@ const SIGNATURES: BrokerSignature[] = [
 
 type AliasMap = Record<string, string[]>;
 
-const MT5_MAP: AliasMap = {
+const MT5_POSITIONS_MAP: AliasMap = {
+  id:         ['position', 'ticket', 'deal'],
+  symbol:     ['symbol'],
+  type:       ['type'],
+  volume:     ['volume'],
+  stopLoss:   ['s / l', 's/l', 'stoploss', 'stop loss', 's \\ l'],
+  takeProfit: ['t / p', 't/p', 'takeprofit', 'take profit', 't \\ p'],
+  commission: ['commission'],
+  swap:       ['swap'],
+  profit:     ['profit'],
+};
+
+const MT5_DEALS_MAP: AliasMap = {
   id:         ['ticket'],
-  date:       ['date'],
+  date:       ['date', 'time'],
   symbol:     ['symbol'],
   type:       ['type'],
   volume:     ['volume'],
   price:      ['price'],
-  stopLoss:   ['stoploss', 'stop loss', 's/l'],
-  takeProfit: ['takeprofit', 'take profit', 't/p'],
+  stopLoss:   ['stoploss', 'stop loss', 's/l', 's / l'],
+  takeProfit: ['takeprofit', 'take profit', 't/p', 't / p'],
   profit:     ['profit'],
   commission: ['commission'],
   swap:       ['swap'],
@@ -64,8 +87,8 @@ const MT4_MAP: AliasMap = {
   symbol:     ['symbol'],
   openPrice:  ['open price'],
   closePrice: ['close price'],
-  stopLoss:   ['s/l', 'stoploss', 'stop loss'],
-  takeProfit: ['t/p', 'takeprofit', 'take profit'],
+  stopLoss:   ['s/l', 'stoploss', 'stop loss', 's / l'],
+  takeProfit: ['t/p', 'takeprofit', 'take profit', 't / p'],
   commission: ['commission'],
   swap:       ['swap'],
   profit:     ['profit'],
@@ -74,7 +97,7 @@ const MT4_MAP: AliasMap = {
 /* ── Utilities ─────────────────────────────────────────────── */
 
 function norm(h: string): string {
-  return (h || '').toString().trim().toLowerCase().replace(/[_\-]+/g, ' ');
+  return (h || '').toString().trim().toLowerCase();
 }
 
 function findCol(row: Record<string, string>, aliases: string[]): string | null {
@@ -94,7 +117,10 @@ function num(v: string | null): number {
 
 function parseDate(v: string | null): string | null {
   if (!v) return null;
-  const d = new Date(String(v).trim().replace(/\./g, '-'));
+  const s = String(v).trim();
+  // Handle YYYY.MM.DD HH:MM:SS format (MT4/MT5)
+  const dotFmt = s.replace(/\./g, '-');
+  const d = new Date(dotFmt);
   return isNaN(d.getTime()) ? null : d.toISOString();
 }
 
@@ -113,13 +139,77 @@ export async function parseCSV(text: string): Promise<Record<string, string>[]> 
   });
 }
 
-/* ── Excel parsing (uses SheetJS) ──────────────────────────── */
+/* ── Excel parsing — finds the real header row ─────────────── */
 
 export async function parseExcel(buffer: Uint8Array): Promise<Record<string, string>[]> {
   const XLSX = (await import('xlsx')).default || (await import('xlsx'));
   const wb = XLSX.read(buffer, { type: 'array' });
   const sheet = wb.Sheets[wb.SheetNames[0]];
-  return XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+  // Read ALL rows as raw arrays first (no header assumption)
+  const rawRows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+  // Find the actual header row by scanning for a row containing trading keywords
+  const HEADER_KEYWORDS = ['symbol', 'type', 'volume', 'profit'];
+  let headerIdx = -1;
+
+  for (let i = 0; i < Math.min(20, rawRows.length); i++) {
+    const cells = rawRows[i].map((c: any) => norm(String(c)));
+    const matchCount = HEADER_KEYWORDS.filter((kw) => cells.some((c: string) => c === kw)).length;
+    if (matchCount >= 3) {
+      headerIdx = i;
+      break;
+    }
+  }
+
+  if (headerIdx === -1) {
+    throw new Error('Could not find column headers in Excel file. Expected columns like Symbol, Type, Volume, Profit.');
+  }
+
+  // Build proper header-keyed rows
+  const headers = rawRows[headerIdx].map((c: any) => String(c).trim());
+
+  // MT5 Positions format has duplicate column names: two "Time" and two "Price" columns
+  // Rename duplicates: Time → Open Time / Close Time, Price → Open Price / Close Price
+  const seenHeaders: Record<string, number> = {};
+  const resolvedHeaders = headers.map((h: string) => {
+    const lower = h.toLowerCase();
+    if (!seenHeaders[lower]) {
+      seenHeaders[lower] = 1;
+      return h;
+    }
+    seenHeaders[lower]++;
+    // For MT5: first Time = Open Time, second Time = Close Time
+    if (lower === 'time') return 'Close Time';
+    if (lower === 'price') return 'Close Price';
+    return h + ' ' + seenHeaders[lower];
+  });
+
+  // Rename first occurrences to be explicit
+  const firstTimeIdx = resolvedHeaders.findIndex((h: string) => h.toLowerCase() === 'time');
+  if (firstTimeIdx >= 0) resolvedHeaders[firstTimeIdx] = 'Open Time';
+  const firstPriceIdx = resolvedHeaders.findIndex((h: string) => h.toLowerCase() === 'price');
+  if (firstPriceIdx >= 0) resolvedHeaders[firstPriceIdx] = 'Open Price';
+
+  const result: Record<string, string>[] = [];
+  for (let i = headerIdx + 1; i < rawRows.length; i++) {
+    const row = rawRows[i];
+    // Skip empty rows or section headers
+    if (!row[0] || String(row[0]).trim() === '') continue;
+    // Skip non-data rows (section labels like "Orders", "Deals", "Results", etc.)
+    const firstCell = String(row[0]).trim();
+    if (firstCell.length < 5 && isNaN(Number(firstCell[0]))) continue;
+    // Skip rows that don't start with a date-like value or number
+    if (!/^\d/.test(firstCell)) continue;
+
+    const obj: Record<string, string> = {};
+    resolvedHeaders.forEach((h: string, idx: number) => {
+      if (h) obj[h] = row[idx] !== undefined ? String(row[idx]) : '';
+    });
+    result.push(obj);
+  }
+
+  return result;
 }
 
 /* ── Detect broker format ──────────────────────────────────── */
@@ -129,47 +219,93 @@ function detect(headers: string[]): BrokerSignature | null {
   return SIGNATURES.find((s) => s.match(cols)) ?? null;
 }
 
-/* ── Normalize MT5 (multi-row open/close pairing) ──────────── */
+/* ── Normalize MT5 Positions (single-row) ──────────────────── */
 
-function normalizeMT5(rows: Record<string, string>[]): Trade[] {
+function normalizeMT5Positions(rows: Record<string, string>[]): Trade[] {
+  const trades: Trade[] = [];
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const symbol = findCol(row, MT5_POSITIONS_MAP.symbol);
+    if (!symbol) continue;
+
+    const type = (findCol(row, MT5_POSITIONS_MAP.type) || '').toLowerCase();
+    if (type !== 'buy' && type !== 'sell') continue;
+
+    const profit     = num(findCol(row, MT5_POSITIONS_MAP.profit));
+    const commission = num(findCol(row, MT5_POSITIONS_MAP.commission));
+    const swap       = num(findCol(row, MT5_POSITIONS_MAP.swap));
+
+    // Find open/close time and price using resolved header names
+    const openTime  = row['Open Time']  || findCol(row, ['open time', 'time']);
+    const closeTime = row['Close Time'] || findCol(row, ['close time']);
+    const openPrice  = row['Open Price']  || findCol(row, ['open price', 'price']);
+    const closePrice = row['Close Price'] || findCol(row, ['close price']);
+
+    trades.push({
+      id:         findCol(row, MT5_POSITIONS_MAP.id) || String(i + 1),
+      date:       parseDate(closeTime) || parseDate(openTime) || '',
+      openDate:   parseDate(openTime),
+      closeDate:  parseDate(closeTime),
+      symbol:     symbol.trim(),
+      direction:  type as 'buy' | 'sell',
+      entry:      num(openPrice),
+      exit:       num(closePrice),
+      stopLoss:   num(findCol(row, MT5_POSITIONS_MAP.stopLoss)),
+      takeProfit: num(findCol(row, MT5_POSITIONS_MAP.takeProfit)),
+      lotSize:    num(findCol(row, MT5_POSITIONS_MAP.volume)),
+      profit,
+      commission,
+      swap,
+      netProfit:  profit + commission + swap,
+      duration:   0,
+    });
+  }
+
+  return trades;
+}
+
+/* ── Normalize MT5 Deals (multi-row open/close pairing) ───── */
+
+function normalizeMT5Deals(rows: Record<string, string>[]): Trade[] {
   const trades: Trade[] = [];
   const opens: Record<string, Record<string, string>[]> = {};
 
   for (const row of rows) {
-    const entryType = num(findCol(row, MT5_MAP.entry));
-    const type = num(findCol(row, MT5_MAP.type));
-    const symbol = findCol(row, MT5_MAP.symbol);
-    if (!symbol || type > 1) continue;               // skip balance/credit rows
+    const entryType = num(findCol(row, MT5_DEALS_MAP.entry));
+    const type = num(findCol(row, MT5_DEALS_MAP.type));
+    const symbol = findCol(row, MT5_DEALS_MAP.symbol);
+    if (!symbol || type > 1) continue;
 
-    if (entryType === 0) {                            // opening deal
+    if (entryType === 0) {
       const key = `${symbol}_${type}`;
       (opens[key] ??= []).push(row);
-    } else {                                          // closing deal
+    } else {
       const openKey = `${symbol}_${type === 0 ? 1 : 0}`;
       const altKey  = `${symbol}_${type}`;
       const openArr = opens[openKey] ?? opens[altKey] ?? [];
       const open    = openArr.shift();
 
-      const profit     = num(findCol(row, MT5_MAP.profit));
-      const commission = num(findCol(row, MT5_MAP.commission)) + (open ? num(findCol(open, MT5_MAP.commission)) : 0);
-      const swap       = num(findCol(row, MT5_MAP.swap));
-      const fee        = num(findCol(row, MT5_MAP.fee)) + (open ? num(findCol(open, MT5_MAP.fee)) : 0);
+      const profit     = num(findCol(row, MT5_DEALS_MAP.profit));
+      const commission = num(findCol(row, MT5_DEALS_MAP.commission)) + (open ? num(findCol(open, MT5_DEALS_MAP.commission)) : 0);
+      const swap       = num(findCol(row, MT5_DEALS_MAP.swap));
+      const fee        = num(findCol(row, MT5_DEALS_MAP.fee)) + (open ? num(findCol(open, MT5_DEALS_MAP.fee)) : 0);
 
-      const openDate  = open ? parseDate(findCol(open, MT5_MAP.date)) : null;
-      const closeDate = parseDate(findCol(row, MT5_MAP.date));
+      const openDate  = open ? parseDate(findCol(open, MT5_DEALS_MAP.date)) : null;
+      const closeDate = parseDate(findCol(row, MT5_DEALS_MAP.date));
 
       trades.push({
-        id:         findCol(row, MT5_MAP.id) || String(trades.length + 1),
+        id:         findCol(row, MT5_DEALS_MAP.id) || String(trades.length + 1),
         date:       closeDate || openDate || '',
         openDate,
         closeDate,
         symbol,
-        direction:  open ? (num(findCol(open, MT5_MAP.type)) === 0 ? 'buy' : 'sell') : (type === 0 ? 'buy' : 'sell'),
-        entry:      open ? num(findCol(open, MT5_MAP.price)) : 0,
-        exit:       num(findCol(row, MT5_MAP.price)),
-        stopLoss:   num(open ? findCol(open, MT5_MAP.stopLoss) : findCol(row, MT5_MAP.stopLoss)),
-        takeProfit: num(open ? findCol(open, MT5_MAP.takeProfit) : findCol(row, MT5_MAP.takeProfit)),
-        lotSize:    num(findCol(row, MT5_MAP.volume)) || (open ? num(findCol(open, MT5_MAP.volume)) : 0),
+        direction:  open ? (num(findCol(open, MT5_DEALS_MAP.type)) === 0 ? 'buy' : 'sell') : (type === 0 ? 'buy' : 'sell'),
+        entry:      open ? num(findCol(open, MT5_DEALS_MAP.price)) : 0,
+        exit:       num(findCol(row, MT5_DEALS_MAP.price)),
+        stopLoss:   num(open ? findCol(open, MT5_DEALS_MAP.stopLoss) : findCol(row, MT5_DEALS_MAP.stopLoss)),
+        takeProfit: num(open ? findCol(open, MT5_DEALS_MAP.takeProfit) : findCol(row, MT5_DEALS_MAP.takeProfit)),
+        lotSize:    num(findCol(row, MT5_DEALS_MAP.volume)) || (open ? num(findCol(open, MT5_DEALS_MAP.volume)) : 0),
         profit,
         commission,
         swap:       swap + fee,
@@ -191,7 +327,7 @@ function normalizeMT4(rows: Record<string, string>[]): Trade[] {
     const t = (findCol(row, MT4_MAP.type) || '').toLowerCase();
     if (t !== 'buy' && t !== 'sell') continue;
 
-    const symbol     = findCol(row, MT4_MAP.symbol);
+    const symbol = findCol(row, MT4_MAP.symbol);
     if (!symbol) continue;
 
     const profit     = num(findCol(row, MT4_MAP.profit));
@@ -244,11 +380,17 @@ export async function parseTrades(
   if (!format) {
     throw new Error(
       'Could not detect broker format. Supported formats: MT4 CSV/Excel, MT5 CSV/Excel.\n\n' +
-      'Detected columns: ' + Object.keys(rows[0]).slice(0, 6).join(', '),
+      'Detected columns: ' + Object.keys(rows[0]).slice(0, 8).join(', '),
     );
   }
 
-  let trades = format.id === 'mt5' ? normalizeMT5(rows) : normalizeMT4(rows);
+  let trades: Trade[];
+  switch (format.id) {
+    case 'mt5-positions': trades = normalizeMT5Positions(rows); break;
+    case 'mt5-deals':     trades = normalizeMT5Deals(rows); break;
+    case 'mt4':           trades = normalizeMT4(rows); break;
+    default:              trades = []; break;
+  }
 
   if (trades.length < 10) {
     throw new Error(
