@@ -5,7 +5,7 @@ import LandingNav from '@/components/landing/LandingNav';
 
 export const metadata = {
   title: 'Pricing — PropLogAI',
-  description: 'Simple pricing for serious traders. Start free, upgrade to Elite for unlimited AI coaching.',
+  description: 'Start with a 14-day no-card Elite trial, continue on Basic for free, or upgrade for expanded AI coaching.',
 };
 
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
@@ -42,11 +42,11 @@ const ELITE_FULL = [
 const FAQ = [
   {
     q: 'Can I try Elite for free?',
-    a: 'Yes! Every Elite subscription starts with a 14-day free trial. No charge until the trial ends, and you can cancel anytime.',
+    a: 'Yes. Sign up without a credit card and use Elite features for 14 days.',
   },
   {
     q: 'What happens when my trial ends?',
-    a: 'If you don\'t cancel during the trial, your subscription starts at $9.99/mo (or $7.99/mo yearly). You\'ll get an email reminder before the trial ends.',
+    a: 'Your account continues on Basic unless you choose to upgrade. There is no automatic charge without a payment method.',
   },
   {
     q: 'Can I cancel anytime?',
@@ -61,8 +61,8 @@ const FAQ = [
     a: 'Yes. All payments are processed by Razorpay, a PCI-DSS compliant payment gateway. We never store your card details.',
   },
   {
-    q: 'What if I\'m on the beta?',
-    a: 'Beta users get full Elite access for free while the beta lasts. When we launch pricing, you\'ll have the option to subscribe or move to the Basic plan.',
+    q: 'Is Basic really free?',
+    a: 'Yes. Basic stays free with the limits shown above, and your trade history remains yours.',
   },
 ];
 
@@ -83,10 +83,10 @@ export default function PricingPage() {
       {/* Hero */}
       <div className="px-4 pt-16 pb-10 text-center">
         <h1 className="font-display text-3xl font-bold sm:text-4xl">
-          Simple pricing for <span style={gradientText}>serious traders</span>
+          Simple pricing for <span style={gradientText}>disciplined traders</span>
         </h1>
         <p className="mx-auto mt-4 max-w-lg text-sm text-white/55">
-          Start free. Upgrade when the AI becomes indispensable — and it will.
+          Start with Elite free for 14 days. Continue on Basic or upgrade when you&apos;re ready.
         </p>
       </div>
 
@@ -104,7 +104,7 @@ export default function PricingPage() {
             <ul className="mt-8 space-y-3">
               {BASIC_FEATURES.map((f, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-white/60">
-                  <span className="mt-0.5 text-white/30">✓</span>{f}
+                  <span className="mt-0.5 text-white/35">✓</span>{f}
                 </li>
               ))}
             </ul>
@@ -189,10 +189,10 @@ export default function PricingPage() {
 
         {/* CTA */}
         <div className="mt-16 text-center">
-          <h2 className="font-display text-2xl font-bold mb-2">Ready to level up?</h2>
-          <p className="text-white/50 text-sm mb-6">Start your 14-day free trial. No credit card required upfront.</p>
+          <h2 className="font-display text-2xl font-bold mb-2">Ready to build better habits?</h2>
+          <p className="text-white/50 text-sm mb-6">14-day Elite trial · No credit card</p>
           <Link href="/login?mode=signup" className="inline-block rounded-xl px-8 py-3 text-sm font-bold text-[#08080f]" style={gradientBtn}>
-            Get started free →
+            Start my discipline system →
           </Link>
         </div>
       </div>

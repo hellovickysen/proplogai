@@ -24,19 +24,19 @@ const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
 export const metadata = {
   metadataBase: new URL('https://proplogai.com'),
-  title: 'PropLogAI — AI Trading Journal for Prop Firm Traders',
-  description: 'Still losing funded accounts to the same mistakes? PropLogAI is an AI-powered trading journal that finds the one pattern costing you money. Free beta — join 500 traders.',
+  title: 'PropLogAI — 30-Day Discipline System for Prop Firm Traders',
+  description: 'Build better trading habits in 30 days. PropLogAI learns from your rulebook, behavior, and trade history to find recurring mistakes — no signals or predictions.',
   openGraph: {
-    title: 'Still losing funded accounts to the same mistakes?',
-    description: 'AI-powered trading journal that finds the pattern costing you funded accounts. Log trades, track psychology, get AI coaching. Free beta.',
+    title: 'Become a disciplined prop trader in 30 days.',
+    description: 'PropLogAI analyzes your rulebook, behavior, and trade history to find recurring mistakes and build better trading habits.',
     siteName: 'PropLogAI',
     type: 'website',
     locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Still losing funded accounts to the same mistakes?',
-    description: 'AI-powered trading journal that finds the pattern costing you funded accounts. Free beta — join now.',
+    title: 'Become a disciplined prop trader in 30 days.',
+    description: 'A 30-day discipline system built for prop firm traders. No signals. No predictions. Just better trading habits.',
   },
 };
 

@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'PropLogAI — AI Trading Journal for Prop Firm Traders';
+export const alt = 'PropLogAI — 30-Day Discipline System for Prop Firm Traders';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -79,7 +79,7 @@ export default async function Image() {
               marginBottom: '8px',
             }}
           >
-            Still losing funded accounts
+            Become a disciplined prop trader
           </div>
           <div
             style={{
@@ -90,7 +90,7 @@ export default async function Image() {
               color: '#f87171',
             }}
           >
-            to the same mistakes?
+            in 30 days.
           </div>
         </div>
         <div
@@ -103,7 +103,7 @@ export default async function Image() {
             lineHeight: 1.5,
           }}
         >
-          AI-powered trading journal that finds the pattern costing you funded accounts. Free beta — join now.
+          The AI doesn’t analyze the market. It analyzes you. No signals. No predictions. Just better trading habits.
         </div>
         <div
           style={{
@@ -113,9 +113,9 @@ export default async function Image() {
           }}
         >
           {[
-            { val: '85%', label: 'challenges fail' },
-            { val: '$200+', label: 'per failure' },
-            { val: '1 pattern', label: 'to fix' },
+            { val: '30 days', label: 'discipline system' },
+            { val: '3 phases', label: 'behavior change' },
+            { val: '1 score', label: 'to improve' },
           ].map((s) => (
             <div
               key={s.label}
