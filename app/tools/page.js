@@ -13,6 +13,8 @@ export const metadata = {
     'prop firm payout',
     'trading calculator',
     'funded trader tools',
+    'prop firm challenge probability',
+    'monte carlo trading',
   ],
   openGraph: {
     title: 'Free Prop Trading Tools | PropLogAI',
@@ -36,6 +38,15 @@ export const metadata = {
 };
 
 const TOOLS = [
+  {
+    title: 'Prop Test Pass Probability',
+    subtitle:
+      'Find out your realistic probability of passing a prop firm challenge based on your real trading data',
+    icon: '🎯',
+    href: '/tools/probability-analyzer',
+    color: 'linear-gradient(120deg, #a78bfa, #22d3ee)',
+    tag: 'Free',
+  },
   {
     title: 'Consistency Calculator',
     subtitle:
