@@ -8,12 +8,12 @@ import EmailGate from './EmailGate';
    Report — the full results experience
    ═══════════════════════════════════════════════════════════════ */
 
-export default function Report({ report, onReset, firms }) {
-  const [verified, setVerified] = useState(false);
+export default function Report({ report, onReset, firms, isLoggedIn = false }) {
+  const [verified, setVerified] = useState(isLoggedIn); // logged-in users skip gate
 
   return (
     <div className="relative mx-auto max-w-3xl space-y-6">
-      {/* Email gate overlay — blurs the report until verified */}
+      {/* Email gate overlay — only for guests */}
       {!verified && (
         <EmailGate onVerified={() => setVerified(true)} />
       )}
@@ -77,7 +77,7 @@ export default function Report({ report, onReset, firms }) {
       <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
         <ShareCard report={report} />
       </div>
-      <CTASection />
+      <CTASection isLoggedIn={isLoggedIn} />
 
       </div>{/* end blur wrapper */}
     </div>
@@ -469,7 +469,27 @@ function VerdictCard({ verdict, probability }) {
 
 /* ── 14. CTA ───────────────────────────────────────────────── */
 
-function CTASection() {
+function CTASection({ isLoggedIn }) {
+  if (isLoggedIn) {
+    return (
+      <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-violet-500/5 to-cyan-500/5 p-8 text-center">
+        <p className="text-lg font-semibold text-white">
+          Track your probability after every trade
+        </p>
+        <p className="mt-2 text-sm text-white/40">
+          Log your next trade and run this analysis again to see how your probability changes.
+        </p>
+        <div className="mt-5 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <a href="/dashboard"
+            className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f] transition-transform hover:scale-105"
+            style={{ background: 'linear-gradient(120deg, #a78bfa, #22d3ee)' }}>
+            ← Back to Dashboard
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-violet-500/5 to-cyan-500/5 p-8 text-center">
       <p className="text-lg font-semibold text-white">
