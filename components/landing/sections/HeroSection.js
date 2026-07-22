@@ -17,8 +17,12 @@ export default function HeroSection() {
             <span className="text-red-400" style={redGlow}>in 30 days.</span>
           </h1>
 
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg lg:mx-0">
-            PropLogAI isn&apos;t another trading journal. It turns your rulebook, behavior, and trade data into daily AI coaching that trains consistency, control, and discipline.
+          <p className="mx-auto mt-5 max-w-xl text-sm font-semibold leading-relaxed text-white/75 sm:text-base lg:mx-0">
+            Built specifically for prop firm traders who want consistency — not signals.
+          </p>
+
+          <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-white/55 sm:text-lg lg:mx-0">
+            Your AI coach remembers the recurring mistakes in every trade you log — and helps you stop repeating them. No signals. No market predictions.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
@@ -30,11 +34,9 @@ export default function HeroSection() {
             </Link>
           </div>
 
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-white/40 lg:justify-start">
-            <span>✓ 14-day Elite trial</span>
-            <span>✓ No credit card</span>
-            <span>✓ Your data stays private</span>
-          </div>
+          <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.12em] text-white/35 sm:text-xs lg:text-left">
+            14-day Elite trial · No credit card · Private by design
+          </p>
         </div>
 
         <HeroProductPreview />
