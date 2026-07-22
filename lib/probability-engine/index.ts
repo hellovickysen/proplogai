@@ -5,6 +5,7 @@ export { parseTrades }      from './parser';
 export { computeStatistics } from './statistics';
 export { simulate }         from './simulator';
 export { PROFILES, getProfileById } from './profiles';
+export { loadFirms }        from './firmLoader';
 
 export type {
   Trade,
@@ -23,3 +24,5 @@ export type {
   BiggestMistake,
   TraderLevel,
 } from './types';
+
+export type { FirmWithMeta } from './firmLoader';

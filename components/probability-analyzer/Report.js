@@ -2,14 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import ShareCard from './ShareCard';
+import EmailGate from './EmailGate';
 
 /* ═══════════════════════════════════════════════════════════════
    Report — the full results experience
    ═══════════════════════════════════════════════════════════════ */
 
-export default function Report({ report, onReset }) {
+export default function Report({ report, onReset, firms }) {
+  const [verified, setVerified] = useState(false);
+
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="relative mx-auto max-w-3xl space-y-6">
+      {/* Email gate overlay — blurs the report until verified */}
+      {!verified && (
+        <EmailGate onVerified={() => setVerified(true)} />
+      )}
+
+      {/* Blurred content wrapper */}
+      <div className={!verified ? 'pointer-events-none select-none blur-md' : ''}>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-white">Your Analysis</h2>
@@ -67,6 +78,8 @@ export default function Report({ report, onReset }) {
         <ShareCard report={report} />
       </div>
       <CTASection />
+
+      </div>{/* end blur wrapper */}
     </div>
   );
 }
