@@ -22,12 +22,13 @@ export default function HeroSection() {
           </p>
 
           <p className="mx-auto mt-3 max-w-xl text-base leading-relaxed text-white/55 sm:text-lg lg:mx-0">
-            Your AI coach remembers the recurring mistakes in every trade you log — and helps you stop repeating them. No signals. No market predictions.
+            Your AI coach learns from every trade you log, finds recurring mistakes, and helps you stop repeating them.
+            <span className="mt-1 block font-semibold text-white/70">No signals. No predictions. Just better trading habits.</span>
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
             <Link href="/login?mode=signup" className="cta-glow whitespace-nowrap rounded-xl px-6 py-3 text-sm font-semibold text-[#08080f] transition-transform hover:-translate-y-0.5 sm:text-base" style={gradientBtn}>
-              Start your 30-day build →
+              Start my discipline system →
             </Link>
             <Link href="#the-pattern" className="whitespace-nowrap rounded-xl border border-white/15 bg-white/5 px-6 py-3 text-sm font-semibold text-white/72 transition hover:border-white/25 hover:bg-white/10 hover:text-white sm:text-base">
               See how it works ↓

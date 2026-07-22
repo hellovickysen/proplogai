@@ -25,8 +25,10 @@ export default function HeroProductPreview() {
 
         <div className="grid gap-3 border-t border-white/[0.08] bg-white/[0.025] px-4 py-4 sm:grid-cols-[1fr_auto] sm:items-center sm:px-5">
           <div>
-            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-300/75">AI coaching from your rulebook and behavior</div>
-            <div className="mt-1 text-xs leading-relaxed text-white/[0.45]">Finds recurring mistakes from your own records — not market predictions.</div>
+            <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-cyan-300/75">The PropLogAI difference</div>
+            <div className="mt-1 font-display text-sm font-semibold leading-relaxed text-white/70 sm:text-base">
+              The AI doesn&apos;t analyze the market. <span className="text-cyan-300">It analyzes you.</span>
+            </div>
           </div>
           <div className="flex items-end justify-between gap-4 sm:block sm:text-right">
             <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/35">Discipline score</div>
