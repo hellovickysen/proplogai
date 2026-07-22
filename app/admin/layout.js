@@ -18,6 +18,8 @@ const ADMIN_NAV = [
   { label: 'Tickets', href: '/admin/tickets', icon: '📩' },
   { label: 'AI Usage', href: '/admin/ai-usage', icon: '✦' },
   { label: 'Revenue', href: '/admin/revenue', icon: '💰' },
+  { label: 'Prop Firms', href: '/admin/prop-firms', icon: '🏢' },
+  { label: 'Lead Gen', href: '/admin/lead-gen', icon: '📊' },
 ];
 
 export default async function AdminLayout({ children }) {
