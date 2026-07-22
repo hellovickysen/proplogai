@@ -73,12 +73,6 @@ export default function LandingNav({ logo }) {
             );
           })}
 
-          {/* 14-Day Trial static badge */}
-          <span className="flex items-center gap-1.5 rounded-full border border-violet-400/20 bg-violet-500/[0.08] px-3.5 py-1.5 text-xs font-medium text-violet-300/80">
-            <span>✦</span>
-            14-Day Trial
-          </span>
-
           <Link
             href="/login"
             className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white/70 transition-colors hover:border-white/20 hover:text-white"
