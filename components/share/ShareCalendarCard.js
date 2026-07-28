@@ -3,12 +3,15 @@
 import { forwardRef } from 'react';
 
 const LOGO_MARK =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABmJLR0QA/wD/AP+gvaeTAAACtUlEQVR4nO3Zv2sTYRgH8O/zps09V5K+qbYKtYugYl0Eg61SXETcFaWIk4OCFP8CRZwFBRUXdwcnNycROvijhYAOijrpUERbWmKVXK7JPQ4K1utV7CW5t7XPB7LkTZ583+8lOZIDlFJKKaWUUkptPjnXAdLpL/p+fiKXy4/n82wbjfob14kyNFBgtu+ZrSy73Us7zbQzWhaYw3EAu2N3ny8UCtvSzNtoBRgiXEpaCMPu7akGtpYnW75fui2C/QlLc2G48DbNzA1TAHPpmohMrFyRzwCdArCUeaiseJ69GPvSE2ZbZ+47C4Bc5+so3y+dYLaN2Oabvm9Pu87Wccz2KLMN4kff83oTvwj/K55njzPbxYS3/mXX2TrNMPdeZbbN+OZ9v3TLdbiOKhaLW5nto4SjLsz2PtbZWctr5zDf7x1hth9X2fwDAN2dyJL6FMJsPwGYAfBYxDyt12kSmP+actYFAHcA5GNLDSJcqdWq1wHI77sHe3y/dgCIxkRwDMBwEFSH0rx2KwXMAuhfHhbAK6ypkCGfefEugHMJi18AnAmC6pOEDR/Bn0d9LgiqA2n20c4C4v5aiOcV9xDlHgKyL+G5k8bQTREZXmXDceuygLhlhdAzIrkBYFfsMQLgA4BBrO1znbqArjRPSqkLQBlAmUhWewwB2JlZIqyz04oLWoDrAK5pAa4DuKYFuA7gmhbgOoBrWoDrAK5t+gJa+DFkThJFh6MIh4gwAmBH21L9mxkRTBuDFyLmedohbbuo0NPTP9hsNstEUiZCWUTGAPS1afx3gF4SoSKCShSZShjOv27H4E5eVcnl81v2GhP9KgRlQA5i5d9ecU2A3gE/N2sMVWq1hWkAYSdCZnxZaaDAvFQmktEowigRRgFABFPGYEqEpoKguwLMfss2l1JKKaWUUkoppTaTH/eK6MSpCDdTAAAAAElFTkSuQmCC';
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABmJLR0QA/wD/AP+gvaeTAAACtUlEQVR4nO3Zv2sTYRgH8O/zps09V5K+qbYKtYugYl0Eg61SXETcFaWIk4OCFP8CRZwFBRUXdwcnNycROvijhYAOijrpUERbWmKVXK7JPQ4K1utV7CW5t7XPB7LkTZ783+8lOZIDlFJKKaWUUkoptfnkXAdIp7/o+fmJXC4/n8+wbTfob14kyNFBgtu+ZrSy73Us7zbQzWhaYw3EAu2N3ny8UCtvSzNtoBRgiXEpaCMPu7akGtpYnW75fui2C/QlLc2G48DbNzA1TAHPpmohMrFyRzwCdArCUeaiseJ69GPvSE2ZbZ+47C4Bc5+so3y+dYLaN2Oabvm9Pu87Wccz2KLMN4kff83oTvwj/K55njzPbxYS3/mXX2TrNMPdeZbbN+OZ9v3TLdbiOKhaLW5nto4SjLsz2PtbZWctr5zDf7x1hth9X2fwDAN2dyJL6FMJsPwGYAfBYxDyt12kSmP+actYFAHcA5GNLDSJcqdWq1wHI77sHe3y/dgCIxkRwDMBwEFSH0rx2KwXMAuhfHhbAK6ypkCGfefEugHMJi18AnAmC6pOEDR/Bn0d9LgiqA2n20c4C4v5aiOcV9xDlHgKyL+G5k8bQTREZXmXDceuygLhlhdAzIrkBYFfsMQLgA4BBrO1znbqArjRPSqkLQBlAmUhWewwB2JlZIqyz04oLWoDrAK5pAa4DuKYFuA7gmhbgOoBrWoDrAK5t+gJa+DFkThJFh6MIh4gwAmBH21L9mxkRTBuDFyLmedohbbuo0NPTP9hsNstEUiZCWUTGAPS1afx3gF4SoSKCShSZShjOv27H4E5eVcnl81v2GhP9KgRlQA5i5d9ecU2A3gE/N2sMVWq1hWkAYSdCZnxZaaDAvFQmktEowigRRgFABFPGYEqEpoKguwLMfss2l1JKKaWUUkoppTaTH/eK6MSpCDdTAAAAAElFTkSuQmCC';
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /* Tailwind font-mono stack — matches the calendar page's font-mono class exactly */
 var MONO = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace";
+
+/* Poppins stack — matches the app's next/font display face; used for the share header */
+var POPPINS = "'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
 
 function fmtPnlShort(v) {
   if (v === 0) return '$0';
@@ -98,6 +101,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
     'July', 'August', 'September', 'October', 'November', 'December',
   ];
   var monthName = monthNames[month] || '';
+  var monthAbbr = monthName.slice(0, 3);
   var tradingDays = Object.keys(byDay).length;
   var totalTrades = Object.values(byDay).reduce(function (s, e) { return s + e.count; }, 0);
   var totalPnl =
@@ -178,7 +182,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
           minHeight: 0,
         }}
       >
-        {/* ── header ── */}
+        {/* ── header (3-zone: logo left · Monthly P/L center · month right) ── */}
         <div
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -187,7 +191,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
           }}
         >
           {/* LEFT: full logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
             <div
               style={{
                 width: 30, height: 30, borderRadius: 8,
@@ -204,56 +208,77 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                 <circle cx="74" cy="27" r="4.5" fill="#08080f" />
               </svg>
             </div>
-            <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1 }}>
+            <span style={{ fontFamily: POPPINS, fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1 }}>
               PropLog<span style={{ color: '#22d3ee' }}>AI</span>
             </span>
           </div>
 
-          {/* RIGHT: month + stats */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: isSquare ? 16 : 20 }}>
-            {/* P&L stat */}
-            <div style={{ textAlign: 'right' }}>
-              <div
-                style={{
-                  fontSize: isSquare ? 20 : 18, fontWeight: 800,
-                  fontFamily: MONO,
-                  color: accentColor,
-                  textShadow: '0 0 18px ' + accentGlow,
-                  lineHeight: 1.1,
-                }}
-              >
-                {fmtPnlHeader(totalPnl)}
-              </div>
-              <div
-                style={{
-                  fontSize: 9, color: 'rgba(255,255,255,0.4)',
-                  marginTop: 3, lineHeight: 1,
-                }}
-              >
-                {totalTrades} trade{totalTrades !== 1 ? 's' : ''} &middot; {tradingDays} day{tradingDays !== 1 ? 's' : ''}
-              </div>
+          {/* CENTER: Monthly P/L hero */}
+          <div
+            style={{
+              flex: 1, display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', minWidth: 0,
+            }}
+          >
+            <div
+              style={{
+                fontFamily: POPPINS,
+                fontSize: 9, fontWeight: 600,
+                letterSpacing: '0.16em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.45)',
+                lineHeight: 1, marginBottom: 5, whiteSpace: 'nowrap',
+              }}
+            >
+              Monthly P/L
             </div>
-            {/* divider */}
-            <div style={{ width: 1, height: 28, background: 'rgba(255,255,255,0.1)' }} />
-            {/* month */}
-            <div style={{ textAlign: 'right' }}>
-              <div
-                style={{
-                  fontSize: isSquare ? 18 : 16, fontWeight: 700,
-                  lineHeight: 1.1,
-                }}
-              >
-                {monthName}
-              </div>
-              <div
-                style={{
-                  fontSize: 10, color: 'rgba(255,255,255,0.4)',
-                  marginTop: 2, lineHeight: 1,
-                }}
-              >
-                {year}
-              </div>
+            <div
+              style={{
+                fontFamily: POPPINS,
+                fontSize: isSquare ? 30 : 30, fontWeight: 800,
+                color: accentColor,
+                textShadow: '0 0 20px ' + accentGlow,
+                lineHeight: 1.05, whiteSpace: 'nowrap',
+              }}
+            >
+              {fmtPnlHeader(totalPnl)}
             </div>
+            <div
+              style={{
+                fontFamily: POPPINS,
+                fontSize: 9, color: 'rgba(255,255,255,0.4)',
+                marginTop: 5, lineHeight: 1, whiteSpace: 'nowrap',
+              }}
+            >
+              {totalTrades} trade{totalTrades !== 1 ? 's' : ''} &middot; {tradingDays} day{tradingDays !== 1 ? 's' : ''}
+            </div>
+          </div>
+
+          {/* RIGHT: month + year (one line, abbreviated) */}
+          <div
+            style={{
+              flex: 1, display: 'flex', alignItems: 'baseline',
+              justifyContent: 'flex-end', gap: 6, minWidth: 0,
+            }}
+          >
+            <span
+              style={{
+                fontFamily: POPPINS,
+                fontSize: isSquare ? 18 : 16, fontWeight: 700,
+                lineHeight: 1.1, whiteSpace: 'nowrap',
+              }}
+            >
+              {monthAbbr}
+            </span>
+            <span
+              style={{
+                fontFamily: POPPINS,
+                fontSize: isSquare ? 15 : 13, fontWeight: 600,
+                color: 'rgba(255,255,255,0.5)',
+                lineHeight: 1.1, whiteSpace: 'nowrap',
+              }}
+            >
+              {year}
+            </span>
           </div>
         </div>
 
