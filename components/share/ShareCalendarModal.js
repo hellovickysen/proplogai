@@ -21,6 +21,14 @@ export default function ShareCalendarModal({ trades, year, month, monthlyPnl, on
         fontLink.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap';
         document.head.appendChild(fontLink);
       }
+      /* Trigger font loading for all weights we use */
+      if (document.fonts) {
+        document.fonts.load('400 16px Poppins');
+        document.fonts.load('500 16px Poppins');
+        document.fonts.load('600 16px Poppins');
+        document.fonts.load('700 16px Poppins');
+        document.fonts.load('800 16px Poppins');
+      }
       if (!window.html2canvas) {
         var script = document.createElement('script');
         script.src =
@@ -40,6 +48,10 @@ export default function ShareCalendarModal({ trades, year, month, monthlyPnl, on
       if (!cardRef.current || !window.html2canvas) return;
       setRendering(true);
       try {
+        /* Wait for Poppins (and all other fonts) to finish loading */
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready;
+        }
         var canvas = await window.html2canvas(cardRef.current, {
           scale: 3,
           useCORS: true,
@@ -100,6 +112,7 @@ export default function ShareCalendarModal({ trades, year, month, monthlyPnl, on
       setDownloading(true);
       try {
         if (!cardRef.current || !window.html2canvas) return;
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
         var canvas = await window.html2canvas(cardRef.current, {
           scale: 3,
           useCORS: true,
@@ -122,6 +135,7 @@ export default function ShareCalendarModal({ trades, year, month, monthlyPnl, on
       setSharing(true);
       try {
         if (!cardRef.current || !window.html2canvas) return;
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
         var canvas = await window.html2canvas(cardRef.current, {
           scale: 3,
           useCORS: true,
