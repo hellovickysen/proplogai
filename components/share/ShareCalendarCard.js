@@ -186,59 +186,45 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
             flexShrink: 0,
           }}
         >
-          {/* logo + month */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
+          {/* month/year with arrows */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)' }}>&larr;</span>
+            <span
               style={{
-                width: 28, height: 28, borderRadius: 7,
-                background: 'linear-gradient(120deg,#a78bfa,#22d3ee)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 0 14px rgba(139,92,246,0.5)',
-                flexShrink: 0,
+                fontSize: isSquare ? 18 : 16, fontWeight: 700,
+                letterSpacing: '-0.01em',
               }}
             >
-              <img src={LOGO_MARK} width={16} height={16} alt="" />
-            </div>
-            <div>
-              <div
-                style={{
-                  fontSize: isSquare ? 18 : 16, fontWeight: 700,
-                  letterSpacing: '-0.02em', lineHeight: 1.2,
-                }}
-              >
-                {monthName} {year}
-              </div>
-              <div
-                style={{
-                  fontSize: 11, color: 'rgba(255,255,255,0.5)',
-                  letterSpacing: '0.04em', marginTop: 2, lineHeight: 1,
-                }}
-              >
-                PropLogAI
-              </div>
-            </div>
+              {monthName} {year}
+            </span>
+            <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.35)' }}>&rarr;</span>
           </div>
 
-          {/* monthly stats */}
-          <div style={{ textAlign: 'right' }}>
-            <div
+          {/* monthly stats: P&L + trades */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: isSquare ? 14 : 16 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+                Monthly P&L:
+              </span>
+              <span
+                style={{
+                  fontSize: isSquare ? 20 : 18, fontWeight: 800,
+                  fontFamily: MONO,
+                  color: accentColor,
+                  textShadow: '0 0 20px ' + accentGlow,
+                }}
+              >
+                {fmtPnlHeader(totalPnl)}
+              </span>
+            </div>
+            <span
               style={{
-                fontSize: isSquare ? 22 : 20, fontWeight: 800,
-                color: accentColor,
-                textShadow: '0 0 20px ' + accentGlow,
-                lineHeight: 1.2,
+                fontSize: 11, color: 'rgba(255,255,255,0.4)',
+                fontFamily: MONO,
               }}
             >
-              {fmtPnlHeader(totalPnl)}
-            </div>
-            <div
-              style={{
-                fontSize: 11, color: 'rgba(255,255,255,0.45)',
-                marginTop: 4, lineHeight: 1,
-              }}
-            >
-              {totalTrades} trade{totalTrades !== 1 ? 's' : ''} &middot; {tradingDays} day{tradingDays !== 1 ? 's' : ''}
-            </div>
+              {totalTrades} trades
+            </span>
           </div>
         </div>
 
@@ -345,7 +331,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                               </div>
                               <div
                                 style={{
-                                  fontSize: 9, color: 'rgba(255,255,255,0.4)',
+                                  fontSize: 8, color: 'rgba(255,255,255,0.4)',
                                   lineHeight: 1, whiteSpace: 'nowrap',
                                 }}
                               >
@@ -412,7 +398,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                   </div>
                   <div
                     style={{
-                      fontSize: 9, color: 'rgba(255,255,255,0.4)', lineHeight: 1,
+                      fontSize: 8, color: 'rgba(255,255,255,0.4)', lineHeight: 1,
                       marginTop: 2,
                     }}
                   >
@@ -424,20 +410,41 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
           </div>
         </div>
 
-        {/* ── footer ── */}
+        {/* ── footer: full logo ── */}
         <div
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginTop: isSquare ? 8 : 6, flexShrink: 0,
+            gap: 8, marginTop: isSquare ? 10 : 6, flexShrink: 0,
           }}
         >
-          <span
+          {/* logo icon */}
+          <div
             style={{
-              fontSize: 11, color: 'rgba(255,255,255,0.45)',
-              letterSpacing: '0.06em',
+              width: 22, height: 22, borderRadius: 5,
+              background: 'linear-gradient(135deg, #a78bfa, #22d3ee)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 10px rgba(139,92,246,0.4)',
+              flexShrink: 0,
             }}
           >
-            proplogai.com &mdash; AI Trading Discipline
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <polygon points="3,2 11,2 11,22 3,22" fill="rgba(255,255,255,0.9)" />
+              <polygon points="13,2 21,2 21,22 13,22" fill="rgba(255,255,255,0.6)" />
+              <polyline points="14,12 18,8 22,8" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+              <circle cx="22" cy="8" r="1.5" fill="white" />
+            </svg>
+          </div>
+          {/* wordmark */}
+          <span style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em' }}>
+            PropLog
+          </span>
+          <span
+            style={{
+              fontSize: 14, fontWeight: 700, letterSpacing: '-0.01em',
+              color: '#22d3ee', marginLeft: -6,
+            }}
+          >
+            AI
           </span>
         </div>
       </div>
