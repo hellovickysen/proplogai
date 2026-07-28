@@ -260,7 +260,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                     key={d}
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontWeight: 600,
+                      fontSize: 11, fontWeight: 600,
                       color: 'rgba(255,255,255,0.4)',
                       letterSpacing: '0.06em', textTransform: 'uppercase',
                     }}
@@ -317,7 +317,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                         >
                           <div
                             style={{
-                              fontSize: isSquare ? 12 : 13,
+                              fontSize: 11,
                               fontWeight: isToday ? 700 : 500,
                               color: isToday ? '#22d3ee' : 'rgba(255,255,255,0.5)',
                               lineHeight: 1, flexShrink: 0,
@@ -335,7 +335,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                             >
                               <div
                                 style={{
-                                  fontSize: isSquare ? 16 : 18,
+                                  fontSize: isSquare ? 14 : 14,
                                   fontWeight: 700,
                                   fontFamily: MONO,
                                   color: e.net >= 0 ? '#34d399' : '#f87171',
@@ -346,7 +346,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                               </div>
                               <div
                                 style={{
-                                  fontSize: 10, color: 'rgba(255,255,255,0.4)',
+                                  fontSize: 9, color: 'rgba(255,255,255,0.4)',
                                   lineHeight: 1, whiteSpace: 'nowrap',
                                 }}
                               >
@@ -396,7 +396,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                   </div>
                   <div
                     style={{
-                      fontSize: isSquare ? 16 : 18,
+                      fontSize: 15,
                       fontWeight: 700,
                       fontFamily: MONO,
                       color:
@@ -413,7 +413,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                   </div>
                   <div
                     style={{
-                      fontSize: 10, color: 'rgba(255,255,255,0.4)', lineHeight: 1,
+                      fontSize: 9, color: 'rgba(255,255,255,0.4)', lineHeight: 1,
                       marginTop: 2,
                     }}
                   >
