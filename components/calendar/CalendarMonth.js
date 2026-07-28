@@ -141,7 +141,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
           ══════════════════════════════════════════════════════════ */}
       <div className="hidden sm:block">
         <div className="overflow-x-auto">
-          <table className="w-full border-separate" style={{ tableLayout: 'fixed', borderSpacing: '6px' }}>
+          <table className="w-full border-separate" style={{ tableLayout: 'fixed', borderSpacing: '4px' }}>
             <thead>
               <tr>
                 {DOW_ALL.map((d) => (
@@ -179,7 +179,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       if (isSaturday) {
                         const satContent = (
                           <div
-                            className={'flex h-28 flex-col rounded-xl overflow-hidden ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '')}
+                            className={'flex h-28 flex-col rounded-lg overflow-hidden ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '')}
                             style={bgStyle}
                           >
                             <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -207,7 +207,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       /* Regular day cell */
                       const cellContent = (
                         <div
-                          className={'flex h-28 flex-col rounded-xl overflow-hidden ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer' : '')}
+                          className={'flex h-28 flex-col rounded-lg overflow-hidden ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer' : '')}
                           style={bgStyle}
                         >
                           <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -275,7 +275,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
 
         {/* DOW header */}
         <div className="px-2">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '4px' }}>
             {dowLabels.map((d, i) => (
               <div key={d + '-' + i} className="py-2 text-center text-xs font-medium text-white/45">{d}</div>
             ))}
@@ -287,7 +287,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
             return (
               <div
                 key={'week-' + wi}
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '6px', marginBottom: '6px' }}
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '4px', marginBottom: '4px' }}
               >
                 {filtered.map((cell, di) => {
                   const d = cell.day;
