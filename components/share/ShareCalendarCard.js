@@ -361,14 +361,14 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                               style={{
                                 flex: 1, display: 'flex', flexDirection: 'column',
                                 alignItems: 'center', justifyContent: 'center',
-                                minHeight: 0, gap: 4,
+                                minHeight: 0, gap: 6,
                               }}
                             >
                               <div
                                 style={{
                                   fontSize: isSquare ? 14 : 14,
                                   fontWeight: 700,
-                                  fontFamily: MONO,
+                                  fontFamily: POPPINS,
                                   color: e.net >= 0 ? '#34d399' : '#f87171',
                                   whiteSpace: 'nowrap', lineHeight: 1,
                                 }}
@@ -377,7 +377,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                               </div>
                               <div
                                 style={{
-                                  fontSize: 9, color: 'rgba(255,255,255,0.4)',
+                                  fontSize: 8, color: 'rgba(255,255,255,0.4)',
                                   lineHeight: 1, whiteSpace: 'nowrap',
                                 }}
                               >
@@ -429,7 +429,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                     style={{
                       fontSize: 15,
                       fontWeight: 700,
-                      fontFamily: MONO,
+                      fontFamily: POPPINS,
                       color:
                         ws.count === 0
                           ? 'rgba(255,255,255,0.2)'
@@ -444,8 +444,8 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                   </div>
                   <div
                     style={{
-                      fontSize: 9, color: 'rgba(255,255,255,0.4)', lineHeight: 1,
-                      marginTop: 2,
+                      fontSize: 8, color: 'rgba(255,255,255,0.4)', lineHeight: 1,
+                      marginTop: 5,
                     }}
                   >
                     {ws.count} trade{ws.count !== 1 ? 's' : ''} &middot; {ws.days} day{ws.days !== 1 ? 's' : ''}
