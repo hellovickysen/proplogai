@@ -182,51 +182,20 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
           minHeight: 0,
         }}
       >
-        {/* ── header (3-zone: logo left · Monthly P/L center · month right) ── */}
-        <div
-          style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            marginBottom: isSquare ? 12 : 8,
-            flexShrink: 0,
-          }}
-        >
-          {/* LEFT: full logo */}
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
-            <div
-              style={{
-                width: 30, height: 30, borderRadius: 8,
-                background: 'linear-gradient(135deg,#a78bfa,#22d3ee)',
-                display: 'grid', placeItems: 'center',
-                boxShadow: '0 0 12px rgba(139,92,246,0.4)',
-                flexShrink: 0,
-              }}
-            >
-              <svg width="30" height="30" viewBox="0 0 100 100">
-                <polygon points="22,42 50,49 50,75 22,69" fill="#08080f" />
-                <polygon points="78,42 50,49 50,75 78,69" fill="#08080f" />
-                <polyline points="50,49 63,39 74,27" fill="none" stroke="#08080f" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="74" cy="27" r="4.5" fill="#08080f" />
-              </svg>
-            </div>
-            <span style={{ fontFamily: POPPINS, fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: '30px', display: 'flex', alignItems: 'center' }}>
-              PropLog<span style={{ color: '#22d3ee' }}>AI</span>
-            </span>
-          </div>
-
-          {/* CENTER: Monthly P/L hero */}
-          <div
-            style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center', minWidth: 0,
-            }}
-          >
+        {/* ── header (logo left · Monthly P/L center · month right) ──
+            html2canvas-safe: center block uses text-align:center (not flex),
+            logo/month are absolutely positioned; logo lockup uses inline-block +
+            vertical-align:middle so the wordmark centers on the mark reliably. */}
+        <div style={{ position: 'relative', marginBottom: isSquare ? 12 : 8, flexShrink: 0 }}>
+          {/* CENTER: Monthly P/L hero — full-width, text-align center */}
+          <div style={{ textAlign: 'center' }}>
             <div
               style={{
                 fontFamily: POPPINS,
                 fontSize: 9, fontWeight: 600,
                 letterSpacing: '0.16em', textTransform: 'uppercase',
                 color: 'rgba(255,255,255,0.45)',
-                lineHeight: 1, marginBottom: 5, whiteSpace: 'nowrap',
+                lineHeight: 1,
               }}
             >
               Monthly P/L
@@ -237,7 +206,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                 fontSize: 22, fontWeight: 800,
                 color: accentColor,
                 textShadow: '0 0 16px ' + accentGlow,
-                lineHeight: 1.1, whiteSpace: 'nowrap',
+                lineHeight: 1.2, marginTop: 5,
               }}
             >
               {fmtPnlHeader(totalPnl)}
@@ -246,35 +215,70 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
               style={{
                 fontFamily: POPPINS,
                 fontSize: 9, color: 'rgba(255,255,255,0.4)',
-                marginTop: 8, lineHeight: 1, whiteSpace: 'nowrap',
+                lineHeight: 1, marginTop: 7,
               }}
             >
               {totalTrades} trade{totalTrades !== 1 ? 's' : ''} &middot; {tradingDays} day{tradingDays !== 1 ? 's' : ''}
             </div>
           </div>
 
-          {/* RIGHT: month + year (one line, abbreviated) */}
+          {/* LEFT: logo — absolute, vertically centered */}
           <div
             style={{
-              flex: 1, display: 'flex', alignItems: 'baseline',
-              justifyContent: 'flex-end', gap: 6, minWidth: 0,
+              position: 'absolute', left: 0, top: '50%',
+              transform: 'translateY(-50%)', whiteSpace: 'nowrap',
+            }}
+          >
+            <div
+              style={{
+                display: 'inline-block', verticalAlign: 'middle',
+                width: 30, height: 30, borderRadius: 8,
+                background: 'linear-gradient(135deg,#a78bfa,#22d3ee)',
+                boxShadow: '0 0 12px rgba(139,92,246,0.4)',
+              }}
+            >
+              <svg width="30" height="30" viewBox="0 0 100 100" style={{ display: 'block' }}>
+                <polygon points="22,42 50,49 50,75 22,69" fill="#08080f" />
+                <polygon points="78,42 50,49 50,75 78,69" fill="#08080f" />
+                <polyline points="50,49 63,39 74,27" fill="none" stroke="#08080f" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="74" cy="27" r="4.5" fill="#08080f" />
+              </svg>
+            </div>
+            <span
+              style={{
+                display: 'inline-block', verticalAlign: 'middle',
+                marginLeft: 7,
+                fontFamily: POPPINS, fontSize: 15, fontWeight: 700,
+                letterSpacing: '-0.01em', lineHeight: 1,
+              }}
+            >
+              PropLog<span style={{ color: '#22d3ee' }}>AI</span>
+            </span>
+          </div>
+
+          {/* RIGHT: month + year (one line, abbreviated) — absolute, vertically centered */}
+          <div
+            style={{
+              position: 'absolute', right: 0, top: '50%',
+              transform: 'translateY(-50%)', whiteSpace: 'nowrap',
             }}
           >
             <span
               style={{
                 fontFamily: POPPINS,
                 fontSize: isSquare ? 18 : 16, fontWeight: 700,
-                lineHeight: 1.1, whiteSpace: 'nowrap',
+                lineHeight: 1,
               }}
             >
               {monthAbbr}
             </span>
             <span
               style={{
+                marginLeft: 6,
                 fontFamily: POPPINS,
                 fontSize: isSquare ? 15 : 13, fontWeight: 600,
                 color: 'rgba(255,255,255,0.5)',
-                lineHeight: 1.1, whiteSpace: 'nowrap',
+                lineHeight: 1,
               }}
             >
               {year}
