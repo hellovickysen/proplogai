@@ -7,6 +7,9 @@ const LOGO_MARK =
 
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+/* Tailwind font-mono stack — matches the calendar page's font-mono class exactly */
+var MONO = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace";
+
 function fmtPnlShort(v) {
   if (v === 0) return '$0';
   const sign = v < 0 ? '-' : '+';
@@ -129,7 +132,6 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
         width: w,
         height: h,
         background: '#07070b',
-        fontFamily: "'Poppins', 'Inter', sans-serif",
         color: '#fff',
         position: 'relative',
         overflow: 'hidden',
@@ -209,7 +211,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
               <div
                 style={{
                   fontSize: 10, color: 'rgba(255,255,255,0.5)',
-                  fontFamily: "'JetBrains Mono', monospace",
+                  fontFamily: MONO,
                   letterSpacing: '0.04em', marginTop: 2, lineHeight: 1,
                 }}
               >
@@ -223,7 +225,6 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
             <div
               style={{
                 fontSize: isSquare ? 22 : 20, fontWeight: 800,
-                fontFamily: "'Poppins', 'Inter', sans-serif",
                 color: accentColor,
                 textShadow: '0 0 20px ' + accentGlow,
                 lineHeight: 1.2,
@@ -261,7 +262,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: isSquare ? 10 : 11, fontWeight: 600,
                       color: 'rgba(255,255,255,0.35)',
-                      fontFamily: "'JetBrains Mono', monospace",
+                      fontFamily: MONO,
                       letterSpacing: '0.06em', textTransform: 'uppercase',
                     }}
                   >
@@ -337,7 +338,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                                 style={{
                                   fontSize: isSquare ? 12 : 14,
                                   fontWeight: 700,
-                                  fontFamily: "'JetBrains Mono', monospace",
+                                  fontFamily: MONO,
                                   color: e.net >= 0 ? '#34d399' : '#f87171',
                                   whiteSpace: 'nowrap', lineHeight: 1,
                                 }}
@@ -398,7 +399,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                     style={{
                       fontSize: isSquare ? 13 : 15,
                       fontWeight: 700,
-                      fontFamily: "'JetBrains Mono', monospace",
+                      fontFamily: MONO,
                       color:
                         ws.count === 0
                           ? 'rgba(255,255,255,0.2)'
@@ -435,7 +436,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
           <span
             style={{
               fontSize: 10, color: 'rgba(255,255,255,0.45)',
-              fontFamily: "'JetBrains Mono', monospace",
+              fontFamily: MONO,
               letterSpacing: '0.08em',
             }}
           >
