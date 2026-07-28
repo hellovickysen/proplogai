@@ -242,31 +242,25 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                 {fmtPnlHeader(totalPnl)}
               </div>
             </div>
-            <div
-              style={{
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 8, padding: '6px 10px', textAlign: 'center',
-              }}
-            >
-              <div
+            <div style={{ textAlign: 'center' }}>
+              <span
                 style={{
-                  fontSize: isSquare ? 18 : 16, fontWeight: 700,
+                  fontSize: isSquare ? 16 : 14, fontWeight: 700,
                   fontFamily: "'JetBrains Mono', monospace",
-                  lineHeight: 1.2,
+                  color: 'rgba(255,255,255,0.7)',
                 }}
               >
                 {tradingDays}
-              </div>
-              <div
+              </span>
+              <span
                 style={{
-                  fontSize: 8, color: 'rgba(255,255,255,0.4)',
-                  textTransform: 'uppercase', letterSpacing: '0.08em',
-                  lineHeight: 1,
+                  fontSize: 9, color: 'rgba(255,255,255,0.4)',
+                  textTransform: 'uppercase', letterSpacing: '0.06em',
+                  marginLeft: 4,
                 }}
               >
                 days
-              </div>
+              </span>
             </div>
           </div>
         </div>
@@ -279,7 +273,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
             <div
               style={{
                 display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
-                height: dowH, gap: 2, flexShrink: 0,
+                height: dowH, gap: 1, flexShrink: 0,
               }}
             >
               {DOW.map(function (d) {
@@ -305,7 +299,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
               style={{
                 flex: 1, display: 'grid',
                 gridTemplateRows: 'repeat(6, 1fr)',
-                gap: 2, minHeight: 0,
+                gap: 1, minHeight: 0,
               }}
             >
               {weeks.map(function (week, wi) {
@@ -314,7 +308,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                     key={'w' + wi}
                     style={{
                       display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)',
-                      gap: 2, minHeight: 0,
+                      gap: 1, minHeight: 0,
                     }}
                   >
                     {week.map(function (cell, ci) {
@@ -357,9 +351,9 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                           {e ? (
                             <div
                               style={{
-                                flex: 1, display: 'flex',
+                                flex: 1, display: 'flex', flexDirection: 'column',
                                 alignItems: 'center', justifyContent: 'center',
-                                minHeight: 0,
+                                minHeight: 0, gap: 2,
                               }}
                             >
                               <div
@@ -372,6 +366,14 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                                 }}
                               >
                                 {fmtPnlShort(e.net)}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 8, color: 'rgba(255,255,255,0.35)',
+                                  lineHeight: 1, whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {e.count} trade{e.count !== 1 ? 's' : ''}
                               </div>
                             </div>
                           ) : null}
@@ -427,6 +429,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                           ? '#34d399'
                           : '#f87171',
                       lineHeight: 1.3,
+                      marginTop: 2,
                     }}
                   >
                     {ws.count === 0 ? '$0' : fmtPnlShort(ws.net)}
@@ -434,9 +437,10 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                   <div
                     style={{
                       fontSize: 8, color: 'rgba(255,255,255,0.3)', lineHeight: 1,
+                      marginTop: 2,
                     }}
                   >
-                    {ws.days} day{ws.days !== 1 ? 's' : ''}
+                    {ws.count} trade{ws.count !== 1 ? 's' : ''} &middot; {ws.days} day{ws.days !== 1 ? 's' : ''}
                   </div>
                 </div>
               );
