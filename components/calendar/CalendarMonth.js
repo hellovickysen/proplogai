@@ -141,11 +141,11 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
           ══════════════════════════════════════════════════════════ */}
       <div className="hidden sm:block">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+          <table className="w-full border-separate" style={{ tableLayout: 'fixed', borderSpacing: '6px' }}>
             <thead>
               <tr>
                 {DOW_ALL.map((d) => (
-                  <th key={d} className="border border-white/[0.08] px-1 py-2 text-center text-xs font-normal text-white/45">
+                  <th key={d} className="px-1 py-2 text-center text-xs font-normal text-white/45">
                     {d}
                   </th>
                 ))}
@@ -179,7 +179,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       if (isSaturday) {
                         const satContent = (
                           <div
-                            className={'flex h-28 flex-col ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '')}
+                            className={'flex h-28 flex-col rounded-xl overflow-hidden ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '')}
                             style={bgStyle}
                           >
                             <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -196,7 +196,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                         );
 
                         return (
-                          <td key={di} className={todayBorder + ' p-0'}>
+                          <td key={di} className="p-0 align-top">
                             {e && dateStr ? (
                               <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>{satContent}</Link>
                             ) : satContent}
@@ -207,7 +207,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       /* Regular day cell */
                       const cellContent = (
                         <div
-                          className={'flex h-28 flex-col ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer' : '')}
+                          className={'flex h-28 flex-col rounded-xl overflow-hidden ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer' : '')}
                           style={bgStyle}
                         >
                           <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -230,7 +230,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       );
 
                       return (
-                        <td key={di} className={todayBorder + ' p-0'}>
+                        <td key={di} className="p-0 align-top">
                           {e && dateStr ? (
                             <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>
                               {cellContent}
@@ -275,7 +275,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
 
         {/* DOW header */}
         <div className="px-2">
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '2px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '6px' }}>
             {dowLabels.map((d, i) => (
               <div key={d + '-' + i} className="py-2 text-center text-xs font-medium text-white/45">{d}</div>
             ))}
@@ -287,7 +287,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
             return (
               <div
                 key={'week-' + wi}
-                style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '2px', marginBottom: '2px' }}
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(' + cols + ', 1fr)', gap: '6px', marginBottom: '6px' }}
               >
                 {filtered.map((cell, di) => {
                   const d = cell.day;
@@ -329,7 +329,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   );
 
                   return (
-                    <div key={cell.overflow ? 'overflow-' + di : 'day-' + cell.day} className={'overflow-hidden border bg-white/[0.02] ' + (isToday ? 'border-2 border-cyan-400/50' : 'border-white/[0.08]')}>
+                    <div key={cell.overflow ? 'overflow-' + di : 'day-' + cell.day} className={'overflow-hidden rounded-lg border bg-white/[0.02] ' + (isToday ? 'border-2 border-cyan-400/50' : 'border-white/[0.08]')}>
                       {e && dateStr ? (
                         <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>{cellContent}</Link>
                       ) : cellContent}
