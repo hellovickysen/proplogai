@@ -179,7 +179,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       if (isSaturday) {
                         const satContent = (
                           <div
-                            className={'flex h-28 flex-col rounded-lg overflow-hidden ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '')}
+                            className={'flex h-28 flex-col rounded-lg overflow-hidden ' + todayBorder + ' ' + (ws.count === 0 ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '')}
                             style={bgStyle}
                           >
                             <div className="flex items-center gap-1 px-2 pt-1.5">
