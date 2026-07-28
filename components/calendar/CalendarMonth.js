@@ -2,7 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { num } from '@/lib/stats';
+
+const ShareCalendarModal = dynamic(
+  () => import('@/components/share/ShareCalendarModal'),
+  { ssr: false }
+);
 
 const DOW_ALL = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const DOW_WEEKDAY = ['Mo', 'Tu', 'We', 'Th', 'Fr'];
@@ -28,6 +34,7 @@ function fmtPnlShort(v) {
 
 export default function CalendarMonth({ trades, year, month, selected, monthParam, monthlyPnl, journalDays }) {
   const [showWeekends, setShowWeekends] = useState(false);
+  const [showShareCalendar, setShowShareCalendar] = useState(false);
 
   const now = new Date();
   const todayDay =
@@ -108,12 +115,25 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
 
   return (
     <div>
-      {/* ── monthly P/L ── */}
-      <div className="py-4 text-center">
-        <span className="text-sm text-white/55">Monthly P/L: </span>
-        <span className={'text-xl font-bold ' + (monthlyPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-          {fmtPnl(monthlyPnl || 0)}
-        </span>
+      {/* ── monthly P/L + share button ── */}
+      <div className="flex items-center justify-center gap-3 py-4">
+        <div className="text-center">
+          <span className="text-sm text-white/55">Monthly P/L: </span>
+          <span className={'text-xl font-bold ' + (monthlyPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+            {fmtPnl(monthlyPnl || 0)}
+          </span>
+        </div>
+        <button
+          onClick={() => setShowShareCalendar(true)}
+          className="grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-white/50 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80"
+          title="Share calendar"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
+        </button>
       </div>
 
       {/* ══════════════════════════════════════════════════════════
@@ -337,6 +357,17 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
           </div>
         </div>
       </div>
+
+      {/* ── Share Calendar Modal ── */}
+      {showShareCalendar && (
+        <ShareCalendarModal
+          trades={trades}
+          year={year}
+          month={month}
+          monthlyPnl={monthlyPnl || 0}
+          onClose={() => setShowShareCalendar(false)}
+        />
+      )}
     </div>
   );
 }
