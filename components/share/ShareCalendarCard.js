@@ -132,7 +132,6 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
         width: w,
         height: h,
         background: '#07070b',
-        fontFamily: "'Poppins', sans-serif",
         color: '#fff',
         position: 'relative',
         overflow: 'hidden',

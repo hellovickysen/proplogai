@@ -14,21 +14,6 @@ export default function ShareCalendarModal({ trades, year, month, monthlyPnl, on
 
   useEffect(function () {
     if (typeof window !== 'undefined') {
-      /* Load Poppins from Google Fonts so html2canvas can use the literal name */
-      if (!document.querySelector('link[href*="fonts.googleapis.com/css2?family=Poppins"]')) {
-        var fontLink = document.createElement('link');
-        fontLink.rel = 'stylesheet';
-        fontLink.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap';
-        document.head.appendChild(fontLink);
-      }
-      /* Trigger font loading for all weights we use */
-      if (document.fonts) {
-        document.fonts.load('400 16px Poppins');
-        document.fonts.load('500 16px Poppins');
-        document.fonts.load('600 16px Poppins');
-        document.fonts.load('700 16px Poppins');
-        document.fonts.load('800 16px Poppins');
-      }
       if (!window.html2canvas) {
         var script = document.createElement('script');
         script.src =
@@ -70,7 +55,7 @@ export default function ShareCalendarModal({ trades, year, month, monthlyPnl, on
     function () {
       var timer = setTimeout(function () {
         renderPreview();
-      }, 400);
+      }, 200);
       return function () {
         clearTimeout(timer);
       };
