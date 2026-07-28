@@ -5,6 +5,9 @@ import { forwardRef } from 'react';
 const LOGO_MARK =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABmJLR0QA/wD/AP+gvaeTAAACtUlEQVR4nO3Zv2sTYRgH8O/zps09V5K+qbYKtYugYl0Eg61SXETcFaWIk4OCFP8CRZwFBRUXdwcnNycROvijhYAOijrpUERbWmKVXK7JPQ4K1utV7CW5t7XPB7LkTZ783+8lOZIDlFJKKaWUUkoptfnkXAdIp7/o+fmJXC4/n8+wbTfob14kyNFBgtu+ZrSy73Us7zbQzWhaYw3EAu2N3ny8UCtvSzNtoBRgiXEpaCMPu7akGtpYnW75fui2C/QlLc2G48DbNzA1TAHPpmohMrFyRzwCdArCUeaiseJ69GPvSE2ZbZ+47C4Bc5+so3y+dYLaN2Oabvm9Pu87Wccz2KLMN4kff83oTvwj/K55njzPbxYS3/mXX2TrNMPdeZbbN+OZ9v3TLdbiOKhaLW5nto4SjLsz2PtbZWctr5zDf7x1hth9X2fwDAN2dyJL6FMJsPwGYAfBYxDyt12kSmP+actYFAHcA5GNLDSJcqdWq1wHI77sHe3y/dgCIxkRwDMBwEFSH0rx2KwXMAuhfHhbAK6ypkCGfefEugHMJi18AnAmC6pOEDR/Bn0d9LgiqA2n20c4C4v5aiOcV9xDlHgKyL+G5k8bQTREZXmXDceuygLhlhdAzIrkBYFfsMQLgA4BBrO1znbqArjRPSqkLQBlAmUhWewwB2JlZIqyz04oLWoDrAK5pAa4DuKYFuA7gmhbgOoBrWoDrAK5t+gJa+DFkThJFh6MIh4gwAmBH21L9mxkRTBuDFyLmedohbbuo0NPTP9hsNstEUiZCWUTGAPS1afx3gF4SoSKCShSZShjOv27H4E5eVcnl81v2GhP9KgRlQA5i5d9ecU2A3gE/N2sMVWq1hWkAYSdCZnxZaaDAvFQmktEowigRRgFABFPGYEqEpoKguwLMfss2l1JKKaWUUkoppTaTH/eK6MSpCDdTAAAAAElFTkSuQmCC';
 
+const LOGO_FULL =
+  'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0NTIiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgNDUyIDEwMCIgZmlsbD0ibm9uZSI+CiAgPGRlZnM+CiAgICA8bGluZWFyR3JhZGllbnQgaWQ9InBsZyIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPgogICAgICA8c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjYTc4YmZhIi8+CiAgICAgIDxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iIzIyZDNlZSIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+CiAgPHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIHJ4PSIyMiIgZmlsbD0idXJsKCNwbGcpIi8+CiAgPHBvbHlnb24gcG9pbnRzPSIyMiw0MiA1MCw0OSA1MCw3NSAyMiw2OSIgZmlsbD0iIzA4MDgwZiIvPgogIDxwb2x5Z29uIHBvaW50cz0iNzgsNDIgNTAsNDkgNTAsNzUgNzgsNjkiIGZpbGw9IiMwODA4MGYiLz4KICA8cG9seWxpbmUgcG9pbnRzPSI1MCw0OSA2MywzOSA3NCwyNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMDgwODBmIiBzdHJva2Utd2lkdGg9IjYuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+CiAgPGNpcmNsZSBjeD0iNzQiIGN5PSIyNyIgcj0iNC41IiBmaWxsPSIjMDgwODBmIi8+CiAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTI2LjAwLDcxLjg2KSBzY2FsZSgwLjA2MjAwLC0wLjA2MjAwKSIgZmlsbD0iI2ZmZmZmZiIgZD0iTTMzOSAyNTJIMjMzVjBINjJWNzAySDMzOVE0MjMgNzAyIDQ4MS4wIDY3My4wUTUzOSA2NDQgNTY4LjAgNTkzLjBRNTk3IDU0MiA1OTcgNDc2UTU5NyA0MTUgNTY5LjAgMzY0LjVRNTQxIDMxNCA0ODMuMCAyODMuMFE0MjUgMjUyIDMzOSAyNTJaTTQyMyA0NzZRNDIzIDUxOCAzOTkuMCA1NDEuMFEzNzUgNTY0IDMyNiA1NjRIMjMzVjM4OEgzMjZRMzc1IDM4OCAzOTkuMCA0MTEuMFE0MjMgNDM0IDQyMyA0NzZaIi8+CiAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMTY0LjY5LDcxLjg2KSBzY2FsZSgwLjA2MjAwLC0wLjA2MjAwKSIgZmlsbD0iI2ZmZmZmZiIgZD0iTTQwOCA1NjRWMzgzSDM2MVEyOTcgMzgzIDI2NS4wIDM1NS41UTIzMyAzMjggMjMzIDI1OVYwSDYyVjU1OEgyMzNWNDY1UTI2MyA1MTEgMzA4LjAgNTM3LjVRMzUzIDU2NCA0MDggNTY0WiIvPgogIDxwYXRoIHRyYW5zZm9ybT0idHJhbnNsYXRlKDE5MS4yMiw3MS44Nikgc2NhbGUoMC4wNjIwMCwtMC4wNjIwMCkiIGZpbGw9IiNmZmZmZmYiIGQ9Ik0yOCAyNzlRMjggMzY1IDY2LjAgNDMwLjVRMTA0IDQ5NiAxNzAuMCA1MzEuMFEyMzYgNTY2IDMxOCA1NjZRNDAwIDU2NiA0NjYuMCA1MzEuMFE1MzIgNDk2IDU3MC4wIDQzMC41UTYwOCAzNjUgNjA4IDI3OVE2MDggMTkzIDU2OS41IDEyNy41UTUzMSA2MiA0NjQuNSAyNy4wUTM5OCAtOCAzMTYgLThRMjM0IC04IDE2OC41IDI3LjBRMTAzIDYyIDY1LjUgMTI3LjBRMjggMTkyIDI4IDI3OVpNNDM0IDI3OVE0MzQgMzQ2IDQwMC41IDM4Mi4wUTM2NyA0MTggMzE4IDQxOFEyNjggNDE4IDIzNS4wIDM4Mi41UTIwMiAzNDcgMjAyIDI3OVEyMDIgMjEyIDIzNC41IDE3Ni4wUTI2NyAxNDAgMzE2IDE0MFEzNjUgMTQwIDM5OS41IDE3Ni4wUTQzNCAyMTIgNDM0IDI3OVoiLz4KICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyMzAuNzIsNzEuODYpIHNjYWxlKDAuMDYyMDAsLTAuMDYyMDApIiBmaWxsPSIjZmZmZmZmIiBkPSJNNDA1IDU2NlE0NzQgNTY2IDUzMC4wIDUzMS4wUTU4NiA0OTYgNjE4LjUgNDMxLjBRNjUxIDM2NiA2NTEgMjgwUTY1MSAxOTQgNjE4LjUgMTI4LjVRNTg2IDYzIDUzMC4wIDI3LjVRNDc0IC04IDQwNSAtOFEzNDcgLTggMzAyLjUgMTYuMFEyNTggNDAgMjMzIDc4Vi0yNjZINjJWNTU4SDIzM1Y0NzlRMjU4IDUxOCAzMDIuMCA1NDIuMFEzNDYgNTY2IDQwNSA1NjZaTTM1NCA0MTdRMzAzIDQxNyAyNjcuNSAzODAuMFEyMzIgMzQzIDIzMiAyNzlRMjMyIDIxNSAyNjcuNSAxNzguMFEzMDMgMTQxIDM1NCAxNDFRNDA1IDE0MSA0NDEuMCAxNzguNVE0NzcgMjE2IDQ3NyAyODBRNDc3IDM0NCA0NDEuNSAzODAuNVE0MDYgNDE3IDM1NCA0MTdaIi8+CiAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjcyLjgyLDcxLjg2KSBzY2FsZSgwLjA2MjAwLC0wLjA2MjAwKSIgZmlsbD0iI2ZmZmZmZiIgZD0iTTIzMyAxMzJINDU3VjBINjJWNzAySDIzM1oiLz4KICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzMDIuMzksNzEuODYpIHNjYWxlKDAuMDYyMDAsLTAuMDYyMDApIiBmaWxsPSIjZmZmZmZmIiBkPSJNMjggMjc5UTI4IDM2NSA2Ni4wIDQzMC41UTEwNCA0OTYgMTcwLjAgNTMxLjBRMjM2IDU2NiAzMTggNTY2UTQwMCA1NjYgNDY2LjAgNTMxLjBRNTMyIDQ5NiA1NzAuMCA0MzAuNVE2MDggMzY1IDYwOCAyNzlRNjA4IDE5MyA1NjkuNSAxMjcuNVE1MzEgNjIgNDY0LjUgMjcuMFEzOTggLTggMzE2IC04UTIzNCAtOCAxNjguNSAyNy4wUTEwMyA2MiA2NS41IDEyNy4wUTI4IDE5MiAyOCAyNzlaTTQzNCAyNzlRNDM0IDM0NiA0MDAuNSAzODIuMFEzNjcgNDE4IDMxOCA0MThRMjY4IDQxOCAyMzUuMCAzODIuNVEyMDIgMzQ3IDIwMiAyNzlRMjAyIDIxMiAyMzQuNSAxNzYuMFEyNjcgMTQwIDMxNiAxNDBRMzY1IDE0MCAzOTkuNSAxNzYuMFE0MzQgMjEyIDQzNCAyNzlaIi8+CiAgPHBhdGggdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzQxLjg4LDcxLjg2KSBzY2FsZSgwLjA2MjAwLC0wLjA2MjAwKSIgZmlsbD0iI2ZmZmZmZiIgZD0iTTQ0NiA0NzlWNTU4SDYxN1YxUTYxNyAtNzYgNTg2LjUgLTEzOC41UTU1NiAtMjAxIDQ5My41IC0yMzguMFE0MzEgLTI3NSAzMzggLTI3NVEyMTQgLTI3NSAxMzcuMCAtMjE2LjVRNjAgLTE1OCA0OSAtNThIMjE4UTIyNiAtOTAgMjU2LjAgLTEwOC41UTI4NiAtMTI3IDMzMCAtMTI3UTM4MyAtMTI3IDQxNC41IC05Ni41UTQ0NiAtNjYgNDQ2IDFWODBRNDIxIDQxIDM3Ny4wIDE2LjVRMzMzIC04IDI3NCAtOFEyMDUgLTggMTQ5LjAgMjcuNVE5MyA2MyA2MC41IDEyOC41UTI4IDE5NCAyOCAyODBRMjggMzY2IDYwLjUgNDMxLjBROTMgNDk2IDE0OS4wIDUzMS4wUTIwNSA1NjYgMjc0IDU2NlEzMzMgNTY2IDM3Ny41IDU0Mi4wUTQyMiA1MTggNDQ2IDQ3OVpNMzI0IDQxN1EyNzMgNDE3IDIzNy41IDM4MC41UTIwMiAzNDQgMjAyIDI4MFEyMDIgMjE2IDIzNy41IDE3OC41UTI3MyAxNDEgMzI0IDE0MVEzNzUgMTQxIDQxMC41IDE3OC4wUTQ0NiAyMTUgNDQ2IDI3OVE0NDYgMzQzIDQxMC41IDM4MC4wUTM3NSA0MTcgMzI0IDQxN1oiLz4KICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSgzODMuOTgsNzEuODYpIHNjYWxlKDAuMDYyMDAsLTAuMDYyMDApIiBmaWxsPSIjMjJkM2VlIiBkPSJNNDk5IDEyNEgyMzdMMTk1IDBIMTZMMjcwIDcwMkg0NjhMNzIyIDBINTQxWk00NTUgMjU2IDM2OCA1MTMgMjgyIDI1NloiLz4KICA8cGF0aCB0cmFuc2Zvcm09InRyYW5zbGF0ZSg0MjkuNjgsNzEuODYpIHNjYWxlKDAuMDYyMDAsLTAuMDYyMDApIiBmaWxsPSIjMjJkM2VlIiBkPSJNMjMzIDcwMlYwSDYyVjcwMloiLz4KPC9zdmc+Cg==';
+
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /* Tailwind font-mono stack — matches the calendar page's font-mono class exactly */
@@ -222,38 +225,23 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
             </div>
           </div>
 
-          {/* LEFT: logo — absolute, vertically centered */}
+          {/* LEFT: logo — single standalone SVG (icon + wordmark baked together as
+              vector paths), absolute + vertically centered. Rendered as an <img>
+              data-URI so html2canvas rasterizes it faithfully with zero layout or
+              font drift. Aspect ratio 452:100 → 136x30. */}
           <div
             style={{
               position: 'absolute', left: 0, top: '50%',
-              transform: 'translateY(-50%)', whiteSpace: 'nowrap',
+              transform: 'translateY(-50%)',
             }}
           >
-            <div
-              style={{
-                display: 'inline-block', verticalAlign: 'middle',
-                width: 30, height: 30, borderRadius: 8,
-                background: 'linear-gradient(135deg,#a78bfa,#22d3ee)',
-                boxShadow: '0 0 12px rgba(139,92,246,0.4)',
-              }}
-            >
-              <svg width="30" height="30" viewBox="0 0 100 100" style={{ display: 'block' }}>
-                <polygon points="22,42 50,49 50,75 22,69" fill="#08080f" />
-                <polygon points="78,42 50,49 50,75 78,69" fill="#08080f" />
-                <polyline points="50,49 63,39 74,27" fill="none" stroke="#08080f" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="74" cy="27" r="4.5" fill="#08080f" />
-              </svg>
-            </div>
-            <span
-              style={{
-                display: 'inline-block', verticalAlign: 'middle',
-                marginLeft: 7,
-                fontFamily: POPPINS, fontSize: 15, fontWeight: 700,
-                letterSpacing: '-0.01em', lineHeight: 1,
-              }}
-            >
-              PropLog<span style={{ color: '#22d3ee' }}>AI</span>
-            </span>
+            <img
+              src={LOGO_FULL}
+              alt="PropLogAI"
+              width={136}
+              height={30}
+              style={{ display: 'block', width: 136, height: 30 }}
+            />
           </div>
 
           {/* RIGHT: month + year (one line, abbreviated) — absolute, vertically centered */}
