@@ -96,6 +96,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
   ];
   var monthName = monthNames[month] || '';
   var tradingDays = Object.keys(byDay).length;
+  var totalTrades = Object.values(byDay).reduce(function (s, e) { return s + e.count; }, 0);
   var totalPnl =
     monthlyPnl != null
       ? monthlyPnl
@@ -128,7 +129,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
         width: w,
         height: h,
         background: '#07070b',
-        fontFamily: "'Inter', 'Helvetica Neue', sans-serif",
+        fontFamily: "'Poppins', 'Inter', sans-serif",
         color: '#fff',
         position: 'relative',
         overflow: 'hidden',
@@ -218,49 +219,25 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
           </div>
 
           {/* monthly stats */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: isSquare ? 10 : 14 }}>
-            <div style={{ textAlign: 'right' }}>
-              <div
-                style={{
-                  fontSize: 9, textTransform: 'uppercase', letterSpacing: '0.12em',
-                  color: 'rgba(255,255,255,0.4)',
-                  fontFamily: "'JetBrains Mono', monospace",
-                  marginBottom: 3,
-                }}
-              >
-                Monthly P&L
-              </div>
-              <div
-                style={{
-                  fontSize: isSquare ? 20 : 18, fontWeight: 800,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  color: accentColor,
-                  textShadow: '0 0 20px ' + accentGlow,
-                  lineHeight: 1,
-                }}
-              >
-                {fmtPnlHeader(totalPnl)}
-              </div>
+          <div style={{ textAlign: 'right' }}>
+            <div
+              style={{
+                fontSize: isSquare ? 22 : 20, fontWeight: 800,
+                fontFamily: "'Poppins', 'Inter', sans-serif",
+                color: accentColor,
+                textShadow: '0 0 20px ' + accentGlow,
+                lineHeight: 1.2,
+              }}
+            >
+              {fmtPnlHeader(totalPnl)}
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <span
-                style={{
-                  fontSize: isSquare ? 16 : 14, fontWeight: 700,
-                  fontFamily: "'JetBrains Mono', monospace",
-                  color: 'rgba(255,255,255,0.7)',
-                }}
-              >
-                {tradingDays}
-              </span>
-              <span
-                style={{
-                  fontSize: 9, color: 'rgba(255,255,255,0.4)',
-                  textTransform: 'uppercase', letterSpacing: '0.06em',
-                  marginLeft: 4,
-                }}
-              >
-                days
-              </span>
+            <div
+              style={{
+                fontSize: 10, color: 'rgba(255,255,255,0.45)',
+                marginTop: 4, lineHeight: 1,
+              }}
+            >
+              {totalTrades} trade{totalTrades !== 1 ? 's' : ''} &middot; {tradingDays} day{tradingDays !== 1 ? 's' : ''}
             </div>
           </div>
         </div>
@@ -353,7 +330,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                               style={{
                                 flex: 1, display: 'flex', flexDirection: 'column',
                                 alignItems: 'center', justifyContent: 'center',
-                                minHeight: 0, gap: 2,
+                                minHeight: 0, gap: 4,
                               }}
                             >
                               <div
