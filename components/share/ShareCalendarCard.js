@@ -208,7 +208,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
                 <circle cx="74" cy="27" r="4.5" fill="#08080f" />
               </svg>
             </div>
-            <span style={{ fontFamily: POPPINS, fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1 }}>
+            <span style={{ fontFamily: POPPINS, fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', lineHeight: '30px', display: 'flex', alignItems: 'center' }}>
               PropLog<span style={{ color: '#22d3ee' }}>AI</span>
             </span>
           </div>
@@ -234,10 +234,10 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
             <div
               style={{
                 fontFamily: POPPINS,
-                fontSize: isSquare ? 30 : 30, fontWeight: 800,
+                fontSize: 22, fontWeight: 800,
                 color: accentColor,
-                textShadow: '0 0 20px ' + accentGlow,
-                lineHeight: 1.05, whiteSpace: 'nowrap',
+                textShadow: '0 0 16px ' + accentGlow,
+                lineHeight: 1.1, whiteSpace: 'nowrap',
               }}
             >
               {fmtPnlHeader(totalPnl)}
@@ -246,7 +246,7 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
               style={{
                 fontFamily: POPPINS,
                 fontSize: 9, color: 'rgba(255,255,255,0.4)',
-                marginTop: 5, lineHeight: 1, whiteSpace: 'nowrap',
+                marginTop: 8, lineHeight: 1, whiteSpace: 'nowrap',
               }}
             >
               {totalTrades} trade{totalTrades !== 1 ? 's' : ''} &middot; {tradingDays} day{tradingDays !== 1 ? 's' : ''}

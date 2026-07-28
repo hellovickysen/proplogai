@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import ShareCalendarCard from '@/components/share/ShareCalendarCard';
 
 export default function ShareCalendarModal({ trades, year, month, monthlyPnl, onClose }) {
-  const [ratio, setRatio] = useState('1:1');
+  const [ratio] = useState('1:1');
   const [downloading, setDownloading] = useState(false);
   const [sharing, setSharing] = useState(false);
   const [canShare, setCanShare] = useState(false);
@@ -178,29 +178,6 @@ export default function ShareCalendarModal({ trades, year, month, monthlyPnl, on
           <p className="mt-1 text-xs text-white/40">
             Download or share your monthly performance
           </p>
-        </div>
-
-        {/* ratio toggle */}
-        <div className="flex gap-1 rounded-lg border border-white/10 bg-white/[0.03] p-0.5">
-          {[
-            { r: '1:1', l: 'Square (1:1)' },
-            { r: '16:9', l: 'Landscape (16:9)' },
-          ].map(function (opt) {
-            return (
-              <button
-                key={opt.r}
-                onClick={function () { setRatio(opt.r); }}
-                className={
-                  'rounded-md px-3 py-2 text-xs font-semibold transition-colors ' +
-                  (ratio === opt.r
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/40 hover:text-white/60')
-                }
-              >
-                {opt.l}
-              </button>
-            );
-          })}
         </div>
 
         {/* offscreen card for html2canvas */}
