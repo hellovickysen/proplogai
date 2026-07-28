@@ -186,58 +186,81 @@ const ShareCalendarCard = forwardRef(function ShareCalendarCard(
             flexShrink: 0,
           }}
         >
-          {/* logo + month */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* LEFT: full logo (icon + wordmark) */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <div
               style={{
-                width: 28, height: 28, borderRadius: 7,
-                background: 'linear-gradient(120deg,#a78bfa,#22d3ee)',
+                width: isSquare ? 28 : 26, height: isSquare ? 28 : 26, borderRadius: 7,
+                background: 'linear-gradient(135deg,#a78bfa,#22d3ee)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 0 14px rgba(139,92,246,0.5)',
                 flexShrink: 0,
               }}
             >
-              <img src={LOGO_MARK} width={16} height={16} alt="" />
+              <svg width={isSquare ? 28 : 26} height={isSquare ? 28 : 26} viewBox="0 0 100 100">
+                <polygon points="22,42 50,49 50,75 22,69" fill="#08080f" />
+                <polygon points="78,42 50,49 50,75 78,69" fill="#08080f" />
+                <polyline points="50,49 63,39 74,27" fill="none" stroke="#08080f" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="74" cy="27" r="4.5" fill="#08080f" />
+              </svg>
             </div>
-            <div>
-              <div
-                style={{
-                  fontSize: isSquare ? 18 : 16, fontWeight: 700,
-                  letterSpacing: '-0.02em', lineHeight: 1.2,
-                }}
-              >
-                {monthName} {year}
-              </div>
-              <div
-                style={{
-                  fontSize: 11, color: 'rgba(255,255,255,0.5)',
-                  letterSpacing: '0.04em', marginTop: 2, lineHeight: 1,
-                }}
-              >
-                PropLogAI
-              </div>
-            </div>
-          </div>
-
-          {/* monthly stats */}
-          <div style={{ textAlign: 'right' }}>
-            <div
+            <span style={{ fontSize: isSquare ? 16 : 14, fontWeight: 700, letterSpacing: '-0.01em' }}>
+              PropLog
+            </span>
+            <span
               style={{
-                fontSize: isSquare ? 22 : 20, fontWeight: 800,
-                color: accentColor,
-                textShadow: '0 0 20px ' + accentGlow,
-                lineHeight: 1.2,
+                fontSize: isSquare ? 16 : 14, fontWeight: 700, letterSpacing: '-0.01em',
+                color: '#22d3ee', marginLeft: -6,
               }}
             >
-              {fmtPnlHeader(totalPnl)}
+              AI
+            </span>
+          </div>
+
+          {/* CENTER: monthly stats */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 5 }}>
+              <span style={{ fontSize: isSquare ? 11 : 10, color: 'rgba(255,255,255,0.45)' }}>
+                Monthly P&L:
+              </span>
+              <span
+                style={{
+                  fontSize: isSquare ? 18 : 16, fontWeight: 800,
+                  fontFamily: MONO,
+                  color: accentColor,
+                  textShadow: '0 0 20px ' + accentGlow,
+                }}
+              >
+                {fmtPnlHeader(totalPnl)}
+              </span>
             </div>
             <div
               style={{
-                fontSize: 11, color: 'rgba(255,255,255,0.45)',
-                marginTop: 4, lineHeight: 1,
+                fontSize: isSquare ? 10 : 9, color: 'rgba(255,255,255,0.4)',
+                marginTop: 3, lineHeight: 1,
               }}
             >
               {totalTrades} trade{totalTrades !== 1 ? 's' : ''} &middot; {tradingDays} day{tradingDays !== 1 ? 's' : ''}
+            </div>
+          </div>
+
+          {/* RIGHT: month name */}
+          <div style={{ textAlign: 'right' }}>
+            <div
+              style={{
+                fontSize: isSquare ? 18 : 16, fontWeight: 700,
+                letterSpacing: '-0.02em', lineHeight: 1.2,
+              }}
+            >
+              {monthName}
+            </div>
+            <div
+              style={{
+                fontSize: isSquare ? 11 : 10, color: 'rgba(255,255,255,0.4)',
+                marginTop: 2, lineHeight: 1,
+              }}
+            >
+              {year}
             </div>
           </div>
         </div>
