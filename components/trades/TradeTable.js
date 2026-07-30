@@ -51,10 +51,7 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               {/* Row 2: Meta info */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-mono text-[11px] text-white/40">
-                  <span className="text-white/25">#{tradeNum}</span>
-                  {t.is_favorite && (
-                    <span className="rounded bg-amber-400/15 px-1 py-px text-[9px] font-bold tracking-wide text-amber-300" aria-label="Favorite trade">FAV</span>
-                  )}
+                  <span className={'rounded border px-1 py-px ' + (t.is_favorite ? 'border-cyan-400/70 bg-cyan-400/[0.08] text-cyan-300' : 'border-transparent text-white/25')} aria-label={t.is_favorite ? 'Favorite trade' : undefined}>#{tradeNum}</span>
                   <span>{fmtDate(t.trade_date || t.closed_at || t.created_at)}</span>
                   {t.session && <><span className="text-white/20">·</span><span>{t.session}</span></>}
                   {t.setup && <><span className="text-white/20">·</span><span className="truncate max-w-[100px]">{t.setup.split(', ')[0]}</span></>}
@@ -115,14 +112,9 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               >
                 {/* Trade number */}
                 <td className="px-2 py-3.5">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className={'flex h-6 w-6 items-center justify-center rounded-md font-mono text-[10px] ' + (t.is_favorite ? 'bg-amber-400/15 text-amber-200' : 'bg-white/[0.06] text-white/30')}>
-                      {tradeNum}
-                    </span>
-                    {t.is_favorite && (
-                      <span className="rounded bg-amber-400/15 px-1 py-px font-mono text-[9px] font-bold tracking-wide text-amber-300" aria-label="Favorite trade">FAV</span>
-                    )}
-                  </div>
+                  <span className={'flex h-6 w-6 items-center justify-center rounded-md border font-mono text-[10px] ' + (t.is_favorite ? 'border-cyan-400/70 bg-cyan-400/[0.08] text-cyan-300' : 'border-transparent bg-white/[0.06] text-white/30')} aria-label={t.is_favorite ? 'Favorite trade' : undefined}>
+                    {tradeNum}
+                  </span>
                 </td>
 
                 {/* Pair + journal icon */}
