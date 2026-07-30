@@ -36,6 +36,9 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
                   <span className="font-display text-base font-semibold">{t.pair}</span>
+                  {t.is_favorite && (
+                    <span className="text-amber-400" title="Favorite trade" aria-label="Favorite trade">★</span>
+                  )}
                   <span className={'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ' + (t.direction === 'long' ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/25 bg-red-500/10 text-red-300')}>
                     <svg width="10" height="7" viewBox="0 0 14 10" fill="none" className="shrink-0">{t.direction === 'long' ? <path d="M1 9L4.5 4L7.5 6.5L13 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M1 1L4.5 6L7.5 3.5L13 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}</svg>
                     {t.direction === 'long' ? 'Long' : 'Short'}
@@ -121,6 +124,9 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
                 <td className="px-3 py-3.5 font-display font-semibold">
                   <Link href={'/dashboard/trades/' + t.id} className="hover:text-cyan-400">
                     {t.pair}
+                    {t.is_favorite && (
+                      <span className="ml-1.5 text-amber-400 align-middle" title="Favorite trade" aria-label="Favorite trade">★</span>
+                    )}
                     {hasJournal && (
                       <span className="ml-1.5 text-xs text-amber-400/70 align-middle" title="Has journal entry">&#128221;</span>
                     )}
