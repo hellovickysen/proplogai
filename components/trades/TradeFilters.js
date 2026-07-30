@@ -202,6 +202,7 @@ export default function TradeFilters({ trades, prefs }) {
   const [dateFrom, setDateFrom] = useState((hasUrlParams ? '' : saved?.dateFrom) || '');
   const [dateTo, setDateTo] = useState((hasUrlParams ? '' : saved?.dateTo) || '');
   const [hasLesson, setHasLesson] = useState((hasUrlParams ? false : saved?.hasLesson) || false);
+  const [favoritesOnly, setFavoritesOnly] = useState((hasUrlParams ? false : saved?.favoritesOnly) || false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -319,8 +320,8 @@ export default function TradeFilters({ trades, prefs }) {
 
   /* Persist filters to sessionStorage on change */
   useEffect(() => {
-    saveFilters({ result, setupFilter, emotionFilter, sessionFilter, tagFilter, dateFrom, dateTo, hasLesson });
-  }, [result, setupFilter, emotionFilter, sessionFilter, tagFilter, dateFrom, dateTo, hasLesson]);
+    saveFilters({ result, setupFilter, emotionFilter, sessionFilter, tagFilter, dateFrom, dateTo, hasLesson, favoritesOnly });
+  }, [result, setupFilter, emotionFilter, sessionFilter, tagFilter, dateFrom, dateTo, hasLesson, favoritesOnly]);
 
   /* Stamp absolute trade number BEFORE filtering so it survives filters */
   const numberedTrades = useMemo(() =>
@@ -362,6 +363,9 @@ export default function TradeFilters({ trades, prefs }) {
         if (!t._journal || !t._journal.hasLesson) return false;
       }
 
+      // Favorites
+      if (favoritesOnly && !t.is_favorite) return false;
+
       // Date range
       const tDate = t.trade_date || (t.closed_at || t.created_at || '').slice(0, 10);
       if (dateFrom && tDate < dateFrom) return false;
@@ -369,16 +373,16 @@ export default function TradeFilters({ trades, prefs }) {
 
       return true;
     });
-  }, [numberedTrades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo]);
+  }, [numberedTrades, result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, favoritesOnly, dateFrom, dateTo]);
 
   // Reset to page 1 when filters change
-  useEffect(() => { setPage(1); }, [result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, dateFrom, dateTo]);
+  useEffect(() => { setPage(1); }, [result, setupFilter, emotionFilter, sessionFilter, tagFilter, hasLesson, favoritesOnly, dateFrom, dateTo]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginatedTrades = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter.length > 0 || hasLesson || dateFrom || dateTo;
-  const activeFilterCount = [setupFilter, emotionFilter, sessionFilter, tagFilter.length > 0, hasLesson, dateFrom, dateTo].filter(Boolean).length;
+  const hasFilters = result !== 'all' || setupFilter || emotionFilter || sessionFilter || tagFilter.length > 0 || hasLesson || favoritesOnly || dateFrom || dateTo;
+  const activeFilterCount = [setupFilter, emotionFilter, sessionFilter, tagFilter.length > 0, hasLesson, favoritesOnly, dateFrom, dateTo].filter(Boolean).length;
 
   const resultButtons = [
     { v: 'all', l: 'All' },
@@ -410,6 +414,12 @@ export default function TradeFilters({ trades, prefs }) {
           <MultiFilterDropdown label="Tags" selected={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} counts={tagCounts} />
         )}
         <div className="flex items-end pb-0.5">
+          <button type="button" onClick={() => setFavoritesOnly(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (favoritesOnly ? 'border-amber-400/40 bg-amber-400/[0.08] text-amber-300' : 'border-white/10 bg-black/30 text-white/55 hover:border-white/20')}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill={favoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3 2.75 5.57 6.15.89-4.45 4.33 1.05 6.12L12 17.02l-5.5 2.89 1.05-6.12L3.1 9.46l6.15-.89L12 3Z" /></svg>
+            <span className="text-xs font-semibold">Favorites</span>
+          </button>
+        </div>
+        <div className="flex items-end pb-0.5">
           <button type="button" onClick={() => setHasLesson(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (hasLesson ? 'border-violet-400/30 bg-violet-400/[0.08]' : 'border-white/10 bg-black/30 hover:border-white/20')}>
             <span className={'flex h-4 w-4 items-center justify-center rounded border transition-all ' + (hasLesson ? 'border-violet-400 bg-violet-400' : 'border-white/30 bg-transparent')}>
               {hasLesson && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
@@ -426,7 +436,7 @@ export default function TradeFilters({ trades, prefs }) {
           <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
         </div>
         {hasFilters && (
-          <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setDateFrom(''); setDateTo(''); }} className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
+          <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setFavoritesOnly(false); setDateFrom(''); setDateTo(''); }} className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
         )}
       </div>
 
@@ -452,6 +462,12 @@ export default function TradeFilters({ trades, prefs }) {
             <FilterDropdown label="Session" value={sessionFilter} onChange={setSessionFilter} placeholder="All sessions" options={sessionOptions} />
             {tagOptions.length > 0 && <MultiFilterDropdown label="Tags" selected={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} counts={tagCounts} />}
             <div className="flex items-end pb-0.5">
+              <button type="button" onClick={() => setFavoritesOnly(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (favoritesOnly ? 'border-amber-400/40 bg-amber-400/[0.08] text-amber-300' : 'border-white/10 bg-black/30 text-white/55 hover:border-white/20')}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill={favoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3 2.75 5.57 6.15.89-4.45 4.33 1.05 6.12L12 17.02l-5.5 2.89 1.05-6.12L3.1 9.46l6.15-.89L12 3Z" /></svg>
+                <span className="text-xs font-semibold">Favorites</span>
+              </button>
+            </div>
+            <div className="flex items-end pb-0.5">
               <button type="button" onClick={() => setHasLesson(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (hasLesson ? 'border-violet-400/30 bg-violet-400/[0.08]' : 'border-white/10 bg-black/30 hover:border-white/20')}>
                 <span className={'flex h-4 w-4 items-center justify-center rounded border transition-all ' + (hasLesson ? 'border-violet-400 bg-violet-400' : 'border-white/30 bg-transparent')}>
                   {hasLesson && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#08080f" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>}
@@ -468,7 +484,7 @@ export default function TradeFilters({ trades, prefs }) {
               <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
             </div>
             {hasFilters && (
-              <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }} className="col-span-2 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
+              <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setFavoritesOnly(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }} className="col-span-2 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
             )}
           </div>
         )}

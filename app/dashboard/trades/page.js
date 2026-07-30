@@ -19,7 +19,7 @@ export default async function TradesPage() {
 
   let tradesQuery = supabase
     .from('trades')
-    .select('id, pair, direction, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, source')
+    .select('id, pair, direction, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, source, is_favorite')
     .eq('user_id', user.id);
   tradesQuery = applyAccountFilter(tradesQuery, activeAccountId);
   const { data: trades, error: tradesError } = await tradesQuery

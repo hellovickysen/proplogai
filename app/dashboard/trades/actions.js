@@ -195,6 +195,22 @@ export async function updateTrade(id, payload) {
   return { ok: true };
 }
 
+export async function toggleTradeFavorite(id, isFavorite) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+
+  const { error } = await supabase
+    .from('trades')
+    .update({ is_favorite: Boolean(isFavorite) })
+    .eq('id', id)
+    .eq('user_id', user.id);
+  if (error) return { error: error.message };
+
+  revalidatePath('/dashboard/trades');
+  revalidatePath('/dashboard/trades/' + id);
+  return { ok: true };
+}
+
 export async function deleteTrade(id) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
