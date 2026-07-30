@@ -36,9 +36,6 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center gap-2">
                   <span className="font-display text-base font-semibold">{t.pair}</span>
-                  {t.is_favorite && (
-                    <span className="text-amber-400" title="Favorite trade" aria-label="Favorite trade">★</span>
-                  )}
                   <span className={'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-semibold ' + (t.direction === 'long' ? 'border-emerald-400/25 bg-emerald-500/10 text-emerald-300' : 'border-red-400/25 bg-red-500/10 text-red-300')}>
                     <svg width="10" height="7" viewBox="0 0 14 10" fill="none" className="shrink-0">{t.direction === 'long' ? <path d="M1 9L4.5 4L7.5 6.5L13 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /> : <path d="M1 1L4.5 6L7.5 3.5L13 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />}</svg>
                     {t.direction === 'long' ? 'Long' : 'Short'}
@@ -55,6 +52,9 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-mono text-[11px] text-white/40">
                   <span className="text-white/25">#{tradeNum}</span>
+                  {t.is_favorite && (
+                    <span className="rounded bg-amber-400/15 px-1 py-px text-[9px] font-bold tracking-wide text-amber-300" aria-label="Favorite trade">FAV</span>
+                  )}
                   <span>{fmtDate(t.trade_date || t.closed_at || t.created_at)}</span>
                   {t.session && <><span className="text-white/20">·</span><span>{t.session}</span></>}
                   {t.setup && <><span className="text-white/20">·</span><span className="truncate max-w-[100px]">{t.setup.split(', ')[0]}</span></>}
@@ -115,18 +115,20 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               >
                 {/* Trade number */}
                 <td className="px-2 py-3.5">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-md bg-white/[0.06] font-mono text-[10px] text-white/30">
-                    {tradeNum}
-                  </span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className={'flex h-6 w-6 items-center justify-center rounded-md font-mono text-[10px] ' + (t.is_favorite ? 'bg-amber-400/15 text-amber-200' : 'bg-white/[0.06] text-white/30')}>
+                      {tradeNum}
+                    </span>
+                    {t.is_favorite && (
+                      <span className="rounded bg-amber-400/15 px-1 py-px font-mono text-[9px] font-bold tracking-wide text-amber-300" aria-label="Favorite trade">FAV</span>
+                    )}
+                  </div>
                 </td>
 
                 {/* Pair + journal icon */}
                 <td className="px-3 py-3.5 font-display font-semibold">
                   <Link href={'/dashboard/trades/' + t.id} className="hover:text-cyan-400">
                     {t.pair}
-                    {t.is_favorite && (
-                      <span className="ml-1.5 text-amber-400 align-middle" title="Favorite trade" aria-label="Favorite trade">★</span>
-                    )}
                     {hasJournal && (
                       <span className="ml-1.5 text-xs text-amber-400/70 align-middle" title="Has journal entry">&#128221;</span>
                     )}
