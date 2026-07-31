@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import DisciplineRulesExperience from '@/components/discipline/DisciplineRulesExperience';
+import RulesMockupWorkspace from '@/components/discipline/RulesMockupWorkspace';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,10 +39,6 @@ export default async function DisciplinePage() {
   }
 
   return (
-    <DisciplineRulesExperience
-      program={program || null}
-      rules={rules}
-      focusRuleIds={focusRuleIds}
-    />
+    <RulesMockupWorkspace />
   );
 }
