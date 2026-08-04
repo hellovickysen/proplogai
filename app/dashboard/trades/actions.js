@@ -6,6 +6,7 @@ import { analyzeTradeWithAI } from '@/lib/ai';
 import { notify, TYPES } from '@/lib/notifications';
 import { getUserAccess } from '@/lib/plans';
 import { getUserTradeContext } from '@/lib/tradeContext';
+import { getActiveAccountId } from '@/lib/accounts';
 
 /** Input validation limits */
 const MAX_PAIR_LENGTH = 20;
@@ -124,7 +125,14 @@ export async function createTrade(payload) {
   if (payload.journal && Array.isArray(payload.journal.screenshot_urls) && payload.journal.screenshot_urls.length > screenshotLimit) {
     payload.journal.screenshot_urls = payload.journal.screenshot_urls.slice(0, screenshotLimit);
   }
-  const { data, error } = await supabase.from('trades').insert(buildRow(user, payload)).select('id').single();
+  // Quick Log omits account_id, so inherit the account currently selected in the header.
+  // When All Accounts is active, getActiveAccountId returns null and the trade remains unassigned.
+  const accountId = payload.account_id || await getActiveAccountId(supabase, user.id);
+  const { data, error } = await supabase
+    .from('trades')
+    .insert(buildRow(user, { ...payload, account_id: accountId }))
+    .select('id')
+    .single();
   if (error) return { error: error.message };
 
   // If journal fields were included, create the journal entry too
