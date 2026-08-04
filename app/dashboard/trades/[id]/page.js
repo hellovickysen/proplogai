@@ -22,7 +22,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
   // Fetch trade with user_id check
   const { data: trade, error: tradeErr } = await supabase
     .from('trades')
-    .select('id, account_id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, is_favorite, share_id, shared_until, created_at')
+    .select('id, account_id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_follow_map, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, is_favorite, share_id, shared_until, created_at')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -73,8 +73,12 @@ export default async function TradeDetailPage({ params, searchParams }) {
     .order('created_at', { ascending: false })
     .maybeSingle();
 
-  // Fetch setup names if setup_ids exist
-  let setupNames = trade.setup ? trade.setup.split(', ') : [];
+  // Preserve the setup order so each badge can use its own follow status.
+  const setupNames = trade.setup ? trade.setup.split(', ') : [];
+  const setupFollowMap = trade.setup_follow_map && typeof trade.setup_follow_map === 'object' && !Array.isArray(trade.setup_follow_map)
+    ? trade.setup_follow_map
+    : {};
+  const setupIds = Array.isArray(trade.setup_ids) ? trade.setup_ids : [];
 
   const pnl = Number(trade.pnl) || 0;
   const isProfit = pnl >= 0;
@@ -149,20 +153,14 @@ export default async function TradeDetailPage({ params, searchParams }) {
         {setupNames.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {setupNames.map((s, i) => {
-              // Good SL always green, Bad SL / No Setup always red
+              const followStatus = setupFollowMap[setupIds[i]] || trade.setup_followed;
               const isGoodSL = s === 'Good SL';
               const isBadOrNoSetup = s === 'Bad SL' || s === 'No Setup';
               let pillClass;
-              if (isGoodSL) {
+              if (followStatus === 'yes' || (!followStatus && isGoodSL)) {
                 pillClass = 'bg-emerald-400/[0.1] border border-emerald-400/20 text-emerald-400';
-              } else if (isBadOrNoSetup) {
+              } else if (followStatus === 'no' || (!followStatus && isBadOrNoSetup)) {
                 pillClass = 'bg-red-400/[0.1] border border-red-400/20 text-red-400';
-              } else if (trade.setup_followed === 'yes') {
-                pillClass = 'bg-emerald-400/[0.1] border border-emerald-400/20 text-emerald-400';
-              } else if (trade.setup_followed === 'no') {
-                pillClass = 'bg-red-400/[0.1] border border-red-400/20 text-red-400';
-              } else if (trade.setup_followed === 'partial') {
-                pillClass = 'bg-amber-400/[0.1] border border-amber-400/20 text-amber-400';
               } else {
                 pillClass = 'bg-amber-400/[0.1] border border-amber-400/20 text-amber-400';
               }
