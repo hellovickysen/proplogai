@@ -18,7 +18,7 @@ function fmtPnl(v) {
   const sign = n >= 0 ? '+' : '-';
   const abs = Math.abs(n);
   if (abs >= 1000) return sign + '$' + (abs / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
-  return sign + '$' + Math.round(abs);
+  return sign + '$' + abs.toFixed(2);
 }
 
 /**
