@@ -878,23 +878,30 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
   const curYear = now.getFullYear();
   const curMonth = now.getMonth();
   const fiscalStartYear = curMonth >= 3 ? curYear : curYear - 1;
+  const currentFYStart = new Date(fiscalStartYear, 3, 1);
+  const currentFYEnd = new Date(curYear, curMonth, now.getDate() + 1);
+  const currentFYLabel = `FY ${fiscalStartYear}–${String(fiscalStartYear + 1).slice(-2)}`;
   const lastFYStart = new Date(fiscalStartYear - 1, 3, 1);
-  const lastFYEnd = new Date(fiscalStartYear, 3, 1);
+  const lastFYEnd = currentFYStart;
   const lastFYLabel = `FY ${fiscalStartYear - 1}–${String(fiscalStartYear).slice(-2)}`;
-  const isInLastFY = (dateValue) => {
+  const isInRange = (dateValue, start, end) => {
     const date = new Date(dateValue + 'T00:00:00');
-    return date >= lastFYStart && date < lastFYEnd;
+    return date >= start && date < end;
   };
   const dExpenses = dashboardScope === 'month'
     ? expenses.filter(e => { const d = new Date(e.expense_date + 'T00:00:00'); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
-    : dashboardScope === 'last-fy'
-      ? expenses.filter(e => isInLastFY(e.expense_date))
-      : expenses;
+    : dashboardScope === 'current-fy'
+      ? expenses.filter(e => isInRange(e.expense_date, currentFYStart, currentFYEnd))
+      : dashboardScope === 'last-fy'
+        ? expenses.filter(e => isInRange(e.expense_date, lastFYStart, lastFYEnd))
+        : expenses;
   const dPayouts = dashboardScope === 'month'
     ? payouts.filter(p => { const d = new Date(p.payout_date + 'T00:00:00'); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
-    : dashboardScope === 'last-fy'
-      ? payouts.filter(p => isInLastFY(p.payout_date))
-      : payouts;
+    : dashboardScope === 'current-fy'
+      ? payouts.filter(p => isInRange(p.payout_date, currentFYStart, currentFYEnd))
+      : dashboardScope === 'last-fy'
+        ? payouts.filter(p => isInRange(p.payout_date, lastFYStart, lastFYEnd))
+        : payouts;
 
   // Aggregates
   const totalExpense = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
@@ -1079,7 +1086,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           {tab === 'Dashboard' && (
             <div className="space-y-6">
               <div className="flex items-center gap-1.5">
-                {[{ key: 'all', label: 'All' }, { key: 'month', label: 'This Month' }, { key: 'last-fy', label: 'Last FY' }].map(s => (
+                {[{ key: 'all', label: 'All' }, { key: 'month', label: 'This Month' }, { key: 'current-fy', label: 'Current FY' }, { key: 'last-fy', label: 'Last FY' }].map(s => (
                   <button key={s.key} onClick={() => setDashboardScope(s.key)}
                     className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (dashboardScope === s.key ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}>
                     {s.label}
@@ -1087,6 +1094,9 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                 ))}
                 {dashboardScope === 'month' && (
                   <span className="ml-1 font-mono text-[11px] text-white/40">{new Date().toLocaleString('en-US', { month: 'long' })}</span>
+                )}
+                {dashboardScope === 'current-fy' && (
+                  <span className="ml-1 font-mono text-[11px] text-white/40">{currentFYLabel}</span>
                 )}
                 {dashboardScope === 'last-fy' && (
                   <span className="ml-1 font-mono text-[11px] text-white/40">{lastFYLabel}</span>
@@ -1106,7 +1116,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                <div className="mb-4 font-display text-base font-semibold">{dashboardScope === 'month' ? new Date().toLocaleString('en-US', { month: 'long' }) + ' activity' : dashboardScope === 'last-fy' ? lastFYLabel + ' activity' : 'Recent activity'}</div>
+                <div className="mb-4 font-display text-base font-semibold">{dashboardScope === 'month' ? new Date().toLocaleString('en-US', { month: 'long' }) + ' activity' : dashboardScope === 'current-fy' ? currentFYLabel + ' activity' : dashboardScope === 'last-fy' ? lastFYLabel + ' activity' : 'Recent activity'}</div>
                 {dExpenses.length === 0 && dPayouts.length === 0 ? (
                   <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first prop expense or payout.</p></div>
                 ) : (
