@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { setActiveAccount } from '@/app/dashboard/accounts/actions';
 
-const ACCOUNT_SCOPED_PATHS = ['/dashboard/trades', '/dashboard/calendar', '/dashboard/coach', '/dashboard/rulebook'];
+const ACCOUNT_SCOPED_PATHS = ['/dashboard/trades', '/dashboard/calendar', '/dashboard/coach'];
 
 export default function AccountScopeGate({ accounts = [], activeAccountId, children }) {
   const pathname = usePathname();
