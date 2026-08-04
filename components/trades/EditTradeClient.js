@@ -10,8 +10,13 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   const [saving, setSaving] = useState(false);
   const [journalDirty, setJournalDirty] = useState(false);
   const [tradeDirty, setTradeDirty] = useState(false);
+  const [journalPreview, setJournalPreview] = useState({
+    emotions: journal?.emotions || [],
+    tags: Array.isArray(journal?.tags) ? journal.tags : [],
+  });
 
   const onJournalDirtyChange = useCallback((d) => setJournalDirty(d), []);
+  const onJournalPreviewChange = useCallback((preview) => setJournalPreview(preview), []);
 
   // Track trade form changes
   useEffect(() => {
@@ -63,7 +68,7 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
 
   return (
     <>
-      <TradeForm mode="edit" tradeId={tradeId} initial={trade} prefs={prefs} setups={setups || []} accounts={accounts || []} activeAccountId={activeAccountId} hideButtons />
+      <TradeForm mode="edit" tradeId={tradeId} initial={trade} prefs={prefs} setups={setups || []} accounts={accounts || []} activeAccountId={activeAccountId} previewJournal={journalPreview} hideButtons />
 
       <div className="mt-6 lg:pr-[324px]">
         <JournalInlineEdit
@@ -75,6 +80,7 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
           startInEditMode
           hideButtons
           onDirtyChange={onJournalDirtyChange}
+          onPreviewChange={onJournalPreviewChange}
         />
       </div>
 

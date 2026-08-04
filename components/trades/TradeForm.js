@@ -75,7 +75,7 @@ function TimeframeDropdown({ value, onChange, labelCls, fieldCls }) {
   );
 }
 
-export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, hideButtons = false }) {
+export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, previewJournal = null, hideButtons = false }) {
   const router = useRouter();
 
   // Resolve initial setup_ids from setup_ids array, or single setup_id, or empty
@@ -555,6 +555,8 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   const pnlNum = Number(form.pnl);
   const hasPnl = form.pnl !== '' && Number.isFinite(pnlNum);
+  const previewEmotions = mode === 'edit' ? (previewJournal?.emotions || []) : emotions;
+  const previewTags = mode === 'edit' ? (previewJournal?.tags || []) : tradeTags;
 
   const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
   const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -1008,19 +1010,17 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
         <div className="mt-4 font-mono text-xs text-white/55">{hasPnl ? (pnlNum >= 0 ? 'Win' : 'Loss') : 'Enter P&L to preview'}</div>
 
-        {/* Emotions — from journal (create mode) */}
-        {emotions.length > 0 && (
+        {previewEmotions.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1">
-            {emotions.map((em, i) => (
+            {previewEmotions.map((em, i) => (
               <span key={i} className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-200">{em}</span>
             ))}
           </div>
         )}
 
-        {/* Tags — from journal (create mode) */}
-        {tradeTags.length > 0 && (
+        {previewTags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
-            {tradeTags.map((tag, i) => (
+            {previewTags.map((tag, i) => (
               <span key={i} className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-[10px] text-cyan-200">#{tag}</span>
             ))}
           </div>
