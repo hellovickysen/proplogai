@@ -195,6 +195,20 @@ export async function updateTrade(id, payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
   if (toNum(payload.pnl) === null) return { error: 'Please enter the trade P&L.' };
+
+  const activeAccountId = await getActiveAccountId(supabase, user.id);
+  if (activeAccountId) {
+    const { data: trade } = await supabase
+      .from('trades')
+      .select('account_id')
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (!trade || trade.account_id !== activeAccountId) {
+      return { error: 'Switch to this trade’s account before editing it.' };
+    }
+  }
+
   const row = buildRow(user, payload);
   delete row.user_id;
   const { error } = await supabase.from('trades').update(row).eq('id', id).eq('user_id', user.id);
