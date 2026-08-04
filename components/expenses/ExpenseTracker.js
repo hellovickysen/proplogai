@@ -873,16 +873,28 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
 
   const allTrophies = trophies || [];
 
-  // Dashboard scope filter (All vs This Month)
+  // Dashboard scope filter: All, current month, or the preceding Apr–Mar financial year.
   const now = new Date();
   const curYear = now.getFullYear();
   const curMonth = now.getMonth();
+  const fiscalStartYear = curMonth >= 3 ? curYear : curYear - 1;
+  const lastFYStart = new Date(fiscalStartYear - 1, 3, 1);
+  const lastFYEnd = new Date(fiscalStartYear, 3, 1);
+  const lastFYLabel = `FY ${fiscalStartYear - 1}–${String(fiscalStartYear).slice(-2)}`;
+  const isInLastFY = (dateValue) => {
+    const date = new Date(dateValue + 'T00:00:00');
+    return date >= lastFYStart && date < lastFYEnd;
+  };
   const dExpenses = dashboardScope === 'month'
-    ? expenses.filter(e => { const d = new Date(e.expense_date); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
-    : expenses;
+    ? expenses.filter(e => { const d = new Date(e.expense_date + 'T00:00:00'); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
+    : dashboardScope === 'last-fy'
+      ? expenses.filter(e => isInLastFY(e.expense_date))
+      : expenses;
   const dPayouts = dashboardScope === 'month'
-    ? payouts.filter(p => { const d = new Date(p.payout_date); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
-    : payouts;
+    ? payouts.filter(p => { const d = new Date(p.payout_date + 'T00:00:00'); return d.getFullYear() === curYear && d.getMonth() === curMonth; })
+    : dashboardScope === 'last-fy'
+      ? payouts.filter(p => isInLastFY(p.payout_date))
+      : payouts;
 
   // Aggregates
   const totalExpense = expenses.reduce((a, e) => a + (Number(e.total_cost) || 0), 0);
@@ -1067,7 +1079,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
           {tab === 'Dashboard' && (
             <div className="space-y-6">
               <div className="flex items-center gap-1.5">
-                {[{ key: 'all', label: 'All' }, { key: 'month', label: 'This Month' }].map(s => (
+                {[{ key: 'all', label: 'All' }, { key: 'month', label: 'This Month' }, { key: 'last-fy', label: 'Last FY' }].map(s => (
                   <button key={s.key} onClick={() => setDashboardScope(s.key)}
                     className={'rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ' + (dashboardScope === s.key ? 'bg-white/[0.08] text-white' : 'text-white/35 hover:text-white/60')}>
                     {s.label}
@@ -1075,6 +1087,9 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                 ))}
                 {dashboardScope === 'month' && (
                   <span className="ml-1 font-mono text-[11px] text-white/40">{new Date().toLocaleString('en-US', { month: 'long' })}</span>
+                )}
+                {dashboardScope === 'last-fy' && (
+                  <span className="ml-1 font-mono text-[11px] text-white/40">{lastFYLabel}</span>
                 )}
               </div>
 
@@ -1091,7 +1106,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
               </div>
 
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-                <div className="mb-4 font-display text-base font-semibold">{dashboardScope === 'month' ? new Date().toLocaleString('en-US', { month: 'long' }) + ' activity' : 'Recent activity'}</div>
+                <div className="mb-4 font-display text-base font-semibold">{dashboardScope === 'month' ? new Date().toLocaleString('en-US', { month: 'long' }) + ' activity' : dashboardScope === 'last-fy' ? lastFYLabel + ' activity' : 'Recent activity'}</div>
                 {dExpenses.length === 0 && dPayouts.length === 0 ? (
                   <div className="py-4 text-center"><ExpensesEmptyIcon /><p className="mt-4 text-sm text-white/40">No activity yet. Add your first prop expense or payout.</p></div>
                 ) : (
