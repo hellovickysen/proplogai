@@ -87,6 +87,14 @@ function buildRow(user, payload) {
   const setupIds = Array.isArray(payload.setup_ids)
     ? payload.setup_ids.filter((id) => typeof id === 'string' && id.length > 0).slice(0, MAX_SETUPS_PER_TRADE)
     : [];
+  const submittedFollowMap = payload.setup_follow_map && typeof payload.setup_follow_map === 'object' && !Array.isArray(payload.setup_follow_map)
+    ? payload.setup_follow_map
+    : {};
+  const setupFollowMap = setupIds.reduce((map, id) => {
+    const value = submittedFollowMap[id];
+    if (VALID_SETUP_FOLLOWED.includes(value)) map[id] = value;
+    return map;
+  }, {});
 
   return {
     user_id: user.id,
@@ -102,6 +110,7 @@ function buildRow(user, payload) {
     setup: sanitizeText(payload.setup, MAX_SETUP_LENGTH),
     setup_id: payload.setup_id || null,
     setup_ids: setupIds,
+    setup_follow_map: setupFollowMap,
     setup_followed: VALID_SETUP_FOLLOWED.includes(payload.setup_followed) ? payload.setup_followed : null,
     no_setup_reason: sanitizeText(payload.no_setup_reason, 50) || null,
     timeframe: payload.timeframe || null,

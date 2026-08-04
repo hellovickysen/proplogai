@@ -86,9 +86,15 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         ? [initial.setup_id]
         : [];
 
-  // Build initial per-setup follow map: if editing, assign the saved overall status to each setup
+  // Restore independently saved setup statuses. Legacy trades fall back to their aggregate status.
   const initialFollowMap = {};
-  if (initial && initial.setup_followed) {
+  if (initial && initial.setup_follow_map && typeof initial.setup_follow_map === 'object' && !Array.isArray(initial.setup_follow_map)) {
+    initialSetupIds.forEach((id) => {
+      if (['yes', 'partial', 'no'].includes(initial.setup_follow_map[id])) {
+        initialFollowMap[id] = initial.setup_follow_map[id];
+      }
+    });
+  } else if (initial && initial.setup_followed) {
     initialSetupIds.forEach((id) => { initialFollowMap[id] = initial.setup_followed; });
   }
 
