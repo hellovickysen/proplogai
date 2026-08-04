@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { setActiveAccount } from '@/app/dashboard/accounts/actions';
 import { UpgradeModal } from '@/components/ui/BlurGate';
@@ -31,9 +31,11 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
   const [showUpgrade, setShowUpgrade] = useState(false);
   const ref = useRef(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   const isElite = planAccess && (planAccess.isAdmin || planAccess.isBeta || planAccess.effectivePlan === 'elite');
   const hasAccounts = accounts.length > 0;
+  const showAllOption = pathname === '/dashboard';
 
   // Close on outside click
   useEffect(() => {
@@ -122,27 +124,30 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
       {/* Dropdown — same look for Basic and Elite */}
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-white/10 bg-[#12121a] py-1.5 shadow-2xl">
-          {/* All Accounts option */}
-          <button
-            onClick={() => hasAccounts ? switchAccount(null) : null}
-            className={'flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors ' +
-              (!activeAccountId ? 'bg-emerald-500/[0.06] border-l-2 border-l-emerald-400' : 'hover:bg-white/[0.04] border-l-2 border-l-transparent')}
-          >
-            <span className="h-2 w-2 rounded-full bg-white/30 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-white">All Accounts</div>
-              {Object.keys(todayStats).length > 0 && (
-                <div className={'font-mono text-[11px] ' + (allPnl >= 0 ? 'text-emerald-400/70' : 'text-red-400/70')}>
-                  Today {fmtPnl(allPnl)}
+          {showAllOption && (
+            <>
+              <button
+                onClick={() => hasAccounts ? switchAccount(null) : null}
+                className={'flex w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors ' +
+                  (!activeAccountId ? 'bg-emerald-500/[0.06] border-l-2 border-l-emerald-400' : 'hover:bg-white/[0.04] border-l-2 border-l-transparent')}
+              >
+                <span className="h-2 w-2 rounded-full bg-white/30 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-white">All Accounts</div>
+                  {Object.keys(todayStats).length > 0 && (
+                    <div className={'font-mono text-[11px] ' + (allPnl >= 0 ? 'text-emerald-400/70' : 'text-red-400/70')}>
+                      Today {fmtPnl(allPnl)}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-            {!activeAccountId && (
-              <span className="h-2 w-2 rounded-full bg-emerald-400 flex-shrink-0" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }} />
-            )}
-          </button>
+                {!activeAccountId && (
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 flex-shrink-0" style={{ boxShadow: '0 0 6px rgba(52,211,153,0.5)' }} />
+                )}
+              </button>
+            </>
+          )}
 
-          {hasAccounts && (
+          {showAllOption && hasAccounts && (
             <div className="mx-3 my-1 border-t border-white/[0.06]" />
           )}
 
