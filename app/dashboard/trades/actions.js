@@ -53,6 +53,20 @@ async function getCtx() {
   return { supabase, user };
 }
 
+async function canAccessSelectedAccountTrade(supabase, userId, tradeId) {
+  const activeAccountId = await getActiveAccountId(supabase, userId);
+  if (!activeAccountId) return true;
+
+  const { data: trade } = await supabase
+    .from('trades')
+    .select('account_id')
+    .eq('id', tradeId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  return !!trade && trade.account_id === activeAccountId;
+}
+
 function isValidStorageUrl(url) {
   if (!url || typeof url !== 'string') return false;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -196,17 +210,8 @@ export async function updateTrade(id, payload) {
   if (!user) return { error: 'You must be signed in.' };
   if (toNum(payload.pnl) === null) return { error: 'Please enter the trade P&L.' };
 
-  const activeAccountId = await getActiveAccountId(supabase, user.id);
-  if (activeAccountId) {
-    const { data: trade } = await supabase
-      .from('trades')
-      .select('account_id')
-      .eq('id', id)
-      .eq('user_id', user.id)
-      .maybeSingle();
-    if (!trade || trade.account_id !== activeAccountId) {
-      return { error: 'Switch to this trade’s account before editing it.' };
-    }
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, id)) {
+    return { error: 'Switch to this trade’s account before editing it.' };
   }
 
   const row = buildRow(user, payload);
@@ -222,6 +227,9 @@ export async function updateTrade(id, payload) {
 export async function toggleTradeFavorite(id, isFavorite) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, id)) {
+    return { error: 'Switch to this trade’s account before changing it.' };
+  }
 
   const { error } = await supabase
     .from('trades')
@@ -238,6 +246,9 @@ export async function toggleTradeFavorite(id, isFavorite) {
 export async function deleteTrade(id) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, id)) {
+    return { error: 'Switch to this trade’s account before deleting it.' };
+  }
 
   // Fetch journal screenshots before cascade delete removes them
   const { data: journal } = await supabase
@@ -269,9 +280,9 @@ export async function deleteTrade(id) {
 export async function saveJournal(tradeId, payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
-  // Verify trade belongs to the current user (prevents IDOR)
-  const { data: tradeOwner } = await supabase.from('trades').select('id').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
-  if (!tradeOwner) return { error: 'Trade not found.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, tradeId)) {
+    return { error: 'Switch to this trade’s account before editing its journal.' };
+  }
   const urls = normalizeScreenshots(payload.screenshot_urls, payload.screenshot_url).slice(0, MAX_SCREENSHOTS);
   const emotions = Array.isArray(payload.emotions) ? payload.emotions.slice(0, MAX_EMOTIONS).map((e) => sanitizeText(e, 50)) : [];
   const entry = {
@@ -320,6 +331,9 @@ export async function saveJournal(tradeId, payload) {
 export async function analyzeTrade(tradeId) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, tradeId)) {
+    return { error: 'Switch to this trade’s account before analyzing it.' };
+  }
   if (!checkAiRateLimit(user.id)) return { error: 'Rate limit reached. Try again in an hour.' };
 
   // Plan-based limit check
@@ -386,6 +400,9 @@ export async function analyzeTrade(tradeId) {
 export async function shareTrade(tradeId) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, tradeId)) {
+    return { error: 'Switch to this trade’s account before sharing it.' };
+  }
 
   // Verify ownership
   const { data: trade } = await supabase
@@ -419,6 +436,9 @@ export async function shareTrade(tradeId) {
 export async function unshareTrade(tradeId) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, tradeId)) {
+    return { error: 'Switch to this trade’s account before changing sharing.' };
+  }
 
   const { error } = await supabase
     .from('trades')

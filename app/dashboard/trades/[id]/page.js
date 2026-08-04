@@ -8,6 +8,7 @@ import AnalyzeButton from '@/components/trades/AnalyzeButton';
 import DeleteTradeButton from '@/components/trades/DeleteTradeButton';
 import FavoriteTradeButton from '@/components/trades/FavoriteTradeButton';
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
+import { getActiveAccountId } from '@/lib/accounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
   // Fetch trade with user_id check
   const { data: trade, error: tradeErr } = await supabase
     .from('trades')
-    .select('id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, is_favorite, share_id, shared_until, created_at')
+    .select('id, account_id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, is_favorite, share_id, shared_until, created_at')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -39,6 +40,12 @@ export default async function TradeDetailPage({ params, searchParams }) {
         </div>
       </div>
     );
+  }
+
+  // A selected account scopes direct detail routes as well as the trade list.
+  const activeAccountId = await getActiveAccountId(supabase, user.id);
+  if (activeAccountId && trade.account_id !== activeAccountId) {
+    redirect('/dashboard/trades');
   }
 
   // Fetch journal entry
