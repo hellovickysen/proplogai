@@ -65,7 +65,10 @@ export async function createAccount(payload) {
     .select('id')
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.code === '23505') return { error: 'An account with this name already exists, including archived accounts.' };
+    return { error: error.message };
+  }
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/accounts');
@@ -98,7 +101,10 @@ export async function updateAccount(accountId, payload) {
     .eq('id', accountId)
     .eq('user_id', user.id);
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.code === '23505') return { error: 'An account with this name already exists, including archived accounts.' };
+    return { error: error.message };
+  }
 
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/accounts');
