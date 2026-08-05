@@ -134,7 +134,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   // Risk:Reward state
   const [rrRisk, setRrRisk] = useState('1');
-  const [rrReward, setRrReward] = useState('');
+  const [rrReward, setRrReward] = useState('2');
   const [rrManual, setRrManual] = useState(false);
 
   const [error, setError] = useState(null);
@@ -232,7 +232,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     const exit = Number(form.exit_price);
     const sl = Number(form.stop_loss);
     if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(sl)) {
-      setRrReward('');
+      setRrReward('2');
       return;
     }
     let risk, reward;
@@ -243,7 +243,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       risk = Math.abs(sl - entry);
       reward = Math.abs(entry - exit);
     }
-    if (risk <= 0) { setRrReward(''); return; }
+    if (risk <= 0) { setRrReward('2'); return; }
     setRrRisk('1');
     setRrReward((reward / risk).toFixed(1));
   }, [form.entry_price, form.exit_price, form.stop_loss, form.direction, rrManual]);
@@ -797,7 +797,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => setNumeric('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
               <div>
-                <label className={labelCls}>Risk : Reward <span className="text-white/30">(auto)</span></label>
+                <label className={labelCls}>Risk : Reward <span className="text-white/30">(optional)</span></label>
                 <div className="flex items-center gap-2">
                   <input
                     className="w-14 rounded-lg border border-white/10 bg-black/30 px-2 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
