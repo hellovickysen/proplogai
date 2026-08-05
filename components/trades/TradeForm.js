@@ -75,7 +75,7 @@ function TimeframeDropdown({ value, onChange, labelCls, fieldCls }) {
   );
 }
 
-export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, previewJournal = null, hideButtons = false }) {
+export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, previewJournal = null, hideButtons = false, onSaveError = null }) {
   const router = useRouter();
 
   // Resolve initial setup_ids from setup_ids array, or single setup_id, or empty
@@ -477,21 +477,25 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     if (!form.entry_price && form.entry_price !== 0) {
       setError('Entry price is required');
       setSaving(false);
+      if (onSaveError) onSaveError();
       return;
     }
     if (!form.exit_price && form.exit_price !== 0) {
       setError('Exit price is required');
       setSaving(false);
+      if (onSaveError) onSaveError();
       return;
     }
     if (!form.lot_size && form.lot_size !== 0) {
       setError('Lot / Contract size is required');
       setSaving(false);
+      if (onSaveError) onSaveError();
       return;
     }
     if (!form.pnl && form.pnl !== 0) {
       setError('P&L is required');
       setSaving(false);
+      if (onSaveError) onSaveError();
       return;
     }
 
@@ -503,6 +507,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         const names = missing.map((s) => s.name).join(', ');
         setError('Please mark whether you followed each setup: ' + names);
         setSaving(false);
+        if (onSaveError) onSaveError();
         return;
       }
     }
@@ -526,6 +531,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       setError(res.error);
       if (toast) toast.error(res.error);
       setSaving(false);
+      if (onSaveError) onSaveError();
     } else {
       // Clean up any screenshots that were uploaded then removed before save
       await cleanupOrphanedUploads(screenshotUrls);

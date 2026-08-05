@@ -49,6 +49,9 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   }, [isDirty]);
 
   async function handleSaveAll() {
+    const form = document.getElementById('trade-form');
+    if (!form || !form.reportValidity()) return;
+
     setSaving(true);
     try {
       if (journalDirty && window.__journalSave) {
@@ -58,14 +61,10 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
           return;
         }
       }
-      const form = document.getElementById('trade-form');
-      if (form) form.requestSubmit();
-      else setSaving(false);
+      form.requestSubmit();
     } catch (e) {
       setSaving(false);
     }
-    // Reset only if form validation prevents navigation.
-    setTimeout(() => setSaving(false), 4000);
   }
 
   function handleCancel() {
@@ -76,15 +75,13 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     <>
       {saving && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#07070b]/35 px-6 backdrop-blur-[1px]">
-          <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-col items-center gap-2.5">
             <LogoMark size={34} glow />
-            <div className="h-1 w-24 overflow-hidden rounded-full bg-white/15">
-              <div className="h-full w-2/3 animate-pulse rounded-full" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} />
-            </div>
+            <span className="font-mono text-xs font-semibold tracking-wide text-white/75">Saving<span className="animate-pulse">...</span></span>
           </div>
         </div>
       )}
-      <TradeForm mode="edit" tradeId={tradeId} initial={trade} prefs={prefs} setups={setups || []} accounts={accounts || []} activeAccountId={activeAccountId} previewJournal={journalPreview} hideButtons />
+      <TradeForm mode="edit" tradeId={tradeId} initial={trade} prefs={prefs} setups={setups || []} accounts={accounts || []} activeAccountId={activeAccountId} previewJournal={journalPreview} hideButtons onSaveError={() => setSaving(false)} />
 
       <div className="mt-6 lg:pr-[324px]">
         <JournalInlineEdit
