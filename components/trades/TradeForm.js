@@ -557,6 +557,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
   const hasPnl = form.pnl !== '' && Number.isFinite(pnlNum);
   const previewEmotions = mode === 'edit' ? (previewJournal?.emotions || []) : emotions;
   const previewTags = mode === 'edit' ? (previewJournal?.tags || []) : tradeTags;
+  const assignedAccount = accounts.find((account) => account.id === form.account_id);
 
   const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
   const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -565,6 +566,14 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div className="space-y-6">
         <form onSubmit={onSubmit} id="trade-form" className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
+          {assignedAccount && (
+            <div className="mb-5 flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/[0.06] px-3.5 py-2.5">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: assignedAccount.color || '#a78bfa' }} />
+              <span className="font-mono text-[10px] uppercase tracking-wider text-white/45">Account</span>
+              <span className="text-sm font-semibold text-violet-200">{assignedAccount.name}</span>
+            </div>
+          )}
+
           {/* Section 1: Trade Details */}
           <div className="mb-5">
             <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/50">
