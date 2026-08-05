@@ -75,9 +75,11 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     <>
       {saving && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#07070b]/35 px-6 backdrop-blur-[1px]">
-          <div className="flex flex-col items-center gap-2.5">
-            <LogoMark size={34} glow />
-            <span className="font-mono text-xs font-semibold tracking-wide text-white/75">Saving<span className="animate-pulse">...</span></span>
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-pulse">
+              <LogoMark size={48} rounded="rounded-2xl" glow />
+            </div>
+            <span className="text-sm text-white/50">Saving<span className="animate-pulse">...</span></span>
           </div>
         </div>
       )}
