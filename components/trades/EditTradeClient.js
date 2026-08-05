@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import TradeForm from '@/components/trades/TradeForm';
 import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
+import { LogoMark } from '@/components/Logo';
 
 export default function EditTradeClient({ tradeId, trade, prefs, setups, journal, screenshots, userId, accounts, activeAccountId }) {
   const router = useRouter();
@@ -51,15 +52,20 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
     setSaving(true);
     try {
       if (journalDirty && window.__journalSave) {
-        await window.__journalSave();
+        const journalResult = await window.__journalSave();
+        if (journalResult?.error) {
+          setSaving(false);
+          return;
+        }
       }
       const form = document.getElementById('trade-form');
       if (form) form.requestSubmit();
+      else setSaving(false);
     } catch (e) {
-      // ignore
+      setSaving(false);
     }
-    // Reset after delay — if form validation fails, page stays
-    setTimeout(() => setSaving(false), 2000);
+    // Reset only if form validation prevents navigation.
+    setTimeout(() => setSaving(false), 4000);
   }
 
   function handleCancel() {
@@ -68,6 +74,21 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
 
   return (
     <>
+      {saving && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#07070b]/90 px-6 backdrop-blur-sm">
+          <div className="w-full max-w-xs text-center">
+            <div className="mx-auto mb-5 flex w-fit items-center gap-3">
+              <LogoMark size={44} glow />
+              <span className="font-display text-xl font-bold text-white">PropLog<span className="text-cyan-300">AI</span></span>
+            </div>
+            <p className="font-display text-base font-semibold text-white">Saving changes</p>
+            <p className="mt-1 text-sm text-white/50">Updating your trade and journal...</p>
+            <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full w-2/3 animate-pulse rounded-full" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} />
+            </div>
+          </div>
+        </div>
+      )}
       <TradeForm mode="edit" tradeId={tradeId} initial={trade} prefs={prefs} setups={setups || []} accounts={accounts || []} activeAccountId={activeAccountId} previewJournal={journalPreview} hideButtons />
 
       <div className="mt-6 lg:pr-[324px]">
@@ -81,6 +102,7 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
           hideButtons
           onDirtyChange={onJournalDirtyChange}
           onPreviewChange={onJournalPreviewChange}
+          skipRefresh
         />
       </div>
 

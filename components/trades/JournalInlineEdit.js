@@ -7,7 +7,7 @@ import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
 
-export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '', startInEditMode = false, hideButtons = false, onDirtyChange, onPreviewChange }) {
+export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '', startInEditMode = false, hideButtons = false, onDirtyChange, onPreviewChange, skipRefresh = false }) {
   const router = useRouter();
   const toast = useToast?.() || { success: () => {}, error: () => {} };
   const [editing, setEditing] = useState(startInEditMode);
@@ -245,15 +245,18 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
       }
 
       uploadedThisSessionRef.current = [];
-      toast.success?.('Journal saved');
+      if (!skipRefresh) toast.success?.('Journal saved');
       setDirty(false);
       setEditing(startInEditMode); // stay in edit mode if started there
-      router.refresh();
+      if (!skipRefresh) router.refresh();
+      setSaving(false);
+      return { ok: true };
     } catch (err) {
       console.error('Save journal error:', err);
       toast.error?.('Failed to save journal');
+      setSaving(false);
+      return { error: 'Failed to save journal' };
     }
-    setSaving(false);
   }
 
   // Keep ref updated so parent can call save
