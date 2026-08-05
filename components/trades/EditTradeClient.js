@@ -75,15 +75,10 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   return (
     <>
       {saving && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#07070b]/90 px-6 backdrop-blur-sm">
-          <div className="w-full max-w-xs text-center">
-            <div className="mx-auto mb-5 flex w-fit items-center gap-3">
-              <LogoMark size={44} glow />
-              <span className="font-display text-xl font-bold text-white">PropLog<span className="text-cyan-300">AI</span></span>
-            </div>
-            <p className="font-display text-base font-semibold text-white">Saving changes</p>
-            <p className="mt-1 text-sm text-white/50">Updating your trade and journal...</p>
-            <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#07070b]/35 px-6 backdrop-blur-[1px]">
+          <div className="flex flex-col items-center gap-3">
+            <LogoMark size={34} glow />
+            <div className="h-1 w-24 overflow-hidden rounded-full bg-white/15">
               <div className="h-full w-2/3 animate-pulse rounded-full" style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} />
             </div>
           </div>
