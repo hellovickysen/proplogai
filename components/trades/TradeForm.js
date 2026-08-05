@@ -345,12 +345,18 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             newIds = newIds.filter((id) => id !== noSetupEntry.id);
             delete newMap[noSetupEntry.id];
           }
+          const oppositeName = chosen.name === 'Good SL' ? 'Bad SL' : chosen.name === 'Bad SL' ? 'Good SL' : null;
+          if (oppositeName) {
+            const opposite = activeSetups.find((s) => s.name === oppositeName);
+            if (opposite) {
+              newIds = newIds.filter((id) => id !== opposite.id);
+              delete newMap[opposite.id];
+            }
+            delete newMap[setupId];
+          }
           if (newIds.length >= MAX_SETUPS) return f;
           newIds.push(setupId);
-          // Auto-set follow for protected setups
-          if (chosen.name === 'Good SL') newMap[setupId] = 'yes';
-          else if (chosen.name === 'Bad SL') newMap[setupId] = 'no';
-          // Regular setups start with no follow status (blank)
+          // Good SL and Bad SL are selection-only markers; regular setups start blank.
         }
       }
 
