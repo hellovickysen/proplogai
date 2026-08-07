@@ -1,72 +1,52 @@
 "use server";
 
-import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { createClient } from '@/lib/supabase/server';
 
-const DEFAULT_SETUPS = [
-  { name: 'Breakout', direction: 'Only trade breakouts after a confirmed candle close above or below a key level. Avoid chasing if price is already extended.', sort_order: 1 },
-  { name: 'Pullback', direction: 'Trade with the trend after price pulls back to a valid area and shows continuation confirmation.', sort_order: 2 },
-  { name: 'Liquidity Sweep', direction: 'Trade only after price sweeps liquidity and shows rejection or reversal confirmation.', sort_order: 3 },
-  { name: 'Support / Resistance', direction: 'Trade around clearly marked levels with confirmation. Avoid random entries in the middle of a range.', sort_order: 4 },
-  { name: 'Trend Continuation', direction: 'Enter in the direction of the established trend after a healthy retracement or consolidation breakout.', sort_order: 5 },
-  { name: 'Reversal', direction: 'Trade reversals only at major structural levels with multiple confirmations. Higher risk — reduce size.', sort_order: 6 },
-  { name: 'Good SL', direction: 'You followed your setup correctly but the market hit your stop loss. This is not a mistake — it is the cost of doing business. Mark this when your process was right and the loss was simply the market doing its thing.', sort_order: 7 },
-  { name: 'Bad SL', direction: 'You broke your own stop loss rule — moved it, widened it, or ignored it entirely. This is a risk management violation. Every time you select this, ask yourself: was the extra risk worth it? Your stop loss exists to protect your account.', sort_order: 8 },
-  { name: 'No Setup', direction: 'Use this when the trade did not follow any planned setup, was emotional, or was taken impulsively.', is_default: true, sort_order: 99 },
-];
+const FOCUS_RULE_IDS = new Set([
+  'planned_setups_only',
+  'candle_close_confirmation',
+  'one_trade_at_a_time',
+  'no_averaging_down',
+  'journal_before_next_trade',
+  'pause_after_rule_break',
+]);
 
-export async function completeOnboarding(payload) {
+function positiveNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+export async function completeDisciplineOnboarding(payload) {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not signed in.' };
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'You must be signed in.' };
 
-  const { data: existing } = await supabase
-    .from('user_preferences')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  const dailyLossLimit = positiveNumber(payload?.dailyLossLimit);
+  const maximumPositionSize = positiveNumber(payload?.maximumPositionSize);
+  const stopOnProfit = positiveNumber(payload?.stopOnProfit);
+  const focusRuleIds = Array.isArray(payload?.focusRuleIds)
+    ? [...new Set(payload.focusRuleIds.filter((id) => typeof id === 'string' && FOCUS_RULE_IDS.has(id)))]
+    : [];
 
-  const row = {
-    user_id: user.id,
-    onboarding_complete: true,
-    custom_emotions: Array.isArray(payload.custom_emotions)
-      ? payload.custom_emotions.filter(e => typeof e === 'string' && e.length > 0).map(e => e.trim().slice(0, 50)).slice(0, 50)
-      : [],
-    default_confidence: Number(payload.default_confidence) || 0,
-    updated_at: new Date().toISOString(),
-  };
-
-  let error;
-  if (existing) {
-    delete row.user_id;
-    const res = await supabase.from('user_preferences').update(row).eq('id', existing.id).eq('user_id', user.id);
-    error = res.error;
-  } else {
-    const res = await supabase.from('user_preferences').insert(row);
-    error = res.error;
+  if (!dailyLossLimit || !maximumPositionSize || !stopOnProfit) {
+    return { error: 'Set a positive value for each required guardrail.' };
   }
-  if (error) return { error: error.message };
-
-  // Seed default setups for the new user (only if they have none)
-  const { count } = await supabase
-    .from('setups')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id);
-
-  if (!count || count === 0) {
-    const setupRows = DEFAULT_SETUPS.map((s) => ({
-      user_id: user.id,
-      name: s.name,
-      direction: s.direction,
-      is_default: s.is_default || false,
-      is_active: true,
-      sort_order: s.sort_order,
-    }));
-    await supabase.from('setups').insert(setupRows);
+  if (focusRuleIds.length < 3 || focusRuleIds.length > 5) {
+    return { error: 'Choose between three and five Focus rules.' };
   }
 
-  revalidatePath('/dashboard');
-  return { ok: true };
+  const { data: programId, error: programError } = await supabase.rpc('complete_discipline_onboarding', {
+    p_user_id: user.id,
+    p_daily_loss_limit: dailyLossLimit,
+    p_maximum_position_size: maximumPositionSize,
+    p_stop_on_profit: stopOnProfit,
+    p_focus_rule_ids: focusRuleIds,
+  });
+  if (programError) return { error: programError.message || 'Unable to start your programme. Please retry.' };
+
+
+  revalidatePath('/dashboard/discipline');
+  revalidatePath('/onboarding/discipline');
+  return { ok: true, programId };
 }

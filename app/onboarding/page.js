@@ -1,24 +1,21 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import OnboardingFlow from '@/components/onboarding/OnboardingFlow';
+import OnboardingFlowFiveStep from '@/components/onboarding/OnboardingFlowFiveStep';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OnboardingPage() {
+export default async function DisciplineOnboardingPage() {
   const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  // Already onboarded? Skip straight to dashboard.
-  const { data: prefs } = await supabase
+  const { data: preferences, error } = await supabase
     .from('user_preferences')
-    .select('onboarding_complete')
+    .select('active_account_id, onboarding_complete')
     .eq('user_id', user.id)
     .maybeSingle();
+  if (error) throw new Error('Unable to load onboarding preferences.');
+  if (preferences?.onboarding_complete) redirect('/dashboard/discipline');
 
-  if (prefs && prefs.onboarding_complete) redirect('/dashboard');
-
-  return <OnboardingFlow userEmail={user.email} />;
+  return <OnboardingFlowFiveStep accountLabel={preferences?.active_account_id ? 'your selected account' : 'your account'} />;
 }
