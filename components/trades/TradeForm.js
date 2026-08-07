@@ -998,7 +998,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               return (
                 <div key={s.id} className="flex items-center gap-1.5">
                   <span className={'rounded-full border px-2 py-0.5 text-xs ' + setupBadge}>{s.name}</span>
-                  {followLabel && <span className={'rounded-full px-2 py-0.5 text-xs ' + followBadge}>{followLabel}</span>}
+                  {followLabel && !PINNED_SETUPS.includes(s.name) && <span className={'rounded-full px-2 py-0.5 text-xs ' + followBadge}>{followLabel}</span>}
                 </div>
               );
             })}
