@@ -75,7 +75,7 @@ function TimeframeDropdown({ value, onChange, labelCls, fieldCls }) {
   );
 }
 
-export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, hideButtons = false }) {
+export default function TradeForm({ mode = 'create', tradeId = null, initial = null, prefs = null, setups = null, accounts = [], activeAccountId = null, previewJournal = null, hideButtons = false, onSaveError = null }) {
   const router = useRouter();
 
   // Resolve initial setup_ids from setup_ids array, or single setup_id, or empty
@@ -86,9 +86,15 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         ? [initial.setup_id]
         : [];
 
-  // Build initial per-setup follow map: if editing, assign the saved overall status to each setup
+  // Restore independently saved setup statuses. Legacy trades fall back to their aggregate status.
   const initialFollowMap = {};
-  if (initial && initial.setup_followed) {
+  if (initial && initial.setup_follow_map && typeof initial.setup_follow_map === 'object' && !Array.isArray(initial.setup_follow_map)) {
+    initialSetupIds.forEach((id) => {
+      if (['yes', 'partial', 'no'].includes(initial.setup_follow_map[id])) {
+        initialFollowMap[id] = initial.setup_follow_map[id];
+      }
+    });
+  } else if (initial && initial.setup_followed) {
     initialSetupIds.forEach((id) => { initialFollowMap[id] = initial.setup_followed; });
   }
 
@@ -128,7 +134,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   // Risk:Reward state
   const [rrRisk, setRrRisk] = useState('1');
-  const [rrReward, setRrReward] = useState('');
+  const [rrReward, setRrReward] = useState('2');
   const [rrManual, setRrManual] = useState(false);
 
   const [error, setError] = useState(null);
@@ -226,7 +232,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     const exit = Number(form.exit_price);
     const sl = Number(form.stop_loss);
     if (!Number.isFinite(entry) || !Number.isFinite(exit) || !Number.isFinite(sl)) {
-      setRrReward('');
+      setRrReward('2');
       return;
     }
     let risk, reward;
@@ -237,7 +243,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       risk = Math.abs(sl - entry);
       reward = Math.abs(entry - exit);
     }
-    if (risk <= 0) { setRrReward(''); return; }
+    if (risk <= 0) { setRrReward('2'); return; }
     setRrRisk('1');
     setRrReward((reward / risk).toFixed(1));
   }, [form.entry_price, form.exit_price, form.stop_loss, form.direction, rrManual]);
@@ -339,12 +345,18 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             newIds = newIds.filter((id) => id !== noSetupEntry.id);
             delete newMap[noSetupEntry.id];
           }
+          const oppositeName = chosen.name === 'Good SL' ? 'Bad SL' : chosen.name === 'Bad SL' ? 'Good SL' : null;
+          if (oppositeName) {
+            const opposite = activeSetups.find((s) => s.name === oppositeName);
+            if (opposite) {
+              newIds = newIds.filter((id) => id !== opposite.id);
+              delete newMap[opposite.id];
+            }
+            delete newMap[setupId];
+          }
           if (newIds.length >= MAX_SETUPS) return f;
           newIds.push(setupId);
-          // Auto-set follow for protected setups
-          if (chosen.name === 'Good SL') newMap[setupId] = 'yes';
-          else if (chosen.name === 'Bad SL') newMap[setupId] = 'no';
-          // Regular setups start with no follow status (blank)
+          // Good SL and Bad SL are selection-only markers; regular setups start blank.
         }
       }
 
@@ -471,21 +483,25 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     if (!form.entry_price && form.entry_price !== 0) {
       setError('Entry price is required');
       setSaving(false);
+      if (onSaveError) onSaveError();
       return;
     }
     if (!form.exit_price && form.exit_price !== 0) {
       setError('Exit price is required');
       setSaving(false);
+      if (onSaveError) onSaveError();
       return;
     }
     if (!form.lot_size && form.lot_size !== 0) {
       setError('Lot / Contract size is required');
       setSaving(false);
+      if (onSaveError) onSaveError();
       return;
     }
     if (!form.pnl && form.pnl !== 0) {
       setError('P&L is required');
       setSaving(false);
+      if (onSaveError) onSaveError();
       return;
     }
 
@@ -497,6 +513,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         const names = missing.map((s) => s.name).join(', ');
         setError('Please mark whether you followed each setup: ' + names);
         setSaving(false);
+        if (onSaveError) onSaveError();
         return;
       }
     }
@@ -520,6 +537,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
       setError(res.error);
       if (toast) toast.error(res.error);
       setSaving(false);
+      if (onSaveError) onSaveError();
     } else {
       // Clean up any screenshots that were uploaded then removed before save
       await cleanupOrphanedUploads(screenshotUrls);
@@ -549,6 +567,9 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
   const pnlNum = Number(form.pnl);
   const hasPnl = form.pnl !== '' && Number.isFinite(pnlNum);
+  const previewEmotions = mode === 'edit' ? (previewJournal?.emotions || []) : emotions;
+  const previewTags = mode === 'edit' ? (previewJournal?.tags || []) : tradeTags;
+  const assignedAccount = accounts.find((account) => account.id === form.account_id);
 
   const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
   const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -557,31 +578,11 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
       <div className="space-y-6">
         <form onSubmit={onSubmit} id="trade-form" className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 sm:p-6">
-          {/* Account selector (Elite with multiple accounts only) */}
-          {accounts.length > 0 && (
-            <div className="mb-5">
-              <label className={labelCls}>Account</label>
-              <div className="flex flex-wrap gap-2">
-                {accounts.map((acc) => (
-                  <button
-                    key={acc.id}
-                    type="button"
-                    onClick={() => set('account_id', form.account_id === acc.id ? '' : acc.id)}
-                    className={'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition-colors ' +
-                      (form.account_id === acc.id
-                        ? 'border-violet-400/50 bg-violet-500/15 text-violet-200'
-                        : 'border-white/10 bg-black/30 text-white/50 hover:text-white')}
-                  >
-                    <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: acc.color || '#a78bfa' }} />
-                    {acc.name}
-                    {acc.phase && (
-                      <span className="text-[9px] text-white/30 ml-0.5">
-                        {acc.phase === 'challenge' ? 'CH' : acc.phase === 'funded' ? 'FD' : 'PO'}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
+          {assignedAccount && (
+            <div className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-violet-400/20 bg-violet-500/[0.06] px-3 py-1.5">
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: assignedAccount.color || '#a78bfa' }} />
+              <span className="font-mono text-[10px] uppercase tracking-wider text-white/45">Account</span>
+              <span className="text-sm font-semibold text-violet-200">{assignedAccount.name}</span>
             </div>
           )}
 
@@ -802,7 +803,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
             <div className="grid gap-4 sm:grid-cols-2">
               <div><label htmlFor="field-pnl" className={labelCls}>P&L ($) *</label><input id="field-pnl" className={field} value={form.pnl} onChange={(e) => setNumeric('pnl', e.target.value)} inputMode="decimal" placeholder="e.g. 145 or -90" /></div>
               <div>
-                <label className={labelCls}>Risk : Reward <span className="text-white/30">(auto)</span></label>
+                <label className={labelCls}>Risk : Reward <span className="text-white/30">(optional)</span></label>
                 <div className="flex items-center gap-2">
                   <input
                     className="w-14 rounded-lg border border-white/10 bg-black/30 px-2 py-2.5 text-center text-sm font-semibold outline-none focus:border-cyan-400/60"
@@ -1002,19 +1003,17 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
 
         <div className="mt-4 font-mono text-xs text-white/55">{hasPnl ? (pnlNum >= 0 ? 'Win' : 'Loss') : 'Enter P&L to preview'}</div>
 
-        {/* Emotions — from journal (create mode) */}
-        {emotions.length > 0 && (
+        {previewEmotions.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-1">
-            {emotions.map((em, i) => (
+            {previewEmotions.map((em, i) => (
               <span key={i} className="rounded-full border border-violet-400/20 bg-violet-500/10 px-2 py-0.5 text-[10px] text-violet-200">{em}</span>
             ))}
           </div>
         )}
 
-        {/* Tags — from journal (create mode) */}
-        {tradeTags.length > 0 && (
+        {previewTags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1">
-            {tradeTags.map((tag, i) => (
+            {previewTags.map((tag, i) => (
               <span key={i} className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-[10px] text-cyan-200">#{tag}</span>
             ))}
           </div>

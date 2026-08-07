@@ -6,7 +6,9 @@ import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
 import TradeShareMenu from '@/components/share/TradeShareMenu';
 import AnalyzeButton from '@/components/trades/AnalyzeButton';
 import DeleteTradeButton from '@/components/trades/DeleteTradeButton';
+import FavoriteTradeButton from '@/components/trades/FavoriteTradeButton';
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
+import { getActiveAccountId } from '@/lib/accounts';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +22,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
   // Fetch trade with user_id check
   const { data: trade, error: tradeErr } = await supabase
     .from('trades')
-    .select('id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, share_id, shared_until, created_at')
+    .select('id, account_id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_follow_map, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, is_favorite, share_id, shared_until, created_at')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -38,6 +40,12 @@ export default async function TradeDetailPage({ params, searchParams }) {
         </div>
       </div>
     );
+  }
+
+  // A selected account scopes direct detail routes as well as the trade list.
+  const activeAccountId = await getActiveAccountId(supabase, user.id);
+  if (activeAccountId && trade.account_id !== activeAccountId) {
+    redirect('/dashboard/trades');
   }
 
   // Fetch journal entry
@@ -65,8 +73,12 @@ export default async function TradeDetailPage({ params, searchParams }) {
     .order('created_at', { ascending: false })
     .maybeSingle();
 
-  // Fetch setup names if setup_ids exist
-  let setupNames = trade.setup ? trade.setup.split(', ') : [];
+  // Preserve the setup order so each badge can use its own follow status.
+  const setupNames = trade.setup ? trade.setup.split(', ') : [];
+  const setupFollowMap = trade.setup_follow_map && typeof trade.setup_follow_map === 'object' && !Array.isArray(trade.setup_follow_map)
+    ? trade.setup_follow_map
+    : {};
+  const setupIds = Array.isArray(trade.setup_ids) ? trade.setup_ids : [];
 
   const pnl = Number(trade.pnl) || 0;
   const isProfit = pnl >= 0;
@@ -93,12 +105,15 @@ export default async function TradeDetailPage({ params, searchParams }) {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
           Back to Trades
         </Link>
-        <TradeShareMenu
-          tradeId={trade.id}
-          tradeData={{ pair: trade.pair, direction: trade.direction, pnl, trade_date: trade.trade_date, entry_price: trade.entry_price, exit_price: trade.exit_price, session: trade.session, setup: trade.setup, avatarUrl: prefs?.avatar_url || null, fullName: prefs?.full_name || '' }}
-          initialShareId={trade.share_id}
-          initialSharedUntil={trade.shared_until}
-        />
+        <div className="flex items-center gap-2">
+          <FavoriteTradeButton tradeId={trade.id} initialFavorite={trade.is_favorite} />
+          <TradeShareMenu
+            tradeId={trade.id}
+            tradeData={{ pair: trade.pair, direction: trade.direction, pnl, trade_date: trade.trade_date, entry_price: trade.entry_price, exit_price: trade.exit_price, session: trade.session, setup: trade.setup, avatarUrl: prefs?.avatar_url || null, fullName: prefs?.full_name || '' }}
+            initialShareId={trade.share_id}
+            initialSharedUntil={trade.shared_until}
+          />
+        </div>
       </div>
 
       {/* Trade Header */}
@@ -138,20 +153,14 @@ export default async function TradeDetailPage({ params, searchParams }) {
         {setupNames.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {setupNames.map((s, i) => {
-              // Good SL always green, Bad SL / No Setup always red
+              const followStatus = setupFollowMap[setupIds[i]] || trade.setup_followed;
               const isGoodSL = s === 'Good SL';
               const isBadOrNoSetup = s === 'Bad SL' || s === 'No Setup';
               let pillClass;
-              if (isGoodSL) {
+              if (followStatus === 'yes' || (!followStatus && isGoodSL)) {
                 pillClass = 'bg-emerald-400/[0.1] border border-emerald-400/20 text-emerald-400';
-              } else if (isBadOrNoSetup) {
+              } else if (followStatus === 'no' || (!followStatus && isBadOrNoSetup)) {
                 pillClass = 'bg-red-400/[0.1] border border-red-400/20 text-red-400';
-              } else if (trade.setup_followed === 'yes') {
-                pillClass = 'bg-emerald-400/[0.1] border border-emerald-400/20 text-emerald-400';
-              } else if (trade.setup_followed === 'no') {
-                pillClass = 'bg-red-400/[0.1] border border-red-400/20 text-red-400';
-              } else if (trade.setup_followed === 'partial') {
-                pillClass = 'bg-amber-400/[0.1] border border-amber-400/20 text-amber-400';
               } else {
                 pillClass = 'bg-amber-400/[0.1] border border-amber-400/20 text-amber-400';
               }

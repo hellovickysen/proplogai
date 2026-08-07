@@ -20,6 +20,7 @@ import QuickActions from '@/components/layout/QuickActions';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import HeaderAvatar from '@/components/layout/HeaderAvatar';
 import AccountSwitcher from '@/components/accounts/AccountSwitcher';
+import AccountScopeGate from '@/components/accounts/AccountScopeGate';
 import SmartHeader from '@/components/layout/SmartHeader';
 import { getAccounts, getActiveAccountId, getAccountStats } from '@/lib/accounts';
 
@@ -245,7 +246,7 @@ export default async function DashboardLayout({ children }) {
             </div>
           </div>
         </SmartHeader>
-        <main className="flex-1"><SubscriptionBanner subscription={subscription} planAccess={planAccess} />{children}</main>
+        <main className="flex-1"><SubscriptionBanner subscription={subscription} planAccess={planAccess} /><AccountScopeGate accounts={accounts} activeAccountId={activeAccountId}>{children}</AccountScopeGate></main>
         <RiskFooter />
       </div>
       <QuickActions />

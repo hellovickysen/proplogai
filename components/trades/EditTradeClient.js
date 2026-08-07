@@ -4,14 +4,20 @@ import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import TradeForm from '@/components/trades/TradeForm';
 import JournalInlineEdit from '@/components/trades/JournalInlineEdit';
+import { LogoMark } from '@/components/Logo';
 
 export default function EditTradeClient({ tradeId, trade, prefs, setups, journal, screenshots, userId, accounts, activeAccountId }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [journalDirty, setJournalDirty] = useState(false);
   const [tradeDirty, setTradeDirty] = useState(false);
+  const [journalPreview, setJournalPreview] = useState({
+    emotions: journal?.emotions || [],
+    tags: Array.isArray(journal?.tags) ? journal.tags : [],
+  });
 
   const onJournalDirtyChange = useCallback((d) => setJournalDirty(d), []);
+  const onJournalPreviewChange = useCallback((preview) => setJournalPreview(preview), []);
 
   // Track trade form changes
   useEffect(() => {
@@ -43,18 +49,22 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
   }, [isDirty]);
 
   async function handleSaveAll() {
+    const form = document.getElementById('trade-form');
+    if (!form || !form.reportValidity()) return;
+
     setSaving(true);
     try {
       if (journalDirty && window.__journalSave) {
-        await window.__journalSave();
+        const journalResult = await window.__journalSave();
+        if (journalResult?.error) {
+          setSaving(false);
+          return;
+        }
       }
-      const form = document.getElementById('trade-form');
-      if (form) form.requestSubmit();
+      form.requestSubmit();
     } catch (e) {
-      // ignore
+      setSaving(false);
     }
-    // Reset after delay — if form validation fails, page stays
-    setTimeout(() => setSaving(false), 2000);
   }
 
   function handleCancel() {
@@ -63,7 +73,17 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
 
   return (
     <>
-      <TradeForm mode="edit" tradeId={tradeId} initial={trade} prefs={prefs} setups={setups || []} accounts={accounts || []} activeAccountId={activeAccountId} hideButtons />
+      {saving && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#07070b]/35 px-6 backdrop-blur-[1px]">
+          <div className="flex flex-col items-center gap-4">
+            <div className="animate-pulse">
+              <LogoMark size={48} rounded="rounded-2xl" glow />
+            </div>
+            <span className="text-sm text-white/50">Saving<span className="animate-pulse">...</span></span>
+          </div>
+        </div>
+      )}
+      <TradeForm mode="edit" tradeId={tradeId} initial={trade} prefs={prefs} setups={setups || []} accounts={accounts || []} activeAccountId={activeAccountId} previewJournal={journalPreview} hideButtons onSaveError={() => setSaving(false)} />
 
       <div className="mt-6 lg:pr-[324px]">
         <JournalInlineEdit
@@ -75,6 +95,8 @@ export default function EditTradeClient({ tradeId, trade, prefs, setups, journal
           startInEditMode
           hideButtons
           onDirtyChange={onJournalDirtyChange}
+          onPreviewChange={onJournalPreviewChange}
+          skipRefresh
         />
       </div>
 

@@ -7,7 +7,7 @@ import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
 
-export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '', startInEditMode = false, hideButtons = false, onDirtyChange }) {
+export default function JournalInlineEdit({ tradeId, journal, userId, prefs, screenshots: initialScreenshots = [], editTradeHref = '', startInEditMode = false, hideButtons = false, onDirtyChange, onPreviewChange, skipRefresh = false }) {
   const router = useRouter();
   const toast = useToast?.() || { success: () => {}, error: () => {} };
   const [editing, setEditing] = useState(startInEditMode);
@@ -60,6 +60,11 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
   const [emotions, setEmotions] = useState(journal?.emotions || []);
   const [tags, setTags] = useState(Array.isArray(journal?.tags) ? journal.tags : []);
   const [confidence, setConfidence] = useState(journal?.confidence || 0);
+
+  // Keep the edit preview synchronized with current journal selections.
+  useEffect(() => {
+    if (onPreviewChange) onPreviewChange({ emotions, tags });
+  }, [emotions, tags, onPreviewChange]);
 
   // Screenshot state
   const [screenshotUrls, setScreenshotUrls] = useState(initialScreenshots);
@@ -119,6 +124,11 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
     }
     // Reset state and session tracker
     uploadedThisSessionRef.current = [];
+    setNote(journal?.note || '');
+    setLesson(journal?.lesson || '');
+    setEmotions(journal?.emotions || []);
+    setTags(Array.isArray(journal?.tags) ? journal.tags : []);
+    setConfidence(journal?.confidence || 0);
     setScreenshotUrls(initialScreenshots);
     setDirty(false);
     setEditing(false);
@@ -235,15 +245,18 @@ export default function JournalInlineEdit({ tradeId, journal, userId, prefs, scr
       }
 
       uploadedThisSessionRef.current = [];
-      toast.success?.('Journal saved');
+      if (!skipRefresh) toast.success?.('Journal saved');
       setDirty(false);
       setEditing(startInEditMode); // stay in edit mode if started there
-      router.refresh();
+      if (!skipRefresh) router.refresh();
+      setSaving(false);
+      return { ok: true };
     } catch (err) {
       console.error('Save journal error:', err);
       toast.error?.('Failed to save journal');
+      setSaving(false);
+      return { error: 'Failed to save journal' };
     }
-    setSaving(false);
   }
 
   // Keep ref updated so parent can call save

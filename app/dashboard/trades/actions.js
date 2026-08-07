@@ -6,6 +6,7 @@ import { analyzeTradeWithAI } from '@/lib/ai';
 import { notify, TYPES } from '@/lib/notifications';
 import { getUserAccess } from '@/lib/plans';
 import { getUserTradeContext } from '@/lib/tradeContext';
+import { getActiveAccountId, getDefaultAccountId } from '@/lib/accounts';
 
 /** Input validation limits */
 const MAX_PAIR_LENGTH = 20;
@@ -52,6 +53,20 @@ async function getCtx() {
   return { supabase, user };
 }
 
+async function canAccessSelectedAccountTrade(supabase, userId, tradeId) {
+  const activeAccountId = await getActiveAccountId(supabase, userId);
+  if (!activeAccountId) return true;
+
+  const { data: trade } = await supabase
+    .from('trades')
+    .select('account_id')
+    .eq('id', tradeId)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  return !!trade && trade.account_id === activeAccountId;
+}
+
 function isValidStorageUrl(url) {
   if (!url || typeof url !== 'string') return false;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -72,6 +87,14 @@ function buildRow(user, payload) {
   const setupIds = Array.isArray(payload.setup_ids)
     ? payload.setup_ids.filter((id) => typeof id === 'string' && id.length > 0).slice(0, MAX_SETUPS_PER_TRADE)
     : [];
+  const submittedFollowMap = payload.setup_follow_map && typeof payload.setup_follow_map === 'object' && !Array.isArray(payload.setup_follow_map)
+    ? payload.setup_follow_map
+    : {};
+  const setupFollowMap = setupIds.reduce((map, id) => {
+    const value = submittedFollowMap[id];
+    if (VALID_SETUP_FOLLOWED.includes(value)) map[id] = value;
+    return map;
+  }, {});
 
   return {
     user_id: user.id,
@@ -87,6 +110,7 @@ function buildRow(user, payload) {
     setup: sanitizeText(payload.setup, MAX_SETUP_LENGTH),
     setup_id: payload.setup_id || null,
     setup_ids: setupIds,
+    setup_follow_map: setupFollowMap,
     setup_followed: VALID_SETUP_FOLLOWED.includes(payload.setup_followed) ? payload.setup_followed : null,
     no_setup_reason: sanitizeText(payload.no_setup_reason, 50) || null,
     timeframe: payload.timeframe || null,
@@ -124,7 +148,16 @@ export async function createTrade(payload) {
   if (payload.journal && Array.isArray(payload.journal.screenshot_urls) && payload.journal.screenshot_urls.length > screenshotLimit) {
     payload.journal.screenshot_urls = payload.journal.screenshot_urls.slice(0, screenshotLimit);
   }
-  const { data, error } = await supabase.from('trades').insert(buildRow(user, payload)).select('id').single();
+  // Quick Log inherits the selected account. When All Accounts is selected,
+  // fall back to the user's primary Account 1 instead of creating an unassigned trade.
+  const accountId = payload.account_id
+    || await getActiveAccountId(supabase, user.id)
+    || await getDefaultAccountId(supabase, user.id);
+  const { data, error } = await supabase
+    .from('trades')
+    .insert(buildRow(user, { ...payload, account_id: accountId }))
+    .select('id')
+    .single();
   if (error) return { error: error.message };
 
   // If journal fields were included, create the journal entry too
@@ -185,6 +218,11 @@ export async function updateTrade(id, payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
   if (toNum(payload.pnl) === null) return { error: 'Please enter the trade P&L.' };
+
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, id)) {
+    return { error: 'Switch to this trade’s account before editing it.' };
+  }
+
   const row = buildRow(user, payload);
   delete row.user_id;
   const { error } = await supabase.from('trades').update(row).eq('id', id).eq('user_id', user.id);
@@ -195,9 +233,31 @@ export async function updateTrade(id, payload) {
   return { ok: true };
 }
 
+export async function toggleTradeFavorite(id, isFavorite) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, id)) {
+    return { error: 'Switch to this trade’s account before changing it.' };
+  }
+
+  const { error } = await supabase
+    .from('trades')
+    .update({ is_favorite: Boolean(isFavorite) })
+    .eq('id', id)
+    .eq('user_id', user.id);
+  if (error) return { error: error.message };
+
+  revalidatePath('/dashboard/trades');
+  revalidatePath('/dashboard/trades/' + id);
+  return { ok: true };
+}
+
 export async function deleteTrade(id) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, id)) {
+    return { error: 'Switch to this trade’s account before deleting it.' };
+  }
 
   // Fetch journal screenshots before cascade delete removes them
   const { data: journal } = await supabase
@@ -229,9 +289,9 @@ export async function deleteTrade(id) {
 export async function saveJournal(tradeId, payload) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
-  // Verify trade belongs to the current user (prevents IDOR)
-  const { data: tradeOwner } = await supabase.from('trades').select('id').eq('id', tradeId).eq('user_id', user.id).maybeSingle();
-  if (!tradeOwner) return { error: 'Trade not found.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, tradeId)) {
+    return { error: 'Switch to this trade’s account before editing its journal.' };
+  }
   const urls = normalizeScreenshots(payload.screenshot_urls, payload.screenshot_url).slice(0, MAX_SCREENSHOTS);
   const emotions = Array.isArray(payload.emotions) ? payload.emotions.slice(0, MAX_EMOTIONS).map((e) => sanitizeText(e, 50)) : [];
   const entry = {
@@ -280,6 +340,9 @@ export async function saveJournal(tradeId, payload) {
 export async function analyzeTrade(tradeId) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, tradeId)) {
+    return { error: 'Switch to this trade’s account before analyzing it.' };
+  }
   if (!checkAiRateLimit(user.id)) return { error: 'Rate limit reached. Try again in an hour.' };
 
   // Plan-based limit check
@@ -346,6 +409,9 @@ export async function analyzeTrade(tradeId) {
 export async function shareTrade(tradeId) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, tradeId)) {
+    return { error: 'Switch to this trade’s account before sharing it.' };
+  }
 
   // Verify ownership
   const { data: trade } = await supabase
@@ -379,6 +445,9 @@ export async function shareTrade(tradeId) {
 export async function unshareTrade(tradeId) {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
+  if (!await canAccessSelectedAccountTrade(supabase, user.id, tradeId)) {
+    return { error: 'Switch to this trade’s account before changing sharing.' };
+  }
 
   const { error } = await supabase
     .from('trades')

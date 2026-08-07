@@ -35,6 +35,12 @@ export default async function EditTradePage({ params }) {
     );
   }
 
+  // A selected account scopes direct edit routes as well as the trade list.
+  const activeAccountId = await getActiveAccountId(supabase, user.id);
+  if (activeAccountId && trade.account_id !== activeAccountId) {
+    redirect('/dashboard/trades');
+  }
+
   // Fetch user prefs
   const { data: prefs } = await supabase
     .from('user_preferences')
@@ -60,9 +66,6 @@ export default async function EditTradePage({ params }) {
   // Build screenshots array
   const screenshots = Array.isArray(journal?.screenshot_urls) ? journal.screenshot_urls.filter(Boolean) : [];
   if (!screenshots.length && journal?.screenshot_url) screenshots.push(journal.screenshot_url);
-
-  // Multi-account
-  const activeAccountId = await getActiveAccountId(supabase, user.id);
 
   return (
     <div className="px-4 py-6 sm:px-6 sm:py-8">
