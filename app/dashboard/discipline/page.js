@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getActiveAccountId } from '@/lib/accounts';
-import DisciplineRulesExperience from '@/components/discipline/DisciplineRulesExperience';
+import DisciplineRulesRail from '@/components/discipline/DisciplineRulesRail';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,8 +26,9 @@ export default async function DisciplinePage() {
 
   let rules = [];
   let focusRuleIds = [];
+  let reviewedDayCount = 0;
   if (program) {
-    const [rulesResult, focusResult] = await Promise.all([
+    const [rulesResult, focusResult, reviewedDaysResult] = await Promise.all([
       supabase
         .from('discipline_rules')
         .select('id, name, rule_type, metric, threshold, unit, instrument, version, is_active, effective_from')
@@ -41,20 +42,28 @@ export default async function DisciplinePage() {
         .eq('user_id', user.id)
         .eq('program_id', program.id)
         .order('sort_order', { ascending: true }),
+      supabase
+        .from('discipline_program_trading_days')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('program_id', program.id),
     ]);
-    if (rulesResult.error || focusResult.error) {
+
+    if (rulesResult.error || focusResult.error || reviewedDaysResult.error) {
       throw new Error('Unable to load discipline rules.');
     }
     rules = rulesResult.data || [];
     focusRuleIds = (focusResult.data || []).map((row) => row.rule_id);
+    reviewedDayCount = Math.min(reviewedDaysResult.count || 0, 30);
   }
 
   return (
-    <DisciplineRulesExperience
+    <DisciplineRulesRail
       program={program}
       rules={rules}
       focusRuleIds={focusRuleIds}
       activeAccountId={activeAccountId}
+      reviewedDayCount={reviewedDayCount}
     />
   );
 }
