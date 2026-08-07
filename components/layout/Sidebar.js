@@ -152,7 +152,7 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
                 <div className="truncate text-[11px] text-white/40">{email}</div>
               </div>
             )}
-            <HeaderAvatar email={email} fullName={fullName} avatarUrl={avatarUrl} credits={credits} isAdmin={isAdmin} adminNotifCount={adminNotifCount} planAccess={planAccess} popoverPosition="up" />
+            <HeaderAvatar email={email} fullName={fullName} avatarUrl={avatarUrl} credits={credits} isAdmin={isAdmin} adminNotifCount={adminNotifCount} planAccess={planAccess} popoverPosition="up" popoverAlign="left" />
           </div>
         </div>
       </div>
