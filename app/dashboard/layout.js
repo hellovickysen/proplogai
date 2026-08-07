@@ -220,7 +220,7 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} planAccess={planAccess} credits={prefs.referral_balance} />
+      <Sidebar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} planAccess={planAccess} credits={prefs.referral_balance} isAdmin={isAdmin} adminNotifCount={adminNotifCount} />
       <div className="flex min-w-0 flex-1 flex-col">
         <SmartHeader>
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
