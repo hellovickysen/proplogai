@@ -75,12 +75,9 @@ function MonkRail({ reviewedDayCount = 0 }) {
   return (
     <aside className="hidden h-fit rounded-2xl border border-white/15 bg-[radial-gradient(circle_at_50%_25%,rgba(86,70,210,0.24),transparent_36%),linear-gradient(180deg,#0b111c,#080b11)] p-5 xl:sticky xl:top-6 xl:block">
       <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.19em] text-fuchsia-300">Monk reminder <span className="rounded-full border border-white/25 px-2 py-0.5 text-[9px] text-white/60">Lite</span></div>
-      <div className="relative mx-auto mt-5 grid h-56 w-full place-items-center overflow-hidden rounded-2xl border border-violet-300/20 bg-[radial-gradient(circle_at_50%_42%,rgba(53,197,255,0.18),transparent_25%),linear-gradient(180deg,rgba(21,16,43,0.72),rgba(4,11,20,0.9))]">
-        <div className="absolute h-36 w-36 rounded-full border border-fuchsia-300/25 shadow-[0_0_55px_rgba(94,207,255,0.24)]" />
-        <div className="absolute top-7 h-12 w-12 rounded-full border-2 border-violet-300/70 bg-[#05070e]" />
-        <div className="absolute top-[5.6rem] h-24 w-32 rounded-t-[55%] border-x border-t border-cyan-300/55 bg-gradient-to-b from-violet-500/20 to-cyan-300/10" />
-        <div className="absolute bottom-4 h-5 w-40 rounded-[100%] border border-cyan-300/30" />
-        <span className="absolute bottom-7 font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-200/70">Path begins with review</span>
+      <div className="relative mx-auto mt-5 overflow-hidden rounded-2xl border border-violet-300/20 bg-[radial-gradient(circle_at_50%_35%,rgba(53,197,255,0.16),transparent_42%),linear-gradient(180deg,rgba(21,16,43,0.72),rgba(4,11,20,0.9))]">
+        <img src="/discipline/monk-master.png.png" alt="Faceless Monk path progress illustration" className="h-56 w-full object-contain object-bottom" />
+        <span className="absolute inset-x-0 bottom-4 text-center font-mono text-[10px] uppercase tracking-[0.18em] text-cyan-200/70">Path begins with review</span>
       </div>
       <div className="mt-5 text-center"><div className="text-sm text-white/60">Reviewed</div><div className="mt-1 font-display text-xl text-white">Day {boundedDayCount} of 30</div><div className="mt-1 font-display text-4xl text-cyan-300">{percent}%</div></div>
       <div className="mt-4 grid grid-cols-10 gap-1" aria-label={`${percent}% of 30 reviewed trading days completed`} role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow={boundedDayCount}>
