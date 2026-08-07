@@ -352,11 +352,11 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
               newIds = newIds.filter((id) => id !== opposite.id);
               delete newMap[opposite.id];
             }
-            delete newMap[setupId];
+            newMap[setupId] = chosen.name === 'Good SL' ? 'yes' : 'no';
           }
           if (newIds.length >= MAX_SETUPS) return f;
           newIds.push(setupId);
-          // Good SL and Bad SL are selection-only markers; regular setups start blank.
+          // Good SL and Bad SL receive automatic status; regular setups start blank.
         }
       }
 
@@ -506,7 +506,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
     }
 
     // Validate: each selected regular setup must have a follow status
-    const regularSetups = selectedSetups.filter((s) => !s.is_default);
+    const regularSetups = selectedSetups.filter((s) => !s.is_default && !PINNED_SETUPS.includes(s.name));
     if (regularSetups.length > 0) {
       const missing = regularSetups.filter((s) => !form.setup_follow_map[s.id]);
       if (missing.length > 0) {
@@ -658,8 +658,10 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                             className={
                               'rounded-full border px-3 py-1.5 text-xs transition-colors ' +
                               (selected
-                                ? isNoSetupItem
+                                ? isNoSetupItem || s.name === 'Bad SL'
                                   ? 'border-red-400/50 bg-red-500/15 text-red-200'
+                                  : s.name === 'Good SL'
+                                  ? 'border-emerald-400/50 bg-emerald-500/15 text-emerald-200'
                                   : 'border-cyan-400/50 bg-cyan-500/15 text-cyan-200'
                                 : 'border-white/10 bg-black/30 text-white/50 hover:text-white')
                             }
@@ -720,7 +722,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                 {!hasNoSetup && (
                   <div className="space-y-3">
                     {selectedSetups.filter((s) => !s.is_default && !PINNED_SETUPS.includes(s.name)).map((s) => {
-                      const val = form.setup_follow_map[s.id] || '';
+                      const val = s.name === 'Good SL' ? 'yes' : s.name === 'Bad SL' ? 'no' : form.setup_follow_map[s.id] || '';
                       return (
                         <div key={s.id} className="rounded-lg bg-white/[0.02] px-3 py-2.5">
                           <div className="flex items-center justify-between gap-2">
@@ -983,14 +985,19 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
         {selectedSetups.length > 0 && (
           <div className="mt-2 space-y-1">
             {selectedSetups.map((s) => {
-              const val = form.setup_follow_map[s.id] || '';
+              const val = s.name === 'Good SL' ? 'yes' : s.name === 'Bad SL' ? 'no' : form.setup_follow_map[s.id] || '';
               const followBadge = val === 'yes' ? 'bg-emerald-500/15 text-emerald-300'
                 : val === 'partial' ? 'bg-amber-500/15 text-amber-300'
                 : val === 'no' ? 'bg-red-500/15 text-red-300' : '';
               const followLabel = val === 'yes' ? 'Followed' : val === 'partial' ? 'Partial' : val === 'no' ? 'Not followed' : '';
+              const setupBadge = s.name === 'Good SL'
+                ? 'border-emerald-400/20 bg-emerald-500/10 text-emerald-300'
+                : s.name === 'Bad SL'
+                ? 'border-red-400/20 bg-red-500/10 text-red-300'
+                : 'border-cyan-400/20 bg-cyan-500/10 text-cyan-300';
               return (
                 <div key={s.id} className="flex items-center gap-1.5">
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-0.5 text-xs text-cyan-300">{s.name}</span>
+                  <span className={'rounded-full border px-2 py-0.5 text-xs ' + setupBadge}>{s.name}</span>
                   {followLabel && <span className={'rounded-full px-2 py-0.5 text-xs ' + followBadge}>{followLabel}</span>}
                 </div>
               );
