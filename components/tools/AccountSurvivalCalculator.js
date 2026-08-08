@@ -50,7 +50,7 @@ function SessionProgression({ sessions, dailyRisk, drawdown }) {
   return (
     <div className="mt-5 space-y-1.5">
       <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
-        Drawdown consumed per losing session
+        Drawdown consumed per losing day
       </p>
       <div className="space-y-1">
         {steps.map((s) => {
@@ -107,7 +107,7 @@ function SessionProgression({ sessions, dailyRisk, drawdown }) {
         )}
       </div>
       <p className="mt-1 text-center font-mono text-[10px] text-white/35">
-        {sessions} sessions &times; {usd.format(dailyRisk)} = {usd.format(drawdown)} maximum loss
+        {sessions} {sessions === 1 ? 'day' : 'days'} &times; {usd.format(dailyRisk)} = {usd.format(drawdown)} maximum loss
       </p>
     </div>
   );
@@ -168,7 +168,7 @@ export default function AccountSurvivalCalculator() {
         </h1>
         <p className="mt-2 text-sm text-white/55 md:text-base">
           Calculate how much you can risk per day or per trade based on your
-          prop firm&rsquo;s maximum drawdown and how many losing sessions you want
+          prop firm&rsquo;s maximum drawdown and how many losing days you want
           your account to survive.
         </p>
       </div>
@@ -289,7 +289,7 @@ export default function AccountSurvivalCalculator() {
               setValue={setKnownRisk}
               prefix="$"
               placeholder="200"
-              note="Enter your maximum planned loss per trading session."
+              note="Enter your maximum planned loss per trading day."
             />
           )}
         </div>
@@ -309,7 +309,7 @@ export default function AccountSurvivalCalculator() {
           {showTrades && (
             <div className="mt-3 max-w-xs">
               <Field
-                label="Trades per session"
+                label="Trades per day"
                 value={tradesPerSession}
                 setValue={setTradesPerSession}
                 min={1}
@@ -336,7 +336,7 @@ export default function AccountSurvivalCalculator() {
             {usd.format(result.dailyRisk)}
           </p>
           <p className="mt-1 text-lg text-white/60">
-            per session
+            per day
           </p>
           <p className="mt-1 font-mono text-sm text-cyan-300">
             {result.dailyPct.toFixed(2)}% of your account
@@ -345,7 +345,7 @@ export default function AccountSurvivalCalculator() {
           {/* Context sentence */}
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/50">
             Your account can survive{' '}
-            <span className="font-semibold text-white/80">{result.sessions} consecutive losing sessions</span>{' '}
+            <span className="font-semibold text-white/80">{result.sessions} consecutive losing {result.sessions === 1 ? 'day' : 'days'}</span>{' '}
             before reaching the{' '}
             <span className="font-semibold text-white/80">{usd.format(drawdown)}</span>{' '}
             maximum loss.
@@ -355,7 +355,7 @@ export default function AccountSurvivalCalculator() {
           {showTrades && (
             <div className="mx-auto mt-5 max-w-sm rounded-xl border border-white/10 bg-black/20 p-4">
               <p className="text-sm text-white/50">
-                With {trades} trades per session
+                With {trades} trades per day
               </p>
               <p className="mt-1 font-mono text-3xl font-bold text-violet-400">
                 {usd.format(result.perTrade)}
@@ -377,11 +377,11 @@ export default function AccountSurvivalCalculator() {
             </div>
             <div className="flex justify-between">
               <span>Survival target</span>
-              <span className="font-mono text-white/60">{result.sessions} sessions</span>
+              <span className="font-mono text-white/60">{result.sessions} {result.sessions === 1 ? 'day' : 'days'}</span>
             </div>
             {showTrades && (
               <div className="flex justify-between">
-                <span>Trades per session</span>
+                <span>Trades per day</span>
                 <span className="font-mono text-white/60">{trades}</span>
               </div>
             )}
@@ -398,8 +398,8 @@ export default function AccountSurvivalCalculator() {
 
       {/* Disclaimer */}
       <p className="px-1 text-xs leading-relaxed text-white/35">
-        If every session reaches your maximum planned loss, your account can
-        survive the number of sessions shown above. This is a mathematical
+        If every day reaches your maximum planned loss, your account can
+        survive the number of days shown above. This is a mathematical
         calculation, not a prediction of trading performance.
       </p>
 
