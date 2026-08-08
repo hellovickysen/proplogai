@@ -6,7 +6,7 @@ import AccountSurvivalCalculator from '@/components/tools/AccountSurvivalCalcula
 const faqs = [
   {
     q: 'How many losing trades can my account survive?',
-    a: 'Your account’s survival depends on your maximum allowed loss and how much you risk per trade. Divide your maximum allowed loss by your risk per trade to estimate the maximum number of consecutive losing trades before reaching your loss limit.',
+    a: "Your account’s survival depends on your maximum allowed loss and how much you risk per trade. Divide your maximum allowed loss by your risk per trade to estimate the maximum number of consecutive losing trades before reaching your loss limit.",
     formula: 'Maximum Allowed Loss ÷ Risk Per Trade = Consecutive Losing Trades',
   },
   {
@@ -32,7 +32,7 @@ const faqs = [
   },
   {
     q: 'How do I calculate risk per trade for a prop firm account?',
-    a: 'Start with the firm’s maximum allowed drawdown, decide how many consecutive losing trades or sessions you want to survive, and work backward from that limit. Remember to consider the firm’s specific daily loss and maximum drawdown rules.',
+    a: "Start with the firm’s maximum allowed drawdown, decide how many consecutive losing trades or sessions you want to survive, and work backward from that limit. Remember to consider the firm’s specific daily loss and maximum drawdown rules.",
   },
   {
     q: 'What happens if I lose my maximum daily loss every day?',
@@ -40,7 +40,7 @@ const faqs = [
   },
   {
     q: 'Is risking 1% per trade safe for a prop firm account?',
-    a: 'Not necessarily. A 1% risk per trade may represent a large portion of a prop firm’s available drawdown. For example, if a $50,000 account has a $2,000 drawdown, a 1% risk is $500—25% of the entire drawdown. Five consecutive losses of $500 would exhaust the $2,000 drawdown.',
+    a: "Not necessarily. A 1% risk per trade may represent a large portion of a prop firm’s available drawdown. For example, if a $50,000 account has a $2,000 drawdown, a 1% risk is $500—25% of the entire drawdown. Five consecutive losses of $500 would exhaust the $2,000 drawdown.",
   },
   {
     q: 'How can I make my trading account survive longer?',
@@ -52,7 +52,7 @@ const faqs = [
   },
   {
     q: 'Can I use this calculator for prop firm accounts?',
-    a: 'Yes. Enter the account’s nominal size and use the firm’s actual maximum allowed drawdown or loss as your maximum loss. Then enter your planned daily or per-trade risk to see how many consecutive losses your account could theoretically withstand.',
+    a: "Yes. Enter the account’s nominal size and use the firm’s actual maximum allowed drawdown or loss as your maximum loss. Then enter your planned daily or per-trade risk to see how many consecutive losses your account could theoretically withstand.",
   },
 ];
 

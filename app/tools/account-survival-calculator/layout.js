@@ -7,7 +7,7 @@ const faqStructuredData = {
       name: 'How many losing trades can my account survive?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Your account's survival depends on your maximum allowed loss and how much you risk per trade. Divide your maximum allowed loss by your risk per trade to estimate the maximum number of consecutive losing trades before reaching your loss limit. Formula: Maximum Allowed Loss ÷ Risk Per Trade = Consecutive Losing Trades.',
+        text: "Your account's survival depends on your maximum allowed loss and how much you risk per trade. Divide your maximum allowed loss by your risk per trade to estimate the maximum number of consecutive losing trades before reaching your loss limit. Formula: Maximum Allowed Loss ÷ Risk Per Trade = Consecutive Losing Trades.",
       },
     },
     {
@@ -132,9 +132,6 @@ export const metadata = {
     title: 'Account Survival Calculator – Losing Streak & Risk | ProplogAI',
     description:
       'Calculate how many consecutive losing trades or sessions your account can survive.',
-  },
-  other: {
-    'script:ld+json': JSON.stringify(faqStructuredData),
   },
 };
 
