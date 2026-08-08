@@ -107,7 +107,7 @@ function SessionProgression({ sessions, dailyRisk, drawdown }) {
         )}
       </div>
       <p className="mt-1 text-center font-mono text-[10px] text-white/35">
-        {sessions} sessions &times; {usd.format(dailyRisk)} = {usd.format(drawdown)} drawdown limit
+        {sessions} sessions &times; {usd.format(dailyRisk)} = {usd.format(drawdown)} maximum loss
       </p>
     </div>
   );
@@ -176,7 +176,7 @@ export default function AccountSurvivalCalculator() {
       {/* Mode toggle */}
       <div>
         <label className="font-mono text-xs uppercase tracking-wider text-white/55">
-          What do you want to calculate?
+          What do you want to know?
         </label>
         <div className="mt-2 flex gap-2">
           <button
@@ -193,7 +193,7 @@ export default function AccountSurvivalCalculator() {
                 : undefined
             }
           >
-            Risk for X sessions
+            How much can I risk?
           </button>
           <button
             type="button"
@@ -209,7 +209,7 @@ export default function AccountSurvivalCalculator() {
                 : undefined
             }
           >
-            Survival at my risk
+            How long can I survive?
           </button>
         </div>
       </div>
@@ -219,19 +219,19 @@ export default function AccountSurvivalCalculator() {
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {/* Account size */}
           <Field
-            label="Account size"
+            label="Prop firm account size"
             value={size}
             setValue={setSize}
             prefix="$"
             placeholder="50000"
-            note="Your prop firm account size."
+            note="Enter your prop firm account size."
           />
 
           {/* Maximum drawdown */}
           <div>
             <div className="mb-2 flex items-center justify-between">
               <span className="font-mono text-xs uppercase tracking-wider text-white/55">
-                Maximum drawdown
+                Maximum loss / drawdown
               </span>
               <div className="flex rounded-lg border border-white/10 p-0.5">
                 <button
@@ -264,7 +264,7 @@ export default function AccountSurvivalCalculator() {
               <Field label="" value={ddPercent} setValue={setDdPercent} suffix="%" step={0.1} max={100} placeholder="4" />
             )}
             <p className="mt-1.5 text-xs text-white/40">
-              {usd.format(drawdown)} &mdash; {drawdownPct.toFixed(1)}% of account
+              The most you can lose before your prop firm account fails. {usd.format(drawdown)} &mdash; {drawdownPct.toFixed(1)}% of account
             </p>
           </div>
         </div>
@@ -273,14 +273,14 @@ export default function AccountSurvivalCalculator() {
         <div className="mt-5">
           {mode === 'target' ? (
             <Field
-              label="I want to survive"
+              label="How many losing sessions do you want to survive?"
               value={targetSessions}
               setValue={setTargetSessions}
               suffix="trading sessions"
               min={1}
               max={10000}
               placeholder="20"
-              note="How many consecutive fully losing trading sessions do you want your drawdown to withstand?"
+              note="How many consecutive losing sessions do you want your account to survive?"
             />
           ) : (
             <Field
@@ -344,11 +344,11 @@ export default function AccountSurvivalCalculator() {
 
           {/* Context sentence */}
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/50">
-            To withstand{' '}
-            <span className="font-semibold text-white/80">{result.sessions} consecutive full-loss sessions</span>{' '}
-            within your{' '}
+            Your account can survive{' '}
+            <span className="font-semibold text-white/80">{result.sessions} consecutive losing sessions</span>{' '}
+            before reaching the{' '}
             <span className="font-semibold text-white/80">{usd.format(drawdown)}</span>{' '}
-            drawdown.
+            maximum loss.
           </p>
 
           {/* Per-trade risk */}
@@ -372,8 +372,8 @@ export default function AccountSurvivalCalculator() {
           {/* Summary details */}
           <div className="mx-auto mt-6 max-w-sm space-y-1 text-xs text-white/45">
             <div className="flex justify-between">
-              <span>Drawdown capacity</span>
-              <span className="font-mono text-white/60">{usd.format(drawdown)} ({drawdownPct.toFixed(1)}%)</span>
+              <span>Maximum loss</span>
+              <span className="font-mono text-white/60">{usd.format(drawdown)} ({drawdownPct.toFixed(1)}% of account)</span>
             </div>
             <div className="flex justify-between">
               <span>Survival target</span>
@@ -398,9 +398,9 @@ export default function AccountSurvivalCalculator() {
 
       {/* Disclaimer */}
       <p className="px-1 text-xs leading-relaxed text-white/35">
-        This is a mathematical risk-capacity calculation, not a prediction of
-        trading performance. It assumes every selected session reaches the full
-        planned loss.
+        If every session reaches your maximum planned loss, your account can
+        survive the number of sessions shown above. This is a mathematical
+        calculation, not a prediction of trading performance.
       </p>
 
       <style jsx global>{`
