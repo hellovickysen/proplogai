@@ -50,7 +50,7 @@ function SessionProgression({ sessions, dailyRisk, drawdown }) {
   return (
     <div className="mt-5 space-y-1.5">
       <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
-        Drawdown consumed per losing day
+        If you lose {usd.format(dailyRisk)} every day
       </p>
       <div className="space-y-1">
         {steps.map((s) => {
@@ -329,10 +329,10 @@ export default function AccountSurvivalCalculator() {
           </p>
 
           {/* Hero: daily risk amount */}
-          <p className="mt-4 text-base text-white/60">
-            You can risk up to
+          <p className="mt-4 text-sm text-white/50">
+            Maximum daily loss to survive {result.sessions} {result.sessions === 1 ? 'day' : 'days'}
           </p>
-          <p className="mt-1 font-mono text-5xl font-bold text-white md:text-6xl">
+          <p className="mt-2 font-mono text-5xl font-bold text-white md:text-6xl">
             {usd.format(result.dailyRisk)}
           </p>
           <p className="mt-1 text-lg text-white/60">
@@ -344,9 +344,8 @@ export default function AccountSurvivalCalculator() {
 
           {/* Context sentence */}
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/50">
-            Your account can survive{' '}
             <span className="font-semibold text-white/80">{result.sessions} consecutive losing {result.sessions === 1 ? 'day' : 'days'}</span>{' '}
-            before reaching the{' '}
+            would use your entire{' '}
             <span className="font-semibold text-white/80">{usd.format(drawdown)}</span>{' '}
             maximum loss.
           </p>
@@ -376,8 +375,8 @@ export default function AccountSurvivalCalculator() {
               <span className="font-mono text-white/60">{usd.format(drawdown)} ({drawdownPct.toFixed(1)}% of account)</span>
             </div>
             <div className="flex justify-between">
-              <span>Survival target</span>
-              <span className="font-mono text-white/60">{result.sessions} {result.sessions === 1 ? 'day' : 'days'}</span>
+              <span>Days to survive</span>
+              <span className="font-mono text-white/60">{result.sessions} losing {result.sessions === 1 ? 'day' : 'days'}</span>
             </div>
             {showTrades && (
               <div className="flex justify-between">
