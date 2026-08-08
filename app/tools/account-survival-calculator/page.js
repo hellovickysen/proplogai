@@ -1,21 +1,19 @@
-'use client';
-
 import Link from 'next/link';
 import LandingFooter from '@/components/landing/LandingFooter';
 import LandingNav from '@/components/landing/LandingNav';
-import AccountSurvivalCalculatorNext from '@/components/tools/AccountSurvivalCalculatorNext';
-
-export default function PublicAccountSurvivalCalculatorPage() {
-  return (
-    <>
-      <LandingNav />
-      <main className="min-h-screen bg-[#07070b]">
-        <div className="mx-auto max-w-5xl p-4 md:p-8">
-          <Link href="/tools" className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-white/55 transition-colors hover:text-white/90">← Tools</Link>
-          <div className="mt-4"><AccountSurvivalCalculatorNext /></div>
-        </div>
-      </main>
-      <LandingFooter />
-    </>
-  );
-}
+import AccountSurvivalCalculatorV3 from '@/components/tools/AccountSurvivalCalculatorV3';
+const faqs=[
+['How many losing trades can my account survive?','Your account survival depends on maximum allowed loss and risk per trade. Divide maximum allowed loss by risk per trade to estimate the maximum consecutive losing trades before reaching the loss limit. Formula: Maximum Allowed Loss ÷ Risk Per Trade = Consecutive Losing Trades.'],
+['How many losing trading days can my account survive?','Divide maximum allowed loss or drawdown by planned maximum daily loss. Formula: Maximum Drawdown ÷ Daily Risk = Consecutive Losing Sessions. A $2,000 drawdown and $200 maximum daily loss can absorb 10 consecutive fully losing sessions.'],
+['How much should I risk per day to survive 20 losing days?','Divide maximum allowed loss by the losing sessions you want to survive. With a $2,000 maximum loss and 20 sessions, $2,000 ÷ 20 = $100 per day.'],
+['How much should I risk per trade if I take 2 trades per day?','First calculate daily risk from the desired survival period, then divide it by maximum trades per session. $2,000 ÷ 20 sessions = $100/day; $100 ÷ 2 trades = $50/trade.'],
+['What percentage should I risk per trade?','There is no single percentage appropriate for every trader or prop firm. Consider maximum drawdown, strategy, trading frequency, and consecutive losses you want to withstand.'],
+['What is the difference between account size and maximum drawdown?','Account size is the nominal account value. Maximum drawdown is the amount it can lose before reaching its loss limit. A $50,000 prop account with a $2,000 maximum drawdown has $2,000 of relevant risk capacity.'],
+['How do I calculate risk per trade for a prop firm account?','Start with the firm’s maximum allowed drawdown, decide how many consecutive losing trades or sessions you want to survive, and work backward. Consider the firm’s specific daily loss and drawdown rules.'],
+['What happens if I lose my maximum daily loss every day?','Divide maximum allowed drawdown by daily loss to determine consecutive losing sessions you can withstand. This is a worst-case risk scenario, not a prediction.'],
+['Is risking 1% per trade safe for a prop firm account?','Not necessarily. A 1% risk can be a large share of available drawdown. On a $50,000 account with a $2,000 drawdown, 1% is $500, or 25% of drawdown; five losses would exhaust it.'],
+['How can I make my trading account survive longer?','Reducing risk per trade or per session increases consecutive losses your account can withstand. Actual risk should also account for strategy and prop-firm rules.'],
+['Does this calculator predict whether I will lose money?','No. It does not predict trading performance or future losses. It only shows consecutive losing trades or sessions the entered limits could theoretically withstand.'],
+['Can I use this calculator for prop firm accounts?','Yes. Enter nominal account size and the firm’s actual maximum drawdown, then enter planned daily or per-trade risk to see the theoretical losing-streak buffer.']];
+const faqJson={'@context':'https://schema.org','@type':'FAQPage',mainEntity:faqs.map(([name,text])=>({'@type':'Question',name,acceptedAnswer:{'@type':'Answer',text}}))};
+export default function PublicAccountSurvivalCalculatorPage(){return <><LandingNav/><main className="min-h-screen bg-[#07070b]"><div className="mx-auto max-w-5xl p-4 md:p-8"><Link href="/tools" className="font-mono text-xs uppercase tracking-wider text-white/55">← Tools</Link><div className="mt-4"><AccountSurvivalCalculatorV3/></div><section className="mt-12 rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="text-2xl font-bold text-white">How the Account Survival Calculator Works</h2><p className="mt-3 text-sm leading-relaxed text-white/60">The Account Survival Calculator relates planned risk to maximum loss. Enter account size, maximum drawdown, and either risk per trade or daily loss. It shows how many consecutive losses the account could survive.</p><ol className="mt-5 list-decimal space-y-3 pl-5 text-sm text-white/60"><li><b className="text-white">Enter your account size.</b> Enter personal trading capital or prop-firm account size.</li><li><b className="text-white">Enter your maximum loss.</b> Enter maximum drawdown in dollars or as a percentage.</li><li><b className="text-white">Set risk or a survival target.</b> Enter planned risk per trade or day, or choose consecutive losing sessions to survive.</li></ol></section><section className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="text-2xl font-bold text-white">Account Survival Calculator FAQ</h2><p className="mt-3 text-sm text-white/60">Learn how account drawdown, daily risk, and risk per trade affect how many consecutive losing trading sessions your account can survive.</p><div className="mt-6 space-y-5">{faqs.map(([q,a])=><article key={q}><h3 className="font-semibold text-white">{q}</h3><p className="mt-1 text-sm leading-relaxed text-white/60">{a}</p></article>)}</div></section></div></main><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(faqJson)}}/><LandingFooter/></>}
