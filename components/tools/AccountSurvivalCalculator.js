@@ -321,52 +321,55 @@ export default function AccountSurvivalCalculator() {
         </div>
       </div>
 
-      {/* Result card */}
+      {/* Result card — dollar amount is the hero */}
       {drawdown > 0 && result.sessions > 0 && (
         <div className="animate-[fadeIn_0.3s_ease-out] rounded-2xl border border-white/10 bg-gradient-to-br from-violet-500/[0.08] to-cyan-500/[0.04] p-6 text-center md:p-8">
           <p className="font-mono text-xs uppercase tracking-[.18em] text-white/50">
             Your survival plan
           </p>
 
-          {/* Big number: sessions */}
-          <p className="mt-4 font-mono text-6xl font-bold text-white md:text-7xl">
-            {result.sessions}
+          {/* Hero: daily risk amount */}
+          <p className="mt-4 text-base text-white/60">
+            You can risk up to
           </p>
-          <p className="mt-1 text-sm font-medium text-white/60">
-            consecutive losing sessions
+          <p className="mt-1 font-mono text-5xl font-bold text-white md:text-6xl">
+            {usd.format(result.dailyRisk)}
+          </p>
+          <p className="mt-1 text-lg text-white/60">
+            per session
+          </p>
+          <p className="mt-1 font-mono text-sm text-cyan-300">
+            {result.dailyPct.toFixed(2)}% of your account
           </p>
 
-          {/* Daily risk */}
-          <div className="mx-auto mt-6 max-w-sm rounded-xl border border-white/10 bg-black/20 p-4">
-            <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
-              Maximum planned daily risk
-            </p>
-            <p className="mt-1 text-2xl font-bold text-cyan-300">
-              {usd.format(result.dailyRisk)}
-            </p>
-            <p className="mt-0.5 font-mono text-xs text-white/40">
-              {result.dailyPct.toFixed(2)}% of account
-            </p>
-          </div>
+          {/* Context sentence */}
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/50">
+            To withstand{' '}
+            <span className="font-semibold text-white/80">{result.sessions} consecutive full-loss sessions</span>{' '}
+            within your{' '}
+            <span className="font-semibold text-white/80">{usd.format(drawdown)}</span>{' '}
+            drawdown.
+          </p>
 
           {/* Per-trade risk */}
           {showTrades && (
-            <div className="mx-auto mt-3 max-w-sm rounded-xl border border-white/10 bg-black/20 p-4">
-              <p className="font-mono text-[10px] uppercase tracking-wider text-white/45">
-                Maximum planned risk per trade
+            <div className="mx-auto mt-5 max-w-sm rounded-xl border border-white/10 bg-black/20 p-4">
+              <p className="text-sm text-white/50">
+                With {trades} trades per session
               </p>
-              <p className="mt-1 text-2xl font-bold text-violet-400">
+              <p className="mt-1 font-mono text-3xl font-bold text-violet-400">
                 {usd.format(result.perTrade)}
+              </p>
+              <p className="mt-0.5 text-sm text-white/50">
+                per trade
               </p>
               <p className="mt-0.5 font-mono text-xs text-white/40">
                 {result.perTradePct.toFixed(2)}% of account
-                {' '}&middot;{' '}
-                {trades} trades per session
               </p>
             </div>
           )}
 
-          {/* Summary line */}
+          {/* Summary details */}
           <div className="mx-auto mt-6 max-w-sm space-y-1 text-xs text-white/45">
             <div className="flex justify-between">
               <span>Drawdown capacity</span>
@@ -383,14 +386,6 @@ export default function AccountSurvivalCalculator() {
               </div>
             )}
           </div>
-
-          {/* Explanation sentence */}
-          <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-white/50">
-            If every trading session reaches your full planned loss,{' '}
-            <span className="text-white/70">{result.sessions} consecutive losing sessions</span>{' '}
-            would consume the configured{' '}
-            <span className="text-white/70">{usd.format(drawdown)}</span> drawdown.
-          </p>
 
           {/* Session progression visual */}
           <SessionProgression
