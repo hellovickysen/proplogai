@@ -5,54 +5,36 @@ import AccountSurvivalCalculator from '@/components/tools/AccountSurvivalCalcula
 
 const faqs = [
   {
-    q: 'How many losing trades can my account survive?',
-    a: "Your account’s survival depends on your maximum allowed loss and how much you risk per trade. Divide your maximum allowed loss by your risk per trade to estimate the maximum number of consecutive losing trades before reaching your loss limit.",
-    formula: 'Maximum Allowed Loss ÷ Risk Per Trade = Consecutive Losing Trades',
+    q: 'How do I calculate how many losing days my prop firm account can survive?',
+    a: "Divide your prop firm's maximum allowed drawdown by your planned maximum daily loss. For example, with a $2,000 drawdown and a $200 daily risk, your account can absorb 10 consecutive fully losing sessions before reaching the drawdown limit.",
   },
   {
-    q: 'How many losing trading days can my account survive?',
-    a: 'Divide your maximum allowed loss or drawdown by your planned maximum daily loss. For example, with a $2,000 drawdown and $200 maximum daily loss, your account can absorb 10 consecutive fully losing sessions.',
-    formula: 'Maximum Drawdown ÷ Daily Risk = Consecutive Losing Sessions',
+    q: 'How much can I risk per day on a $50K prop firm account?',
+    a: "It depends on the firm's maximum drawdown, not the account size. A $50,000 account with a $2,000 drawdown has only $2,000 of risk capacity. If you want to survive 20 losing sessions, your maximum daily risk is $2,000 ÷ 20 = $100 per day.",
   },
   {
-    q: 'How much should I risk per day to survive 20 losing days?',
-    a: 'Divide your maximum allowed loss by the number of losing sessions you want your account to survive. For example, with a $2,000 maximum loss and a target of 20 losing sessions: $2,000 ÷ 20 = $100 per day. Your planned maximum daily loss would therefore be $100.',
+    q: 'How much should I risk per trade if I want to survive 20 losing sessions?',
+    a: "First calculate your maximum daily risk: divide your maximum drawdown by 20. Then divide that daily risk by the number of trades you take per session. For example, with a $2,000 drawdown: $2,000 ÷ 20 = $100/day. If you take 2 trades per session: $100 ÷ 2 = $50 per trade.",
   },
   {
-    q: 'How much should I risk per trade if I take 2 trades per day?',
-    a: 'First calculate your maximum daily risk based on your desired survival period. Then divide that daily risk by your maximum number of trades per session. For example: $2,000 ÷ 20 sessions = $100/day. $100 ÷ 2 trades = $50/trade. So risking $50 per trade allows for two maximum-loss trades per day while maintaining the 20-session survival target.',
+    q: "How do I calculate daily risk from a prop firm's maximum drawdown?",
+    a: "Divide the firm's maximum allowed drawdown by the number of consecutive losing sessions you want your account to survive. The result is your maximum planned daily loss. For example, $2,000 drawdown ÷ 20 sessions = $100 per day.",
   },
   {
-    q: 'What percentage should I risk per trade?',
-    a: 'There is no single risk percentage that is appropriate for every trader or prop firm. Your risk should take into account your maximum drawdown, strategy, trading frequency, and the number of consecutive losses you want your account to withstand. Use the calculator above to convert your dollar risk into a percentage of your account size.',
+    q: 'What is the difference between daily loss and maximum drawdown?',
+    a: "Maximum drawdown is the total amount your account can lose before the firm closes or resets it. Daily loss is how much you lose in a single trading session. Your daily loss contributes toward the overall drawdown. Some firms also enforce a separate daily loss limit.",
   },
   {
-    q: 'What is the difference between account size and maximum drawdown?',
-    a: 'Account size is the nominal value of the account. Maximum drawdown is the amount the account can lose before reaching its loss limit. For example, a $50,000 prop account with a $2,000 maximum drawdown does not have $50,000 of risk capacity. Its relevant survival boundary is $2,000.',
+    q: 'How much can I risk per trade if I take 2 trades per day?',
+    a: "Divide your maximum planned daily risk by the number of trades per session. If your daily risk is $100 and you take 2 trades, your maximum risk per trade is $50. This keeps your total daily exposure within your planned limit.",
   },
   {
-    q: 'How do I calculate risk per trade for a prop firm account?',
-    a: "Start with the firm’s maximum allowed drawdown, decide how many consecutive losing trades or sessions you want to survive, and work backward from that limit. Remember to consider the firm’s specific daily loss and maximum drawdown rules.",
+    q: 'How many losing sessions can a $50K account survive?',
+    a: "It depends on the drawdown, not the account size. A $50,000 account with a $2,000 maximum drawdown and $100 daily risk can survive 20 consecutive fully losing sessions. A $50,000 account with a $5,000 drawdown and $100 daily risk can survive 50 sessions.",
   },
   {
-    q: 'What happens if I lose my maximum daily loss every day?',
-    a: 'If you reach your planned maximum daily loss on every trading session, divide your maximum allowed drawdown by your daily loss to determine how many consecutive losing sessions you can withstand. This represents a worst-case risk scenario, not a prediction of future performance.',
-  },
-  {
-    q: 'Is risking 1% per trade safe for a prop firm account?',
-    a: "Not necessarily. A 1% risk per trade may represent a large portion of a prop firm’s available drawdown. For example, if a $50,000 account has a $2,000 drawdown, a 1% risk is $500—25% of the entire drawdown. Five consecutive losses of $500 would exhaust the $2,000 drawdown.",
-  },
-  {
-    q: 'How can I make my trading account survive longer?',
-    a: 'One way is to reduce the amount you risk per trade or per trading session. Lower risk increases the number of consecutive losses your account can withstand before reaching its maximum allowed loss. Your actual risk should also account for your trading strategy and the rules of your prop firm.',
-  },
-  {
-    q: 'Does this calculator predict whether I will lose money?',
-    a: 'No. The calculator does not predict your trading performance or future losses. It only shows how many consecutive losing trades or trading sessions your account could withstand based on the risk limits you enter.',
-  },
-  {
-    q: 'Can I use this calculator for prop firm accounts?',
-    a: "Yes. Enter the account’s nominal size and use the firm’s actual maximum allowed drawdown or loss as your maximum loss. Then enter your planned daily or per-trade risk to see how many consecutive losses your account could theoretically withstand.",
+    q: 'How do I convert prop firm drawdown percentage into dollars?',
+    a: "Multiply your account size by the drawdown percentage. For example, a 4% drawdown on a $50,000 account is $50,000 × 0.04 = $2,000. Use the dollar amount for all risk calculations.",
   },
 ];
 
@@ -76,33 +58,34 @@ export default function PublicAccountSurvivalCalculatorPage() {
           {/* How It Works */}
           <section className="mt-10 rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
             <h2 className="font-display text-lg font-semibold text-white md:text-xl">
-              How the Account Survival Calculator Works
+              How the Prop Firm Survival Calculator Works
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/60">
-              The Account Survival Calculator helps traders understand how their
-              planned risk relates to their account&rsquo;s maximum loss. Enter your
-              account size, maximum allowed drawdown, and either your planned risk
-              per trade or maximum daily loss. The calculator shows how many
-              consecutive losing trades or trading sessions your account could
-              survive.
+              Enter your prop firm account size, maximum allowed drawdown, and
+              how many losing trading sessions you want your account to survive.
+              The calculator tells you the maximum planned daily risk you can
+              take. Optionally, enter your trades per session to see per-trade
+              risk.
             </p>
             <ol className="mt-5 list-decimal space-y-4 pl-5 text-sm text-white/60">
               <li>
                 <b className="text-white">Enter your account size</b>
                 <br />
-                Enter your personal trading capital or prop firm account size.
+                Your prop firm account size or personal trading capital.
               </li>
               <li>
-                <b className="text-white">Enter your maximum loss</b>
+                <b className="text-white">Enter your maximum drawdown</b>
                 <br />
-                Enter your maximum drawdown as either a dollar amount or
-                percentage.
+                The maximum amount your account can lose, in dollars or as a
+                percentage. The calculator converts between the two
+                automatically.
               </li>
               <li>
-                <b className="text-white">Set your risk or survival target</b>
+                <b className="text-white">Set your survival target or daily risk</b>
                 <br />
-                Enter your planned risk per trade/day, or choose how many
-                consecutive losing sessions you want to survive.
+                Choose how many consecutive losing sessions you want to survive,
+                or enter your planned daily risk to see how many sessions your
+                drawdown can absorb.
               </li>
             </ol>
           </section>
@@ -110,12 +93,11 @@ export default function PublicAccountSurvivalCalculatorPage() {
           {/* FAQ */}
           <section className="mt-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5 md:p-6">
             <h2 className="font-display text-lg font-semibold text-white md:text-xl">
-              Account Survival Calculator FAQ
+              Prop Firm Survival Calculator FAQ
             </h2>
             <p className="mt-3 text-sm text-white/60">
-              Learn how account drawdown, daily risk, and risk per trade affect
-              how many consecutive losing trading sessions your account can
-              survive.
+              Common questions about calculating daily risk, per-trade risk, and
+              drawdown survival for prop firm accounts.
             </p>
 
             <div className="mt-6 divide-y divide-white/10">
@@ -129,14 +111,9 @@ export default function PublicAccountSurvivalCalculatorPage() {
                       &#9662;
                     </span>
                   </summary>
-                  <div className="mt-3 space-y-2 text-sm leading-relaxed text-white/60">
-                    <p>{item.a}</p>
-                    {item.formula && (
-                      <p className="rounded-lg border border-white/10 bg-white/[0.02] px-4 py-2.5 font-mono text-xs text-white/70">
-                        {item.formula}
-                      </p>
-                    )}
-                  </div>
+                  <p className="mt-3 text-sm leading-relaxed text-white/60">
+                    {item.a}
+                  </p>
                 </details>
               ))}
             </div>
@@ -159,14 +136,6 @@ export default function PublicAccountSurvivalCalculatorPage() {
               Start journaling free &rarr;
             </Link>
           </div>
-
-          {/* Disclaimer */}
-          <p className="mt-6 px-1 text-xs leading-relaxed text-white/35">
-            This calculator does not predict trading performance or future
-            losses. Results are based entirely on the values you enter and
-            represent a theoretical worst-case scenario. Always verify your prop
-            firm&rsquo;s specific drawdown and daily loss rules before trading.
-          </p>
         </div>
       </div>
       <LandingFooter />
