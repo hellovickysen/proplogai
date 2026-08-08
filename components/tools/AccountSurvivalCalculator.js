@@ -273,14 +273,14 @@ export default function AccountSurvivalCalculator() {
         <div className="mt-5">
           {mode === 'target' ? (
             <Field
-              label="How many losing sessions do you want to survive?"
+              label="How many days do you want to survive?"
               value={targetSessions}
               setValue={setTargetSessions}
-              suffix="trading sessions"
+              suffix="trading days"
               min={1}
               max={10000}
               placeholder="20"
-              note="How many consecutive losing sessions do you want your account to survive?"
+              note="How many consecutive losing trading days do you want your account to survive?"
             />
           ) : (
             <Field
