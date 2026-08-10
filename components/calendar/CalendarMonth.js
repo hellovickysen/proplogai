@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { num } from '@/lib/stats';
@@ -35,6 +35,11 @@ function fmtPnlShort(v) {
 export default function CalendarMonth({ trades, year, month, selected, monthParam, monthlyPnl, journalDays }) {
   const [showWeekends, setShowWeekends] = useState(false);
   const [showShareCalendar, setShowShareCalendar] = useState(false);
+  const [pendingDate, setPendingDate] = useState(null);
+
+  useEffect(() => {
+    setPendingDate(null);
+  }, [selected]);
 
   const now = new Date();
   const todayDay =
@@ -113,6 +118,14 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
     return 'text-xs text-white/50';
   }
 
+  function handleDaySelect(event, dateStr) {
+    if (selected === dateStr) {
+      event.preventDefault();
+      return;
+    }
+    setPendingDate(dateStr);
+  }
+
   return (
     <div>
       {/* ── monthly P/L + share button ── */}
@@ -167,6 +180,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                         ? year + '-' + pad2(month + 1) + '-' + pad2(d)
                         : null;
                       const isSel = dateStr && selected === dateStr;
+                      const isPending = dateStr && pendingDate === dateStr;
 
                       let bgStyle = {};
                       if (e) {
@@ -179,7 +193,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       if (isSaturday) {
                         const satContent = (
                           <div
-                            className={'flex h-28 flex-col rounded-lg overflow-hidden ' + todayBorder + ' ' + (ws.count === 0 ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '')}
+                            className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (ws.count === 0 ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                             style={bgStyle}
                           >
                             <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -192,13 +206,20 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                               </span>
                               <span className="text-[10px] text-white/45">{ws.count} trades</span>
                             </div>
+                            {isPending && (
+                              <div className="absolute inset-0 grid place-items-center bg-[#12121a]/70 backdrop-blur-[1px]" aria-live="polite">
+                                <span className="h-5 w-5 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" />
+                              </div>
+                            )}
                           </div>
                         );
 
                         return (
                           <td key={di} className="p-0 align-top">
                             {e && dateStr ? (
-                              <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>{satContent}</Link>
+                              <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false} onClick={(event) => handleDaySelect(event, dateStr)} className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
+                                {satContent}
+                              </Link>
                             ) : satContent}
                           </td>
                         );
@@ -207,7 +228,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       /* Regular day cell */
                       const cellContent = (
                         <div
-                          className={'flex h-28 flex-col rounded-lg overflow-hidden ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer' : '')}
+                          className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                           style={bgStyle}
                         >
                           <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -226,13 +247,18 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                           ) : (
                             <div className="flex-1" />
                           )}
+                          {isPending && (
+                            <div className="absolute inset-0 grid place-items-center bg-[#12121a]/70 backdrop-blur-[1px]" aria-live="polite">
+                              <span className="h-5 w-5 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" />
+                            </div>
+                          )}
                         </div>
                       );
 
                       return (
                         <td key={di} className="p-0 align-top">
                           {e && dateStr ? (
-                            <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>
+                            <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false} onClick={(event) => handleDaySelect(event, dateStr)} className="group block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
                               {cellContent}
                             </Link>
                           ) : (
@@ -297,6 +323,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                   const hasJournal = !isOverflow && jDays[d];
                   const dateStr = !isOverflow ? year + '-' + pad2(month + 1) + '-' + pad2(d) : null;
                   const isSel = dateStr && selected === dateStr;
+                  const isPending = dateStr && pendingDate === dateStr;
 
                   let bgStyle = {};
                   if (e) {
@@ -305,7 +332,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
 
                   const cellContent = (
                     <div
-                      className={'flex h-[72px] flex-col ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-2 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer' : '')}
+                      className={'relative flex h-[72px] flex-col transition-all duration-200 ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-2 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:ring-1 group-hover:ring-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                       style={bgStyle}
                     >
                       <div className="flex items-center gap-1 px-1.5 pt-1.5">
@@ -325,13 +352,20 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       ) : (
                         <div className="flex-1" />
                       )}
+                      {isPending && (
+                        <div className="absolute inset-0 grid place-items-center bg-[#12121a]/70 backdrop-blur-[1px]" aria-live="polite">
+                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-300 border-t-transparent" />
+                        </div>
+                      )}
                     </div>
                   );
 
                   return (
                     <div key={cell.overflow ? 'overflow-' + di : 'day-' + cell.day} className={'overflow-hidden rounded-lg border bg-white/[0.02] ' + (isToday ? 'border-2 border-cyan-400/50' : 'border-white/[0.08]')}>
                       {e && dateStr ? (
-                        <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false}>{cellContent}</Link>
+                        <Link href={'/dashboard/calendar?month=' + monthParam + '&date=' + dateStr} scroll={false} onClick={(event) => handleDaySelect(event, dateStr)} className="group block h-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
+                          {cellContent}
+                        </Link>
                       ) : cellContent}
                     </div>
                   );

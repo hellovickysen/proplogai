@@ -9,6 +9,7 @@ import { getUserAccess } from '@/lib/plans';
 import { getActiveAccountId, applyAccountFilter } from '@/lib/accounts';
 import YearlyPerformance from '@/components/calendar/YearlyPerformance';
 import ScrollIntoView from '@/components/ui/ScrollIntoView';
+import CalendarNavigation from '@/components/calendar/CalendarNavigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -189,6 +190,7 @@ export default async function CalendarPage({ searchParams }) {
   const prevParam = `${prevMonth.getFullYear()}-${pad2(prevMonth.getMonth() + 1)}`;
   const nextParam = `${nextMonth.getFullYear()}-${pad2(nextMonth.getMonth() + 1)}`;
   const monthParam = `${year}-${pad2(month + 1)}`;
+  const todayParam = `${now.getUTCFullYear()}-${pad2(now.getUTCMonth() + 1)}`;
 
   return (
     <div className="p-6 mx-auto">
@@ -203,17 +205,14 @@ export default async function CalendarPage({ searchParams }) {
 
       <div className="rounded-2xl border border-white/10 bg-[#12121a] overflow-hidden">
         {/* Month navigation in the calendar card header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <Link href={`/dashboard/calendar?month=${prevParam}`} className="text-xs text-white/40 hover:text-white/70 transition-colors">
-            &#8592; {MONTHS_SHORT[prevMonth.getMonth()]}
-          </Link>
-          <span className="font-semibold text-white">
-            {MONTHS_SHORT[month]} {year}
-          </span>
-          <Link href={`/dashboard/calendar?month=${nextParam}`} className="text-xs text-white/40 hover:text-white/70 transition-colors">
-            {MONTHS_SHORT[nextMonth.getMonth()]} &rarr;
-          </Link>
-        </div>
+        <CalendarNavigation
+          prevHref={`/dashboard/calendar?month=${prevParam}`}
+          nextHref={`/dashboard/calendar?month=${nextParam}`}
+          todayHref={`/dashboard/calendar?month=${todayParam}`}
+          prevLabel={MONTHS_SHORT[prevMonth.getMonth()]}
+          nextLabel={MONTHS_SHORT[nextMonth.getMonth()]}
+          currentLabel={`${MONTHS_SHORT[month]} ${year}`}
+        />
 
         {/* CalendarMonth with the correct props it expects */}
         <CalendarMonth trades={enrichedTrades} year={year} month={month} selected={selected} monthlyPnl={monthlyPnl} journalDays={journalDays} monthParam={monthParam} />
