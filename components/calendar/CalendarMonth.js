@@ -12,6 +12,7 @@ const ShareCalendarModal = dynamic(
 
 const DOW_ALL = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 const DOW_WEEKDAY = ['Mo', 'Tu', 'We', 'Th', 'Fr'];
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 function pad2(n) {
   return String(n).padStart(2, '0');
@@ -46,48 +47,37 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
     now.getUTCFullYear() === year && now.getUTCMonth() === month ? now.getUTCDate() : null;
   const jDays = journalDays || {};
 
-  /* ── aggregate by day ── */
+  /* ── aggregate visible calendar trades by ISO date ── */
   const byDay = {};
   (trades || []).forEach((t) => {
-    const raw = t.trade_date || t.closed_at || t.created_at;
-    if (!raw) return;
-    const d = new Date(raw);
-    if (d.getUTCFullYear() !== year || d.getUTCMonth() !== month) return;
-    const day = d.getUTCDate();
-    const e = byDay[day] || { net: 0, count: 0 };
+    const dateStr = t.trade_date ? t.trade_date.slice(0, 10) : null;
+    if (!dateStr) return;
+    const e = byDay[dateStr] || { net: 0, count: 0 };
     e.net += num(t.pnl);
     e.count += 1;
-    byDay[day] = e;
+    byDay[dateStr] = e;
   });
 
-  /* ── build weeks (7 cells each, with dow) ── */
-  const firstDow = new Date(Date.UTC(year, month, 1)).getUTCDay();
-  const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-  const prevMonthDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
-
+  /* ── build six complete weeks, including adjacent months ── */
+  const firstDay = new Date(Date.UTC(year, month, 1));
+  const calendarStart = new Date(firstDay);
+  calendarStart.setUTCDate(calendarStart.getUTCDate() - firstDay.getUTCDay());
   const weeks = [];
-  let currentWeek = [];
-  for (let i = 0; i < firstDow; i++) {
-    currentWeek.push({ day: prevMonthDays - firstDow + 1 + i, overflow: true, dow: i });
-  }
-  for (let d = 1; d <= daysInMonth; d++) {
-    if (currentWeek.length === 7) {
-      weeks.push(currentWeek);
-      currentWeek = [];
+  for (let wi = 0; wi < 6; wi++) {
+    const week = [];
+    for (let dow = 0; dow < 7; dow++) {
+      const date = new Date(calendarStart);
+      date.setUTCDate(calendarStart.getUTCDate() + wi * 7 + dow);
+      week.push({
+        day: date.getUTCDate(),
+        overflow: date.getUTCFullYear() !== year || date.getUTCMonth() !== month,
+        dow,
+        dateStr: date.getUTCFullYear() + '-' + pad2(date.getUTCMonth() + 1) + '-' + pad2(date.getUTCDate()),
+        dateMonth: date.getUTCMonth(),
+        dateYear: date.getUTCFullYear(),
+      });
     }
-    currentWeek.push({ day: d, overflow: false, dow: currentWeek.length });
-  }
-  let nextDay = 1;
-  while (currentWeek.length < 7) {
-    currentWeek.push({ day: nextDay++, overflow: true, dow: currentWeek.length });
-  }
-  weeks.push(currentWeek);
-  while (weeks.length < 6) {
-    const extraWeek = [];
-    for (let i = 0; i < 7; i++) {
-      extraWeek.push({ day: nextDay++, overflow: true, dow: i });
-    }
-    weeks.push(extraWeek);
+    weeks.push(week);
   }
 
   /* ── week summaries ── */
@@ -96,13 +86,22 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
     let count = 0;
     let days = 0;
     week.forEach((cell) => {
-      if (!cell.overflow && byDay[cell.day]) {
-        net += byDay[cell.day].net;
-        count += byDay[cell.day].count;
+      const e = byDay[cell.dateStr];
+      if (e) {
+        net += e.net;
+        count += e.count;
         days += 1;
       }
     });
-    return { net, count, days };
+    const allAdjacent = week.every((cell) => cell.overflow);
+    const anchor = week[0];
+    const weekOfMonth = Math.floor((anchor.day - 1) / 7) + 1;
+    return {
+      net,
+      count,
+      days,
+      label: allAdjacent ? MONTHS_SHORT[anchor.dateMonth] + ' Week ' + weekOfMonth : 'Week ' + (weeks.indexOf(week) + 1),
+    };
   }
 
   const weekSummaries = weeks.map((week, wi) => ({ weekNum: wi + 1, ...weekSummary(week) }));
@@ -172,19 +171,20 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                     {week.map((cell, di) => {
                       const d = cell.day;
                       const isOverflow = cell.overflow;
-                      const e = !isOverflow ? byDay[d] : null;
-                      const isToday = !isOverflow && d === todayDay;
+                      const dateStr = cell.dateStr;
+                      const e = byDay[dateStr] || null;
+                      const isToday = cell.dateYear === now.getUTCFullYear() && cell.dateMonth === now.getUTCMonth() && d === todayDay;
                       const isSaturday = di === 6;
-                      const hasJournal = !isOverflow && jDays[d];
-                      const dateStr = !isOverflow
-                        ? year + '-' + pad2(month + 1) + '-' + pad2(d)
-                        : null;
+                      const hasJournal = jDays[dateStr];
                       const isSel = dateStr && selected === dateStr;
                       const isPending = dateStr && pendingDate === dateStr;
 
                       let bgStyle = {};
                       if (e) {
-                        bgStyle = { background: e.net >= 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.18)' };
+                        bgStyle = { backgroundColor: e.net >= 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.18)' };
+                      }
+                      if (isOverflow) {
+                        bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 7px)';
                       }
 
                       const todayBorder = isToday ? 'border-2 border-cyan-400/50' : 'border border-white/[0.08]';
@@ -200,7 +200,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                               <span className={dayNumClass(isToday, isOverflow)}>{d}</span>
                             </div>
                             <div className="flex flex-1 flex-col items-center justify-center overflow-hidden px-0.5">
-                              <span className="text-xs font-semibold text-white/50">Week {wi + 1}</span>
+                              <span className="text-xs font-semibold text-white/50">{ws.label}</span>
                               <span className={'truncate max-w-full font-mono text-lg font-extrabold ' + (ws.count === 0 ? 'text-white/40' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                                 {fmtPnl(ws.net)}
                               </span>
@@ -228,7 +228,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       /* Regular day cell */
                       const cellContent = (
                         <div
-                          className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
+                          className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (isOverflow ? 'opacity-80' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                           style={bgStyle}
                         >
                           <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -318,21 +318,24 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                 {filtered.map((cell, di) => {
                   const d = cell.day;
                   const isOverflow = cell.overflow;
-                  const e = !isOverflow ? byDay[d] : null;
-                  const isToday = !isOverflow && d === todayDay;
-                  const hasJournal = !isOverflow && jDays[d];
-                  const dateStr = !isOverflow ? year + '-' + pad2(month + 1) + '-' + pad2(d) : null;
+                  const dateStr = cell.dateStr;
+                  const e = byDay[dateStr] || null;
+                  const isToday = cell.dateYear === now.getUTCFullYear() && cell.dateMonth === now.getUTCMonth() && d === todayDay;
+                  const hasJournal = jDays[dateStr];
                   const isSel = dateStr && selected === dateStr;
                   const isPending = dateStr && pendingDate === dateStr;
 
                   let bgStyle = {};
                   if (e) {
-                    bgStyle = { background: e.net >= 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.18)' };
+                    bgStyle = { backgroundColor: e.net >= 0 ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.18)' };
+                  }
+                  if (isOverflow) {
+                    bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.07) 0, rgba(255,255,255,0.07) 1px, transparent 1px, transparent 7px)';
                   }
 
                   const cellContent = (
                     <div
-                      className={'relative flex h-[72px] flex-col transition-all duration-200 ' + (isOverflow ? 'opacity-25' : '') + (isSel ? ' ring-2 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:ring-1 group-hover:ring-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
+                      className={'relative flex h-[72px] flex-col transition-all duration-200 ' + (isOverflow ? 'opacity-80' : '') + (isSel ? ' ring-2 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:ring-1 group-hover:ring-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                       style={bgStyle}
                     >
                       <div className="flex items-center gap-1 px-1.5 pt-1.5">
@@ -381,7 +384,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
           <div className="grid grid-cols-3 gap-2">
             {weekSummaries.map((ws) => (
               <div key={ws.weekNum} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-2 py-2.5 text-center">
-                <div className="text-[10px] font-medium text-white/40">Week {ws.weekNum}</div>
+                <div className="text-[10px] font-medium text-white/40">{ws.label}</div>
                 <div className={'mt-1 font-mono text-sm font-bold ' + (ws.count === 0 ? 'text-white/35' : ws.net >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                   {ws.count === 0 ? '$0' : fmtPnlShort(ws.net)}
                 </div>

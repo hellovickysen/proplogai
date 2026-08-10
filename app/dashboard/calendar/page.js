@@ -45,18 +45,24 @@ export default async function CalendarPage({ searchParams }) {
   // Multi-account: get active account filter
   const activeAccountId = await getActiveAccountId(supabase, user.id);
 
-  // Calculate the start and end of the displayed month for date-range filtering
+  // Load the six-week visual calendar window, including leading and trailing adjacent-month cells.
   const monthStartDate = `${year}-${pad2(month + 1)}-01`;
   const nextMonthVal = month === 11 ? 0 : month + 1;
   const nextYearVal = month === 11 ? year + 1 : year;
   const monthEndDate = `${nextYearVal}-${pad2(nextMonthVal + 1)}-01`;
+  const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+  const calendarStart = new Date(Date.UTC(year, month, 1 - firstDayOfMonth.getUTCDay()));
+  const calendarEnd = new Date(calendarStart);
+  calendarEnd.setUTCDate(calendarEnd.getUTCDate() + 42);
+  const calendarStartDate = `${calendarStart.getUTCFullYear()}-${pad2(calendarStart.getUTCMonth() + 1)}-${pad2(calendarStart.getUTCDate())}`;
+  const calendarEndDate = `${calendarEnd.getUTCFullYear()}-${pad2(calendarEnd.getUTCMonth() + 1)}-${pad2(calendarEnd.getUTCDate())}`;
 
   let monthQuery = supabase
     .from('trades')
     .select('id, pair, direction, pnl, setup, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
     .eq('user_id', user.id)
-    .gte('trade_date', monthStartDate)
-    .lt('trade_date', monthEndDate);
+    .gte('trade_date', calendarStartDate)
+    .lt('trade_date', calendarEndDate);
   monthQuery = applyAccountFilter(monthQuery, activeAccountId);
   const { data: trades, error: tradesError } = await monthQuery
     .order('trade_date', { ascending: false, nullsFirst: false })
@@ -90,6 +96,7 @@ export default async function CalendarPage({ searchParams }) {
   }
 
   const list = trades || [];
+  const monthTrades = list.filter((t) => t.trade_date >= monthStartDate && t.trade_date < monthEndDate);
 
   // Empty state — user has no trades at all (only for unfiltered view, not account-filtered)
   if (totalTradeCount === 0 && !activeAccountId) {
@@ -159,16 +166,14 @@ export default async function CalendarPage({ searchParams }) {
   });
 
   // Calculate monthly P/L (CalendarMonth expects this as a prop)
-  const monthlyPnl = enrichedTrades.reduce((sum, t) => sum + num(t.pnl), 0);
+  const monthlyPnl = enrichedTrades
+    .filter((t) => t.trade_date >= monthStartDate && t.trade_date < monthEndDate)
+    .reduce((sum, t) => sum + num(t.pnl), 0);
 
-  // Build journalDays map: { dayNumber: true } for days that have journal entries
+  // Build journalDays map: { YYYY-MM-DD: true } for visible calendar cells with journal entries.
   const journalDays = {};
   for (const t of enrichedTrades) {
-    if (t._journal) {
-      const raw = t.trade_date || t.closed_at || t.created_at;
-      const d = raw ? new Date(raw).getUTCDate() : null;
-      if (d) journalDays[d] = true;
-    }
+    if (t._journal && t.trade_date) journalDays[t.trade_date.slice(0, 10)] = true;
   }
 
   // Build day/selected-date trades lookup
@@ -197,9 +202,9 @@ export default async function CalendarPage({ searchParams }) {
       <h1 className="text-2xl font-bold mb-6">Calendar</h1>
 
       {/* Calendar Insights — blurred for Basic users */}
-      {list.length > 0 && (
+      {monthTrades.length > 0 && (
         <BlurGate feature="calendar_insights" access={planAccess}>
-          <CalendarInsights monthTrades={list} allTrades={allTrades || []} />
+          <CalendarInsights monthTrades={monthTrades} allTrades={allTrades || []} />
         </BlurGate>
       )}
 
