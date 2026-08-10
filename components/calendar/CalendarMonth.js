@@ -182,10 +182,10 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
 
                       let bgStyle = {};
                       if (e) {
-                        bgStyle = { backgroundColor: e.net >= 0 ? (isOverflow ? 'rgba(34, 197, 94, 0.04)' : 'rgba(34, 197, 94, 0.15)') : (isOverflow ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.18)') };
+                        bgStyle = { backgroundColor: e.net >= 0 ? (isOverflow ? 'rgba(34, 197, 94, 0.02)' : 'rgba(34, 197, 94, 0.15)') : (isOverflow ? 'rgba(239, 68, 68, 0.025)' : 'rgba(239, 68, 68, 0.18)') };
                       }
                       if (isOverflow) {
-                        bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 10px)';
+                        bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.075) 0, rgba(255,255,255,0.075) 1px, transparent 1px, transparent 10px)';
                       }
 
                       const todayBorder = isToday ? 'border-2 border-cyan-400/50' : 'border border-white/[0.08]';
@@ -194,7 +194,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       if (isSaturday) {
                         const satContent = (
                           <div
-                            className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (ws.count === 0 ? 'opacity-25' : '') + (isOverflow ? ' opacity-50' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
+                            className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (ws.count === 0 ? 'opacity-25' : '') + (isOverflow ? ' opacity-35' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                             style={bgStyle}
                           >
                             <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -229,7 +229,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       /* Regular day cell */
                       const cellContent = (
                         <div
-                          className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (isOverflow ? 'opacity-50' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
+                          className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (isOverflow ? 'opacity-35' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                           style={bgStyle}
                         >
                           <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -328,15 +328,15 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
 
                   let bgStyle = {};
                   if (e) {
-                    bgStyle = { backgroundColor: e.net >= 0 ? (isOverflow ? 'rgba(34, 197, 94, 0.04)' : 'rgba(34, 197, 94, 0.15)') : (isOverflow ? 'rgba(239, 68, 68, 0.05)' : 'rgba(239, 68, 68, 0.18)') };
+                    bgStyle = { backgroundColor: e.net >= 0 ? (isOverflow ? 'rgba(34, 197, 94, 0.02)' : 'rgba(34, 197, 94, 0.15)') : (isOverflow ? 'rgba(239, 68, 68, 0.025)' : 'rgba(239, 68, 68, 0.18)') };
                   }
                   if (isOverflow) {
-                    bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 10px)';
+                    bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.075) 0, rgba(255,255,255,0.075) 1px, transparent 1px, transparent 10px)';
                   }
 
                   const cellContent = (
                     <div
-                      className={'relative flex h-[72px] flex-col transition-all duration-200 ' + (isOverflow ? 'opacity-50' : '') + (isSel ? ' ring-2 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:ring-1 group-hover:ring-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
+                      className={'relative flex h-[72px] flex-col transition-all duration-200 ' + (isOverflow ? 'opacity-35' : '') + (isSel ? ' ring-2 ring-inset ring-cyan-400/50' : '') + (e ? ' cursor-pointer group-hover:-translate-y-0.5 group-hover:ring-1 group-hover:ring-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                       style={bgStyle}
                     >
                       <div className="flex items-center gap-1 px-1.5 pt-1.5">
