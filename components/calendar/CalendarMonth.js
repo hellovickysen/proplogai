@@ -175,17 +175,18 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       const dateStr = cell.dateStr;
                       const e = byDay[dateStr] || null;
                       const isToday = cell.dateYear === now.getUTCFullYear() && cell.dateMonth === now.getUTCMonth() && d === todayDay;
-                      const isSaturday = di === 6;
                       const hasJournal = jDays[dateStr];
                       const isSel = dateStr && selected === dateStr;
                       const isPending = dateStr && pendingDate === dateStr;
+                      const isSaturday = di === 6;
+                      const useAdjacentStyle = isSaturday ? week.every((weekCell) => weekCell.overflow) : isOverflow;
 
                       let bgStyle = {};
                       if (e) {
-                        bgStyle = { backgroundColor: e.net >= 0 ? (isOverflow ? 'rgba(34, 197, 94, 0.02)' : 'rgba(34, 197, 94, 0.15)') : (isOverflow ? 'rgba(239, 68, 68, 0.025)' : 'rgba(239, 68, 68, 0.18)') };
+                        bgStyle = { backgroundColor: e.net >= 0 ? (useAdjacentStyle ? 'rgba(34, 197, 94, 0.02)' : 'rgba(34, 197, 94, 0.15)') : (useAdjacentStyle ? 'rgba(239, 68, 68, 0.025)' : 'rgba(239, 68, 68, 0.18)') };
                       }
-                      if (isOverflow) {
-                        bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.075) 0, rgba(255,255,255,0.075) 1px, transparent 1px, transparent 10px)';
+                      if (useAdjacentStyle) {
+                        bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.11) 0, rgba(255,255,255,0.11) 1px, transparent 1px, transparent 8px)';
                       }
 
                       const todayBorder = isToday ? 'border-2 border-cyan-400/50' : 'border border-white/[0.08]';
@@ -194,7 +195,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                       if (isSaturday) {
                         const satContent = (
                           <div
-                            className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (ws.count === 0 ? 'opacity-25' : '') + (isOverflow ? ' opacity-35' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
+                            className={'relative flex h-28 flex-col rounded-lg overflow-hidden transition-all duration-200 ' + todayBorder + ' ' + (ws.count === 0 ? 'opacity-25' : '') + (useAdjacentStyle ? ' opacity-35' : '') + (isSel ? ' ring-1 ring-inset ring-cyan-400/50' : '') + (e ? ' group-hover:-translate-y-0.5 group-hover:border-cyan-400/60 group-hover:shadow-lg group-hover:shadow-cyan-500/10' : '')}
                             style={bgStyle}
                           >
                             <div className="flex items-center gap-1 px-2 pt-1.5">
@@ -331,7 +332,7 @@ export default function CalendarMonth({ trades, year, month, selected, monthPara
                     bgStyle = { backgroundColor: e.net >= 0 ? (isOverflow ? 'rgba(34, 197, 94, 0.02)' : 'rgba(34, 197, 94, 0.15)') : (isOverflow ? 'rgba(239, 68, 68, 0.025)' : 'rgba(239, 68, 68, 0.18)') };
                   }
                   if (isOverflow) {
-                    bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.075) 0, rgba(255,255,255,0.075) 1px, transparent 1px, transparent 10px)';
+                    bgStyle.backgroundImage = 'repeating-linear-gradient(-45deg, rgba(255,255,255,0.11) 0, rgba(255,255,255,0.11) 1px, transparent 1px, transparent 8px)';
                   }
 
                   const cellContent = (
