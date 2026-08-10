@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 function Spinner() {
@@ -11,8 +11,12 @@ export default function CalendarNavigation({ prevHref, nextHref, todayHref, prev
   const router = useRouter();
   const [pendingHref, setPendingHref] = useState(null);
 
+  useEffect(() => {
+    setPendingHref(null);
+  }, [currentLabel]);
+
   function navigate(href) {
-    if (pendingHref) return;
+    if (pendingHref || window.location.pathname + window.location.search === href) return;
     setPendingHref(href);
     router.push(href, { scroll: false });
   }
