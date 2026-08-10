@@ -224,7 +224,7 @@ export default async function CalendarPage({ searchParams }) {
       {/* Day trades section — after yearly performance, at the bottom */}
       {selected && (
         <div className="mt-6">
-          <ScrollIntoView />
+          <ScrollIntoView target={selected} />
           <div className="flex items-center gap-3 mb-4">
             <h2 className="text-lg font-semibold">Trades on {selected}</h2>
             {dayMap[selected] && (

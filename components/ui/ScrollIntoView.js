@@ -3,10 +3,10 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Tiny client component that scrolls itself into view on mount.
- * Used to auto-scroll to the trades section after date selection.
+ * Tiny client component that scrolls itself into view when its target changes.
+ * Used to auto-scroll to the trades section after each date selection.
  */
-export default function ScrollIntoView() {
+export default function ScrollIntoView({ target }) {
   const ref = useRef(null);
   useEffect(() => {
     // Small delay to let the page render first
@@ -14,6 +14,6 @@ export default function ScrollIntoView() {
       ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
     return () => clearTimeout(t);
-  }, []);
+  }, [target]);
   return <div ref={ref} className="-mt-4" />;
 }
