@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 /* ─── Lightbox Carousel ──────────────────────────────────────── */
 function Lightbox({ images, startIndex, onClose }) {
@@ -19,29 +20,30 @@ function Lightbox({ images, startIndex, onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose, prev, next]);
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm" onClick={onClose}>
-      <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
+  return createPortal(
+    <div className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm" onClick={onClose}>
+      <div className="relative max-h-[90vh] max-w-full" onClick={(e) => e.stopPropagation()}>
         {/* Close */}
-        <button onClick={onClose} className="absolute -top-10 right-0 text-white/60 hover:text-white text-2xl font-light">&times;</button>
+        <button onClick={onClose} aria-label="Close screenshot" className="absolute -top-10 right-0 text-3xl font-light text-white/75 hover:text-white">&times;</button>
 
         {/* Image */}
-        <img src={images[idx]} alt={'Screenshot ' + (idx + 1)} className="max-h-[85vh] max-w-[85vw] rounded-xl border border-white/10 object-contain" />
+        <img src={images[idx]} alt={'Screenshot ' + (idx + 1)} className="max-h-[70vh] max-w-[calc(100vw-2rem)] rounded-xl border border-white/10 object-contain sm:max-h-[85vh] sm:max-w-[85vw]" />
 
         {/* Nav arrows */}
         {images.length > 1 && (
           <>
-            <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-12 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white text-xl transition-colors">&#8249;</button>
-            <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-12 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white text-xl transition-colors">&#8250;</button>
+            <button onClick={(e) => { e.stopPropagation(); prev(); }} aria-label="Previous screenshot" className="absolute left-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/65 text-3xl text-white shadow-lg transition-colors hover:bg-black/85 sm:left-0 sm:-translate-x-12">&#8249;</button>
+            <button onClick={(e) => { e.stopPropagation(); next(); }} aria-label="Next screenshot" className="absolute right-2 top-1/2 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-black/65 text-3xl text-white shadow-lg transition-colors hover:bg-black/85 sm:right-0 sm:translate-x-12">&#8250;</button>
           </>
         )}
 
         {/* Counter */}
         {images.length > 1 && (
-          <div className="mt-3 text-center font-mono text-xs text-white/40">{idx + 1} / {images.length}</div>
+          <div className="mt-3 text-center font-mono text-xs text-white/60">{idx + 1} / {images.length}</div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
