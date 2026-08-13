@@ -109,6 +109,9 @@ function Lightbox({ trophy, onClose }) {
         </div>
         {trophy.description && <p className="mb-3 text-sm text-white/60">{trophy.description}</p>}
         <img src={trophy.file_url} alt={trophy.title} className="w-full rounded-xl" />
+        <div className="mt-3 flex justify-end">
+          <a href={trophy.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20">Open full view ↗</a>
+        </div>
       </div>
     </div>
   );

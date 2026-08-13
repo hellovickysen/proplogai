@@ -849,6 +849,9 @@ function FirmDashboard({
             </div>
             {viewingTrophy.description && <p className="text-sm text-white/60">{viewingTrophy.description}</p>}
             <img src={viewingTrophy.file_url} alt={viewingTrophy.title} className="max-h-[65vh] w-full rounded-xl border border-white/10 object-contain" />
+            <div className="flex justify-end">
+              <a href={viewingTrophy.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20">Open full view ↗</a>
+            </div>
           </div>
         </Modal>
       )}
