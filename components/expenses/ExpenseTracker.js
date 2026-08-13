@@ -588,6 +588,7 @@ function FirmDashboard({
   const [showAllPayouts, setShowAllPayouts] = useState(false);
   const [expenseTypeFilter, setExpenseTypeFilter] = useState('all');
   const [trophyCategoryFilter, setTrophyCategoryFilter] = useState('all');
+  const [viewingTrophy, setViewingTrophy] = useState(null);
   const PAGE_SIZE = 5;
 
   const filteredExpenses = expenseTypeFilter === 'all' ? expenses : expenses.filter((e) => e.purchase_type === expenseTypeFilter);
@@ -816,7 +817,7 @@ function FirmDashboard({
             {filteredTrophies.map((t) => {
               const cat = TROPHY_CATS[t.category] || TROPHY_CATS.other;
               return (
-                <div key={t.id} className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+                <button type="button" key={t.id} onClick={() => setViewingTrophy(t)} className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] text-left transition-all hover:border-cyan-400/30 hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
                   <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
                     <img src={t.file_url} alt={t.title} className="h-full w-full object-cover" />
                     <div className="absolute left-2 top-2">
@@ -827,7 +828,7 @@ function FirmDashboard({
                     <h3 className="text-sm font-semibold">{t.title}</h3>
                     {t.description && <p className="mt-0.5 text-xs text-white/45 line-clamp-1">{t.description}</p>}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -836,6 +837,21 @@ function FirmDashboard({
         </div>
         );
       })()}
+
+      {viewingTrophy && (
+        <Modal open={!!viewingTrophy} onClose={() => setViewingTrophy(null)} title={viewingTrophy.title}>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] text-white/45">
+              <span className={'rounded-full border px-2 py-0.5 font-semibold ' + (TROPHY_CATS[viewingTrophy.category] || TROPHY_CATS.other).color}>{(TROPHY_CATS[viewingTrophy.category] || TROPHY_CATS.other).label}</span>
+              <span>{firmName}</span>
+              <span>·</span>
+              <span>{fmtDate(viewingTrophy.trophy_date || viewingTrophy.created_at)}</span>
+            </div>
+            {viewingTrophy.description && <p className="text-sm text-white/60">{viewingTrophy.description}</p>}
+            <img src={viewingTrophy.file_url} alt={viewingTrophy.title} className="max-h-[65vh] w-full rounded-xl border border-white/10 object-contain" />
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
