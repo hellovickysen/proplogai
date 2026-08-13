@@ -68,7 +68,7 @@ export default function RulebookGuardrailsPage({ rules = [] }) {
           <h2 className="font-display text-xl font-semibold">1. Non-negotiables</h2>
           <p className="mt-1 text-sm text-white/45">Set the boundaries I will follow before I trade.</p>
         </div>
-        <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           {defaults.map((rule) => <RuleCard key={rule.rule_key} rule={rule} initialValue={values[rule.rule_key]} />)}
         </div>
       </section>
