@@ -842,12 +842,13 @@ function FirmDashboard({
 
 /* ─── Main Component ─────────────────────────────────────────── */
 
-export default function ExpenseTracker({ expenses, payouts, trophies }) {
+export default function ExpenseTracker({ expenses, payouts, trophies, initialAction = '', initialTab = '' }) {
   const router = useRouter();
   const toast = useToast();
-  const [tab, setTab] = useState('Dashboard');
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [showPayoutForm, setShowPayoutForm] = useState(false);
+  const opensPayout = initialAction === 'add' && initialTab === 'payouts';
+  const [tab, setTab] = useState(opensPayout ? 'Payouts' : 'Dashboard');
+  const [showExpenseForm, setShowExpenseForm] = useState(initialAction === 'add' && !opensPayout);
+  const [showPayoutForm, setShowPayoutForm] = useState(opensPayout);
   const [showTrophyForm, setShowTrophyForm] = useState(false);
   const [expandedFirm, setExpandedFirm] = useState(null);
   const [selectedFirm, setSelectedFirm] = useState(null);

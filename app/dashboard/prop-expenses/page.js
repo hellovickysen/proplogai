@@ -3,7 +3,7 @@ import ExpenseTracker from '@/components/expenses/ExpenseTracker';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PropExpensesPage() {
+export default async function PropExpensesPage({ searchParams }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -41,5 +41,5 @@ export default async function PropExpensesPage() {
     .order('created_at', { ascending: false });
   if (trophiesError) console.error('trophies error', trophiesError);
 
-  return <ExpenseTracker expenses={expenses || []} payouts={payouts || []} trophies={trophies || []} />;
+  return <ExpenseTracker expenses={expenses || []} payouts={payouts || []} trophies={trophies || []} initialAction={(searchParams && searchParams.action) || ''} initialTab={(searchParams && searchParams.tab) || ''} />;
 }

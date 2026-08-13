@@ -320,12 +320,12 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
 
 const BASIC_TROPHY_LIMIT = 5;
 
-export default function TrophyWall({ trophies, firmNames, planAccess }) {
+export default function TrophyWall({ trophies, firmNames, planAccess, initialAction = '' }) {
   const hasUnlimited = planAccess && (planAccess.isAdmin || planAccess.isBeta || planAccess.effectivePlan === 'elite');
   const atLimit = !hasUnlimited && trophies.length >= BASIC_TROPHY_LIMIT;
   const router = useRouter();
   const toast = useToast();
-  const [showUpload, setShowUpload] = useState(false);
+  const [showUpload, setShowUpload] = useState(initialAction === 'add');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [viewing, setViewing] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);

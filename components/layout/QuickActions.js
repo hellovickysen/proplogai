@@ -7,8 +7,8 @@ import QuickLogModal from '@/components/trades/QuickLogModal';
 const ACTIONS = [
   { label: 'Log Trade', icon: '📈', href: '/dashboard/trades/new' },
   { label: 'Quick Log', icon: '⚡', action: 'quick-log' },
-  { label: 'Add Expense', icon: '💳', href: '/dashboard/expenses?action=add' },
-  { label: 'Add Payout', icon: '💰', href: '/dashboard/expenses?tab=payouts&action=add' },
+  { label: 'Add Expense', icon: '💳', href: '/dashboard/prop-expenses?action=add' },
+  { label: 'Add Payout', icon: '💰', href: '/dashboard/prop-expenses?tab=payouts&action=add' },
   { label: 'Add Trophy', icon: '🏆', href: '/dashboard/trophies?action=add' },
   { label: 'AI Coach', icon: '✦', href: '/dashboard/coach' },
 ];
