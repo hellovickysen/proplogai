@@ -10,6 +10,7 @@ import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 import { ExpensesEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import DatePickerDropdown from '@/components/ui/DatePickerDropdown';
 
 
 
@@ -28,7 +29,6 @@ const PURCHASE_LABELS = { new: 'New Purchase', renewal: 'Renewal', activation: '
 const PURCHASE_COLORS = { new: 'bg-cyan-500/15 text-cyan-300 border-cyan-400/30', renewal: 'bg-amber-500/15 text-amber-300 border-amber-400/30', activation: 'bg-violet-500/15 text-violet-300 border-violet-400/30' };
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
-const dateStyle = { colorScheme: 'dark' };
 
 const TROPHY_CATS = {
   payout: { label: 'Payout', color: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30' },
@@ -222,10 +222,7 @@ function AddExpenseForm({ onSave, onCancel, existingFirms, defaultFirmName }) {
             {ACCOUNT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.expense_date} onChange={(e) => set('expense_date', e.target.value)} />
-        </div>
+        <DatePickerDropdown label="Date" value={f.expense_date} onChange={(value) => set('expense_date', value)} />
       </div>
 
       <div>
@@ -343,10 +340,7 @@ function EditExpenseForm({ expense, onSave, onCancel, existingFirms }) {
             {ACCOUNT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.expense_date} onChange={(e) => set('expense_date', e.target.value)} />
-        </div>
+        <DatePickerDropdown label="Date" value={f.expense_date} onChange={(value) => set('expense_date', value)} />
       </div>
 
       <div>
@@ -470,10 +464,7 @@ function AddPayoutForm({ onSave, onCancel, existingFirms, defaultFirmName }) {
           <label className={labelCls}>Amount ($) *</label>
           <input className={field} value={f.amount} onChange={(e) => set('amount', e.target.value)} inputMode="decimal" placeholder="0.00" required />
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.payout_date} onChange={(e) => set('payout_date', e.target.value)} />
-        </div>
+        <DatePickerDropdown label="Date" value={f.payout_date} onChange={(value) => set('payout_date', value)} />
       </div>
       <div>
         <label className={labelCls}>Notes (optional)</label>
@@ -565,10 +556,7 @@ function EditPayoutForm({ payout, onSave, onCancel, existingFirms }) {
           <label className={labelCls}>Amount ($) *</label>
           <input className={field} value={f.amount} onChange={(e) => set('amount', e.target.value)} inputMode="decimal" placeholder="0.00" required />
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.payout_date} onChange={(e) => set('payout_date', e.target.value)} />
-        </div>
+        <DatePickerDropdown label="Date" value={f.payout_date} onChange={(value) => set('payout_date', value)} />
       </div>
       <div>
         <label className={labelCls}>Notes (optional)</label>

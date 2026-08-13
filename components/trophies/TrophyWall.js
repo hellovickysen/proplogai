@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/Toast';
 import { TrophyEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { UpgradeModal } from '@/components/ui/BlurGate';
+import DatePickerDropdown from '@/components/ui/DatePickerDropdown';
 
 
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
@@ -250,10 +251,7 @@ export function UploadTrophyForm({ onSave, onCancel, firmNames, initialFirmName 
         <textarea className={field} rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Any details about this achievement..." />
       </div>
 
-      <div>
-        <label className={labelCls}>Date</label>
-        <input type="date" className={field + ' cursor-pointer'} style={{ colorScheme: 'dark' }} value={trophyDate} onChange={(e) => setTrophyDate(e.target.value)} />
-      </div>
+      <DatePickerDropdown label="Date" value={trophyDate} onChange={setTrophyDate} />
 
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={handleCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>

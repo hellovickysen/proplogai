@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createTrade } from '@/app/dashboard/trades/actions';
+import DatePickerDropdown from '@/components/ui/DatePickerDropdown';
 
 const PAIRS = ['XAU/USD', 'EUR/USD', 'GBP/USD', 'USD/JPY', 'GBP/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
 
@@ -145,16 +146,7 @@ export default function QuickLogModal({ onClose }) {
                 ))}
               </div>
             </div>
-            <div>
-              <label className={labelCls}>Date</label>
-              <input
-                type="date"
-                className={field + ' cursor-pointer'}
-                style={{ colorScheme: 'dark' }}
-                value={tradeDate}
-                onChange={(e) => setTradeDate(e.target.value)}
-              />
-            </div>
+            <DatePickerDropdown label="Date" value={tradeDate} onChange={setTradeDate} />
           </div>
 
           {/* P&L */}
