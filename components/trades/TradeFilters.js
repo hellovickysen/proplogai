@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import TradeTable from '@/components/trades/TradeTable';
 import { num } from '@/lib/stats';
+import DatePickerDropdown from '@/components/ui/DatePickerDropdown';
 
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 text-sm outline-none focus:border-cyan-400/60 sm:w-auto';
 const PAGE_SIZE = 20;
@@ -66,7 +67,7 @@ function FilterDropdown({ label, value, onChange, placeholder, options, counts }
 }
 
 /* ─── Themed calendar dropdown (single date) ───────────────── */
-function DateFilterDropdown({ label, value, onChange }) {
+function LegacyDateFilterDropdown({ label, value, onChange }) {
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => value ? new Date(value + 'T00:00:00') : new Date());
   const ref = useRef(null);
@@ -489,8 +490,8 @@ export default function TradeFilters({ trades, prefs }) {
             <span className={'text-xs font-semibold ' + (hasLesson ? 'text-violet-300' : 'text-white/55')}>Has lesson</span>
           </button>
         </div>
-        <DateFilterDropdown label="From" value={dateFrom} onChange={setDateFrom} />
-        <DateFilterDropdown label="To" value={dateTo} onChange={setDateTo} />
+        <DatePickerDropdown label="From" value={dateFrom} onChange={setDateFrom} className="sm:w-auto sm:min-w-[150px]" />
+        <DatePickerDropdown label="To" value={dateTo} onChange={setDateTo} className="sm:w-auto sm:min-w-[150px]" />
         {hasFilters && (
           <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setFavoritesOnly(false); setDateFrom(''); setDateTo(''); }} className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
         )}
@@ -531,8 +532,8 @@ export default function TradeFilters({ trades, prefs }) {
                 <span className={'text-xs font-semibold ' + (hasLesson ? 'text-violet-300' : 'text-white/55')}>Has lesson</span>
               </button>
             </div>
-            <DateFilterDropdown label="From" value={dateFrom} onChange={setDateFrom} />
-            <DateFilterDropdown label="To" value={dateTo} onChange={setDateTo} />
+            <DatePickerDropdown label="From" value={dateFrom} onChange={setDateFrom} className="sm:w-auto sm:min-w-[150px]" />
+            <DatePickerDropdown label="To" value={dateTo} onChange={setDateTo} className="sm:w-auto sm:min-w-[150px]" />
             {hasFilters && (
               <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setFavoritesOnly(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }} className="col-span-2 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
             )}
