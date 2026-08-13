@@ -109,16 +109,21 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
         </svg>
       </button>
 
-      {/* Mobile: compact button */}
+      {/* Mobile: active account identity pill */}
       <button
         onClick={() => setOpen(!open)}
         disabled={switching}
-        className="sm:hidden flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/[0.03] h-9 px-2 disabled:opacity-50"
+        title={displayName}
+        className="sm:hidden flex h-9 max-w-[118px] items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/[0.06] disabled:opacity-50"
       >
-        {greenDot}
-        {displayColor && (
-          <span className="h-2 w-2 rounded-full" style={{ backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` }} />
-        )}
+        <span
+          className="h-2 w-2 shrink-0 rounded-full"
+          style={displayColor ? { backgroundColor: displayColor, boxShadow: `0 0 6px ${displayColor}40` } : { backgroundColor: '#34d399', boxShadow: '0 0 6px rgba(52,211,153,0.5)' }}
+        />
+        <span className="min-w-0 truncate">{displayName}</span>
+        <svg width="10" height="10" viewBox="0 0 16 16" fill="none" className={'shrink-0 text-white/40 transition-transform ' + (open ? 'rotate-180' : '')}>
+          <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
       </button>
 
       {/* Dropdown — same look for Basic and Elite */}
