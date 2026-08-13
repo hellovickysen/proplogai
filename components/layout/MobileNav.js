@@ -10,7 +10,8 @@ import PlanBadge from '@/components/ui/PlanBadge';
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades',    icon: '☰', href: '/dashboard/trades' },
-  { label: 'Rulebook',  icon: '📋', href: '/dashboard/rulebook' },
+  { label: 'Rulebook',  icon: '🛡', href: '/dashboard/rulebook' },
+  { label: 'Playbook',  icon: '📋', href: '/dashboard/playbook' },
   { label: 'Calendar',  icon: '📅', href: '/dashboard/calendar' },
   { label: 'Prop Expenses',  icon: '💳', href: '/dashboard/prop-expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
