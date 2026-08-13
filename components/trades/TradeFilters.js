@@ -65,6 +65,68 @@ function FilterDropdown({ label, value, onChange, placeholder, options, counts }
   );
 }
 
+/* ─── Themed calendar dropdown (single date) ───────────────── */
+function DateFilterDropdown({ label, value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [viewDate, setViewDate] = useState(() => value ? new Date(value + 'T00:00:00') : new Date());
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    if (value) setViewDate(new Date(value + 'T00:00:00'));
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [open, value]);
+
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const selected = value ? new Date(value + 'T00:00:00') : null;
+  const monthLabel = viewDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const displayValue = selected ? selected.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Select date';
+
+  function selectDay(day) {
+    onChange(year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0'));
+    setOpen(false);
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">{label}</label>
+      <button type="button" onClick={() => setOpen((o) => !o)} className={field + ' flex w-full cursor-pointer items-center justify-between gap-2 text-left sm:w-auto sm:min-w-[150px]'}>
+        <span className={value ? 'text-white' : 'text-white/50'}>{displayValue}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0 text-white/40"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-30 mt-1 w-[280px] rounded-xl border border-white/10 bg-[#12121a] p-3 shadow-xl">
+          <div className="mb-3 flex items-center justify-between">
+            <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} className="grid h-8 w-8 place-items-center rounded-lg text-lg text-white/60 hover:bg-white/[0.08] hover:text-white">&#8249;</button>
+            <span className="text-sm font-semibold text-white/85">{monthLabel}</span>
+            <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))} className="grid h-8 w-8 place-items-center rounded-lg text-lg text-white/60 hover:bg-white/[0.08] hover:text-white">&#8250;</button>
+          </div>
+          <div className="grid grid-cols-7 gap-1 text-center font-mono text-[10px] text-white/35">
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((day) => <span key={day} className="py-1">{day}</span>)}
+            {Array.from({ length: firstDay }).map((_, i) => <span key={'blank-' + i} />)}
+            {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((day) => {
+              const isSelected = selected && selected.getFullYear() === year && selected.getMonth() === month && selected.getDate() === day;
+              const isToday = new Date().getFullYear() === year && new Date().getMonth() === month && new Date().getDate() === day;
+              return <button key={day} type="button" onClick={() => selectDay(day)} className={'h-8 rounded-lg text-xs transition-colors ' + (isSelected ? 'bg-cyan-400 text-[#08080f] font-bold' : isToday ? 'border border-cyan-400/40 text-cyan-300 hover:bg-cyan-400/10' : 'text-white/70 hover:bg-white/[0.08] hover:text-white')}>{day}</button>;
+            })}
+          </div>
+          <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
+            <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="text-xs text-white/45 hover:text-white/70">Clear</button>
+            <button type="button" onClick={() => { const today = new Date(); setViewDate(today); onChange(today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0')); setOpen(false); }} className="text-xs font-semibold text-cyan-300 hover:text-cyan-200">Today</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Multi-select dropdown (toggle tags on/off) ──────────── */
 function MultiFilterDropdown({ label, selected, onChange, placeholder, options, counts }) {
   const [open, setOpen] = useState(false);
@@ -427,14 +489,8 @@ export default function TradeFilters({ trades, prefs }) {
             <span className={'text-xs font-semibold ' + (hasLesson ? 'text-violet-300' : 'text-white/55')}>Has lesson</span>
           </button>
         </div>
-        <div>
-          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">From</label>
-          <input type="date" className={field} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-        </div>
-        <div>
-          <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">To</label>
-          <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-        </div>
+        <DateFilterDropdown label="From" value={dateFrom} onChange={setDateFrom} />
+        <DateFilterDropdown label="To" value={dateTo} onChange={setDateTo} />
         {hasFilters && (
           <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setFavoritesOnly(false); setDateFrom(''); setDateTo(''); }} className="rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
         )}
@@ -475,14 +531,8 @@ export default function TradeFilters({ trades, prefs }) {
                 <span className={'text-xs font-semibold ' + (hasLesson ? 'text-violet-300' : 'text-white/55')}>Has lesson</span>
               </button>
             </div>
-            <div>
-              <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">From</label>
-              <input type="date" className={field} value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-            </div>
-            <div>
-              <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">To</label>
-              <input type="date" className={field} value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-            </div>
+            <DateFilterDropdown label="From" value={dateFrom} onChange={setDateFrom} />
+            <DateFilterDropdown label="To" value={dateTo} onChange={setDateTo} />
             {hasFilters && (
               <button onClick={() => { setResult('all'); setSetupFilter(''); setEmotionFilter(''); setSessionFilter(''); setTagFilter([]); setHasLesson(false); setFavoritesOnly(false); setDateFrom(''); setDateTo(''); setFiltersOpen(false); }} className="col-span-2 rounded-lg border border-cyan-400/40 bg-cyan-500/10 px-3 py-2.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition-colors">Clear filters</button>
             )}
