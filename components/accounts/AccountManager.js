@@ -25,6 +25,11 @@ function fmtMoney(v) {
   return sign + '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function fmtCreatedDate(value) {
+  if (!value) return '';
+  return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 const gradientBtn = { background: 'linear-gradient(120deg, #a78bfa, #22d3ee)' };
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
@@ -239,9 +244,10 @@ export default function AccountManager({ accounts = [], archivedAccounts = [], s
                       </div>
                     </div>
 
-                    {acc.account_size && (
-                      <div className="mb-4 text-xs text-white/40">
-                        Account size: ${Number(acc.account_size).toLocaleString()}
+                    {(acc.account_size || acc.created_at) && (
+                      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[11px] text-white/40">
+                        {acc.account_size && <span>Account size: ${Number(acc.account_size).toLocaleString()}</span>}
+                        {acc.created_at && <span>Created {fmtCreatedDate(acc.created_at)}</span>}
                       </div>
                     )}
 
@@ -370,6 +376,8 @@ export default function AccountManager({ accounts = [], archivedAccounts = [], s
                         <div className="mt-1 font-mono text-sm font-semibold text-white/60">{s.tradeCount || 0}</div>
                       </div>
                     </div>
+
+                    {acc.created_at && <div className="mb-4 font-mono text-[11px] text-white/30">Created {fmtCreatedDate(acc.created_at)}</div>}
 
                     <button
                       onClick={() => handleRestore(acc.id)}
