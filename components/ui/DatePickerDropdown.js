@@ -1,20 +1,46 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function DatePickerDropdown({ label, value, onChange, className = '' }) {
   const [open, setOpen] = useState(false);
   const [viewDate, setViewDate] = useState(() => value ? new Date(value + 'T00:00:00') : new Date());
+  const [position, setPosition] = useState(null);
   const ref = useRef(null);
+  const popoverRef = useRef(null);
 
   useEffect(() => {
     if (!open) return;
     if (value) setViewDate(new Date(value + 'T00:00:00'));
-    function handleClick(event) {
-      if (ref.current && !ref.current.contains(event.target)) setOpen(false);
+
+    function updatePosition() {
+      const rect = ref.current?.getBoundingClientRect();
+      if (!rect) return;
+      const width = 280;
+      const height = 350;
+      const margin = 12;
+      const placeAbove = window.innerHeight - rect.bottom < height && rect.top > height;
+      setPosition({
+        left: Math.min(Math.max(margin, rect.left), window.innerWidth - width - margin),
+        top: placeAbove ? Math.max(margin, rect.top - height - 8) : rect.bottom + 8,
+      });
     }
+
+    function handleClick(event) {
+      if (ref.current?.contains(event.target) || popoverRef.current?.contains(event.target)) return;
+      setOpen(false);
+    }
+
+    updatePosition();
     document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    window.addEventListener('resize', updatePosition);
+    window.addEventListener('scroll', updatePosition, true);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', updatePosition, true);
+    };
   }, [open, value]);
 
   const year = viewDate.getFullYear();
@@ -37,8 +63,8 @@ export default function DatePickerDropdown({ label, value, onChange, className =
         <span className={value ? 'text-white' : 'text-white/50'}>{displayValue}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="shrink-0 text-white/40"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M8 2v4M16 2v4M3 10h18" /></svg>
       </button>
-      {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 w-[280px] rounded-xl border border-white/10 bg-[#12121a] p-3 shadow-xl">
+      {open && position && typeof document !== 'undefined' && createPortal(
+        <div ref={popoverRef} className="fixed z-[10001] w-[280px] rounded-xl border border-white/10 bg-[#12121a] p-3 shadow-2xl" style={{ left: position.left, top: position.top }}>
           <div className="mb-3 flex items-center justify-between">
             <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} className="grid h-8 w-8 place-items-center rounded-lg text-lg text-white/60 hover:bg-white/[0.08] hover:text-white">&#8249;</button>
             <span className="text-sm font-semibold text-white/85">{monthLabel}</span>
@@ -58,7 +84,8 @@ export default function DatePickerDropdown({ label, value, onChange, className =
             <button type="button" onClick={() => { onChange(''); setOpen(false); }} className="text-xs text-white/45 hover:text-white/70">Clear</button>
             <button type="button" onClick={() => { const today = new Date(); setViewDate(today); onChange(today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0')); setOpen(false); }} className="text-xs font-semibold text-cyan-300 hover:text-cyan-200">Today</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
