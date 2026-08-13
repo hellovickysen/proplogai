@@ -114,7 +114,7 @@ export default function AccountSwitcher({ accounts, activeAccountId, todayStats 
         onClick={() => setOpen(!open)}
         disabled={switching}
         title={displayName}
-        className="sm:hidden flex h-9 max-w-[118px] items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/[0.06] disabled:opacity-50"
+        className="sm:hidden flex h-9 max-w-[100px] items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/[0.06] disabled:opacity-50"
       >
         <span
           className="h-2 w-2 shrink-0 rounded-full"
