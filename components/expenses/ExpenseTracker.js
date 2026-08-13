@@ -1116,13 +1116,13 @@ export default function ExpenseTracker({ expenses, payouts, trophies, initialAct
                       .sort((a, b) => new Date(b.date) - new Date(a.date) || new Date(b.created_at) - new Date(a.created_at))
                       .slice(0, 8)
                       .map((item) => (
-                        <div key={item.id} className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+                        <button type="button" key={item.id} onClick={() => openFirmDashboard(item.firm_name)} className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5 text-left transition-colors hover:border-cyan-400/30 hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 sm:gap-3 sm:px-4 sm:py-3">
                           <div className={'grid h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0 place-items-center rounded-lg font-display text-xs sm:text-sm font-bold ' + (item.type === 'payout' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60')}>
                             {firmInitial(item.firm_name)}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 sm:gap-2">
-                              <button onClick={() => openFirmDashboard(item.firm_name)} className="truncate text-sm font-semibold hover:text-cyan-300 transition-colors">{item.firm_name}</button>
+                              <span className="truncate text-sm font-semibold">{item.firm_name}</span>
                               {item.type === 'expense' && item.purchase_type && (
                                 <span className={'flex-shrink-0 whitespace-nowrap rounded-full border px-1.5 sm:px-2 py-px sm:py-0.5 text-[9px] sm:text-[10px] font-semibold ' + (PURCHASE_COLORS[item.purchase_type] || 'border-white/10 text-white/50')}>
                                   {PURCHASE_LABELS[item.purchase_type] || item.purchase_type}
@@ -1142,7 +1142,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies, initialAct
                           <div className={'flex-shrink-0 font-mono text-sm font-bold ' + (item.type === 'payout' ? 'text-emerald-400' : 'text-red-400')}>
                             {item.type === 'payout' ? '+' : '-'}{fmtCurrency(item.amt)}
                           </div>
-                        </div>
+                        </button>
                       ))}
                   </div>
                 )}
