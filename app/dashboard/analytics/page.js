@@ -563,8 +563,23 @@ export default function AnalyticsPage() {
           <div className="text-xs text-white/60">
             <span className="font-medium text-violet-300">Auto-evaluation:</span> Trades are automatically cross-checked against your Rulebook rules.
             {backfillResult && (
-              <span className="ml-2 text-emerald-400">
-                Evaluated {backfillResult.total} trades ({backfillResult.evaluated} checks)
+              <span className="ml-2">
+                <span className="text-emerald-400">
+                  Evaluated {backfillResult.total} trades ({backfillResult.evaluated} checks)
+                </span>
+                {backfillResult.errors && backfillResult.errors.length > 0 && (
+                  <span className="ml-2 text-red-400">
+                    {backfillResult.errors.length} errors: {backfillResult.errors[0]}
+                  </span>
+                )}
+                {backfillResult.debug && (
+                  <span className="ml-2 text-white/30">
+                    [DB: {backfillResult.debug.tradeCount} trades for user]
+                  </span>
+                )}
+                {backfillResult.error && (
+                  <span className="ml-2 text-red-400">{backfillResult.error}</span>
+                )}
               </span>
             )}
           </div>

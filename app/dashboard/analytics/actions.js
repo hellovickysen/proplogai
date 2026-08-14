@@ -472,11 +472,18 @@ export async function runBackfill() {
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
 
-  const accountId = await getActiveAccountId(supabase, user.id);
-  const result = await backfillEvaluations(supabase, user.id, accountId || null);
+  // Backfill ALL trades regardless of selected account
+  // (analytics should evaluate every trade, not just the active account)
+  const result = await backfillEvaluations(supabase, user.id, null);
+
+  // Debug: count trades to help diagnose issues
+  const { count: tradeCount } = await supabase
+    .from('trades')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', user.id);
 
   revalidatePath('/dashboard/analytics');
-  return result;
+  return { ...result, debug: { userId: user.id, tradeCount: tradeCount || 0 } };
 }
 
 /* ─── AI Explanation (on-demand, cached) ──── */
