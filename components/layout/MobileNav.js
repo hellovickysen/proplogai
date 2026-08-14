@@ -10,13 +10,15 @@ import PlanBadge from '@/components/ui/PlanBadge';
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades',    icon: '☰', href: '/dashboard/trades' },
-  { label: 'Rulebook',  icon: '📋', href: '/dashboard/rulebook' },
   { label: 'Calendar',  icon: '📅', href: '/dashboard/calendar' },
-  { label: 'Prop Expenses',  icon: '💳', href: '/dashboard/prop-expenses' },
+  { label: 'Rulebook',  icon: '🛡', href: '/dashboard/rulebook' },
+  { label: 'Playbook',  icon: '📋', href: '/dashboard/playbook' },
+  { label: 'Accounts',  icon: '📂', href: '/dashboard/accounts', elite: true },
+  { label: 'Prop Expenses', icon: '💳', href: '/dashboard/prop-expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
   { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach' },
   { label: 'Tools',     icon: '🛠', href: '/dashboard/tools' },
-  { label: 'Referrals', icon: '🔗', href: '/dashboard/referrals' },
+  { label: 'Rewards',   icon: '🎁', href: '/dashboard/rewards' },
 ];
 
 export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount = 0, credits, fullName = '', planAccess = null }) {
@@ -139,7 +141,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
         {/* -- Main Nav (scrollable) -- */}
         <nav className="relative flex-1 overflow-y-auto px-3 py-1">
           <div className="flex flex-col gap-0.5">
-            {NAV.map((item) => <NavItem key={item.href} item={item} />)}
+            {NAV.filter((item) => !item.elite || (planAccess && (planAccess.effectivePlan === 'elite' || planAccess.isAdmin || planAccess.isBeta))).map((item) => <NavItem key={item.href} item={item} />)}
           </div>
           {/* Blur overlay when account menu is expanded — tap to close */}
           {accountOpen && (

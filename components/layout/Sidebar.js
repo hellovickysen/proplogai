@@ -5,27 +5,25 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import Logo, { LogoMark } from '@/components/Logo';
 import PlanBadge from '@/components/ui/PlanBadge';
+import HeaderAvatar from '@/components/layout/HeaderAvatar';
 
 const NAV = [
   { label: 'Dashboard', icon: '▦', href: '/dashboard' },
   { label: 'Trades',    icon: '☰', href: '/dashboard/trades' },
-  { label: 'Accounts',  icon: '📂', href: '/dashboard/accounts', elite: true },
-  { label: 'Rulebook',  icon: '📋', href: '/dashboard/rulebook' },
   { label: 'Calendar',  icon: '📅', href: '/dashboard/calendar' },
-  { label: 'Prop Expenses',  icon: '💳', href: '/dashboard/prop-expenses', tourId: 'nav-expenses' },
+  { label: 'Rulebook',  icon: '🛡', href: '/dashboard/rulebook' },
+  { label: 'Playbook',  icon: '📋', href: '/dashboard/playbook' },
+  { label: 'Accounts',  icon: '📂', href: '/dashboard/accounts', elite: true },
+  { label: 'Prop Expenses', icon: '💳', href: '/dashboard/prop-expenses', tourId: 'nav-expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
   { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach', tourId: 'nav-coach' },
   { label: 'Tools',     icon: '🛠', href: '/dashboard/tools' },
   { label: 'Rewards',   icon: '🎁', href: '/dashboard/rewards' },
 ];
 
-const SUPPORT_NAV = [
-  { label: 'Settings',       icon: '⚙', href: '/dashboard/settings' },
-  { label: 'Help & Support', icon: '?', href: '/dashboard/support' },
-  { label: 'Subscription',   icon: '💎', href: '/dashboard/settings?tab=billing' },
-];
 
-export default function Sidebar({ email = '', fullName = '', avatarUrl = '', planAccess = null, credits = null }) {
+
+export default function Sidebar({ email = '', fullName = '', avatarUrl = '', planAccess = null, credits = null, isAdmin = false, adminNotifCount = 0 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [collapsed, setCollapsed] = useState(true);
@@ -124,11 +122,8 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
         {/* -- Support Section -- */}
         <div className={'mt-2 border-t border-white/[0.06] pt-3 ' + (collapsed ? 'px-1.5' : 'px-2')}>
           {!collapsed && (
-            <div className="mb-1.5 px-3 font-mono text-[9px] uppercase tracking-widest text-white/25">Support</div>
+            <div className="mb-1.5 px-3 font-mono text-[9px] uppercase tracking-widest text-white/25">Credits</div>
           )}
-          <div className="flex flex-col gap-0.5">
-            {SUPPORT_NAV.map((item) => <NavItem key={item.href} item={item} />)}
-          </div>
           {/* Credits */}
           {credits != null && Number(credits) > 0 && !collapsed && (
             <Link
@@ -148,39 +143,18 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
 
         {/* -- User Avatar Card -- */}
         <div className={'mt-3 border-t border-white/[0.06] pt-3 ' + (collapsed ? 'px-1.5' : 'px-2')}>
-          <Link
-            href="/dashboard/settings"
-            title={email || 'Profile'}
-            className={
-              'flex w-full items-center rounded-xl transition-all hover:bg-white/[0.04] ' +
-              (collapsed ? 'justify-center px-0 py-2' : 'gap-2.5 px-3 py-2.5')
-            }
-          >
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" className="h-8 w-8 flex-shrink-0 rounded-lg object-cover border border-white/10" />
-            ) : (
-              <div
-                className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg text-xs font-bold text-[#08080f]"
-                style={{ background: 'linear-gradient(135deg,#a78bfa,#22d3ee)' }}
-              >
-                {(fullName || email || '?').charAt(0).toUpperCase()}
+          <div className={collapsed ? 'flex justify-center' : 'flex items-center justify-between'}>
+            {!collapsed && (
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
+                  {planAccess && <PlanBadge access={planAccess} />}
+                </div>
+                <div className="truncate text-[11px] text-white/40">{email}</div>
               </div>
             )}
-            {!collapsed && (
-              <>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    {fullName && <span className="truncate text-xs font-semibold text-white">{fullName}</span>}
-                    {planAccess && <PlanBadge access={planAccess} />}
-                  </div>
-                  <div className="truncate text-[11px] text-white/40">{email}</div>
-                </div>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/25 flex-shrink-0">
-                  <path d="M9 18l6-6-6-6" />
-                </svg>
-              </>
-            )}
-          </Link>
+            <HeaderAvatar email={email} fullName={fullName} avatarUrl={avatarUrl} credits={credits} isAdmin={isAdmin} adminNotifCount={adminNotifCount} planAccess={planAccess} popoverPosition="up" popoverAlign="left" />
+          </div>
         </div>
       </div>
     </aside>

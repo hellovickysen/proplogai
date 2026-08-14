@@ -9,6 +9,7 @@ import { getUserAccess } from '@/lib/plans';
 import { getActiveAccountId, applyAccountFilter } from '@/lib/accounts';
 import YearlyPerformance from '@/components/calendar/YearlyPerformance';
 import ScrollIntoView from '@/components/ui/ScrollIntoView';
+import CalendarNavigation from '@/components/calendar/CalendarNavigation';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,18 +45,24 @@ export default async function CalendarPage({ searchParams }) {
   // Multi-account: get active account filter
   const activeAccountId = await getActiveAccountId(supabase, user.id);
 
-  // Calculate the start and end of the displayed month for date-range filtering
+  // Load the six-week visual calendar window, including leading and trailing adjacent-month cells.
   const monthStartDate = `${year}-${pad2(month + 1)}-01`;
   const nextMonthVal = month === 11 ? 0 : month + 1;
   const nextYearVal = month === 11 ? year + 1 : year;
   const monthEndDate = `${nextYearVal}-${pad2(nextMonthVal + 1)}-01`;
+  const firstDayOfMonth = new Date(Date.UTC(year, month, 1));
+  const calendarStart = new Date(Date.UTC(year, month, 1 - firstDayOfMonth.getUTCDay()));
+  const calendarEnd = new Date(calendarStart);
+  calendarEnd.setUTCDate(calendarEnd.getUTCDate() + 42);
+  const calendarStartDate = `${calendarStart.getUTCFullYear()}-${pad2(calendarStart.getUTCMonth() + 1)}-${pad2(calendarStart.getUTCDate())}`;
+  const calendarEndDate = `${calendarEnd.getUTCFullYear()}-${pad2(calendarEnd.getUTCMonth() + 1)}-${pad2(calendarEnd.getUTCDate())}`;
 
   let monthQuery = supabase
     .from('trades')
     .select('id, pair, direction, pnl, setup, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price')
     .eq('user_id', user.id)
-    .gte('trade_date', monthStartDate)
-    .lt('trade_date', monthEndDate);
+    .gte('trade_date', calendarStartDate)
+    .lt('trade_date', calendarEndDate);
   monthQuery = applyAccountFilter(monthQuery, activeAccountId);
   const { data: trades, error: tradesError } = await monthQuery
     .order('trade_date', { ascending: false, nullsFirst: false })
@@ -89,6 +96,7 @@ export default async function CalendarPage({ searchParams }) {
   }
 
   const list = trades || [];
+  const monthTrades = list.filter((t) => t.trade_date >= monthStartDate && t.trade_date < monthEndDate);
 
   // Empty state — user has no trades at all (only for unfiltered view, not account-filtered)
   if (totalTradeCount === 0 && !activeAccountId) {
@@ -158,16 +166,14 @@ export default async function CalendarPage({ searchParams }) {
   });
 
   // Calculate monthly P/L (CalendarMonth expects this as a prop)
-  const monthlyPnl = enrichedTrades.reduce((sum, t) => sum + num(t.pnl), 0);
+  const monthlyPnl = enrichedTrades
+    .filter((t) => t.trade_date >= monthStartDate && t.trade_date < monthEndDate)
+    .reduce((sum, t) => sum + num(t.pnl), 0);
 
-  // Build journalDays map: { dayNumber: true } for days that have journal entries
+  // Build journalDays map: { YYYY-MM-DD: true } for visible calendar cells with journal entries.
   const journalDays = {};
   for (const t of enrichedTrades) {
-    if (t._journal) {
-      const raw = t.trade_date || t.closed_at || t.created_at;
-      const d = raw ? new Date(raw).getUTCDate() : null;
-      if (d) journalDays[d] = true;
-    }
+    if (t._journal && t.trade_date) journalDays[t.trade_date.slice(0, 10)] = true;
   }
 
   // Build day/selected-date trades lookup
@@ -189,31 +195,29 @@ export default async function CalendarPage({ searchParams }) {
   const prevParam = `${prevMonth.getFullYear()}-${pad2(prevMonth.getMonth() + 1)}`;
   const nextParam = `${nextMonth.getFullYear()}-${pad2(nextMonth.getMonth() + 1)}`;
   const monthParam = `${year}-${pad2(month + 1)}`;
+  const todayParam = `${now.getUTCFullYear()}-${pad2(now.getUTCMonth() + 1)}`;
 
   return (
     <div className="p-6 mx-auto">
       <h1 className="text-2xl font-bold mb-6">Calendar</h1>
 
       {/* Calendar Insights — blurred for Basic users */}
-      {list.length > 0 && (
+      {monthTrades.length > 0 && (
         <BlurGate feature="calendar_insights" access={planAccess}>
-          <CalendarInsights monthTrades={list} allTrades={allTrades || []} />
+          <CalendarInsights monthTrades={monthTrades} allTrades={allTrades || []} />
         </BlurGate>
       )}
 
       <div className="rounded-2xl border border-white/10 bg-[#12121a] overflow-hidden">
         {/* Month navigation in the calendar card header */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
-          <Link href={`/dashboard/calendar?month=${prevParam}`} className="text-xs text-white/40 hover:text-white/70 transition-colors">
-            &#8592; {MONTHS_SHORT[prevMonth.getMonth()]}
-          </Link>
-          <span className="font-semibold text-white">
-            {MONTHS_SHORT[month]} {year}
-          </span>
-          <Link href={`/dashboard/calendar?month=${nextParam}`} className="text-xs text-white/40 hover:text-white/70 transition-colors">
-            {MONTHS_SHORT[nextMonth.getMonth()]} &rarr;
-          </Link>
-        </div>
+        <CalendarNavigation
+          prevHref={`/dashboard/calendar?month=${prevParam}`}
+          nextHref={`/dashboard/calendar?month=${nextParam}`}
+          todayHref={`/dashboard/calendar?month=${todayParam}`}
+          prevLabel={MONTHS_SHORT[prevMonth.getMonth()]}
+          nextLabel={MONTHS_SHORT[nextMonth.getMonth()]}
+          currentLabel={`${MONTHS_SHORT[month]} ${year}`}
+        />
 
         {/* CalendarMonth with the correct props it expects */}
         <CalendarMonth trades={enrichedTrades} year={year} month={month} selected={selected} monthlyPnl={monthlyPnl} journalDays={journalDays} monthParam={monthParam} />
@@ -225,7 +229,7 @@ export default async function CalendarPage({ searchParams }) {
       {/* Day trades section — after yearly performance, at the bottom */}
       {selected && (
         <div className="mt-6">
-          <ScrollIntoView />
+          <ScrollIntoView target={selected} />
           <div className="flex items-center gap-3 mb-4">
             <h2 className="text-lg font-semibold">Trades on {selected}</h2>
             {dayMap[selected] && (

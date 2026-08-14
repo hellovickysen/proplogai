@@ -27,6 +27,7 @@ export default function NavigationLoader() {
   // Detect internal link clicks to know when a navigation has started.
   useEffect(() => {
     function handleClick(e) {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
       const anchor = e.target.closest('a[href]');
       if (!anchor) return;
 

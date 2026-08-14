@@ -10,6 +10,7 @@ import { processImageFile } from '@/lib/imageUtils';
 import { useToast } from '@/components/ui/Toast';
 import { ExpensesEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import DatePickerDropdown from '@/components/ui/DatePickerDropdown';
 
 
 
@@ -28,7 +29,6 @@ const PURCHASE_LABELS = { new: 'New Purchase', renewal: 'Renewal', activation: '
 const PURCHASE_COLORS = { new: 'bg-cyan-500/15 text-cyan-300 border-cyan-400/30', renewal: 'bg-amber-500/15 text-amber-300 border-amber-400/30', activation: 'bg-violet-500/15 text-violet-300 border-violet-400/30' };
 const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3.5 py-2.5 text-sm outline-none focus:border-cyan-400/60';
 const labelCls = 'mb-1.5 block font-mono text-xs uppercase tracking-wider text-white/55';
-const dateStyle = { colorScheme: 'dark' };
 
 const TROPHY_CATS = {
   payout: { label: 'Payout', color: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/30' },
@@ -222,10 +222,7 @@ function AddExpenseForm({ onSave, onCancel, existingFirms, defaultFirmName }) {
             {ACCOUNT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.expense_date} onChange={(e) => set('expense_date', e.target.value)} />
-        </div>
+        <DatePickerDropdown label="Date" value={f.expense_date} onChange={(value) => set('expense_date', value)} />
       </div>
 
       <div>
@@ -343,10 +340,7 @@ function EditExpenseForm({ expense, onSave, onCancel, existingFirms }) {
             {ACCOUNT_SIZES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.expense_date} onChange={(e) => set('expense_date', e.target.value)} />
-        </div>
+        <DatePickerDropdown label="Date" value={f.expense_date} onChange={(value) => set('expense_date', value)} />
       </div>
 
       <div>
@@ -470,10 +464,7 @@ function AddPayoutForm({ onSave, onCancel, existingFirms, defaultFirmName }) {
           <label className={labelCls}>Amount ($) *</label>
           <input className={field} value={f.amount} onChange={(e) => set('amount', e.target.value)} inputMode="decimal" placeholder="0.00" required />
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.payout_date} onChange={(e) => set('payout_date', e.target.value)} />
-        </div>
+        <DatePickerDropdown label="Date" value={f.payout_date} onChange={(value) => set('payout_date', value)} />
       </div>
       <div>
         <label className={labelCls}>Notes (optional)</label>
@@ -565,10 +556,7 @@ function EditPayoutForm({ payout, onSave, onCancel, existingFirms }) {
           <label className={labelCls}>Amount ($) *</label>
           <input className={field} value={f.amount} onChange={(e) => set('amount', e.target.value)} inputMode="decimal" placeholder="0.00" required />
         </div>
-        <div>
-          <label className={labelCls}>Date</label>
-          <input type="date" className={field + ' cursor-pointer'} style={dateStyle} value={f.payout_date} onChange={(e) => set('payout_date', e.target.value)} />
-        </div>
+        <DatePickerDropdown label="Date" value={f.payout_date} onChange={(value) => set('payout_date', value)} />
       </div>
       <div>
         <label className={labelCls}>Notes (optional)</label>
@@ -600,6 +588,7 @@ function FirmDashboard({
   const [showAllPayouts, setShowAllPayouts] = useState(false);
   const [expenseTypeFilter, setExpenseTypeFilter] = useState('all');
   const [trophyCategoryFilter, setTrophyCategoryFilter] = useState('all');
+  const [viewingTrophy, setViewingTrophy] = useState(null);
   const PAGE_SIZE = 5;
 
   const filteredExpenses = expenseTypeFilter === 'all' ? expenses : expenses.filter((e) => e.purchase_type === expenseTypeFilter);
@@ -828,7 +817,7 @@ function FirmDashboard({
             {filteredTrophies.map((t) => {
               const cat = TROPHY_CATS[t.category] || TROPHY_CATS.other;
               return (
-                <div key={t.id} className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+                <button type="button" key={t.id} onClick={() => setViewingTrophy(t)} className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] text-left transition-all hover:border-cyan-400/30 hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60">
                   <div className="relative aspect-[4/3] overflow-hidden bg-black/40">
                     <img src={t.file_url} alt={t.title} className="h-full w-full object-cover" />
                     <div className="absolute left-2 top-2">
@@ -839,7 +828,7 @@ function FirmDashboard({
                     <h3 className="text-sm font-semibold">{t.title}</h3>
                     {t.description && <p className="mt-0.5 text-xs text-white/45 line-clamp-1">{t.description}</p>}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -848,18 +837,37 @@ function FirmDashboard({
         </div>
         );
       })()}
+
+      {viewingTrophy && (
+        <Modal open={!!viewingTrophy} onClose={() => setViewingTrophy(null)} title={viewingTrophy.title}>
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] text-white/45">
+              <span className={'rounded-full border px-2 py-0.5 font-semibold ' + (TROPHY_CATS[viewingTrophy.category] || TROPHY_CATS.other).color}>{(TROPHY_CATS[viewingTrophy.category] || TROPHY_CATS.other).label}</span>
+              <span>{firmName}</span>
+              <span>·</span>
+              <span>{fmtDate(viewingTrophy.trophy_date || viewingTrophy.created_at)}</span>
+            </div>
+            {viewingTrophy.description && <p className="text-sm text-white/60">{viewingTrophy.description}</p>}
+            <img src={viewingTrophy.file_url} alt={viewingTrophy.title} className="max-h-[65vh] w-full rounded-xl border border-white/10 object-contain" />
+            <div className="flex justify-end">
+              <a href={viewingTrophy.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20">Open full view ↗</a>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }
 
 /* ─── Main Component ─────────────────────────────────────────── */
 
-export default function ExpenseTracker({ expenses, payouts, trophies }) {
+export default function ExpenseTracker({ expenses, payouts, trophies, initialAction = '', initialTab = '' }) {
   const router = useRouter();
   const toast = useToast();
-  const [tab, setTab] = useState('Dashboard');
-  const [showExpenseForm, setShowExpenseForm] = useState(false);
-  const [showPayoutForm, setShowPayoutForm] = useState(false);
+  const opensPayout = initialAction === 'add' && initialTab === 'payouts';
+  const [tab, setTab] = useState(opensPayout ? 'Payouts' : 'Dashboard');
+  const [showExpenseForm, setShowExpenseForm] = useState(initialAction === 'add' && !opensPayout);
+  const [showPayoutForm, setShowPayoutForm] = useState(opensPayout);
   const [showTrophyForm, setShowTrophyForm] = useState(false);
   const [expandedFirm, setExpandedFirm] = useState(null);
   const [selectedFirm, setSelectedFirm] = useState(null);
@@ -1127,13 +1135,13 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                       .sort((a, b) => new Date(b.date) - new Date(a.date) || new Date(b.created_at) - new Date(a.created_at))
                       .slice(0, 8)
                       .map((item) => (
-                        <div key={item.id} className="flex items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+                        <button type="button" key={item.id} onClick={() => openFirmDashboard(item.firm_name)} className="flex w-full cursor-pointer items-center gap-2.5 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5 text-left transition-colors hover:border-cyan-400/30 hover:bg-white/[0.05] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400/60 sm:gap-3 sm:px-4 sm:py-3">
                           <div className={'grid h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0 place-items-center rounded-lg font-display text-xs sm:text-sm font-bold ' + (item.type === 'payout' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/[0.06] text-white/60')}>
                             {firmInitial(item.firm_name)}
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 sm:gap-2">
-                              <button onClick={() => openFirmDashboard(item.firm_name)} className="truncate text-sm font-semibold hover:text-cyan-300 transition-colors">{item.firm_name}</button>
+                              <span className="truncate text-sm font-semibold">{item.firm_name}</span>
                               {item.type === 'expense' && item.purchase_type && (
                                 <span className={'flex-shrink-0 whitespace-nowrap rounded-full border px-1.5 sm:px-2 py-px sm:py-0.5 text-[9px] sm:text-[10px] font-semibold ' + (PURCHASE_COLORS[item.purchase_type] || 'border-white/10 text-white/50')}>
                                   {PURCHASE_LABELS[item.purchase_type] || item.purchase_type}
@@ -1153,7 +1161,7 @@ export default function ExpenseTracker({ expenses, payouts, trophies }) {
                           <div className={'flex-shrink-0 font-mono text-sm font-bold ' + (item.type === 'payout' ? 'text-emerald-400' : 'text-red-400')}>
                             {item.type === 'payout' ? '+' : '-'}{fmtCurrency(item.amt)}
                           </div>
-                        </div>
+                        </button>
                       ))}
                   </div>
                 )}

@@ -10,6 +10,7 @@ import { resolveTags } from '@/lib/tags';
 import { processImageFile } from '@/lib/imageUtils';
 import { secureUpload } from '@/lib/secureUpload';
 import { useToast } from '@/components/ui/Toast';
+import DatePickerDropdown from '@/components/ui/DatePickerDropdown';
 
 const PAIRS = ['XAU/USD', 'EUR/USD', 'GBP/USD', 'USD/JPY', 'GBP/JPY', 'AUD/USD', 'USD/CAD', 'NZD/USD'];
 const TIMEFRAMES = ['M1', 'M5', 'M15', 'H1', 'H4', 'D1'];
@@ -636,7 +637,7 @@ export default function TradeForm({ mode = 'create', tradeId = null, initial = n
                   ))}
                 </div>
               </div>
-              <div><label htmlFor="field-trade_date" className={labelCls}>Trade date</label><input id="field-trade_date" type="date" className={field + ' cursor-pointer'} style={{ colorScheme: 'dark' }} value={form.trade_date} onChange={(e) => set('trade_date', e.target.value)} /></div>
+              <DatePickerDropdown label="Trade date" value={form.trade_date} onChange={(value) => set('trade_date', value)} />
               <TimeframeDropdown value={form.timeframe} onChange={(v) => set('timeframe', v)} labelCls={labelCls} fieldCls={field} />
 
               {/* Setup — multi-select toggle buttons or legacy dropdown */}

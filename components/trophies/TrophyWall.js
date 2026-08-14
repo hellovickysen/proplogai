@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/Toast';
 import { TrophyEmptyIcon } from '@/components/ui/EmptyStates';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { UpgradeModal } from '@/components/ui/BlurGate';
+import DatePickerDropdown from '@/components/ui/DatePickerDropdown';
 
 
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
@@ -108,6 +109,9 @@ function Lightbox({ trophy, onClose }) {
         </div>
         {trophy.description && <p className="mb-3 text-sm text-white/60">{trophy.description}</p>}
         <img src={trophy.file_url} alt={trophy.title} className="w-full rounded-xl" />
+        <div className="mt-3 flex justify-end">
+          <a href={trophy.file_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-400/30 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20">Open full view ↗</a>
+        </div>
       </div>
     </div>
   );
@@ -250,10 +254,7 @@ export function UploadTrophyForm({ onSave, onCancel, firmNames, initialFirmName 
         <textarea className={field} rows={2} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Any details about this achievement..." />
       </div>
 
-      <div>
-        <label className={labelCls}>Date</label>
-        <input type="date" className={field + ' cursor-pointer'} style={{ colorScheme: 'dark' }} value={trophyDate} onChange={(e) => setTrophyDate(e.target.value)} />
-      </div>
+      <DatePickerDropdown label="Date" value={trophyDate} onChange={setTrophyDate} />
 
       <div className="flex gap-3 pt-2">
         <button type="button" onClick={handleCancel} className="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white/70">Cancel</button>
@@ -322,12 +323,12 @@ function TrophyCard({ trophy, onView, onTogglePublic, onDelete, onCopyLink }) {
 
 const BASIC_TROPHY_LIMIT = 5;
 
-export default function TrophyWall({ trophies, firmNames, planAccess }) {
+export default function TrophyWall({ trophies, firmNames, planAccess, initialAction = '' }) {
   const hasUnlimited = planAccess && (planAccess.isAdmin || planAccess.isBeta || planAccess.effectivePlan === 'elite');
   const atLimit = !hasUnlimited && trophies.length >= BASIC_TROPHY_LIMIT;
   const router = useRouter();
   const toast = useToast();
-  const [showUpload, setShowUpload] = useState(false);
+  const [showUpload, setShowUpload] = useState(initialAction === 'add');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [viewing, setViewing] = useState(null);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);

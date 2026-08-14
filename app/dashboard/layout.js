@@ -220,13 +220,13 @@ export default async function DashboardLayout({ children }) {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} planAccess={planAccess} credits={prefs.referral_balance} />
+      <Sidebar email={user.email} fullName={prefs?.full_name || ''} avatarUrl={prefs.avatar_url} planAccess={planAccess} credits={prefs.referral_balance} isAdmin={isAdmin} adminNotifCount={adminNotifCount} />
       <div className="flex min-w-0 flex-1 flex-col">
         <SmartHeader>
           <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <MobileNav email={user.email} avatarUrl={prefs.avatar_url} isAdmin={isAdmin} adminNotifCount={adminNotifCount} credits={prefs.referral_balance} fullName={prefs?.full_name || ''} planAccess={planAccess} />
             <Link href="/dashboard" className="sm:hidden flex-shrink-0">
-              <Logo size={28} wordmarkClassName="font-display text-base font-bold" />
+              <Logo size={28} showWordmark={false} />
             </Link>
             <div className="hidden sm:flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 min-h-[36px]">
               <span className="font-mono text-xs uppercase tracking-wider text-white/55">Today</span>

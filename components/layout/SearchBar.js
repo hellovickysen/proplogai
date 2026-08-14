@@ -35,7 +35,7 @@ const GROUP_HREFS = {
   trades: '/dashboard/trades',
   journal: '/dashboard/trades',
   coach: '/dashboard/coach',
-  setups: '/dashboard/rulebook',
+  setups: '/dashboard/playbook',
   expenses: '/dashboard/expenses',
   trophies: '/dashboard/trophies',
 };

@@ -4,7 +4,7 @@ import { getUserAccess } from '@/lib/plans';
 
 export const dynamic = 'force-dynamic';
 
-export default async function TrophiesPage() {
+export default async function TrophiesPage({ searchParams }) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -34,5 +34,5 @@ export default async function TrophiesPage() {
 
   const access = await getUserAccess(supabase, user);
 
-  return <TrophyWall trophies={trophies || []} firmNames={firmNames} planAccess={access.toJSON()} />;
+  return <TrophyWall trophies={trophies || []} firmNames={firmNames} planAccess={access.toJSON()} initialAction={(searchParams && searchParams.action) || ''} />;
 }
