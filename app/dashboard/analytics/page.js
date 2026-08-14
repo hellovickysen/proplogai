@@ -121,15 +121,25 @@ function ConfidenceLabel({ count, minSample = 10 }) {
 
 function OverviewTab({ data }) {
   if (!data) return <LoadingState />;
-  if (data.totalTrades === 0) return <EmptyState message="No trades in this period. Log some trades to see your analytics." />;
+  if (data.error) return (
+    <Card className="border-red-500/20">
+      <div className="text-sm text-red-400">Error loading analytics: {data.error}</div>
+      <div className="text-xs text-white/40 mt-2">Try clicking "Re-evaluate All Trades" above, or refresh the page.</div>
+    </Card>
+  );
+  const totalTrades = data.totalTrades || 0;
+  const totalBreaches = data.totalBreaches || 0;
+  const uniqueBreachedTrades = data.uniqueBreachedTrades || 0;
+  const lossFromBreaches = data.lossFromBreaches || 0;
+  if (totalTrades === 0) return <EmptyState message="No trades in this period. Log some trades to see your analytics." />;
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Total Trades" value={data.totalTrades} />
-        <StatCard label="Rule Breaches" value={data.totalBreaches} accent={data.totalBreaches > 0 ? 'text-red-400' : 'text-emerald-400'} sub={`${data.uniqueBreachedTrades} trades affected`} />
-        <StatCard label="Loss from Breaches" value={data.lossFromBreaches > 0 ? '-$' + data.lossFromBreaches.toFixed(2) : '$0'} accent={data.lossFromBreaches > 0 ? 'text-red-400' : 'text-emerald-400'} />
-        <StatCard label="Breach Rate" value={data.totalTrades > 0 ? Math.round((data.uniqueBreachedTrades / data.totalTrades) * 100) + '%' : '0%'} accent={data.uniqueBreachedTrades > 0 ? 'text-amber-400' : 'text-emerald-400'} />
+        <StatCard label="Total Trades" value={totalTrades} />
+        <StatCard label="Rule Breaches" value={totalBreaches} accent={totalBreaches > 0 ? 'text-red-400' : 'text-emerald-400'} sub={`${uniqueBreachedTrades} trades affected`} />
+        <StatCard label="Loss from Breaches" value={lossFromBreaches > 0 ? '-$' + lossFromBreaches.toFixed(2) : '$0'} accent={lossFromBreaches > 0 ? 'text-red-400' : 'text-emerald-400'} />
+        <StatCard label="Breach Rate" value={totalTrades > 0 ? Math.round((uniqueBreachedTrades / totalTrades) * 100) + '%' : '0%'} accent={uniqueBreachedTrades > 0 ? 'text-amber-400' : 'text-emerald-400'} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -162,6 +172,12 @@ function OverviewTab({ data }) {
 
 function SetupsTab({ data }) {
   if (!data) return <LoadingState />;
+  if (data.error) return (
+    <Card className="border-red-500/20">
+      <div className="text-sm text-red-400">Error: {data.error}</div>
+      <div className="text-xs text-white/40 mt-2">Try clicking "Re-evaluate All Trades" above.</div>
+    </Card>
+  );
   if (!data.setups || data.setups.length === 0) return <EmptyState message="No setup data in this period." />;
 
   return (
@@ -215,6 +231,12 @@ function SetupsTab({ data }) {
 
 function BreachesTab({ data }) {
   if (!data) return <LoadingState />;
+  if (data.error) return (
+    <Card className="border-red-500/20">
+      <div className="text-sm text-red-400">Error: {data.error}</div>
+      <div className="text-xs text-white/40 mt-2">Try clicking "Re-evaluate All Trades" above.</div>
+    </Card>
+  );
   if (!data.rules || data.rules.length === 0) return <EmptyState message="No rule breaches detected in this period." />;
 
   return (
@@ -267,6 +289,12 @@ function BreachesTab({ data }) {
 
 function PatternsTab({ data }) {
   if (!data) return <LoadingState />;
+  if (data.error) return (
+    <Card className="border-red-500/20">
+      <div className="text-sm text-red-400">Error: {data.error}</div>
+      <div className="text-xs text-white/40 mt-2">Try clicking "Re-evaluate All Trades" above.</div>
+    </Card>
+  );
   if (data.totalTrades === 0) return <EmptyState message="No trades in this period." />;
 
   return (
@@ -355,6 +383,12 @@ function PatternsTab({ data }) {
 
 function AttributionTab({ data }) {
   if (!data) return <LoadingState />;
+  if (data.error) return (
+    <Card className="border-red-500/20">
+      <div className="text-sm text-red-400">Error: {data.error}</div>
+      <div className="text-xs text-white/40 mt-2">Try clicking "Re-evaluate All Trades" above.</div>
+    </Card>
+  );
   if (!data.categories || data.categories.length === 0) return <EmptyState message="No categorized losses in this period." />;
 
   const totalLoss = data.categories.reduce((sum, c) => sum + c.totalLoss, 0);

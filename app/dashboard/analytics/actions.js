@@ -65,7 +65,8 @@ export async function fetchAnalyticsOverview(preset) {
   if (to) evalQuery = evalQuery.lte('trade_date', to);
 
   const { data: evaluations, error: evalErr } = await evalQuery;
-  if (evalErr) return { error: evalErr.message };
+  // Non-fatal: if evaluations table doesn't exist yet, continue with empty
+  const evals = evalErr ? [] : (evaluations || []);
 
   // Fetch trades for the same range
   let tradeQuery = supabase
@@ -82,7 +83,6 @@ export async function fetchAnalyticsOverview(preset) {
   if (tradeErr) return { error: tradeErr.message };
 
   // Compute overview stats
-  const evals = evaluations || [];
   const tradeList = trades || [];
   const totalTrades = tradeList.length;
   const totalBreaches = evals.filter((e) => e.outcome === 'broken').length;
