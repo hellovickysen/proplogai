@@ -10,6 +10,9 @@ import {
   fetchLossAttribution,
   fetchAIExplanation,
   fetchCoach,
+  startChallenge,
+  getChallenge,
+  abandonChallenge,
   runBackfill,
 } from './actions';
 
@@ -457,7 +460,10 @@ function AITab({ data, preset }) {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
   const [showAsk, setShowAsk] = useState(false);
-  const [challengeStarted, setChallengeStarted] = useState(false);
+  const [chOverride, setChOverride] = useState(null);
+  const [chBusy, setChBusy] = useState(false);
+  const [chErr, setChErr] = useState(null);
+  useEffect(() => { setChOverride(null); setChErr(null); }, [data]);
 
   async function runAnalysis() {
     setAiLoading(true); setAiError(null); setExplanation(null);
@@ -479,6 +485,18 @@ function AITab({ data, preset }) {
   const best = ((data.conditions && data.conditions.best) || []).slice().sort((a, b) => b.avgPnl - a.avgPnl)[0];
   const worst = ((data.conditions && data.conditions.worst) || []).slice().sort((a, b) => a.avgPnl - b.avgPnl)[0];
   const h = data.habits || {};
+  const challenge = chOverride || data.challenge || null;
+
+  async function startCh() {
+    if (!priority || !priority.ruleKey) return;
+    setChBusy(true); setChErr(null);
+    const r = await startChallenge(priority.ruleKey, priority.label || priority.title);
+    if (r && r.error) setChErr(r.error);
+    else if (r && r.challenge) setChOverride(r.challenge);
+    setChBusy(false);
+  }
+  async function refreshCh() { setChBusy(true); const r = await getChallenge(); setChOverride(r && r.challenge ? r.challenge : null); setChBusy(false); }
+  async function abandonCh() { if (!challenge) return; setChBusy(true); await abandonChallenge(challenge.id); setChOverride(null); setChBusy(false); }
 
   return (
     <div className="space-y-4">
@@ -508,14 +526,24 @@ function AITab({ data, preset }) {
       {priority && (
         <div className="rounded-3xl border border-[#8b7cf6]/25 bg-[#8b7cf6]/[0.07] p-6 sm:p-7">
           <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#c4b5fd]">Your focus this week</div>
-          <div className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">{priority.action}</div>
-          {!challengeStarted ? (
-            <button onClick={() => setChallengeStarted(true)} className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee] px-4 py-2.5 text-[13px] font-bold text-[#0a0a12]">Start 10-Trade Challenge →</button>
+          <div className="mt-2 text-xl font-bold tracking-tight sm:text-2xl">{challenge ? challenge.label : priority.action}</div>
+          {challenge ? (
+            <div className="mt-4">
+              <div className="mb-1.5 flex items-center justify-between text-[12px]">
+                <span className="text-white/55">{challenge.done ? 'Challenge complete 🎉' : 'Compliant trades'}</span>
+                <span className="font-mono text-white/70">{challenge.compliant} / {challenge.target}</span>
+              </div>
+              <div className="h-2.5 rounded-full bg-white/[0.08]"><div className="h-full rounded-full bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee]" style={{ width: Math.max(3, Math.round((challenge.compliant / challenge.target) * 100)) + '%' }} /></div>
+              <div className="mt-2 text-[11px] text-white/40">{challenge.total} trades since you started{challenge.breaks > 0 ? ' · ' + challenge.breaks + ' slipped' : ''}. Log &amp; re-evaluate trades to update progress.</div>
+              <div className="mt-3 flex gap-4 text-[12px]">
+                <button onClick={refreshCh} disabled={chBusy} className="text-[#c4b5fd] hover:text-white disabled:opacity-50">Refresh</button>
+                <button onClick={abandonCh} disabled={chBusy} className="text-white/40 hover:text-white/70 disabled:opacity-50">Give up</button>
+              </div>
+            </div>
           ) : (
             <div className="mt-4">
-              <div className="mb-1.5 flex items-center justify-between text-[11px] text-white/50"><span>Challenge progress</span><span className="font-mono">0 / 10</span></div>
-              <div className="h-2 rounded-full bg-white/[0.08]"><div className="h-full rounded-full bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee]" style={{ width: '2%' }} /></div>
-              <div className="mt-2 text-[11px] text-white/40">Take your next 10 trades following this rule. Automatic tracking arrives in the next update.</div>
+              <button onClick={startCh} disabled={chBusy || !priority.ruleKey} className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee] px-4 py-2.5 text-[13px] font-bold text-[#0a0a12] disabled:opacity-50">{chBusy ? 'Starting…' : 'Start 10-Trade Challenge →'}</button>
+              {chErr && <div className="mt-2 text-[11px] text-red-400">{chErr}</div>}
             </div>
           )}
         </div>

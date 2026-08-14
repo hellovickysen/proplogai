@@ -167,6 +167,70 @@ function makeLossCategories() {
   };
 }
 
+/* ─── Challenges: map a leak category to the rule_key a challenge tracks ──── */
+const CAT_PRIMARY_RULE = {
+  not_following_setup: 'no_setup',
+  fomo: 'fomo',
+  over_sizing: 'max_lot_size',
+  over_trading: 'over_trading',
+  bad_sl: 'bad_sl',
+  daily_loss_limit: 'daily_loss_limit',
+};
+
+// Non-fatal: returns null if the challenges table doesn't exist yet (pre-migration).
+async function loadActiveChallenge(supabase, userId, accountId) {
+  try {
+    const { data, error } = await supabase
+      .from('challenges')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('status', 'active')
+      .order('started_at', { ascending: false })
+      .limit(1);
+    if (error || !data || data.length === 0) return null;
+    const ch = data[0];
+
+    let tq = supabase.from('trades').select('id, trade_date').eq('user_id', userId);
+    if (ch.account_id) tq = tq.eq('account_id', ch.account_id);
+    if (ch.start_trade_date) tq = tq.gte('trade_date', ch.start_trade_date);
+    const { data: trs } = await tq;
+    const trades = trs || [];
+    const ids = trades.map((t) => t.id);
+
+    const brokenSet = new Set();
+    const PAGE = 200;
+    for (let i = 0; i < ids.length; i += PAGE) {
+      const batch = ids.slice(i, i + PAGE);
+      const { data: ev } = await supabase
+        .from('trade_rule_evaluations')
+        .select('trade_id')
+        .eq('user_id', userId)
+        .eq('rule_key', ch.rule_key)
+        .eq('outcome', 'broken')
+        .in('trade_id', batch);
+      (ev || []).forEach((e) => brokenSet.add(e.trade_id));
+    }
+
+    const total = trades.length;
+    const breaks = trades.filter((t) => brokenSet.has(t.id)).length;
+    const compliant = total - breaks;
+    const target = ch.target || 10;
+    return {
+      id: ch.id,
+      ruleKey: ch.rule_key,
+      label: ch.label,
+      target,
+      compliant: Math.min(compliant, target),
+      breaks,
+      total,
+      done: compliant >= target,
+      startedAt: ch.started_at,
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
 /* ─── Fetch analytics overview data ──── */
 
 export async function fetchAnalyticsOverview(preset) {
@@ -1014,7 +1078,7 @@ export async function fetchCoach(preset) {
 
   // Findings (top 3, ranked by impact)
   const findings = [];
-  if (topLeak) findings.push({ title: topLeak.label, detail: topLeak.count + ' trades · -$' + (Math.round(topLeak.totalLoss * 100) / 100).toFixed(2), action: topLeak.action });
+  if (topLeak) findings.push({ title: topLeak.label, detail: topLeak.count + ' trades · -$' + (Math.round(topLeak.totalLoss * 100) / 100).toFixed(2), action: topLeak.action, ruleKey: CAT_PRIMARY_RULE[topLeak.key] || topLeak.key, label: topLeak.label });
   if (alT >= 3 && awT > 0) {
     const alWr = Math.round((alW / alT) * 100), awWr = Math.round((awW / awT) * 100);
     if (alWr < awWr - 5) findings.push({ title: 'You trade worse after a loss', detail: 'Win rate ' + alWr + '% after a loss vs ' + awWr + '% after a win.', action: 'Take a mandatory pause after any losing trade before your next entry.' });
@@ -1050,7 +1114,49 @@ export async function fetchCoach(preset) {
     nextMilestone: score.score != null ? Math.min(100, (Math.floor(score.score / 5) + 1) * 5) : null,
   };
 
-  return { habits, conditions: { best, worst }, profile, findings: topFindings, priority: topFindings[0] || null, score };
+  const challenge = await loadActiveChallenge(supabase, user.id, accountId);
+
+  return { habits, conditions: { best, worst }, profile, findings: topFindings, priority: topFindings[0] || null, score, challenge };
+}
+
+/* ─── Challenge actions ──── */
+
+export async function startChallenge(ruleKey, label, target) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+  if (!ruleKey) return { error: 'Missing challenge rule.' };
+  const accountId = await getActiveAccountId(supabase, user.id);
+  const today = new Date().toISOString().slice(0, 10);
+  // One active challenge per user — retire any existing active one first.
+  try { await supabase.from('challenges').update({ status: 'abandoned' }).eq('user_id', user.id).eq('status', 'active'); } catch (e) {}
+  const { error } = await supabase.from('challenges').insert({
+    user_id: user.id,
+    account_id: accountId || null,
+    rule_key: ruleKey,
+    label: label || ruleKey,
+    target: target || 10,
+    status: 'active',
+    start_trade_date: today,
+  });
+  if (error) return { error: error.message };
+  const challenge = await loadActiveChallenge(supabase, user.id, accountId);
+  return { ok: true, challenge };
+}
+
+export async function getChallenge() {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+  const accountId = await getActiveAccountId(supabase, user.id);
+  return { challenge: await loadActiveChallenge(supabase, user.id, accountId) };
+}
+
+export async function abandonChallenge(id) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+  if (!id) return { error: 'Missing challenge id.' };
+  const { error } = await supabase.from('challenges').update({ status: 'abandoned' }).eq('id', id).eq('user_id', user.id);
+  if (error) return { error: error.message };
+  return { ok: true };
 }
 
 /* ─── AI Explanation (on-demand, cached) ──── */
