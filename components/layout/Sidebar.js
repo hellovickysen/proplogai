@@ -17,6 +17,7 @@ const NAV = [
   { label: 'Prop Expenses', icon: '💳', href: '/dashboard/prop-expenses', tourId: 'nav-expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
   { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach', tourId: 'nav-coach' },
+  { label: 'AI Analytics', icon: '📈', href: '/dashboard/analytics' },
   { label: 'Tools',     icon: '🛠', href: '/dashboard/tools' },
   { label: 'Rewards',   icon: '🎁', href: '/dashboard/rewards' },
 ];
