@@ -209,6 +209,8 @@ export async function createTrade(payload) {
     }
   } catch (e) {}
 
+  await autoEvaluateTrade(supabase, user.id, data.id);
+
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/trades');
   return { ok: true };
@@ -227,6 +229,7 @@ export async function updateTrade(id, payload) {
   delete row.user_id;
   const { error } = await supabase.from('trades').update(row).eq('id', id).eq('user_id', user.id);
   if (error) return { error: error.message };
+  await autoEvaluateTrade(supabase, user.id, id);
   revalidatePath('/dashboard');
   revalidatePath('/dashboard/trades');
   revalidatePath('/dashboard/trades/' + id);
@@ -332,6 +335,8 @@ export async function saveJournal(tradeId, payload) {
     error = res.error;
   }
   if (error) return { error: error.message };
+
+  await autoEvaluateTrade(supabase, user.id, tradeId);
 
   revalidatePath('/dashboard/trades/' + tradeId);
   return { ok: true };
@@ -458,4 +463,29 @@ export async function unshareTrade(tradeId) {
 
   revalidatePath('/dashboard/trades/' + tradeId);
   return { ok: true };
+}
+
+/* ─── Auto-evaluation hook (best-effort; must never break a trade save) ──── */
+
+async function autoEvaluateTrade(supabase, userId, tradeId) {
+  try {
+    if (!tradeId) return;
+    const { evaluateTrade } = await import('@/lib/analytics-evaluator');
+    const { data: t } = await supabase
+      .from('trades')
+      .select('id, account_id, trade_date, pnl, lot_size, stop_loss, entry_price, exit_price, direction, setup, setup_ids, setup_follow_map, no_setup_reason')
+      .eq('id', tradeId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (!t) return;
+    const { data: j } = await supabase
+      .from('journal_entries')
+      .select('emotions')
+      .eq('trade_id', tradeId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    await evaluateTrade(supabase, userId, t, j || null);
+  } catch (e) {
+    // Analytics evaluation is best-effort — never block or fail the trade save.
+  }
 }
