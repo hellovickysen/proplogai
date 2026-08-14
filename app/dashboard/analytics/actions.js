@@ -45,6 +45,128 @@ async function getCtx() {
   return { supabase, user };
 }
 
+/* ─── Previous equal period (for score delta); null for 'all' ──── */
+
+function getPreviousDateRange(preset) {
+  const now = new Date();
+  const dayOfWeek = now.getUTCDay();
+  switch (preset) {
+    case 'this_week':
+      return getDateRange('last_week');
+    case 'last_week': {
+      const lastMon = new Date(now);
+      lastMon.setUTCDate(now.getUTCDate() - ((dayOfWeek + 6) % 7) - 14);
+      const lastSun = new Date(lastMon);
+      lastSun.setUTCDate(lastMon.getUTCDate() + 6);
+      return { from: lastMon.toISOString().slice(0, 10), to: lastSun.toISOString().slice(0, 10) };
+    }
+    case 'this_month': {
+      const first = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+      const last = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 0));
+      return { from: first.toISOString().slice(0, 10), to: last.toISOString().slice(0, 10) };
+    }
+    case 'this_year': {
+      const y = now.getUTCFullYear() - 1;
+      return { from: y + '-01-01', to: y + '-12-31' };
+    }
+    default:
+      return null; // 'all' — no previous period
+  }
+}
+
+/* ─── Discipline Score v2 (process / adherence only) ────
+   Compliance: NEVER scores P&L, raw volume, loss count, or review frequency.
+   The evolved dimensions are measured as ADHERENCE (rules kept / within a limit),
+   not raw counts — e.g. post-loss discipline is "% of post-loss trades with no
+   rule break", not the number of losses. */
+
+function stdev(nums) {
+  if (nums.length < 2) return 0;
+  const mean = nums.reduce((a, b) => a + b, 0) / nums.length;
+  const variance = nums.reduce((a, b) => a + (b - mean) * (b - mean), 0) / nums.length;
+  return Math.sqrt(variance);
+}
+
+function computeDisciplineScore(trades, evals, opts) {
+  const options = opts || {};
+  const provisional = !options.hasGuardrails;
+  const total = trades.length;
+  const brokenByTrade = new Set(evals.filter((e) => e.outcome === 'broken').map((e) => e.trade_id));
+  const cleanTrades = trades.filter((t) => !brokenByTrade.has(t.id)).length;
+
+  const dims = [];
+
+  // 1) Rule adherence — % of trades with no rule break
+  dims.push({
+    key: 'rule_adherence', label: 'Rule adherence', weight: 0.35,
+    hasData: total >= 3,
+    value: total > 0 ? Math.round((cleanTrades / total) * 100) : 0,
+  });
+
+  // 2) Setup adherence — % of trades where a valid setup was present (not "No Setup")
+  const noSetupBroken = new Set(evals.filter((e) => e.rule_key === 'no_setup' && e.outcome === 'broken').map((e) => e.trade_id));
+  dims.push({
+    key: 'setup_adherence', label: 'Setup adherence', weight: 0.20,
+    hasData: total >= 3,
+    value: total > 0 ? Math.round((1 - noSetupBroken.size / total) * 100) : 0,
+  });
+
+  // 3) Post-loss discipline — % of post-loss trades with NO rule break
+  const ordered = [...trades].sort((a, b) => {
+    const d = String(a.trade_date || '').localeCompare(String(b.trade_date || ''));
+    return d !== 0 ? d : String(a.id).localeCompare(String(b.id));
+  });
+  let postLossTotal = 0, postLossClean = 0;
+  for (let i = 1; i < ordered.length; i++) {
+    const prevPnl = Number(ordered[i - 1].pnl);
+    if (Number.isFinite(prevPnl) && prevPnl < 0) {
+      postLossTotal++;
+      if (!brokenByTrade.has(ordered[i].id)) postLossClean++;
+    }
+  }
+  dims.push({
+    key: 'post_loss_discipline', label: 'Post-loss discipline', weight: 0.25,
+    hasData: postLossTotal >= 3,
+    value: postLossTotal > 0 ? Math.round((postLossClean / postLossTotal) * 100) : 0,
+  });
+
+  // 4) Risk consistency — steadiness of $ risk per trade (process, not P&L)
+  const risks = [];
+  trades.forEach((t) => {
+    const entry = Number(t.entry_price), sl = Number(t.stop_loss), lot = Number(t.lot_size);
+    if (Number.isFinite(entry) && Number.isFinite(sl) && Number.isFinite(lot) && lot > 0 && entry !== sl) {
+      risks.push(Math.abs(entry - sl) * lot);
+    }
+  });
+  let riskValue = 0, riskHasData = false;
+  if (risks.length >= 3) {
+    const mean = risks.reduce((a, b) => a + b, 0) / risks.length;
+    const cv = mean > 0 ? stdev(risks) / mean : 0;
+    riskValue = Math.round(Math.max(0, Math.min(1, 1 - cv)) * 100);
+    riskHasData = true;
+  }
+  dims.push({ key: 'risk_consistency', label: 'Risk consistency', weight: 0.20, hasData: riskHasData, value: riskValue });
+
+  // Weighted composite over dimensions with data (renormalized)
+  const active = dims.filter((d) => d.hasData);
+  const wSum = active.reduce((a, d) => a + d.weight, 0);
+  const score = wSum > 0 ? Math.round(active.reduce((a, d) => a + d.weight * d.value, 0) / wSum) : null;
+
+  return { score, provisional, dimensions: dims, cleanTrades, totalTrades: total };
+}
+
+/* Loss-attribution categories — mirrors fetchLossAttribution so figures match. */
+function makeLossCategories() {
+  return {
+    not_following_setup: { key: 'not_following_setup', label: 'Not Following Setups', ruleKeys: ['setup_adherence', 'no_setup'], totalLoss: 0, count: 0, action: 'Only take trades when a valid setup is present — no setup, no trade.' },
+    fomo: { key: 'fomo', label: 'FOMO Trading', ruleKeys: ['fomo'], totalLoss: 0, count: 0, action: 'Only enter on a predefined setup — skip impulsive entries.' },
+    over_sizing: { key: 'over_sizing', label: 'Over-Sizing', ruleKeys: ['max_lot_size', 'risk_per_trade'], totalLoss: 0, count: 0, action: 'Keep risk within your defined per-trade limit.' },
+    over_trading: { key: 'over_trading', label: 'Over-Trading', ruleKeys: ['over_trading'], totalLoss: 0, count: 0, action: 'Stop once you hit your daily trade limit.' },
+    bad_sl: { key: 'bad_sl', label: 'Bad Stop Loss', ruleKeys: ['bad_sl'], totalLoss: 0, count: 0, action: 'Place your stop at your planned invalidation and leave it.' },
+    daily_loss_limit: { key: 'daily_loss_limit', label: 'Daily Loss Limit Breached', ruleKeys: ['daily_loss_limit'], totalLoss: 0, count: 0, action: 'Stop trading for the day once you hit your daily loss limit.' },
+  };
+}
+
 /* ─── Fetch analytics overview data ──── */
 
 export async function fetchAnalyticsOverview(preset) {
@@ -121,6 +243,134 @@ export async function fetchAnalyticsOverview(preset) {
   };
 }
 
+/* ─── Overview V2: Discipline Score + #1 Problem + #1 Strength ──── */
+
+export async function fetchAnalyticsOverviewV2(preset) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+
+  const accountId = await getActiveAccountId(supabase, user.id);
+  const { from, to } = getDateRange(preset);
+
+  async function gather(rangeFrom, rangeTo) {
+    let eq = supabase
+      .from('trade_rule_evaluations')
+      .select('rule_key, rule_label, outcome, trade_id, trade_date')
+      .eq('user_id', user.id);
+    if (accountId) eq = eq.eq('account_id', accountId);
+    if (rangeFrom) eq = eq.gte('trade_date', rangeFrom);
+    if (rangeTo) eq = eq.lte('trade_date', rangeTo);
+    const { data: evData, error: evErr } = await eq;
+    const evs = evErr ? [] : (evData || []);
+
+    let tq = supabase
+      .from('trades')
+      .select('id, pnl, trade_date, entry_price, stop_loss, lot_size, account_id')
+      .eq('user_id', user.id);
+    if (accountId) tq = tq.eq('account_id', accountId);
+    if (rangeFrom) tq = tq.gte('trade_date', rangeFrom);
+    if (rangeTo) tq = tq.lte('trade_date', rangeTo);
+    const { data: tData, error: tErr } = await tq;
+    if (tErr) return { error: tErr.message };
+    return { evs, trades: tData || [] };
+  }
+
+  const cur = await gather(from, to);
+  if (cur.error) return { error: cur.error };
+  const { evs, trades } = cur;
+
+  // Guardrail presence (for provisional flag). Non-fatal if table missing.
+  let hasGuardrails = false;
+  try {
+    const { count: guardrailCount, error: gErr } = await supabase
+      .from('rulebook_rules')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('enabled', true);
+    hasGuardrails = !gErr && (guardrailCount || 0) > 0;
+  } catch (e) { hasGuardrails = false; }
+
+  const scoreData = computeDisciplineScore(trades, evs, { hasGuardrails });
+
+  // Previous-period delta (only for bounded presets)
+  let delta = null;
+  const prev = getPreviousDateRange(preset);
+  if (prev) {
+    const p = await gather(prev.from, prev.to);
+    if (!p.error && p.trades.length >= 3) {
+      const prevScore = computeDisciplineScore(p.trades, p.evs, { hasGuardrails }).score;
+      if (prevScore != null && scoreData.score != null) delta = scoreData.score - prevScore;
+    }
+  }
+
+  // Basic stats
+  const total = trades.length;
+  const pnlById = {};
+  trades.forEach((t) => { pnlById[t.id] = Number(t.pnl); });
+  const brokenEvals = evs.filter((e) => e.outcome === 'broken');
+  const brokenSet = new Set(brokenEvals.map((e) => e.trade_id));
+  const lossFromBreaches = [...brokenSet].reduce((s, id) => {
+    const p = pnlById[id];
+    return s + (Number.isFinite(p) && p < 0 ? Math.abs(p) : 0);
+  }, 0);
+
+  // Loss-attribution categories (mirrors the Loss Attribution tab)
+  const cats = makeLossCategories();
+  brokenEvals.forEach((b) => {
+    for (const key of Object.keys(cats)) {
+      if (cats[key].ruleKeys.includes(b.rule_key)) {
+        cats[key].count++;
+        const p = pnlById[b.trade_id];
+        if (Number.isFinite(p) && p < 0) cats[key].totalLoss += Math.abs(p);
+        break;
+      }
+    }
+  });
+  const catList = Object.values(cats).filter((c) => c.count > 0).sort((a, b) => b.totalLoss - a.totalLoss);
+  const totalAttributable = catList.reduce((s, c) => s + c.totalLoss, 0);
+  const top = catList[0] || null;
+  const problem = top ? {
+    key: top.key,
+    label: top.label,
+    violations: top.count,
+    attributableLoss: Math.round(top.totalLoss * 100) / 100,
+    pctOfAttributable: totalAttributable > 0 ? Math.round((top.totalLoss / totalAttributable) * 100) : 0,
+    action: top.action,
+  } : null;
+
+  // Strength — highest follow-rate rule, excluding the #1 problem's rule keys
+  // so the two cards never surface the same behavior.
+  const ruleStats = {};
+  evs.forEach((e) => {
+    if (!ruleStats[e.rule_key]) ruleStats[e.rule_key] = { key: e.rule_key, label: e.rule_label, followed: 0, broken: 0, total: 0 };
+    ruleStats[e.rule_key].total++;
+    if (e.outcome === 'followed') ruleStats[e.rule_key].followed++;
+    if (e.outcome === 'broken') ruleStats[e.rule_key].broken++;
+  });
+  const excluded = new Set(top ? top.ruleKeys : []);
+  const strengthEntries = Object.values(ruleStats)
+    .filter((s) => s.total >= 3 && !excluded.has(s.key) && (s.followed + s.broken) > 0)
+    .sort((a, b) => (b.followed / b.total) - (a.followed / a.total));
+  const st = strengthEntries[0] || null;
+  const strength = st ? {
+    key: st.key,
+    label: st.label,
+    rate: Math.round((st.followed / st.total) * 100),
+    followedCount: st.followed,
+  } : null;
+
+  return {
+    totalTrades: total,
+    totalBreaches: brokenEvals.length,
+    uniqueBreachedTrades: brokenSet.size,
+    lossFromBreaches: Math.round(lossFromBreaches * 100) / 100,
+    disciplineScore: { ...scoreData, delta },
+    problem,
+    strength,
+    hasGuardrails,
+  };
+}
+
 /* ─── Setup Analytics ──── */
 
 export async function fetchSetupAnalytics(preset) {
@@ -183,6 +433,39 @@ export async function fetchSetupAnalytics(preset) {
     });
   });
 
+  // Rule-break cost for behavior-marker setups (No Setup / Bad SL), so the UI can
+  // explain that a profitable-looking marker is still a discipline leak.
+  const behaviorCost = { 'No Setup': 0, 'Bad SL': 0 };
+  {
+    let bq = supabase
+      .from('trade_rule_evaluations')
+      .select('rule_key, outcome, trade_id')
+      .eq('user_id', user.id)
+      .eq('outcome', 'broken')
+      .in('rule_key', ['no_setup', 'bad_sl']);
+    if (accountId) bq = bq.eq('account_id', accountId);
+    if (from) bq = bq.gte('trade_date', from);
+    if (to) bq = bq.lte('trade_date', to);
+    const { data: bev } = await bq;
+    const ids = [...new Set((bev || []).map((e) => e.trade_id))];
+    const pnlMap = {};
+    if (ids.length > 0) {
+      const { data: btr } = await supabase
+        .from('trades')
+        .select('id, pnl')
+        .eq('user_id', user.id)
+        .in('id', ids);
+      (btr || []).forEach((t) => { pnlMap[t.id] = Number(t.pnl); });
+    }
+    (bev || []).forEach((e) => {
+      const p = pnlMap[e.trade_id];
+      if (Number.isFinite(p) && p < 0) {
+        const bucket = e.rule_key === 'no_setup' ? 'No Setup' : 'Bad SL';
+        behaviorCost[bucket] += Math.abs(p);
+      }
+    });
+  }
+
   // Convert to sorted array (most used first)
   const result = Object.values(setupStats)
     .sort((a, b) => b.count - a.count)
@@ -193,6 +476,7 @@ export async function fetchSetupAnalytics(preset) {
         ? Math.round((s.followed / (s.followed + s.partial + s.notFollowed)) * 100)
         : null,
       improvementPriority: s.notFollowed + s.badSl + s.noSetup, // higher = needs more attention
+      ruleBreakCost: behaviorCost[s.name] ? Math.round(behaviorCost[s.name] * 100) / 100 : null,
     }));
 
   return { setups: result, totalTrades: (trades || []).length };

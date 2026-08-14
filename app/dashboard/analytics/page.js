@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useTransition } from 'react';
+import Link from 'next/link';
 import {
   fetchAnalyticsOverview,
+  fetchAnalyticsOverviewV2,
   fetchSetupAnalytics,
   fetchRuleBreachAnalytics,
   fetchDayPatternAnalytics,
@@ -23,11 +25,11 @@ const PRESETS = [
 
 const TABS = [
   { key: 'overview', label: 'Overview', icon: '📊' },
-  { key: 'setups', label: 'Setups', icon: '🎯' },
-  { key: 'breaches', label: 'Rule Breaches', icon: '🚨' },
-  { key: 'patterns', label: 'Day Patterns', icon: '📅' },
-  { key: 'attribution', label: 'Loss Attribution', icon: '💸' },
-  { key: 'ai', label: 'AI Analysis', icon: '✦' },
+  { key: 'setups', label: 'My Setups', icon: '🎯' },
+  { key: 'breaches', label: 'My Mistakes', icon: '🚨' },
+  { key: 'patterns', label: 'Trading Patterns', icon: '📅' },
+  { key: 'attribution', label: 'Where I Lose', icon: '💸' },
+  { key: 'ai', label: 'AI Coach', icon: '✦' },
 ];
 
 /* ─── Shared UI Components ──── */
@@ -117,6 +119,108 @@ function ConfidenceLabel({ count, minSample = 10 }) {
   );
 }
 
+function Meter({ label, value, hint, hasData = true }) {
+  const pct = Math.max(0, Math.min(100, Number(value) || 0));
+  const color = pct >= 70 ? 'bg-emerald-400' : pct >= 40 ? 'bg-amber-400' : 'bg-red-400';
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-xs text-white/60">{label}</span>
+        <span className="text-xs font-mono text-white/50">{hasData ? pct + '%' : '—'}</span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-white/[0.06]">
+        {hasData && <div className={'h-full rounded-full ' + color} style={{ width: pct + '%' }} />}
+      </div>
+      {!hasData && hint && <div className="mt-1 text-[10px] text-white/30">{hint}</div>}
+    </div>
+  );
+}
+
+function DisciplineScoreCard({ score }) {
+  if (!score) return null;
+  const val = score.score;
+  const has = val != null;
+  const tone = !has ? 'text-white/50' : val >= 70 ? 'text-emerald-400' : val >= 45 ? 'text-amber-400' : 'text-red-400';
+  const delta = score.delta;
+  return (
+    <Card className="border-white/10 bg-white/[0.03]">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-lg">🧘</span>
+            <span className="text-xs font-medium uppercase tracking-wider text-white/40">Discipline Score</span>
+            {score.provisional && (
+              <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">Provisional</span>
+            )}
+          </div>
+          <div className="flex items-end gap-3">
+            <div className={'text-4xl font-bold ' + tone}>
+              {has ? val : '—'}<span className="text-lg text-white/30"> / 100</span>
+            </div>
+            {delta != null && delta !== 0 && (
+              <div className={'mb-1 text-sm font-medium ' + (delta > 0 ? 'text-emerald-400' : 'text-red-400')}>
+                {delta > 0 ? '▲ +' : '▼ '}{delta} pts
+              </div>
+            )}
+          </div>
+          <div className="mt-1 text-xs text-white/50">
+            You followed your rules on {score.cleanTrades} of {score.totalTrades} trades.
+          </div>
+          {score.provisional && (
+            <div className="mt-1 text-[11px] text-amber-400/70">
+              Provisional — set your Rulebook guardrails to unlock your full score.
+            </div>
+          )}
+        </div>
+        <div className="w-full space-y-2 sm:w-64">
+          {score.dimensions.map((d) => (
+            <Meter key={d.key} label={d.label} value={d.value} hasData={d.hasData} hint="Needs more data" />
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function PriorityCard({ kind, problem, strength }) {
+  if (kind === 'problem') {
+    if (!problem) return null;
+    return (
+      <Card className="border-red-500/20 bg-red-500/[0.03]">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-lg">🚨</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-white/40">Your #1 Leak</span>
+        </div>
+        <div className="text-lg font-semibold text-red-400">{problem.label}</div>
+        <div className="mt-1 text-sm text-white/70">
+          {problem.violations} violations · <span className="font-mono">-${problem.attributableLoss.toFixed(2)}</span> attributable
+          {problem.pctOfAttributable > 0 && <> · {problem.pctOfAttributable}% of your attributable losses</>}
+        </div>
+        <div className="mt-3 rounded-lg bg-white/[0.03] px-3 py-2 text-xs text-white/60">
+          <span className="text-white/40">What to do next: </span>{problem.action}
+        </div>
+        <Link href="/dashboard/rulebook" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-violet-400 hover:text-violet-300">
+          Fix this rule →
+        </Link>
+      </Card>
+    );
+  }
+  if (!strength) return null;
+  return (
+    <Card className="border-emerald-500/20 bg-emerald-500/[0.03]">
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-lg">💪</span>
+        <span className="text-xs font-medium uppercase tracking-wider text-white/40">Your #1 Strength</span>
+      </div>
+      <div className="text-lg font-semibold text-emerald-400">{strength.label}</div>
+      <div className="mt-1 text-sm text-white/70">{strength.rate}% follow rate · kept on {strength.followedCount} checks</div>
+      <div className="mt-3 rounded-lg bg-white/[0.03] px-3 py-2 text-xs text-white/60">
+        <span className="text-white/40">Keep it up: </span>This is your most consistent discipline habit — protect it.
+      </div>
+    </Card>
+  );
+}
+
 /* ─── Overview Tab ──── */
 
 function OverviewTab({ data }) {
@@ -135,34 +239,21 @@ function OverviewTab({ data }) {
 
   return (
     <div className="space-y-4">
+      {/* Discipline Score — the headline process metric */}
+      <DisciplineScoreCard score={data.disciplineScore} />
+
+      {/* Your #1 Problem + #1 Strength (DATA -> MEANING -> ACTION) */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <PriorityCard kind="problem" problem={data.problem} />
+        <PriorityCard kind="strength" strength={data.strength} />
+      </div>
+
+      {/* Supporting stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatCard label="Total Trades" value={totalTrades} />
         <StatCard label="Rule Breaches" value={totalBreaches} accent={totalBreaches > 0 ? 'text-red-400' : 'text-emerald-400'} sub={`${uniqueBreachedTrades} trades affected`} />
         <StatCard label="Loss from Breaches" value={lossFromBreaches > 0 ? '-$' + lossFromBreaches.toFixed(2) : '$0'} accent={lossFromBreaches > 0 ? 'text-red-400' : 'text-emerald-400'} />
         <StatCard label="Breach Rate" value={totalTrades > 0 ? Math.round((uniqueBreachedTrades / totalTrades) * 100) + '%' : '0%'} accent={uniqueBreachedTrades > 0 ? 'text-amber-400' : 'text-emerald-400'} />
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        {data.strongestAdherence && (
-          <Card>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">💪</span>
-              <span className="text-xs font-medium uppercase tracking-wider text-white/40">Strongest Adherence</span>
-            </div>
-            <div className="text-lg font-semibold text-emerald-400">{data.strongestAdherence.label}</div>
-            <div className="text-xs text-white/50 mt-1">{data.strongestAdherence.rate}% follow rate</div>
-          </Card>
-        )}
-        {data.biggestLeak && (
-          <Card>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg">⚠️</span>
-              <span className="text-xs font-medium uppercase tracking-wider text-white/40">Biggest Repeated Leak</span>
-            </div>
-            <div className="text-lg font-semibold text-red-400">{data.biggestLeak.label}</div>
-            <div className="text-xs text-white/50 mt-1">{data.biggestLeak.rate}% breach rate · {data.biggestLeak.count} violations</div>
-          </Card>
-        )}
       </div>
     </div>
   );
@@ -219,6 +310,13 @@ function SetupsTab({ data }) {
             {s.badSl > 0 && <span className="text-amber-400/60">⚠️ {s.badSl} bad SL</span>}
             {s.noSetup > 0 && <span className="text-red-400/60">🚫 {s.noSetup} no setup</span>}
           </div>
+
+          {s.ruleBreakCost != null && (
+            <div className="mt-2 rounded-lg border border-amber-400/20 bg-amber-400/[0.05] px-3 py-2 text-[11px] leading-relaxed text-amber-200/80">
+              ⚠️ Positive P&L here isn&#39;t a discipline win. This behavior breaks your Rulebook and is responsible for
+              <span className="font-mono font-semibold"> -${s.ruleBreakCost.toFixed(2)}</span> of attributable losses — see the “Where I Lose” tab.
+            </div>
+          )}
 
           <TradeList trades={s.trades} />
         </Card>
@@ -517,7 +615,7 @@ export default function AnalyticsPage() {
     setLoading(true);
     let result;
     switch (t) {
-      case 'overview': result = await fetchAnalyticsOverview(p); break;
+      case 'overview': result = await fetchAnalyticsOverviewV2(p); break;
       case 'setups': result = await fetchSetupAnalytics(p); break;
       case 'breaches': result = await fetchRuleBreachAnalytics(p); break;
       case 'patterns': result = await fetchDayPatternAnalytics(p); break;
