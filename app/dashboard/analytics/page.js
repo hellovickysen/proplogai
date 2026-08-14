@@ -9,6 +9,7 @@ import {
   fetchDayPatternAnalytics,
   fetchLossAttribution,
   fetchAIExplanation,
+  fetchCoach,
   runBackfill,
 } from './actions';
 
@@ -612,11 +613,27 @@ function AttributionTab({ data }) {
 
 /* ─── AI Coach ──── */
 
-function AITab({ preset }) {
+function Chip({ children, tone = 'neutral' }) {
+  const c = tone === 'good' ? 'bg-emerald-500/12 text-emerald-300' : tone === 'bad' ? 'bg-red-500/12 text-red-300' : 'bg-white/[0.06] text-white/60';
+  return <span className={'inline-flex items-center rounded-lg px-2.5 py-1 text-[11px] font-medium ' + c}>{children}</span>;
+}
+
+function HabitTile({ label, value, hint }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3.5">
+      <div className="text-[10px] uppercase tracking-[0.08em] text-white/35">{label}</div>
+      <div className="mt-1.5 text-xl font-extrabold tracking-tight text-white">{value}</div>
+      {hint && <div className="mt-0.5 text-[10px] text-white/35">{hint}</div>}
+    </div>
+  );
+}
+
+function AITab({ data, preset }) {
   const [analysisType, setAnalysisType] = useState('overview');
   const [explanation, setExplanation] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [challengeStarted, setChallengeStarted] = useState(false);
 
   const AI_TYPES = [
     { key: 'overview', label: 'Overall Patterns' },
@@ -627,40 +644,165 @@ function AITab({ preset }) {
   ];
 
   async function runAnalysis() {
-    setLoading(true);
-    setError(null);
+    setAiLoading(true);
+    setAiError(null);
     setExplanation(null);
     const result = await fetchAIExplanation(analysisType, preset);
-    if (result.error) setError(result.error);
+    if (result.error) setAiError(result.error);
     else setExplanation(result.explanation);
-    setLoading(false);
+    setAiLoading(false);
   }
+
+  if (!data) return <LoadingState />;
+  if (data.error) return <ErrorCard error={data.error} />;
+  if (data.empty) return <EmptyState message="Log some trades and hit “Re-evaluate All Trades” to meet your coach." />;
+
+  const p = data.profile || {};
+  const h = data.habits || {};
+  const best = (data.conditions && data.conditions.best) || [];
+  const worst = (data.conditions && data.conditions.worst) || [];
+  const findings = data.findings || [];
+  const priority = data.priority;
 
   return (
     <div className="space-y-4">
+      {/* Trader Profile */}
+      <div className="rounded-3xl border border-violet-400/20 bg-gradient-to-br from-violet-500/[0.12] via-white/[0.02] to-cyan-500/[0.06] p-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">Your Trader Profile</div>
+            <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-white">🎭 {p.archetype}</h2>
+          </div>
+          {p.score != null && (
+            <div className="text-right">
+              <div className="text-3xl font-extrabold text-white">{p.score}<span className="text-base text-white/30">/100</span></div>
+              <div className="text-[11px] text-white/40">Discipline{p.nextMilestone != null ? ' · next ' + p.nextMilestone : ''}</div>
+            </div>
+          )}
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl bg-white/[0.03] p-3.5">
+            <div className="text-[10px] uppercase tracking-[0.08em] text-emerald-400/70">Strength</div>
+            <div className="mt-1 text-sm text-white/80">{p.strength}</div>
+          </div>
+          <div className="rounded-2xl bg-white/[0.03] p-3.5">
+            <div className="text-[10px] uppercase tracking-[0.08em] text-red-400/70">Weakness</div>
+            <div className="mt-1 text-sm text-white/80">{p.weakness}</div>
+          </div>
+        </div>
+        {(p.bestEnvironment && p.bestEnvironment.length > 0) && (
+          <div className="mt-3">
+            <div className="mb-1.5 text-[10px] uppercase tracking-[0.08em] text-white/35">You perform best when</div>
+            <div className="flex flex-wrap gap-2">{p.bestEnvironment.map((x, i) => <Chip key={i} tone="good">{x}</Chip>)}</div>
+          </div>
+        )}
+        {(p.dangerZone && p.dangerZone.length > 0) && (
+          <div className="mt-3">
+            <div className="mb-1.5 text-[10px] uppercase tracking-[0.08em] text-white/35">Danger zone</div>
+            <div className="flex flex-wrap gap-2">{p.dangerZone.map((x, i) => <Chip key={i} tone="bad">{x}</Chip>)}</div>
+          </div>
+        )}
+      </div>
+
+      {/* 3 things to work on + #1 action */}
+      {findings.length > 0 && (
+        <Card>
+          <SectionTitle emoji="🤖">{findings.length} thing{findings.length > 1 ? 's' : ''} to work on</SectionTitle>
+          <div className="space-y-2.5">
+            {findings.map((f, i) => (
+              <div key={i} className="flex gap-3 rounded-2xl bg-white/[0.02] p-3.5">
+                <div className="grid h-6 w-6 flex-none place-items-center rounded-lg bg-violet-500/20 text-xs font-bold text-violet-200">{i + 1}</div>
+                <div>
+                  <div className="text-sm font-semibold text-white">{f.title}</div>
+                  <div className="text-xs text-white/50">{f.detail}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {priority && (
+            <div className="mt-4 rounded-2xl border border-violet-400/20 bg-violet-500/[0.06] p-4">
+              <div className="text-[10px] uppercase tracking-[0.1em] text-violet-300/80">Your #1 action</div>
+              <div className="mt-1 text-sm font-medium text-white/90">{priority.action}</div>
+              {!challengeStarted ? (
+                <button onClick={() => setChallengeStarted(true)}
+                  className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 px-4 py-2 text-xs font-semibold text-white">
+                  Start 10-Trade Challenge →
+                </button>
+              ) : (
+                <div className="mt-3">
+                  <div className="mb-1.5 flex items-center justify-between text-[11px] text-white/50">
+                    <span>Challenge progress</span><span className="font-mono">0 / 10</span>
+                  </div>
+                  <div className="h-2.5 rounded-full bg-white/[0.06]"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-500" style={{ width: '2%' }} /></div>
+                  <div className="mt-2 text-[11px] text-white/40">Take your next 10 trades following this rule. Automatic progress tracking is coming in the next update — for now, use this as your focus.</div>
+                </div>
+              )}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Trading Habits */}
       <Card>
-        <SectionTitle emoji="✦">Your AI Coach</SectionTitle>
-        <p className="-mt-2 mb-4 text-xs text-white/50">Reads only your verified stats to explain patterns and suggest your next focus. It never creates violations or changes your data.</p>
+        <SectionTitle emoji="🧩">Your trading habits</SectionTitle>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <HabitTile label="Trades / day" value={h.tradesPerDay != null ? h.tradesPerDay : '—'} />
+          <HabitTile label="Setup selection" value={h.setupSelectionPct != null ? h.setupSelectionPct + '%' : '—'} hint="trades with a setup" />
+          <HabitTile label="Overtrading" value={h.overtradingPct != null ? h.overtradingPct + '%' : '—'} hint="3rd+ trade of day" />
+          <HabitTile label="Avg risk" value={h.avgRisk != null ? money(h.avgRisk) : '—'} hint={h.avgRisk == null ? 'needs SL data' : ''} />
+          <HabitTile label="Largest risk" value={h.largestRisk != null ? money(h.largestRisk) : '—'} hint={h.largestRisk == null ? 'needs SL data' : ''} />
+          <HabitTile label="Risk consistency" value={h.riskConsistency != null ? h.riskConsistency + '%' : '—'} hint={h.riskConsistency == null ? 'needs SL data' : ''} />
+        </div>
+        {h.afterLossRiskUp && <div className="mt-3 text-[11px] text-amber-400/80">⚠️ You tend to increase your risk right after a losing trade.</div>}
+      </Card>
+
+      {/* Best / Worst conditions */}
+      {(best.length > 0 || worst.length > 0) && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Card>
+            <SectionTitle emoji="✅">You perform best when</SectionTitle>
+            <div className="space-y-2">
+              {best.slice().sort((a, b) => b.avgPnl - a.avgPnl).slice(0, 5).map((b, i) => (
+                <div key={i} className="flex items-center justify-between rounded-xl bg-white/[0.02] px-3 py-2 text-xs">
+                  <span className="text-white/70">{b.dim}: <b className="text-white/90">{b.value}</b></span>
+                  <span className="font-mono text-emerald-400">+{money(b.avgPnl).replace('-', '')} avg</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card>
+            <SectionTitle emoji="⚠️">You struggle when</SectionTitle>
+            <div className="space-y-2">
+              {worst.slice().sort((a, b) => a.avgPnl - b.avgPnl).slice(0, 5).map((w, i) => (
+                <div key={i} className="flex items-center justify-between rounded-xl bg-white/[0.02] px-3 py-2 text-xs">
+                  <span className="text-white/70">{w.dim}: <b className="text-white/90">{w.value}</b></span>
+                  <span className={'font-mono ' + (w.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>{w.avgPnl >= 0 ? '+' : ''}{money(w.avgPnl)} avg</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Ask the AI (on-demand) */}
+      <Card>
+        <SectionTitle emoji="✦">Ask the AI</SectionTitle>
+        <p className="-mt-2 mb-4 text-xs text-white/50">A plain-English read of your verified stats. It never creates violations or changes your data.</p>
         <div className="mb-4 flex flex-wrap gap-2">
           {AI_TYPES.map((t) => (
-            <button key={t.key} onClick={() => { setAnalysisType(t.key); setExplanation(null); setError(null); }}
+            <button key={t.key} onClick={() => { setAnalysisType(t.key); setExplanation(null); setAiError(null); }}
               className={'rounded-lg px-3 py-1.5 text-xs font-medium transition-all ' + (analysisType === t.key ? 'bg-violet-500/20 text-violet-200 ring-1 ring-violet-500/30' : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.06] hover:text-white/70')}>
               {t.label}
             </button>
           ))}
         </div>
-        <button onClick={runAnalysis} disabled={loading}
+        <button onClick={runAnalysis} disabled={aiLoading}
           className="rounded-xl bg-gradient-to-r from-violet-600 to-cyan-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-violet-500/20 disabled:opacity-50">
-          {loading ? 'Analyzing…' : 'Analyze with AI'}
+          {aiLoading ? 'Analyzing…' : 'Analyze with AI'}
         </button>
+        {aiError && <div className="mt-3 text-sm text-red-400">{aiError}</div>}
+        {explanation && <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/70">{explanation}</div>}
       </Card>
-      {error && <ErrorCard error={error} />}
-      {explanation && (
-        <Card>
-          <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/35">💡 Insights</div>
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-white/70">{explanation}</div>
-        </Card>
-      )}
     </div>
   );
 }
@@ -693,15 +835,17 @@ export default function AnalyticsPage() {
       result = await fetchDayPatternAnalytics(p);
     } else if (t === 'attribution') {
       result = await fetchLossAttribution(p);
+    } else if (t === 'ai') {
+      result = await fetchCoach(p);
     } else {
-      result = null; // AI tab loads on demand
+      result = null;
     }
     setData((prev) => ({ ...prev, [t + '_' + p]: result }));
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (tab !== 'ai') loadData(tab, preset);
+    loadData(tab, preset);
   }, [tab, preset, loadData]);
 
   const cacheKey = tab + '_' + preset;
@@ -773,7 +917,7 @@ export default function AnalyticsPage() {
             {tab === 'breaches' && <BreachesTab data={currentData} />}
             {tab === 'patterns' && <PatternsTab data={currentData} />}
             {tab === 'attribution' && <AttributionTab data={currentData} />}
-            {tab === 'ai' && <AITab preset={preset} />}
+            {tab === 'ai' && <AITab data={currentData} preset={preset} />}
           </>
         )}
       </div>

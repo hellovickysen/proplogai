@@ -877,6 +877,182 @@ export async function runBackfill() {
   return { ...result, debug: { userId: user.id, tradeCount: tradeCount || 0 } };
 }
 
+/* ─── Coach hub: Trader Profile + Habits + Best/Worst Conditions + Findings ──── */
+
+export async function fetchCoach(preset) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+
+  const accountId = await getActiveAccountId(supabase, user.id);
+  const { from, to } = getDateRange(preset);
+
+  let tq = supabase
+    .from('trades')
+    .select('id, pnl, trade_date, created_at, entry_price, stop_loss, lot_size, direction, session, setup, setup_ids, no_setup_reason')
+    .eq('user_id', user.id);
+  if (accountId) tq = tq.eq('account_id', accountId);
+  if (from) tq = tq.gte('trade_date', from);
+  if (to) tq = tq.lte('trade_date', to);
+  tq = tq.order('trade_date', { ascending: true }).order('created_at', { ascending: true });
+  const { data: tData, error: tErr } = await tq;
+  if (tErr) return { error: tErr.message };
+  const trades = tData || [];
+  if (trades.length === 0) return { empty: true };
+
+  let eq = supabase.from('trade_rule_evaluations').select('rule_key, rule_label, outcome, trade_id').eq('user_id', user.id);
+  if (accountId) eq = eq.eq('account_id', accountId);
+  if (from) eq = eq.gte('trade_date', from);
+  if (to) eq = eq.lte('trade_date', to);
+  const { data: evData, error: evErr } = await eq;
+  const evals = evErr ? [] : (evData || []);
+
+  const { data: setupRows } = await supabase.from('setups').select('id, name').eq('user_id', user.id);
+  const setupMap = {};
+  (setupRows || []).forEach((s) => { setupMap[s.id] = s.name; });
+
+  let hasGuardrails = false;
+  try {
+    const { count, error } = await supabase.from('rulebook_rules').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('enabled', true);
+    hasGuardrails = !error && (count || 0) > 0;
+  } catch (e) { hasGuardrails = false; }
+
+  const score = computeDisciplineScore(trades, evals, { hasGuardrails });
+  const pnlById = {};
+  trades.forEach((t) => { pnlById[t.id] = Number(t.pnl); });
+
+  // Intra-day trade number
+  const byDay = {};
+  trades.forEach((t) => { if (t.trade_date) (byDay[t.trade_date] = byDay[t.trade_date] || []).push(t); });
+  const tradeNo = new Map();
+  Object.values(byDay).forEach((list) => list.forEach((t, idx) => tradeNo.set(t.id, idx < 3 ? String(idx + 1) : '4+')));
+
+  // Risk
+  const riskOf = (t) => {
+    const e = Number(t.entry_price), s = Number(t.stop_loss), l = Number(t.lot_size);
+    return (Number.isFinite(e) && Number.isFinite(s) && Number.isFinite(l) && l > 0 && e !== s) ? Math.abs(e - s) * l : null;
+  };
+  const risks = trades.map(riskOf).filter((r) => r != null);
+  const avgRisk = risks.length >= 3 ? risks.reduce((a, b) => a + b, 0) / risks.length : null;
+  const largestRisk = risks.length >= 1 ? Math.max.apply(null, risks) : null;
+  let alRiskSum = 0, alRiskN = 0;
+  for (let i = 1; i < trades.length; i++) {
+    const prev = Number(trades[i - 1].pnl);
+    if (Number.isFinite(prev) && prev < 0) { const r = riskOf(trades[i]); if (r != null) { alRiskSum += r; alRiskN++; } }
+  }
+  const afterLossAvgRisk = alRiskN >= 3 ? alRiskSum / alRiskN : null;
+
+  // Habits
+  const dayCount = Object.keys(byDay).length;
+  const noSetupBroken = new Set(evals.filter((e) => e.rule_key === 'no_setup' && e.outcome === 'broken').map((e) => e.trade_id));
+  const overtradingN = trades.filter((t) => { const b = tradeNo.get(t.id); return b === '3' || b === '4+'; }).length;
+  const riskDim = score.dimensions.find((d) => d.key === 'risk_consistency');
+  const habits = {
+    tradesPerDay: dayCount > 0 ? Math.round((trades.length / dayCount) * 10) / 10 : trades.length,
+    setupSelectionPct: Math.round((1 - noSetupBroken.size / trades.length) * 100),
+    overtradingPct: Math.round((overtradingN / trades.length) * 100),
+    avgRisk: avgRisk != null ? Math.round(avgRisk * 100) / 100 : null,
+    largestRisk: largestRisk != null ? Math.round(largestRisk * 100) / 100 : null,
+    riskConsistency: riskDim && riskDim.hasData ? riskDim.value : null,
+    afterLossRiskUp: (afterLossAvgRisk != null && avgRisk != null) ? afterLossAvgRisk > avgRisk : null,
+  };
+
+  // Best / worst conditions across dimensions
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  function dimValue(t, dim) {
+    if (dim === 'Setup') { const ids = Array.isArray(t.setup_ids) && t.setup_ids.length ? t.setup_ids : (t.setup ? [t.setup] : ['No Setup']); return setupMap[ids[0]] || ids[0] || 'No Setup'; }
+    if (dim === 'Day') { if (!t.trade_date) return null; return DAYS[new Date(t.trade_date + 'T00:00:00Z').getUTCDay()]; }
+    if (dim === 'Session') { return t.session || null; }
+    if (dim === 'Direction') { return t.direction === 'long' ? 'Long' : 'Short'; }
+    if (dim === 'Trade #') { const b = tradeNo.get(t.id); return b ? '#' + b : null; }
+    return null;
+  }
+  function bucketize(dim) {
+    const m = {};
+    trades.forEach((t) => {
+      const v = dimValue(t, dim);
+      if (!v) return;
+      const b = m[v] = m[v] || { value: v, n: 0, wins: 0, sum: 0 };
+      b.n++;
+      const p = Number(t.pnl);
+      if (Number.isFinite(p)) { b.sum += p; if (p > 0) b.wins++; }
+    });
+    return Object.values(m).filter((b) => b.n >= 3).map((b) => ({ dim, value: b.value, n: b.n, winRate: Math.round((b.wins / b.n) * 100), avgPnl: Math.round((b.sum / b.n) * 100) / 100 }));
+  }
+  const best = [], worst = [];
+  ['Setup', 'Day', 'Session', 'Direction', 'Trade #'].forEach((dim) => {
+    const arr = bucketize(dim);
+    if (arr.length === 0) return;
+    const b = arr.slice().sort((x, y) => y.avgPnl - x.avgPnl)[0];
+    const w = arr.slice().sort((x, y) => x.avgPnl - y.avgPnl)[0];
+    if (b) best.push(b);
+    if (w && w.value !== b.value) worst.push(w);
+  });
+
+  // #1 leak (loss attribution)
+  const cats = makeLossCategories();
+  evals.filter((e) => e.outcome === 'broken').forEach((bk) => {
+    for (const k of Object.keys(cats)) {
+      if (cats[k].ruleKeys.includes(bk.rule_key)) {
+        cats[k].count++;
+        const p = pnlById[bk.trade_id];
+        if (Number.isFinite(p) && p < 0) cats[k].totalLoss += Math.abs(p);
+        break;
+      }
+    }
+  });
+  const catList = Object.values(cats).filter((c) => c.count > 0).sort((a, b) => b.totalLoss - a.totalLoss);
+  const topLeak = catList[0] || null;
+
+  // After-loss vs after-win win rate (for a finding)
+  let alT = 0, alW = 0, awT = 0, awW = 0;
+  for (let i = 1; i < trades.length; i++) {
+    const prev = Number(trades[i - 1].pnl), cur = Number(trades[i].pnl);
+    if (!Number.isFinite(prev)) continue;
+    if (prev < 0) { alT++; if (Number.isFinite(cur) && cur > 0) alW++; }
+    else if (prev > 0) { awT++; if (Number.isFinite(cur) && cur > 0) awW++; }
+  }
+
+  // Findings (top 3, ranked by impact)
+  const findings = [];
+  if (topLeak) findings.push({ title: topLeak.label, detail: topLeak.count + ' trades · -$' + (Math.round(topLeak.totalLoss * 100) / 100).toFixed(2), action: topLeak.action });
+  if (alT >= 3 && awT > 0) {
+    const alWr = Math.round((alW / alT) * 100), awWr = Math.round((awW / awT) * 100);
+    if (alWr < awWr - 5) findings.push({ title: 'You trade worse after a loss', detail: 'Win rate ' + alWr + '% after a loss vs ' + awWr + '% after a win.', action: 'Take a mandatory pause after any losing trade before your next entry.' });
+  }
+  const worstSorted = worst.slice().sort((a, b) => a.avgPnl - b.avgPnl);
+  if (worstSorted[0] && worstSorted[0].avgPnl < 0) {
+    const w = worstSorted[0];
+    findings.push({ title: w.dim + ': ' + w.value + ' is costing you', detail: w.avgPnl.toFixed(2) + ' avg over ' + w.n + ' trades (' + w.winRate + '% win rate).', action: 'Be extra selective on ' + String(w.value).toLowerCase() + ' — or sit it out.' });
+  }
+  const topFindings = findings.slice(0, 3);
+
+  // Trader profile
+  const archetypeMap = {
+    not_following_setup: { name: 'The Impulsive Entry Trader', weak: 'Entering trades without a valid setup' },
+    fomo: { name: 'The FOMO Chaser', weak: 'Impulsive entries driven by fear of missing out' },
+    over_trading: { name: 'The Over-Trader', weak: 'Taking too many trades per session' },
+    over_sizing: { name: 'The Over-Sizer', weak: 'Risking too much on single trades' },
+    bad_sl: { name: 'The Stop Mover', weak: 'Moving or removing your stop loss' },
+    daily_loss_limit: { name: 'The Tilt Trader', weak: 'Trading past your daily loss limit' },
+  };
+  let arche = (topLeak && archetypeMap[topLeak.key]) ? archetypeMap[topLeak.key] : { name: 'The Developing Trader', weak: 'Still building consistent habits' };
+  if (score.score != null && score.score >= 75) arche = { name: 'The Disciplined Operator', weak: 'Only minor lapses remain' };
+  const ruleStats = {};
+  evals.forEach((e) => { if (!ruleStats[e.rule_key]) ruleStats[e.rule_key] = { label: e.rule_label, f: 0, t: 0 }; ruleStats[e.rule_key].t++; if (e.outcome === 'followed') ruleStats[e.rule_key].f++; });
+  const strengthArr = Object.values(ruleStats).filter((r) => r.t >= 3).sort((a, b) => (b.f / b.t) - (a.f / a.t));
+  const profile = {
+    archetype: arche.name,
+    weakness: arche.weak,
+    strength: strengthArr[0] ? strengthArr[0].label : 'Consistent logging',
+    bestEnvironment: best.slice(0, 4).map((b) => b.dim + ': ' + b.value),
+    dangerZone: worstSorted.slice(0, 2).map((w) => w.dim + ': ' + w.value),
+    score: score.score,
+    nextMilestone: score.score != null ? Math.min(100, (Math.floor(score.score / 5) + 1) * 5) : null,
+  };
+
+  return { habits, conditions: { best, worst }, profile, findings: topFindings, priority: topFindings[0] || null, score };
+}
+
 /* ─── AI Explanation (on-demand, cached) ──── */
 
 export async function fetchAIExplanation(analysisType, preset) {
