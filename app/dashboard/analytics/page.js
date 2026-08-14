@@ -548,7 +548,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 pb-24 sm:pb-6">
+    <div className="px-4 py-6 sm:px-6 pb-24 sm:pb-6">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-xl font-bold text-white sm:text-2xl">AI Analytics</h1>
