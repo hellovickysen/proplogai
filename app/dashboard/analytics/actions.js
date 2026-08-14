@@ -572,13 +572,13 @@ export async function fetchDayPatternAnalytics(preset) {
 
   let query = supabase
     .from('trades')
-    .select('id, pnl, trade_date, pair, direction, lot_size')
+    .select('id, pnl, trade_date, pair, direction, lot_size, created_at, entry_price, stop_loss')
     .eq('user_id', user.id);
 
   if (accountId) query = query.eq('account_id', accountId);
   if (from) query = query.gte('trade_date', from);
   if (to) query = query.lte('trade_date', to);
-  query = query.order('trade_date', { ascending: true });
+  query = query.order('trade_date', { ascending: true }).order('created_at', { ascending: true });
 
   const { data: trades, error } = await query;
   if (error) return { error: error.message };
@@ -653,6 +653,71 @@ export async function fetchDayPatternAnalytics(preset) {
   const otherDays = Object.entries(weekdayStats).filter(([d]) => d !== 'Monday' && d !== 'Sunday' && d !== 'Saturday');
   const otherAvgPnl = otherDays.reduce((sum, [, s]) => sum + s.pnl, 0) / Math.max(otherDays.filter(([, s]) => s.trades > 0).length, 1);
 
+  // ── After-loss / after-win behavior + trade-number analysis ──
+  // seq is already chronological (trade_date asc, created_at asc).
+  const seq = trades || [];
+  const riskOf = (t) => {
+    const e = Number(t.entry_price), s = Number(t.stop_loss), l = Number(t.lot_size);
+    return (Number.isFinite(e) && Number.isFinite(s) && Number.isFinite(l) && l > 0 && e !== s) ? Math.abs(e - s) * l : null;
+  };
+  let baselineRiskSum = 0, baselineRiskN = 0;
+  seq.forEach((t) => { const r = riskOf(t); if (r != null) { baselineRiskSum += r; baselineRiskN++; } });
+  const afterLoss = { total: 0, wins: 0, sumPnl: 0, riskSum: 0, riskN: 0 };
+  const afterWin = { total: 0, wins: 0, sumPnl: 0 };
+  for (let i = 1; i < seq.length; i++) {
+    const prev = Number(seq[i - 1].pnl);
+    const cur = Number(seq[i].pnl);
+    if (!Number.isFinite(prev)) continue;
+    if (prev < 0) {
+      afterLoss.total++;
+      if (Number.isFinite(cur)) { afterLoss.sumPnl += cur; if (cur > 0) afterLoss.wins++; }
+      const r = riskOf(seq[i]); if (r != null) { afterLoss.riskSum += r; afterLoss.riskN++; }
+    } else if (prev > 0) {
+      afterWin.total++;
+      if (Number.isFinite(cur)) { afterWin.sumPnl += cur; if (cur > 0) afterWin.wins++; }
+    }
+  }
+  const afterEvents = {
+    afterLoss: {
+      total: afterLoss.total,
+      winRate: afterLoss.total > 0 ? Math.round((afterLoss.wins / afterLoss.total) * 100) : 0,
+      avgPnl: afterLoss.total > 0 ? Math.round((afterLoss.sumPnl / afterLoss.total) * 100) / 100 : 0,
+      avgRisk: afterLoss.riskN >= 3 ? Math.round((afterLoss.riskSum / afterLoss.riskN) * 100) / 100 : null,
+    },
+    afterWin: {
+      total: afterWin.total,
+      winRate: afterWin.total > 0 ? Math.round((afterWin.wins / afterWin.total) * 100) : 0,
+      avgPnl: afterWin.total > 0 ? Math.round((afterWin.sumPnl / afterWin.total) * 100) / 100 : 0,
+    },
+    baselineAvgRisk: baselineRiskN >= 3 ? Math.round((baselineRiskSum / baselineRiskN) * 100) / 100 : null,
+  };
+
+  // Trade-number within each day (1st / 2nd / 3rd / 4th+)
+  const byDay = {};
+  seq.forEach((t) => { if (t.trade_date) (byDay[t.trade_date] = byDay[t.trade_date] || []).push(t); });
+  const numBuckets = {};
+  Object.values(byDay).forEach((list) => {
+    list.forEach((t, idx) => {
+      const k = idx < 3 ? String(idx + 1) : '4+';
+      const b = numBuckets[k] = numBuckets[k] || { k, trades: 0, wins: 0, sumPnl: 0 };
+      b.trades++;
+      const p = Number(t.pnl);
+      if (Number.isFinite(p)) { b.sumPnl += p; if (p > 0) b.wins++; }
+    });
+  });
+  const numLabels = { '1': '1st', '2': '2nd', '3': '3rd', '4+': '4th+' };
+  const tradeNumbers = ['1', '2', '3', '4+']
+    .filter((k) => numBuckets[k])
+    .map((k) => {
+      const b = numBuckets[k];
+      return {
+        label: numLabels[k],
+        trades: b.trades,
+        winRate: b.trades > 0 ? Math.round((b.wins / b.trades) * 100) : 0,
+        avgPnl: b.trades > 0 ? Math.round((b.sumPnl / b.trades) * 100) / 100 : 0,
+      };
+    });
+
   return {
     bestDate: bestDate ? { ...bestDate, pnl: Math.round(bestDate.pnl * 100) / 100 } : null,
     worstDate: worstDate ? { ...worstDate, pnl: Math.round(worstDate.pnl * 100) / 100 } : null,
@@ -664,6 +729,8 @@ export async function fetchDayPatternAnalytics(preset) {
       otherDaysAvgPnl: Math.round(otherAvgPnl * 100) / 100,
       isMonday_worse: monday.trades >= 3 && (monday.pnl / Math.max(monday.trades, 1)) < (otherAvgPnl / Math.max(otherDays.filter(([, s]) => s.trades > 0).length, 1)),
     },
+    afterEvents,
+    tradeNumbers,
     totalTrades: (trades || []).length,
     sampleSize: dateEntries.length,
   };
@@ -747,7 +814,47 @@ export async function fetchLossAttribution(preset) {
     .filter((c) => c.count > 0)
     .sort((a, b) => b.totalLoss - a.totalLoss);
 
-  return { categories: result };
+  // ── What-if simulator (HISTORICAL simulation — not a prediction, not recoverable profit) ──
+  let allQuery = supabase.from('trades').select('id, pnl').eq('user_id', user.id);
+  if (accountId) allQuery = allQuery.eq('account_id', accountId);
+  if (from) allQuery = allQuery.gte('trade_date', from);
+  if (to) allQuery = allQuery.lte('trade_date', to);
+  const { data: allTrades } = await allQuery;
+  const pnlAll = (allTrades || [])
+    .map((t) => ({ id: t.id, pnl: Number(t.pnl) }))
+    .filter((t) => Number.isFinite(t.pnl));
+  const currentPnl = pnlAll.reduce((s, t) => s + t.pnl, 0);
+
+  // Per-category set of trade ids exhibiting that behavior (any matching broken rule).
+  const catSets = {};
+  Object.keys(categories).forEach((k) => { catSets[k] = new Set(); });
+  (breaches || []).forEach((b) => {
+    for (const [k, cat] of Object.entries(categories)) {
+      if (cat.ruleKeys.includes(b.rule_key)) catSets[k].add(b.trade_id);
+    }
+  });
+  const whatIf = Object.entries(categories)
+    .map(([k, cat]) => {
+      const set = catSets[k];
+      if (!set || set.size === 0) return null;
+      const withoutPnl = pnlAll.filter((t) => !set.has(t.id)).reduce((s, t) => s + t.pnl, 0);
+      return {
+        key: k,
+        label: cat.label,
+        excludedCount: set.size,
+        withoutPnl: Math.round(withoutPnl * 100) / 100,
+        difference: Math.round((withoutPnl - currentPnl) * 100) / 100,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.difference - a.difference);
+
+  return {
+    categories: result,
+    currentPnl: Math.round(currentPnl * 100) / 100,
+    whatIf,
+    totalTrades: pnlAll.length,
+  };
 }
 
 /* ─── Backfill evaluations for all trades ──── */

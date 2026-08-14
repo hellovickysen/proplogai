@@ -119,6 +119,19 @@ function ConfidenceLabel({ count, minSample = 10 }) {
   );
 }
 
+function SampleBadge({ n }) {
+  const level = n >= 30
+    ? { t: 'High confidence', c: 'bg-emerald-500/10 text-emerald-400' }
+    : n >= 10
+      ? { t: 'Medium confidence', c: 'bg-amber-500/10 text-amber-400' }
+      : { t: 'Early signal', c: 'bg-white/[0.06] text-white/50' };
+  return (
+    <span className={'inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ' + level.c}>
+      {level.t} · {n} trades
+    </span>
+  );
+}
+
 function Meter({ label, value, hint, hasData = true }) {
   const pct = Math.max(0, Math.min(100, Number(value) || 0));
   const color = pct >= 70 ? 'bg-emerald-400' : pct >= 40 ? 'bg-amber-400' : 'bg-red-400';
@@ -449,6 +462,60 @@ function PatternsTab({ data }) {
         </Card>
       )}
 
+      {/* After a win vs after a loss */}
+      {data.afterEvents && (data.afterEvents.afterLoss.total >= 3 || data.afterEvents.afterWin.total >= 3) && (
+        <Card>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">🧠</span>
+            <span className="text-sm font-semibold text-white">How you trade after a win vs a loss</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-xl bg-white/[0.02] p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white/40 mb-1">After a loss</div>
+              <div className="text-xs text-white/60">Next-trade win rate: <span className="font-semibold text-white/80">{data.afterEvents.afterLoss.winRate}%</span></div>
+              <div className="text-xs text-white/60">Avg next-trade P&amp;L: <span className={'font-mono font-semibold ' + (data.afterEvents.afterLoss.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>{data.afterEvents.afterLoss.avgPnl >= 0 ? '+' : ''}${data.afterEvents.afterLoss.avgPnl.toFixed(2)}</span></div>
+              <div className="mt-2"><SampleBadge n={data.afterEvents.afterLoss.total} /></div>
+            </div>
+            <div className="rounded-xl bg-white/[0.02] p-3">
+              <div className="text-[10px] uppercase tracking-wider text-white/40 mb-1">After a win</div>
+              <div className="text-xs text-white/60">Next-trade win rate: <span className="font-semibold text-white/80">{data.afterEvents.afterWin.winRate}%</span></div>
+              <div className="text-xs text-white/60">Avg next-trade P&amp;L: <span className={'font-mono font-semibold ' + (data.afterEvents.afterWin.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>{data.afterEvents.afterWin.avgPnl >= 0 ? '+' : ''}${data.afterEvents.afterWin.avgPnl.toFixed(2)}</span></div>
+              <div className="mt-2"><SampleBadge n={data.afterEvents.afterWin.total} /></div>
+            </div>
+          </div>
+          {data.afterEvents.afterLoss.avgRisk != null && data.afterEvents.baselineAvgRisk != null && (
+            <div className="mt-3 text-[11px] text-white/50">
+              Avg risk after a loss: <span className="font-mono text-white/70">${data.afterEvents.afterLoss.avgRisk.toFixed(2)}</span> vs overall <span className="font-mono text-white/70">${data.afterEvents.baselineAvgRisk.toFixed(2)}</span>
+              {data.afterEvents.afterLoss.avgRisk > data.afterEvents.baselineAvgRisk && <span className="text-amber-400"> — you tend to risk more right after a loss.</span>}
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Performance by trade number */}
+      {data.tradeNumbers && data.tradeNumbers.length > 0 && (
+        <Card>
+          <div className="text-xs font-medium uppercase tracking-wider text-white/40 mb-3">Performance by trade number (per day)</div>
+          <div className="space-y-2">
+            {data.tradeNumbers.map((b) => (
+              <div key={b.label} className="flex items-center justify-between rounded-lg bg-white/[0.02] px-3 py-2.5">
+                <div className="flex items-center gap-3">
+                  <span className="w-14 text-sm font-medium text-white/80">{b.label}</span>
+                  <SampleBadge n={b.trades} />
+                </div>
+                <div className="flex items-center gap-4 text-xs">
+                  <span className={b.winRate >= 50 ? 'text-emerald-400' : 'text-red-400'}>{b.winRate}% WR</span>
+                  <span className={'font-mono font-semibold ' + (b.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
+                    {b.avgPnl >= 0 ? '+' : ''}{b.avgPnl.toFixed(2)} avg
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 text-[11px] text-white/40">If your later trades perform worse, try capping trades per day for your next 10 sessions.</div>
+        </Card>
+      )}
+
       {/* Weekday Breakdown */}
       <Card>
         <div className="text-xs font-medium uppercase tracking-wider text-white/40 mb-3">Weekday Performance</div>
@@ -457,7 +524,7 @@ function PatternsTab({ data }) {
             <div key={w.day} className="flex items-center justify-between rounded-lg bg-white/[0.02] px-3 py-2.5">
               <div className="flex items-center gap-3">
                 <span className="w-20 text-sm font-medium text-white/80">{w.day}</span>
-                <span className="text-xs text-white/40">{w.trades} trades</span>
+                <SampleBadge n={w.trades} />
               </div>
               <div className="flex items-center gap-4 text-xs">
                 <span className={w.winRate >= 50 ? 'text-emerald-400' : 'text-red-400'}>{w.winRate}% WR</span>
@@ -480,6 +547,7 @@ function PatternsTab({ data }) {
 /* ─── Loss Attribution Tab ──── */
 
 function AttributionTab({ data }) {
+  const [whatIfSel, setWhatIfSel] = useState(null);
   if (!data) return <LoadingState />;
   if (data.error) return (
     <Card className="border-red-500/20">
@@ -490,9 +558,62 @@ function AttributionTab({ data }) {
   if (!data.categories || data.categories.length === 0) return <EmptyState message="No categorized losses in this period." />;
 
   const totalLoss = data.categories.reduce((sum, c) => sum + c.totalLoss, 0);
+  const whatIfList = Array.isArray(data.whatIf) ? data.whatIf : [];
+  const sel = whatIfSel ? whatIfList.find((x) => x.key === whatIfSel) : null;
+  const currentPnl = typeof data.currentPnl === 'number' ? data.currentPnl : 0;
 
   return (
     <div className="space-y-3">
+      {/* What-if simulator — historical simulation, never a prediction or recoverable profit */}
+      {whatIfList.length > 0 && (
+        <Card>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-lg">🧪</span>
+            <span className="text-sm font-semibold text-white">What if you avoided a behavior?</span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-white/40 mb-3">
+            A historical look across your logged trades — not a prediction, and not recoverable profit. It shows how these trades contributed to your past results.
+          </p>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {whatIfList.map((w) => (
+              <button
+                key={w.key}
+                onClick={() => setWhatIfSel(w.key === whatIfSel ? null : w.key)}
+                className={'rounded-lg px-3 py-1.5 text-xs font-medium transition-all ' +
+                  (whatIfSel === w.key
+                    ? 'bg-violet-500/20 text-violet-300 ring-1 ring-violet-500/30'
+                    : 'bg-white/[0.04] text-white/50 hover:bg-white/[0.06] hover:text-white/70')}
+              >
+                {w.label}
+              </button>
+            ))}
+          </div>
+          {sel ? (
+            <>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="rounded-xl bg-white/[0.02] p-3">
+                  <div className="text-[10px] uppercase text-white/40 mb-1">Your actual result</div>
+                  <div className={'text-base font-bold font-mono ' + (currentPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>{currentPnl >= 0 ? '+' : ''}${currentPnl.toFixed(2)}</div>
+                </div>
+                <div className="rounded-xl bg-white/[0.02] p-3">
+                  <div className="text-[10px] uppercase text-white/40 mb-1">Without these {sel.excludedCount} trades</div>
+                  <div className={'text-base font-bold font-mono ' + (sel.withoutPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>{sel.withoutPnl >= 0 ? '+' : ''}${sel.withoutPnl.toFixed(2)}</div>
+                </div>
+                <div className="rounded-xl bg-white/[0.02] p-3">
+                  <div className="text-[10px] uppercase text-white/40 mb-1">Difference</div>
+                  <div className={'text-base font-bold font-mono ' + (sel.difference >= 0 ? 'text-emerald-400' : 'text-red-400')}>{sel.difference >= 0 ? '+' : ''}${sel.difference.toFixed(2)}</div>
+                </div>
+              </div>
+              <div className="mt-3 text-[11px] text-white/50">
+                These {sel.excludedCount} “{sel.label}” trades contributed {sel.difference >= 0 ? 'a gain of' : 'a loss of'} <span className="font-mono text-white/70">${Math.abs(sel.difference).toFixed(2)}</span> to your historical results.
+              </div>
+            </>
+          ) : (
+            <div className="text-xs text-white/40">Select a behavior above to see how those trades contributed to your results.</div>
+          )}
+        </Card>
+      )}
+
       <div className="text-xs text-white/40 mb-2">
         Total attributable loss: <span className="text-red-400 font-medium">-${totalLoss.toFixed(2)}</span>
       </div>
