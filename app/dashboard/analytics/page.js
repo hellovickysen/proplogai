@@ -254,6 +254,71 @@ function HBars({ rows }) {
   );
 }
 
+function Ring({ value, label, invert = false }) {
+  const has = value != null;
+  const v = has ? Math.max(0, Math.min(100, value)) : 0;
+  const R = 26, C = 2 * Math.PI * R;
+  const off = C * (1 - v / 100);
+  const col = invert
+    ? (v <= 30 ? '#34d399' : v <= 60 ? '#fbbf24' : '#f87171')
+    : (v >= 70 ? '#34d399' : v >= 40 ? '#fbbf24' : '#f87171');
+  return (
+    <div className="flex flex-col items-center rounded-2xl border border-white/[0.07] bg-white/[0.03] p-3.5">
+      <div className="relative h-[68px] w-[68px]">
+        <svg width="68" height="68" viewBox="0 0 68 68">
+          <circle cx="34" cy="34" r="26" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="7" />
+          {has && <circle cx="34" cy="34" r="26" fill="none" stroke={col} strokeWidth="7" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={off} transform="rotate(-90 34 34)" />}
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white">{has ? v + '%' : '—'}</div>
+      </div>
+      <div className="mt-2 text-center text-[10px] uppercase tracking-[0.06em] text-white/40">{label}</div>
+    </div>
+  );
+}
+
+function Radar({ points }) {
+  const n = points.length;
+  if (n < 3) return null;
+  const cx = 100, cy = 100, R = 64;
+  const ang = (i) => (-Math.PI / 2) + (i * 2 * Math.PI / n);
+  const pt = (i, r) => [cx + r * Math.cos(ang(i)), cy + r * Math.sin(ang(i))];
+  const rings = [0.25, 0.5, 0.75, 1].map((f, k) => (
+    <polygon key={'r' + k} fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" points={points.map((_, i) => pt(i, R * f).join(',')).join(' ')} />
+  ));
+  const axes = points.map((_, i) => { const a = pt(i, R); return <line key={'a' + i} x1={cx} y1={cy} x2={a[0]} y2={a[1]} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />; });
+  const poly = points.map((p, i) => pt(i, R * (Math.max(0, Math.min(100, p.value)) / 100)).join(',')).join(' ');
+  return (
+    <svg width="200" height="200" viewBox="0 0 200 200" className="flex-none">
+      <defs><linearGradient id="radarFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#a78bfa" /><stop offset="1" stopColor="#22d3ee" /></linearGradient></defs>
+      {rings}{axes}
+      <polygon points={poly} fill="url(#radarFill)" fillOpacity="0.35" stroke="#a78bfa" strokeWidth="1.5" />
+      {points.map((p, i) => { const a = pt(i, R * (Math.max(0, Math.min(100, p.value)) / 100)); return <circle key={'d' + i} cx={a[0]} cy={a[1]} r="2.5" fill="#c4b5fd" />; })}
+      {points.map((p, i) => { const a = pt(i, R + 15); return <text key={'l' + i} x={a[0]} y={a[1]} textAnchor="middle" dominantBaseline="middle" fontSize="8.5" fill="rgba(255,255,255,0.5)">{p.short}</text>; })}
+    </svg>
+  );
+}
+
+function CondList({ items, positive }) {
+  const sorted = items.slice().sort((a, b) => positive ? b.avgPnl - a.avgPnl : a.avgPnl - b.avgPnl).slice(0, 5);
+  const mx = Math.max(1, ...sorted.map((i) => Math.abs(i.avgPnl)));
+  return (
+    <div className="space-y-2.5">
+      {sorted.map((c, i) => {
+        const pos = c.avgPnl >= 0;
+        return (
+          <div key={i}>
+            <div className="mb-1 flex items-center justify-between text-xs">
+              <span className="text-white/70">{c.dim}: <b className="text-white/90">{c.value}</b></span>
+              <span className={'font-mono ' + (pos ? 'text-emerald-400' : 'text-red-400')}>{pos ? '+' : ''}{money(c.avgPnl)}</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/[0.06]"><div className="h-full rounded-full" style={{ width: Math.max(4, Math.round((Math.abs(c.avgPnl) / mx) * 100)) + '%', background: pos ? '#34d399' : '#f87171' }} /></div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ─── Overview (graphical) ──── */
 
 function ScoreCard({ score }) {
@@ -663,22 +728,23 @@ function AITab({ data, preset }) {
   const worst = (data.conditions && data.conditions.worst) || [];
   const findings = data.findings || [];
   const priority = data.priority;
+  const sc = data.score || {};
+  const SHORT = { rule_adherence: 'Rules', setup_adherence: 'Setup', post_loss_discipline: 'Post-loss', risk_consistency: 'Risk', trade_limit_discipline: 'Limit' };
+  const radarPoints = (sc.dimensions || []).filter((d) => d.hasData).map((d) => ({ short: SHORT[d.key] || d.label, value: d.value }));
 
   return (
     <div className="space-y-4">
       {/* Trader Profile */}
       <div className="rounded-3xl border border-violet-400/20 bg-gradient-to-br from-violet-500/[0.12] via-white/[0.02] to-cyan-500/[0.06] p-5">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-white/40">Your Trader Profile</div>
             <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-white">🎭 {p.archetype}</h2>
+            {p.score != null && (
+              <div className="mt-1 text-[11px] text-white/40">Discipline {p.score}/100{p.nextMilestone != null ? ' · next milestone ' + p.nextMilestone : ''}</div>
+            )}
           </div>
-          {p.score != null && (
-            <div className="text-right">
-              <div className="text-3xl font-extrabold text-white">{p.score}<span className="text-base text-white/30">/100</span></div>
-              <div className="text-[11px] text-white/40">Discipline{p.nextMilestone != null ? ' · next ' + p.nextMilestone : ''}</div>
-            </div>
-          )}
+          {radarPoints.length >= 3 && <Radar points={radarPoints} />}
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl bg-white/[0.03] p-3.5">
@@ -745,13 +811,13 @@ function AITab({ data, preset }) {
       {/* Trading Habits */}
       <Card>
         <SectionTitle emoji="🧩">Your trading habits</SectionTitle>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3">
+          <Ring label="Setup selection" value={h.setupSelectionPct} />
+          <Ring label="Overtrading" value={h.overtradingPct} invert />
+          <Ring label="Risk consistency" value={h.riskConsistency} />
           <HabitTile label="Trades / day" value={h.tradesPerDay != null ? h.tradesPerDay : '—'} />
-          <HabitTile label="Setup selection" value={h.setupSelectionPct != null ? h.setupSelectionPct + '%' : '—'} hint="trades with a setup" />
-          <HabitTile label="Overtrading" value={h.overtradingPct != null ? h.overtradingPct + '%' : '—'} hint="3rd+ trade of day" />
           <HabitTile label="Avg risk" value={h.avgRisk != null ? money(h.avgRisk) : '—'} hint={h.avgRisk == null ? 'needs SL data' : ''} />
           <HabitTile label="Largest risk" value={h.largestRisk != null ? money(h.largestRisk) : '—'} hint={h.largestRisk == null ? 'needs SL data' : ''} />
-          <HabitTile label="Risk consistency" value={h.riskConsistency != null ? h.riskConsistency + '%' : '—'} hint={h.riskConsistency == null ? 'needs SL data' : ''} />
         </div>
         {h.afterLossRiskUp && <div className="mt-3 text-[11px] text-amber-400/80">⚠️ You tend to increase your risk right after a losing trade.</div>}
       </Card>
@@ -761,25 +827,11 @@ function AITab({ data, preset }) {
         <div className="grid gap-3 sm:grid-cols-2">
           <Card>
             <SectionTitle emoji="✅">You perform best when</SectionTitle>
-            <div className="space-y-2">
-              {best.slice().sort((a, b) => b.avgPnl - a.avgPnl).slice(0, 5).map((b, i) => (
-                <div key={i} className="flex items-center justify-between rounded-xl bg-white/[0.02] px-3 py-2 text-xs">
-                  <span className="text-white/70">{b.dim}: <b className="text-white/90">{b.value}</b></span>
-                  <span className="font-mono text-emerald-400">+{money(b.avgPnl).replace('-', '')} avg</span>
-                </div>
-              ))}
-            </div>
+            <CondList items={best} positive />
           </Card>
           <Card>
             <SectionTitle emoji="⚠️">You struggle when</SectionTitle>
-            <div className="space-y-2">
-              {worst.slice().sort((a, b) => a.avgPnl - b.avgPnl).slice(0, 5).map((w, i) => (
-                <div key={i} className="flex items-center justify-between rounded-xl bg-white/[0.02] px-3 py-2 text-xs">
-                  <span className="text-white/70">{w.dim}: <b className="text-white/90">{w.value}</b></span>
-                  <span className={'font-mono ' + (w.avgPnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>{w.avgPnl >= 0 ? '+' : ''}{money(w.avgPnl)} avg</span>
-                </div>
-              ))}
-            </div>
+            <CondList items={worst} positive={false} />
           </Card>
         </div>
       )}
