@@ -278,7 +278,6 @@ function OverviewTab({ data }) {
   if (total === 0) return <EmptyState message="No trades in this period yet. Log some trades to meet your analytics." />;
   const sc = data.disciplineScore || {};
   const pr = data.problem;
-  const st = data.strength;
   const rate = Math.round(((data.uniqueBreachedTrades || 0) / total) * 100);
   const SHORT = { rule_adherence: 'Rules', setup_adherence: 'Setup', post_loss_discipline: 'Post-loss', risk_consistency: 'Risk' };
   const radarPoints = (sc.dimensions || []).filter((d) => d.hasData).map((d) => ({ short: SHORT[d.key] || d.label, value: d.value }));
@@ -288,8 +287,6 @@ function OverviewTab({ data }) {
   const weekdays = (data.pattern && Array.isArray(data.pattern.weekdays)) ? data.pattern.weekdays : [];
   const wSum = weekdays.reduce((a, w) => ({ wins: a.wins + (w.wins || 0), trades: a.trades + (w.trades || 0) }), { wins: 0, trades: 0 });
   const winRate = wSum.trades > 0 ? Math.round((wSum.wins / wSum.trades) * 100) : null;
-  const SHORT_DAY = { Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun' };
-  const bestWd = weekdays.length ? weekdays.slice().sort((a, b) => b.pnl - a.pnl)[0] : null;
   const setupList = (data.setups && Array.isArray(data.setups.setups)) ? data.setups.setups : [];
   const topSetup = setupList.length ? setupList[0] : null;
 
@@ -311,16 +308,14 @@ function OverviewTab({ data }) {
           )}
         </div>
 
-        {/* Middle — quick-glance KPI grid */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Middle — 3x2 quick-glance KPI grid */}
+        <div className="grid grid-cols-2 gap-3 md:h-full md:grid-cols-3 md:grid-rows-2">
           <KpiCard value={total} label="Total Trades" />
           <KpiCard value={netPnl != null ? (netPnl >= 0 ? '+' : '-') + moneyShort(netPnl) : '—'} label="Net P&L" tone={netPnl != null ? (netPnl >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white'} />
           <KpiCard value={winRate != null ? winRate + '%' : '—'} label="Win Rate" tone={winRate != null && winRate >= 50 ? 'text-emerald-400' : 'text-white'} />
           <KpiCard value={<>{sc.cleanTrades != null ? sc.cleanTrades : '—'}<span className="text-lg text-white/30">/{total}</span></>} label="Rules Kept" />
           <KpiCard value={rate + '%'} label="Breach Rate" tone={rate > 0 ? 'text-red-400' : 'text-emerald-400'} />
-          <KpiCard value={st ? st.rate + '%' : '—'} label="Best Habit" tone="text-emerald-400" />
           <KpiCard value={topSetup ? <span className="text-lg font-bold">{topSetup.name}</span> : '—'} sub={topSetup ? topSetup.count + ' trades' : null} label="Most-used Setup" />
-          <KpiCard value={bestWd ? SHORT_DAY[bestWd.day] || bestWd.day : '—'} sub={bestWd ? (bestWd.pnl >= 0 ? '+' : '') + moneyShort(bestWd.pnl) : null} label="Best Day" tone={bestWd && bestWd.pnl >= 0 ? 'text-emerald-400' : 'text-white'} />
         </div>
 
         {/* Right — discipline radar (cone) */}
