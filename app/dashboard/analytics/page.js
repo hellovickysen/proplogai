@@ -306,6 +306,135 @@ function DualEquityCurve({ series, excluded }) {
   );
 }
 
+function arcPoints(cx, cy, R, a0, a1, steps) {
+  const p = [];
+  for (let i = 0; i <= steps; i++) { const a = a0 + (a1 - a0) * (i / steps); p.push([cx + R * Math.cos(a), cy - R * Math.sin(a)]); }
+  return p.map((q) => q[0].toFixed(1) + ',' + q[1].toFixed(1)).join(' ');
+}
+
+function Gauge({ value, label, max = 3, fmt }) {
+  const has = value != null;
+  const v = has ? Math.max(0, Math.min(max, value)) : 0;
+  const frac = v / max;
+  const bg = arcPoints(60, 62, 46, Math.PI, 0, 40);
+  const val = arcPoints(60, 62, 46, Math.PI, Math.PI + (0 - Math.PI) * frac, 40);
+  const col = !has ? '#8b8ba0' : v < 1 ? '#fb7185' : v < 1.5 ? '#fbbf24' : '#34d399';
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
+      <svg width="124" height="74" viewBox="0 0 120 74">
+        <polyline points={bg} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="9" strokeLinecap="round" />
+        {has && <polyline points={val} fill="none" stroke={col} strokeWidth="9" strokeLinecap="round" />}
+        <text x="60" y="58" textAnchor="middle" fontSize="22" fontWeight="800" fill="#fff" fontFamily="ui-monospace,monospace">{has ? (fmt ? fmt(v) : v) : '—'}</text>
+      </svg>
+      <div className="mt-1 text-[11px] uppercase tracking-[0.08em] text-white/40">{label}</div>
+    </div>
+  );
+}
+
+function DonutRing({ value, label, unit = '%', color }) {
+  const has = value != null;
+  const v = has ? Math.max(0, Math.min(100, value)) : 0;
+  const R = 40, C = 2 * Math.PI * R, off = C * (1 - v / 100);
+  const col = color || (v >= 50 ? '#34d399' : v >= 30 ? '#fbbf24' : '#fb7185');
+  return (
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
+      <div className="relative" style={{ width: 104, height: 104 }}>
+        <svg width="104" height="104" viewBox="0 0 104 104">
+          <circle cx="52" cy="52" r={R} fill="none" stroke="rgba(255,255,255,0.09)" strokeWidth="9" />
+          {has && <circle cx="52" cy="52" r={R} fill="none" stroke={col} strokeWidth="9" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={off} transform="rotate(-90 52 52)" />}
+        </svg>
+        <div className="absolute inset-0 grid place-items-center text-xl font-extrabold tracking-tight">{has ? v + unit : '—'}</div>
+      </div>
+      <div className="mt-1 text-[11px] uppercase tracking-[0.08em] text-white/40">{label}</div>
+    </div>
+  );
+}
+
+function SparkLine({ series, color }) {
+  if (!series || !series.length) return null;
+  let c = 0; const pts = series.map((s) => { c += s.pnl; return c; });
+  const min = Math.min(0, ...pts), max = Math.max(0, ...pts), r = (max - min) || 1;
+  const W = 120, H = 34, n = pts.length;
+  const d = pts.map((v, i) => ((n > 1 ? i / (n - 1) : 0) * W).toFixed(1) + ',' + (H - ((v - min) / r) * H).toFixed(1)).join(' ');
+  return <svg width={W} height={H} viewBox={'0 0 ' + W + ' ' + H} className="mt-1 w-full" preserveAspectRatio="none"><polyline points={d} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" /></svg>;
+}
+
+function LeakBars({ leaks, total }) {
+  const items = (leaks || []).slice(0, 4);
+  const max = Math.max(1, ...items.map((l) => l.totalLoss));
+  return (
+    <div className="flex flex-col justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
+      <div className="text-lg font-extrabold text-red-400">-{moneyShort(total || 0)}</div>
+      <div className="mt-2 flex items-end gap-1.5" style={{ height: 44 }}>
+        {items.length ? items.map((l, i) => (
+          <div key={i} className="flex-1" title={l.label + ' -' + l.totalLoss} style={{ height: Math.max(8, Math.round((l.totalLoss / max) * 100)) + '%', background: 'linear-gradient(#fb7185,#be123c)', borderRadius: '4px 4px 2px 2px' }} />
+        )) : <div className="text-[11px] text-white/30">No leaks</div>}
+      </div>
+      <div className="mt-2 text-[11px] uppercase tracking-[0.08em] text-white/40">Leak Impact</div>
+    </div>
+  );
+}
+
+function SetupMatrix({ setups }) {
+  const items = (setups || []).filter((s) => s.count > 0);
+  if (!items.length) return <EmptyState message="No setup data yet." />;
+  const W = 560, H = 300, padL = 46, padB = 34, padT = 14, padR = 16;
+  const maxFreq = Math.max(...items.map((s) => s.count), 1);
+  const ys = items.map((s) => s.avgPnl); const ymin = Math.min(0, ...ys), ymax = Math.max(0, ...ys); const yr = (ymax - ymin) || 1;
+  const x = (f) => padL + (f / maxFreq) * (W - padL - padR);
+  const y = (v) => padT + (1 - (v - ymin) / yr) * (H - padT - padB);
+  const rad = (c) => 7 + Math.sqrt(c / maxFreq) * 24;
+  const col = (w) => (w >= 55 ? '#34d399' : w >= 45 ? '#9ca3af' : '#fb7185');
+  return (
+    <svg viewBox={'0 0 ' + W + ' ' + H} className="w-full" style={{ height: 300 }}>
+      <line x1={padL} y1={y(0)} x2={W - padR} y2={y(0)} stroke="rgba(255,255,255,0.14)" />
+      <line x1={padL} y1={padT} x2={padL} y2={H - padB} stroke="rgba(255,255,255,0.14)" />
+      <text x={W - padR} y={H - 12} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.4)">Frequency (trades) →</text>
+      <text x={padL - 8} y={padT + 4} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.4)">P&L</text>
+      {items.map((s, i) => { const cx = x(s.count), cy = y(s.avgPnl), rr = rad(s.count); const c = col(s.winRate); return (<g key={i}><circle cx={cx} cy={cy} r={rr} fill={c} fillOpacity="0.32" stroke={c} strokeWidth="1.5" /><title>{s.name + ' · ' + s.count + ' trades · ' + s.winRate + '% win · avg ' + (s.avgPnl >= 0 ? '+' : '') + s.avgPnl}</title></g>); })}
+    </svg>
+  );
+}
+
+function Heatmap({ heatmap }) {
+  const days = (heatmap && heatmap.days) || [];
+  const sessions = (heatmap && heatmap.sessions) || [];
+  const cells = (heatmap && heatmap.cells) || [];
+  if (!cells.length) return <EmptyState message="No session data yet." />;
+  const map = {}; cells.forEach((c) => { map[c.day + '|' + c.session] = c; });
+  const maxAbs = Math.max(1, ...cells.map((c) => Math.abs(c.pnl)));
+  const color = (v) => { const t = Math.min(1, Math.abs(v) / maxAbs); return (v >= 0 ? 'rgba(52,211,153,' : 'rgba(251,113,133,') + (0.14 + t * 0.6) + ')'; };
+  return (
+    <div className="overflow-x-auto">
+      <div className="inline-grid gap-1.5" style={{ gridTemplateColumns: '52px repeat(' + sessions.length + ', minmax(52px,1fr))' }}>
+        <div />
+        {sessions.map((s) => <div key={'h' + s} className="pb-1 text-center text-[10px] text-white/40">{s}</div>)}
+        {days.flatMap((d) => [
+          <div key={d + '-l'} className="flex items-center text-[11px] text-white/55">{d.slice(0, 3)}</div>,
+          ...sessions.map((s) => { const c = map[d + '|' + s]; return <div key={d + '|' + s} className="grid place-items-center rounded-md font-mono text-[10px]" style={{ height: 34, background: c ? color(c.pnl) : 'rgba(255,255,255,0.03)' }} title={c ? d + ' ' + s + ': ' + (c.pnl >= 0 ? '+' : '') + c.pnl : ''}>{c ? (c.pnl >= 0 ? '+' : '-') + moneyShort(c.pnl).replace('$', '') : ''}</div>; }),
+        ])}
+      </div>
+    </div>
+  );
+}
+
+function PostLossLine({ postLoss }) {
+  const pts = (postLoss && postLoss.byTradeNo) || [];
+  if (pts.length < 2) return <EmptyState message="Not enough data yet." />;
+  const W = 360, H = 180, padL = 30, padB = 26, padT = 14, padR = 12;
+  const x = (i) => padL + (pts.length > 1 ? i / (pts.length - 1) : 0) * (W - padL - padR);
+  const yv = (v) => padT + (1 - v / 100) * (H - padT - padB);
+  const line = pts.map((p, i) => x(i).toFixed(1) + ',' + yv(p.winRate).toFixed(1)).join(' ');
+  return (
+    <svg viewBox={'0 0 ' + W + ' ' + H} className="w-full" style={{ height: 180 }}>
+      {[0, 50, 100].map((g) => <line key={g} x1={padL} y1={yv(g)} x2={W - padR} y2={yv(g)} stroke="rgba(255,255,255,0.08)" />)}
+      {[0, 50, 100].map((g) => <text key={'t' + g} x={padL - 6} y={yv(g) + 3} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.35)">{g}</text>)}
+      <polyline points={line} fill="none" stroke="#a78bfa" strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+      {pts.map((p, i) => <g key={i}><circle cx={x(i)} cy={yv(p.winRate)} r="3.5" fill="#c4b5fd" /><text x={x(i)} y={H - 8} textAnchor="middle" fontSize="10" fill="rgba(255,255,255,0.5)">{p.label}</text></g>)}
+    </svg>
+  );
+}
+
 function OverviewTab({ data }) {
   const [excluded, setExcluded] = useState(() => new Set());
   useEffect(() => { setExcluded(new Set()); }, [data]);
@@ -340,13 +469,18 @@ function OverviewTab({ data }) {
 
   return (
     <div className="space-y-4">
-      {/* KPI strip */}
+      {/* KPI strip — visual gauges */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-        <KpiCard value={<span className={scoreTone}>{sc.score != null ? sc.score : '—'}</span>} sub={sc.provisional ? 'provisional' : 'of 100'} label="Discipline Index" />
-        <KpiCard value={(shownNet >= 0 ? '+' : '-') + moneyShort(shownNet)} tone={shownNet >= 0 ? 'text-emerald-400' : 'text-red-400'} sub={(simActive ? 'simulated · ' : '') + 'PF ' + (m.profitFactor != null ? m.profitFactor : '—')} label="Net P&L" />
-        <KpiCard value={shownWin + '%'} tone={shownWin >= 50 ? 'text-emerald-400' : 'text-white'} sub={'Exp ' + (m.expectancy >= 0 ? '+' : '') + moneyShort(m.expectancy) + '/t'} label="Win Rate" />
-        <KpiCard value={'-' + moneyShort(leakTotal)} tone="text-red-400" sub={leaks.length + ' leak' + (leaks.length === 1 ? '' : 's')} label="Leak Cost" />
-        <KpiCard value={m.realizedRR != null ? '1:' + m.realizedRR : '—'} sub="avg win / loss" label="Realized R:R" />
+        <div className="flex flex-col justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
+          <div className={'text-2xl font-extrabold tracking-tight ' + (shownNet >= 0 ? 'text-emerald-400' : 'text-red-400')}>{(shownNet >= 0 ? '+' : '-') + moneyShort(shownNet)}</div>
+          <SparkLine series={series} color={(m.netPnl || 0) >= 0 ? '#34d399' : '#fb7185'} />
+          <div className="mt-1 text-[11px] uppercase tracking-[0.08em] text-white/40">Net P&L{simActive ? ' (sim)' : ''}</div>
+          <div className="text-[10px] text-white/35">Exp {(m.expectancy >= 0 ? '+' : '') + moneyShort(m.expectancy)}/t · R:R {m.realizedRR != null ? '1:' + m.realizedRR : '—'}</div>
+        </div>
+        <Gauge value={m.profitFactor} label="Profit Factor" fmt={(v) => v.toFixed(2)} />
+        <DonutRing value={shownWin} label="Win Rate" />
+        <DonutRing value={sc.score} unit="" label="Discipline" color={sc.score == null ? undefined : sc.score >= 70 ? '#34d399' : sc.score >= 45 ? '#fbbf24' : '#fb7185'} />
+        <LeakBars leaks={leaks} total={leakTotal} />
       </div>
 
       {/* Center split — equity curve + profile/radar */}
@@ -388,6 +522,12 @@ function OverviewTab({ data }) {
               ? <AnimatedRadar points={radarPoints} size={220} />
               : <div className="py-8 text-center text-[11px] text-white/30">Radar unlocks with more rule data</div>}
           </div>
+          {leaks.length > 0 && (
+            <div className="mt-3">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/40">Cost of breaches</div>
+              <div className="flex justify-center"><Donut items={leaks.map((l) => ({ label: l.label, value: l.totalLoss }))} centerTop={moneyShort(leakTotal)} centerSub="BREACH COST" /></div>
+            </div>
+          )}
           {pr && (
             <div className="mt-2 rounded-2xl border border-[#fb7185]/20 bg-[#fb7185]/[0.05] p-3">
               <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#fb7185]">Your #1 focus</div>
@@ -397,6 +537,13 @@ function OverviewTab({ data }) {
             </div>
           )}
         </Card>
+      </div>
+
+      {/* Bottom diagnostic grid */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card><SectionTitle emoji="🫧">Setup Edge Matrix</SectionTitle><SetupMatrix setups={data.setups} /></Card>
+        <Card><SectionTitle emoji="🗓️">Time &amp; Day Heatmap</SectionTitle><Heatmap heatmap={data.heatmap} /></Card>
+        <Card><SectionTitle emoji="🧠">Post-Loss Velocity</SectionTitle><PostLossLine postLoss={data.postLoss} /></Card>
       </div>
     </div>
   );
