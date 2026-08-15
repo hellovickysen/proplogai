@@ -66,6 +66,14 @@ function Card({ children, className = '' }) {
 function KLabel({ children }) {
   return <div className="text-[11px] font-medium uppercase tracking-[0.14em] text-white/35">{children}</div>;
 }
+function SectionTitle({ emoji, children }) {
+  return (
+    <div className="mb-3 flex items-center gap-2">
+      {emoji && <span className="text-base">{emoji}</span>}
+      <span className="text-sm font-semibold text-white">{children}</span>
+    </div>
+  );
+}
 function Lead({ children }) {
   return <div className="text-xl font-bold leading-snug tracking-tight sm:text-[22px]">{children}</div>;
 }
