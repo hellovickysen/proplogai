@@ -1159,6 +1159,198 @@ export async function abandonChallenge(id) {
   return { ok: true };
 }
 
+/* ─── Command Center: one consolidated payload for the Overview dashboard ──── */
+
+export async function fetchCommandCenter(preset) {
+  const { supabase, user } = await getCtx();
+  if (!user) return { error: 'You must be signed in.' };
+
+  const accountId = await getActiveAccountId(supabase, user.id);
+  const { from, to } = getDateRange(preset);
+
+  let tq = supabase
+    .from('trades')
+    .select('id, account_id, trade_date, created_at, pnl, lot_size, stop_loss, entry_price, exit_price, take_profit, direction, session, setup, setup_ids, no_setup_reason')
+    .eq('user_id', user.id);
+  if (accountId) tq = tq.eq('account_id', accountId);
+  if (from) tq = tq.gte('trade_date', from);
+  if (to) tq = tq.lte('trade_date', to);
+  tq = tq.order('trade_date', { ascending: true }).order('created_at', { ascending: true });
+  const { data: tData, error: tErr } = await tq;
+  if (tErr) return { error: tErr.message };
+  const trades = tData || [];
+  if (trades.length === 0) return { empty: true };
+
+  let eq = supabase.from('trade_rule_evaluations').select('rule_key, outcome, trade_id').eq('user_id', user.id);
+  if (accountId) eq = eq.eq('account_id', accountId);
+  if (from) eq = eq.gte('trade_date', from);
+  if (to) eq = eq.lte('trade_date', to);
+  const { data: evData } = await eq;
+  const evals = evData || [];
+
+  let hasGuardrails = false;
+  try {
+    const { count, error } = await supabase.from('rulebook_rules').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('enabled', true);
+    hasGuardrails = !error && (count || 0) > 0;
+  } catch (e) { hasGuardrails = false; }
+
+  const score = computeDisciplineScore(trades, evals, { hasGuardrails });
+
+  // Identity for the profile card (own avatar, else initial from name/email)
+  let avatarUrl = null, fullName = null;
+  try {
+    const { data: prefs } = await supabase.from('user_preferences').select('avatar_url, full_name').eq('user_id', user.id).maybeSingle();
+    if (prefs) { avatarUrl = prefs.avatar_url || null; fullName = prefs.full_name || null; }
+  } catch (e) {}
+  const initSrc = (fullName && fullName.trim()) || user.email || '?';
+  const initial = initSrc.trim().charAt(0).toUpperCase();
+
+  // Behavior categories (mirror loss attribution) + reverse map from eval rule_key
+  const CATS = makeLossCategories();
+  const ruleToCat = {};
+  Object.entries(CATS).forEach(([k, c]) => { c.ruleKeys.forEach((rk) => { ruleToCat[rk] = k; }); });
+
+  const pnlById = {};
+  trades.forEach((t) => { pnlById[t.id] = Number(t.pnl); });
+
+  // Per-trade broken behavior categories (for equity curve + live what-if)
+  const brokenByTrade = {};
+  evals.forEach((e) => {
+    if (e.outcome === 'broken') {
+      const cat = ruleToCat[e.rule_key];
+      if (cat) (brokenByTrade[e.trade_id] = brokenByTrade[e.trade_id] || new Set()).add(cat);
+    }
+  });
+  const series = trades.map((t, i) => ({ i, date: t.trade_date, pnl: Number(t.pnl) || 0, broken: brokenByTrade[t.id] ? Array.from(brokenByTrade[t.id]) : [] }));
+
+  // Quant metrics
+  const pnls = trades.map((t) => Number(t.pnl)).filter((p) => Number.isFinite(p));
+  const total = trades.length;
+  const wins = pnls.filter((p) => p > 0);
+  const losses = pnls.filter((p) => p < 0);
+  const grossWin = wins.reduce((a, b) => a + b, 0);
+  const grossLoss = Math.abs(losses.reduce((a, b) => a + b, 0));
+  const netPnl = pnls.reduce((a, b) => a + b, 0);
+  const winRate = total > 0 ? Math.round((wins.length / total) * 100) : 0;
+  const avgWin = wins.length ? grossWin / wins.length : 0;
+  const avgLoss = losses.length ? grossLoss / losses.length : 0;
+  let eqx = 0, peak = 0, maxDD = 0;
+  series.forEach((s) => { eqx += s.pnl; if (eqx > peak) peak = eqx; const dd = peak - eqx; if (dd > maxDD) maxDD = dd; });
+  const metrics = {
+    netPnl: Math.round(netPnl * 100) / 100,
+    grossWin: Math.round(grossWin * 100) / 100,
+    grossLoss: Math.round(grossLoss * 100) / 100,
+    profitFactor: grossLoss > 0 ? Math.round((grossWin / grossLoss) * 100) / 100 : null,
+    expectancy: total > 0 ? Math.round((netPnl / total) * 100) / 100 : 0,
+    winRate,
+    avgWin: Math.round(avgWin * 100) / 100,
+    avgLoss: Math.round(avgLoss * 100) / 100,
+    realizedRR: avgLoss > 0 ? Math.round((avgWin / avgLoss) * 100) / 100 : null,
+    maxDrawdown: Math.round(maxDD * 100) / 100,
+    recoveryFactor: maxDD > 0 ? Math.round((netPnl / maxDD) * 100) / 100 : null,
+    totalTrades: total,
+  };
+
+  // Leak breakdown (attributable loss per behavior, de-duped per trade within a category)
+  const catLoss = {};
+  const catTrades = {};
+  Object.keys(CATS).forEach((k) => { catLoss[k] = { key: k, label: CATS[k].label, totalLoss: 0, count: 0 }; catTrades[k] = new Set(); });
+  evals.forEach((e) => {
+    if (e.outcome !== 'broken') return;
+    const cat = ruleToCat[e.rule_key];
+    if (!cat) return;
+    catLoss[cat].count++;
+    if (!catTrades[cat].has(e.trade_id)) {
+      catTrades[cat].add(e.trade_id);
+      const p = pnlById[e.trade_id];
+      if (Number.isFinite(p) && p < 0) catLoss[cat].totalLoss += Math.abs(p);
+    }
+  });
+  const leaks = Object.values(catLoss).filter((c) => c.count > 0).map((c) => ({ ...c, totalLoss: Math.round(c.totalLoss * 100) / 100 })).sort((a, b) => b.totalLoss - a.totalLoss);
+  const leakTotal = Math.round(leaks.reduce((a, c) => a + c.totalLoss, 0) * 100) / 100;
+  leaks.forEach((c) => { c.pct = leakTotal > 0 ? Math.round((c.totalLoss / leakTotal) * 100) : 0; });
+
+  const top = leaks[0] || null;
+  const problem = top ? { key: top.key, label: top.label, attributableLoss: top.totalLoss, violations: top.count, pctOfAttributable: top.pct, ruleKey: CAT_PRIMARY_RULE[top.key] || top.key } : null;
+
+  const archMap = { not_following_setup: 'The Impulsive Entry Trader', fomo: 'The FOMO Chaser', over_trading: 'The Over-Trader', over_sizing: 'The Over-Sizer', bad_sl: 'The Stop Mover', daily_loss_limit: 'The Tilt Trader' };
+  let archetype = (top && archMap[top.key]) ? archMap[top.key] : 'The Developing Trader';
+  if (score.score != null && score.score >= 75) archetype = 'The Disciplined Operator';
+
+  // Setup edge
+  const setupNameMap = {};
+  try { const { data: setups } = await supabase.from('setups').select('id, name').eq('user_id', user.id); (setups || []).forEach((s) => { setupNameMap[s.id] = s.name; }); } catch (e) {}
+  const setupStats = {};
+  trades.forEach((t) => {
+    const ids = Array.isArray(t.setup_ids) && t.setup_ids.length ? t.setup_ids : (t.setup ? [t.setup] : ['No Setup']);
+    ids.forEach((sid) => {
+      const name = setupNameMap[sid] || sid;
+      const s = setupStats[name] = setupStats[name] || { name, count: 0, wins: 0, totalPnl: 0 };
+      s.count++;
+      const p = Number(t.pnl);
+      if (Number.isFinite(p)) { s.totalPnl += p; if (p > 0) s.wins++; }
+    });
+  });
+  const setupsEdge = Object.values(setupStats).map((s) => ({ name: s.name, count: s.count, winRate: s.count ? Math.round((s.wins / s.count) * 100) : 0, avgPnl: s.count ? Math.round((s.totalPnl / s.count) * 100) / 100 : 0, totalPnl: Math.round(s.totalPnl * 100) / 100 })).sort((a, b) => b.count - a.count);
+
+  // Day x session heatmap
+  const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+  const sessionsSet = new Set();
+  const cellMap = {};
+  trades.forEach((t) => {
+    if (!t.trade_date) return;
+    const day = DAYS[new Date(t.trade_date + 'T00:00:00Z').getUTCDay()];
+    const session = t.session || '—';
+    sessionsSet.add(session);
+    const key = day + '|' + session;
+    const c = cellMap[key] = cellMap[key] || { pnl: 0, trades: 0 };
+    c.pnl += Number(t.pnl) || 0;
+    c.trades++;
+  });
+  const sessions = Array.from(sessionsSet);
+  const cells = [];
+  dayOrder.forEach((day) => sessions.forEach((session) => { const c = cellMap[day + '|' + session]; if (c) cells.push({ day, session, pnl: Math.round(c.pnl * 100) / 100, trades: c.trades }); }));
+  const heatmap = { days: dayOrder, sessions, cells };
+
+  // Post-loss velocity (by trade number + after win/loss)
+  const byDay2 = {};
+  trades.forEach((t) => { if (t.trade_date) (byDay2[t.trade_date] = byDay2[t.trade_date] || []).push(t); });
+  const numB = {};
+  Object.values(byDay2).forEach((list) => list.forEach((t, idx) => {
+    const k = idx < 2 ? String(idx + 1) : '3+';
+    const b = numB[k] = numB[k] || { trades: 0, wins: 0, sum: 0 };
+    b.trades++;
+    const p = Number(t.pnl);
+    if (Number.isFinite(p)) { b.sum += p; if (p > 0) b.wins++; }
+  }));
+  const numLabels = { '1': '1st', '2': '2nd', '3+': '3rd+' };
+  const byTradeNo = ['1', '2', '3+'].filter((k) => numB[k]).map((k) => { const b = numB[k]; return { label: numLabels[k], winRate: b.trades ? Math.round((b.wins / b.trades) * 100) : 0, avgPnl: b.trades ? Math.round((b.sum / b.trades) * 100) / 100 : 0, n: b.trades }; });
+  let alT = 0, alW = 0, awT = 0, awW = 0;
+  for (let i = 1; i < trades.length; i++) {
+    const prev = Number(trades[i - 1].pnl), cur = Number(trades[i].pnl);
+    if (!Number.isFinite(prev)) continue;
+    if (prev < 0) { alT++; if (Number.isFinite(cur) && cur > 0) alW++; }
+    else if (prev > 0) { awT++; if (Number.isFinite(cur) && cur > 0) awW++; }
+  }
+  const afterWin = { winRate: awT ? Math.round((awW / awT) * 100) : null, n: awT };
+  const afterLoss = { winRate: alT ? Math.round((alW / alT) * 100) : null, n: alT };
+  const tiltDrop = (afterWin.winRate != null && afterLoss.winRate != null) ? afterWin.winRate - afterLoss.winRate : null;
+  const postLoss = { byTradeNo, afterWin, afterLoss, tiltDrop };
+
+  const behaviorMeta = Object.entries(CATS).reduce((m, [k, c]) => { m[k] = { label: c.label }; return m; }, {});
+
+  return {
+    identity: { avatarUrl, initial, archetype },
+    metrics, score, problem, hasGuardrails,
+    series, behaviorMeta,
+    leaks, leakTotal,
+    setups: setupsEdge,
+    heatmap, postLoss,
+    totalTrades: total,
+  };
+}
+
 /* ─── AI Explanation (on-demand, cached) ──── */
 
 export async function fetchAIExplanation(analysisType, preset) {
