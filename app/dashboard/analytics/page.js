@@ -234,11 +234,38 @@ function Radar({ points }) {
 
 /* ─── Overview ──── */
 
+function AnimatedRadar({ points, size = 240 }) {
+  const n = points.length;
+  if (n < 3) return null;
+  const cx = size / 2, cy = size / 2, R = size * 0.30;
+  const ang = (i) => (-Math.PI / 2) + (i * 2 * Math.PI / n);
+  const pt = (i, r) => [cx + r * Math.cos(ang(i)), cy + r * Math.sin(ang(i))];
+  const rings = [0.33, 0.66, 1].map((f, k) => (
+    <polygon key={'r' + k} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="1" points={points.map((_, i) => pt(i, R * f).join(',')).join(' ')} />
+  ));
+  const axes = points.map((_, i) => { const a = pt(i, R); return <line key={'a' + i} x1={cx} y1={cy} x2={a[0]} y2={a[1]} stroke="rgba(255,255,255,0.22)" strokeWidth="1" />; });
+  const poly = points.map((p, i) => pt(i, R * (Math.max(0, Math.min(100, p.value)) / 100)).join(',')).join(' ');
+  const origin = cx + 'px ' + cy + 'px';
+  return (
+    <>
+      <style>{'@keyframes radarSpin{to{transform:rotate(360deg)}}@keyframes radarIn{from{transform:scale(0.2);opacity:0}to{transform:scale(1);opacity:1}}'}</style>
+      <svg width={size} height={size} viewBox={'0 0 ' + size + ' ' + size} className="flex-none">
+        <defs><linearGradient id="arf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8b7cf6" /><stop offset="1" stopColor="#22d3ee" /></linearGradient></defs>
+        <circle cx={cx} cy={cy} r={R + 16} fill="none" stroke="rgba(139,124,246,0.35)" strokeWidth="1" strokeDasharray="3 9" style={{ transformOrigin: origin, animation: 'radarSpin 26s linear infinite' }} />
+        {rings}{axes}
+        <polygon points={poly} fill="url(#arf)" fillOpacity="0.45" stroke="#a78bfa" strokeWidth="2" style={{ transformOrigin: origin, animation: 'radarIn 0.8s cubic-bezier(0.2,0.8,0.2,1) both' }} />
+        {points.map((p, i) => { const a = pt(i, R * (Math.max(0, Math.min(100, p.value)) / 100)); return <circle key={'d' + i} cx={a[0]} cy={a[1]} r="3" fill="#c4b5fd" />; })}
+        {points.map((p, i) => { const a = pt(i, R + 24); return <text key={'l' + i} x={a[0]} y={a[1]} textAnchor="middle" dominantBaseline="middle" fontSize="11" fontWeight="500" fill="rgba(255,255,255,0.82)">{p.short}</text>; })}
+      </svg>
+    </>
+  );
+}
+
 function KpiCard({ value, label, tone }) {
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
-      <div className={'text-2xl font-extrabold tracking-tight ' + (tone || 'text-white')}>{value}</div>
-      <div className="mt-1 text-[11px] uppercase tracking-[0.07em] text-white/40">{label}</div>
+    <div className="flex min-h-[118px] flex-col justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5">
+      <div className={'text-3xl font-extrabold tracking-tight ' + (tone || 'text-white')}>{value}</div>
+      <div className="mt-1.5 text-[11px] uppercase tracking-[0.08em] text-white/40">{label}</div>
     </div>
   );
 }
@@ -257,7 +284,7 @@ function OverviewTab({ data }) {
 
   return (
     <Card>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto]">
+      <div className="grid items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)_auto]">
         {/* Left — big circle + #1 focus + fix */}
         <div className="flex flex-col items-start gap-4">
           <div className="mx-auto lg:mx-0"><ScoreDial value={sc.score} delta={sc.delta} provisional={sc.provisional} size={168} /></div>
@@ -274,7 +301,7 @@ function OverviewTab({ data }) {
         </div>
 
         {/* Middle — 2x2 KPI cards */}
-        <div className="grid grid-cols-2 content-center gap-3">
+        <div className="grid h-full grid-cols-2 grid-rows-2 gap-3">
           <KpiCard value={total} label="Total Trades" />
           <KpiCard value={<>{sc.cleanTrades != null ? sc.cleanTrades : '—'}<span className="text-base text-white/30">/{total}</span></>} label="Rules Kept" />
           <KpiCard value={rate + '%'} label="Breach Rate" tone={rate > 0 ? 'text-red-400' : 'text-emerald-400'} />
@@ -284,7 +311,7 @@ function OverviewTab({ data }) {
         {/* Right — discipline radar (cone) */}
         <div className="flex items-center justify-center">
           {radarPoints.length >= 3
-            ? <Radar points={radarPoints} />
+            ? <AnimatedRadar points={radarPoints} size={240} />
             : <div className="text-center text-[11px] leading-relaxed text-white/30">Discipline radar<br />unlocks with more<br />rule data</div>}
         </div>
       </div>
