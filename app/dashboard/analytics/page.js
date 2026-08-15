@@ -237,34 +237,35 @@ function Radar({ points }) {
 function AnimatedRadar({ points, size = 240 }) {
   const n = points.length;
   if (n < 3) return null;
-  const cx = size / 2, cy = size / 2, R = size * 0.30;
+  const cx = size / 2, cy = size / 2, R = size * 0.34;
   const ang = (i) => (-Math.PI / 2) + (i * 2 * Math.PI / n);
   const pt = (i, r) => [cx + r * Math.cos(ang(i)), cy + r * Math.sin(ang(i))];
   const rings = [0.33, 0.66, 1].map((f, k) => (
-    <polygon key={'r' + k} fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="1" points={points.map((_, i) => pt(i, R * f).join(',')).join(' ')} />
+    <polygon key={'r' + k} fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1" points={points.map((_, i) => pt(i, R * f).join(',')).join(' ')} />
   ));
-  const axes = points.map((_, i) => { const a = pt(i, R); return <line key={'a' + i} x1={cx} y1={cy} x2={a[0]} y2={a[1]} stroke="rgba(255,255,255,0.22)" strokeWidth="1" />; });
+  const axes = points.map((_, i) => { const a = pt(i, R); return <line key={'a' + i} x1={cx} y1={cy} x2={a[0]} y2={a[1]} stroke="rgba(255,255,255,0.28)" strokeWidth="1" />; });
   const poly = points.map((p, i) => pt(i, R * (Math.max(0, Math.min(100, p.value)) / 100)).join(',')).join(' ');
   const origin = cx + 'px ' + cy + 'px';
   return (
     <>
-      <style>{'@keyframes radarSpin{to{transform:rotate(360deg)}}@keyframes radarIn{from{transform:scale(0.2);opacity:0}to{transform:scale(1);opacity:1}}'}</style>
+      <style>{'@keyframes radarSpin{to{transform:rotate(360deg)}}@keyframes radarIn{from{transform:scale(0.2);opacity:0}to{transform:scale(1);opacity:1}}@keyframes radarGlow{0%,100%{opacity:.85}50%{opacity:1}}'}</style>
       <svg width={size} height={size} viewBox={'0 0 ' + size + ' ' + size} className="flex-none">
         <defs><linearGradient id="arf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8b7cf6" /><stop offset="1" stopColor="#22d3ee" /></linearGradient></defs>
-        <circle cx={cx} cy={cy} r={R + 16} fill="none" stroke="rgba(139,124,246,0.35)" strokeWidth="1" strokeDasharray="3 9" style={{ transformOrigin: origin, animation: 'radarSpin 26s linear infinite' }} />
+        <circle cx={cx} cy={cy} r={R + 20} fill="none" stroke="rgba(139,124,246,0.4)" strokeWidth="1.5" strokeDasharray="3 9" style={{ transformOrigin: origin, animation: 'radarSpin 22s linear infinite' }} />
         {rings}{axes}
-        <polygon points={poly} fill="url(#arf)" fillOpacity="0.45" stroke="#a78bfa" strokeWidth="2" style={{ transformOrigin: origin, animation: 'radarIn 0.8s cubic-bezier(0.2,0.8,0.2,1) both' }} />
-        {points.map((p, i) => { const a = pt(i, R * (Math.max(0, Math.min(100, p.value)) / 100)); return <circle key={'d' + i} cx={a[0]} cy={a[1]} r="3" fill="#c4b5fd" />; })}
-        {points.map((p, i) => { const a = pt(i, R + 24); return <text key={'l' + i} x={a[0]} y={a[1]} textAnchor="middle" dominantBaseline="middle" fontSize="11" fontWeight="500" fill="rgba(255,255,255,0.82)">{p.short}</text>; })}
+        <polygon points={poly} fill="url(#arf)" fillOpacity="0.5" stroke="#c4b5fd" strokeWidth="2.5" style={{ transformOrigin: origin, animation: 'radarIn 0.8s cubic-bezier(0.2,0.8,0.2,1) both, radarGlow 3.5s ease-in-out 0.9s infinite' }} />
+        {points.map((p, i) => { const a = pt(i, R * (Math.max(0, Math.min(100, p.value)) / 100)); return <circle key={'d' + i} cx={a[0]} cy={a[1]} r="3.5" fill="#e9d5ff" />; })}
+        {points.map((p, i) => { const a = pt(i, R + 26); return <text key={'l' + i} x={a[0]} y={a[1]} textAnchor="middle" dominantBaseline="middle" fontSize="12" fontWeight="500" fill="rgba(255,255,255,0.9)">{p.short}</text>; })}
       </svg>
     </>
   );
 }
 
-function KpiCard({ value, label, tone }) {
+function KpiCard({ value, label, tone, sub }) {
   return (
-    <div className="flex min-h-[118px] flex-col justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] p-5">
-      <div className={'text-3xl font-extrabold tracking-tight ' + (tone || 'text-white')}>{value}</div>
+    <div className="flex min-h-[104px] flex-col justify-center rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 sm:p-5">
+      <div className={'text-2xl font-extrabold leading-tight tracking-tight sm:text-3xl ' + (tone || 'text-white')}>{value}</div>
+      {sub && <div className="mt-0.5 text-[11px] text-white/45">{sub}</div>}
       <div className="mt-1.5 text-[11px] uppercase tracking-[0.08em] text-white/40">{label}</div>
     </div>
   );
@@ -282,12 +283,22 @@ function OverviewTab({ data }) {
   const SHORT = { rule_adherence: 'Rules', setup_adherence: 'Setup', post_loss_discipline: 'Post-loss', risk_consistency: 'Risk' };
   const radarPoints = (sc.dimensions || []).filter((d) => d.hasData).map((d) => ({ short: SHORT[d.key] || d.label, value: d.value }));
 
+  // Extra quick-glance KPIs (from data already loaded for the overview)
+  const netPnl = data.loss && typeof data.loss.currentPnl === 'number' ? data.loss.currentPnl : null;
+  const weekdays = (data.pattern && Array.isArray(data.pattern.weekdays)) ? data.pattern.weekdays : [];
+  const wSum = weekdays.reduce((a, w) => ({ wins: a.wins + (w.wins || 0), trades: a.trades + (w.trades || 0) }), { wins: 0, trades: 0 });
+  const winRate = wSum.trades > 0 ? Math.round((wSum.wins / wSum.trades) * 100) : null;
+  const SHORT_DAY = { Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed', Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun' };
+  const bestWd = weekdays.length ? weekdays.slice().sort((a, b) => b.pnl - a.pnl)[0] : null;
+  const setupList = (data.setups && Array.isArray(data.setups.setups)) ? data.setups.setups : [];
+  const topSetup = setupList.length ? setupList[0] : null;
+
   return (
     <Card>
-      <div className="grid items-stretch gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,360px)_auto]">
+      <div className="grid items-stretch gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)_auto]">
         {/* Left — big circle + #1 focus + fix */}
         <div className="flex flex-col items-start gap-4">
-          <div className="mx-auto lg:mx-0"><ScoreDial value={sc.score} delta={sc.delta} provisional={sc.provisional} size={168} /></div>
+          <div className="mx-auto lg:mx-0"><ScoreDial value={sc.score} delta={sc.delta} provisional={sc.provisional} size={172} /></div>
           {pr ? (
             <div>
               <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#fb7185]">Your #1 focus</div>
@@ -300,18 +311,22 @@ function OverviewTab({ data }) {
           )}
         </div>
 
-        {/* Middle — 2x2 KPI cards */}
-        <div className="grid h-full grid-cols-2 grid-rows-2 gap-3">
+        {/* Middle — quick-glance KPI grid */}
+        <div className="grid grid-cols-2 gap-3">
           <KpiCard value={total} label="Total Trades" />
-          <KpiCard value={<>{sc.cleanTrades != null ? sc.cleanTrades : '—'}<span className="text-base text-white/30">/{total}</span></>} label="Rules Kept" />
+          <KpiCard value={netPnl != null ? (netPnl >= 0 ? '+' : '-') + moneyShort(netPnl) : '—'} label="Net P&L" tone={netPnl != null ? (netPnl >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white'} />
+          <KpiCard value={winRate != null ? winRate + '%' : '—'} label="Win Rate" tone={winRate != null && winRate >= 50 ? 'text-emerald-400' : 'text-white'} />
+          <KpiCard value={<>{sc.cleanTrades != null ? sc.cleanTrades : '—'}<span className="text-lg text-white/30">/{total}</span></>} label="Rules Kept" />
           <KpiCard value={rate + '%'} label="Breach Rate" tone={rate > 0 ? 'text-red-400' : 'text-emerald-400'} />
           <KpiCard value={st ? st.rate + '%' : '—'} label="Best Habit" tone="text-emerald-400" />
+          <KpiCard value={topSetup ? <span className="text-lg font-bold">{topSetup.name}</span> : '—'} sub={topSetup ? topSetup.count + ' trades' : null} label="Most-used Setup" />
+          <KpiCard value={bestWd ? SHORT_DAY[bestWd.day] || bestWd.day : '—'} sub={bestWd ? (bestWd.pnl >= 0 ? '+' : '') + moneyShort(bestWd.pnl) : null} label="Best Day" tone={bestWd && bestWd.pnl >= 0 ? 'text-emerald-400' : 'text-white'} />
         </div>
 
         {/* Right — discipline radar (cone) */}
         <div className="flex items-center justify-center">
           {radarPoints.length >= 3
-            ? <AnimatedRadar points={radarPoints} size={240} />
+            ? <AnimatedRadar points={radarPoints} size={300} />
             : <div className="text-center text-[11px] leading-relaxed text-white/30">Discipline radar<br />unlocks with more<br />rule data</div>}
         </div>
       </div>
@@ -670,8 +685,8 @@ export default function AnalyticsPage() {
     setLoading(true);
     let result;
     if (t === 'overview') {
-      const [v2, loss, pattern] = await Promise.all([fetchAnalyticsOverviewV2(p), fetchLossAttribution(p), fetchDayPatternAnalytics(p)]);
-      result = { ...(v2 || {}), loss, pattern };
+      const [v2, loss, pattern, setups] = await Promise.all([fetchAnalyticsOverviewV2(p), fetchLossAttribution(p), fetchDayPatternAnalytics(p), fetchSetupAnalytics(p)]);
+      result = { ...(v2 || {}), loss, pattern, setups };
     } else if (t === 'setups') { result = await fetchSetupAnalytics(p); }
     else if (t === 'breaches') { result = await fetchRuleBreachAnalytics(p); }
     else if (t === 'patterns') { result = await fetchDayPatternAnalytics(p); }
