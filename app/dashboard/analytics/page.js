@@ -234,6 +234,15 @@ function Radar({ points }) {
 
 /* ─── Overview ──── */
 
+function KpiCard({ value, label, tone }) {
+  return (
+    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4">
+      <div className={'text-2xl font-extrabold tracking-tight ' + (tone || 'text-white')}>{value}</div>
+      <div className="mt-1 text-[11px] uppercase tracking-[0.07em] text-white/40">{label}</div>
+    </div>
+  );
+}
+
 function OverviewTab({ data }) {
   if (!data) return <LoadingState />;
   if (data.error) return <ErrorCard error={data.error} />;
@@ -243,28 +252,42 @@ function OverviewTab({ data }) {
   const pr = data.problem;
   const st = data.strength;
   const rate = Math.round(((data.uniqueBreachedTrades || 0) / total) * 100);
+  const SHORT = { rule_adherence: 'Rules', setup_adherence: 'Setup', post_loss_discipline: 'Post-loss', risk_consistency: 'Risk' };
+  const radarPoints = (sc.dimensions || []).filter((d) => d.hasData).map((d) => ({ short: SHORT[d.key] || d.label, value: d.value }));
+
   return (
     <Card>
-      <div className="grid items-center gap-8 sm:grid-cols-[auto_1fr]">
-        <div className="mx-auto sm:mx-0"><ScoreDial value={sc.score} delta={sc.delta} provisional={sc.provisional} /></div>
-        {pr ? (
-          <FocusStatement
-            tag="Your #1 focus"
-            title={LEAK_HEADLINE[pr.key] || pr.label}
-            detail={<>It&#39;s cost you <b className="font-mono text-white">-{moneyShort(pr.attributableLoss)}</b> across <b className="text-white">{pr.violations}</b> trades — {pr.pctOfAttributable}% of everything you&#39;ve lost to rule-breaks.</>}
-            ctaLabel="Fix this rule →"
-            ctaHref="/dashboard/rulebook"
-          />
-        ) : (
-          <div><KLabel>Nice</KLabel><Lead>No rule-break leak this period. Keep it clean. 🎯</Lead></div>
-        )}
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)_auto]">
+        {/* Left — big circle + #1 focus + fix */}
+        <div className="flex flex-col items-start gap-4">
+          <div className="mx-auto lg:mx-0"><ScoreDial value={sc.score} delta={sc.delta} provisional={sc.provisional} size={168} /></div>
+          {pr ? (
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#fb7185]">Your #1 focus</div>
+              <div className="mt-1.5 text-xl font-bold leading-[1.15] tracking-tight sm:text-2xl">{LEAK_HEADLINE[pr.key] || pr.label}</div>
+              <p className="mt-1.5 text-sm leading-relaxed text-white/55">It&#39;s cost you <b className="font-mono text-white">-{moneyShort(pr.attributableLoss)}</b> across <b className="text-white">{pr.violations}</b> trades — {pr.pctOfAttributable}% of your rule-break losses.</p>
+              <Link href="/dashboard/rulebook" className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee] px-4 py-2.5 text-[13px] font-bold text-[#0a0a12]">Fix this rule →</Link>
+            </div>
+          ) : (
+            <div><KLabel>Nice</KLabel><Lead>No rule-break leak this period. Keep it clean. 🎯</Lead></div>
+          )}
+        </div>
+
+        {/* Middle — 2x2 KPI cards */}
+        <div className="grid grid-cols-2 content-center gap-3">
+          <KpiCard value={total} label="Total Trades" />
+          <KpiCard value={<>{sc.cleanTrades != null ? sc.cleanTrades : '—'}<span className="text-base text-white/30">/{total}</span></>} label="Rules Kept" />
+          <KpiCard value={rate + '%'} label="Breach Rate" tone={rate > 0 ? 'text-red-400' : 'text-emerald-400'} />
+          <KpiCard value={st ? st.rate + '%' : '—'} label="Best Habit" tone="text-emerald-400" />
+        </div>
+
+        {/* Right — discipline radar (cone) */}
+        <div className="flex items-center justify-center">
+          {radarPoints.length >= 3
+            ? <Radar points={radarPoints} />
+            : <div className="text-center text-[11px] leading-relaxed text-white/30">Discipline radar<br />unlocks with more<br />rule data</div>}
+        </div>
       </div>
-      <KpiRow items={[
-        { v: total, l: 'Trades' },
-        { v: <>{sc.cleanTrades != null ? sc.cleanTrades : '—'}<span className="text-base text-white/30">/{total}</span></>, l: 'Rules kept' },
-        { v: rate + '%', l: 'Breach rate', tone: rate > 0 ? 'text-red-400' : 'text-emerald-400' },
-        ...(st ? [{ v: st.rate + '%', l: 'Best habit', tone: 'text-emerald-400' }] : []),
-      ]} />
     </Card>
   );
 }
