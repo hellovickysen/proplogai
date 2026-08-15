@@ -19,10 +19,7 @@ import {
 /* ─── Config ──── */
 
 const PRESETS = [
-  { key: 'this_week', label: 'Week' },
-  { key: 'last_week', label: 'Last wk' },
-  { key: 'this_month', label: 'Month' },
-  { key: 'this_year', label: 'Year' },
+  { key: 'this_month', label: 'This month' },
   { key: 'all', label: 'All time' },
 ];
 
@@ -670,7 +667,7 @@ function AITab({ data, preset }) {
 
 export default function AnalyticsPage() {
   const [tab, setTab] = useState('overview');
-  const [preset, setPreset] = useState('all');
+  const [preset, setPreset] = useState('this_month');
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
@@ -729,7 +726,7 @@ export default function AnalyticsPage() {
         <button onClick={handleBackfill} disabled={backfilling} className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 hover:text-white disabled:opacity-50">{backfilling ? 'Evaluating…' : 'Re-evaluate'}</button>
       </div>
 
-      <div className="mb-7 flex gap-6 overflow-x-auto border-b border-white/[0.07]">
+      <div className="mb-7 flex gap-6 overflow-x-auto border-b border-white/[0.07] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)} className={'relative whitespace-nowrap pb-3 text-[13px] font-medium transition-colors ' + (tab === t.key ? 'text-white' : 'text-white/35 hover:text-white/60')}>
             {t.label}
