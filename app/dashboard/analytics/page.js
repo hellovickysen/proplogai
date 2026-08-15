@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
+  fetchCommandCenter,
   fetchAnalyticsOverviewV2,
   fetchSetupAnalytics,
   fetchRuleBreachAnalytics,
@@ -19,7 +20,10 @@ import {
 /* ─── Config ──── */
 
 const PRESETS = [
-  { key: 'this_month', label: 'This month' },
+  { key: 'this_week', label: 'Week' },
+  { key: 'last_week', label: 'Last wk' },
+  { key: 'this_month', label: 'Month' },
+  { key: 'this_year', label: 'Year' },
   { key: 'all', label: 'All time' },
 ];
 
@@ -268,61 +272,125 @@ function KpiCard({ value, label, tone, sub }) {
   );
 }
 
+function DualEquityCurve({ series, excluded }) {
+  if (!series || series.length === 0) return <div className="py-10 text-center text-xs text-white/30">No trades to chart.</div>;
+  let a = 0, d = 0; const A = [], D = [];
+  series.forEach((s) => {
+    a += s.pnl;
+    const broken = s.broken && s.broken.some((b) => excluded.has(b));
+    if (!broken) d += s.pnl;
+    A.push(a); D.push(d);
+  });
+  const all = A.concat(excluded.size > 0 ? D : []).concat([0]);
+  const min = Math.min(...all), max = Math.max(...all);
+  const W = 640, H = 200, pad = 6;
+  const n = series.length;
+  const x = (i) => pad + (n > 1 ? i / (n - 1) : 0) * (W - 2 * pad);
+  const y = (v) => { const r = (max - min) || 1; return H - pad - ((v - min) / r) * (H - 2 * pad); };
+  const toLine = (arr) => arr.map((v, i) => x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
+  const actualPos = A[A.length - 1] >= 0;
+  return (
+    <svg viewBox={'0 0 ' + W + ' ' + H} className="w-full" style={{ height: 200 }} preserveAspectRatio="none">
+      <line x1={pad} y1={y(0)} x2={W - pad} y2={y(0)} stroke="rgba(255,255,255,0.12)" strokeWidth="1" />
+      {excluded.size > 0 && <polyline points={toLine(D)} fill="none" stroke="#22d3ee" strokeWidth="2" strokeDasharray="5 5" vectorEffect="non-scaling-stroke" />}
+      <polyline points={toLine(A)} fill="none" stroke={actualPos ? '#34d399' : '#fb7185'} strokeWidth="2.5" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
 function OverviewTab({ data }) {
+  const [excluded, setExcluded] = useState(() => new Set());
+  useEffect(() => { setExcluded(new Set()); }, [data]);
   if (!data) return <LoadingState />;
   if (data.error) return <ErrorCard error={data.error} />;
-  const total = data.totalTrades || 0;
-  if (total === 0) return <EmptyState message="No trades in this period yet. Log some trades to meet your analytics." />;
-  const sc = data.disciplineScore || {};
+  if (data.empty || (data.totalTrades || 0) === 0) return <EmptyState message="No trades in this period yet. Log some trades to meet your analytics." />;
+
+  const m = data.metrics || {};
+  const sc = data.score || {};
   const pr = data.problem;
-  const rate = Math.round(((data.uniqueBreachedTrades || 0) / total) * 100);
+  const id = data.identity || {};
+  const series = Array.isArray(data.series) ? data.series : [];
+  const leaks = Array.isArray(data.leaks) ? data.leaks : [];
+  const leakTotal = data.leakTotal || 0;
   const SHORT = { rule_adherence: 'Rules', setup_adherence: 'Setup', post_loss_discipline: 'Post-loss', risk_consistency: 'Risk' };
   const radarPoints = (sc.dimensions || []).filter((d) => d.hasData).map((d) => ({ short: SHORT[d.key] || d.label, value: d.value }));
 
-  // Extra quick-glance KPIs (from data already loaded for the overview)
-  const netPnl = data.loss && typeof data.loss.currentPnl === 'number' ? data.loss.currentPnl : null;
-  const weekdays = (data.pattern && Array.isArray(data.pattern.weekdays)) ? data.pattern.weekdays : [];
-  const wSum = weekdays.reduce((a, w) => ({ wins: a.wins + (w.wins || 0), trades: a.trades + (w.trades || 0) }), { wins: 0, trades: 0 });
-  const winRate = wSum.trades > 0 ? Math.round((wSum.wins / wSum.trades) * 100) : null;
-  const setupList = (data.setups && Array.isArray(data.setups.setups)) ? data.setups.setups : [];
-  const topSetup = setupList.length ? setupList[0] : null;
+  // Live what-if recompute over the per-trade series
+  let liveNet = 0, liveWins = 0, liveN = 0;
+  series.forEach((s) => { const broken = s.broken && s.broken.some((b) => excluded.has(b)); if (!broken) { liveNet += s.pnl; liveN++; if (s.pnl > 0) liveWins++; } });
+  const simActive = excluded.size > 0;
+  const shownNet = simActive ? Math.round(liveNet * 100) / 100 : (m.netPnl || 0);
+  const shownWin = simActive ? (liveN ? Math.round((liveWins / liveN) * 100) : 0) : (m.winRate || 0);
+  const disciplinedNet = Math.round(liveNet * 100) / 100;
+  const delta = Math.round((disciplinedNet - (m.netPnl || 0)) * 100) / 100;
+
+  function toggle(key) {
+    setExcluded((prev) => { const next = new Set(prev); if (next.has(key)) next.delete(key); else next.add(key); return next; });
+  }
+
+  const scoreTone = sc.score == null ? 'text-white/50' : sc.score >= 70 ? 'text-emerald-400' : sc.score >= 45 ? 'text-amber-400' : 'text-red-400';
 
   return (
-    <Card>
-      <div className="grid items-stretch gap-6 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)_auto]">
-        {/* Left — big circle + #1 focus + fix */}
-        <div className="flex flex-col items-start gap-4">
-          <div className="mx-auto lg:mx-0"><ScoreDial value={sc.score} delta={sc.delta} provisional={sc.provisional} size={172} /></div>
-          {pr ? (
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[#fb7185]">Your #1 focus</div>
-              <div className="mt-1.5 text-xl font-bold leading-[1.15] tracking-tight sm:text-2xl">{LEAK_HEADLINE[pr.key] || pr.label}</div>
-              <p className="mt-1.5 text-sm leading-relaxed text-white/55">It&#39;s cost you <b className="font-mono text-white">-{moneyShort(pr.attributableLoss)}</b> across <b className="text-white">{pr.violations}</b> trades — {pr.pctOfAttributable}% of your rule-break losses.</p>
-              <Link href="/dashboard/rulebook" className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee] px-4 py-2.5 text-[13px] font-bold text-[#0a0a12]">Fix this rule →</Link>
-            </div>
-          ) : (
-            <div><KLabel>Nice</KLabel><Lead>No rule-break leak this period. Keep it clean. 🎯</Lead></div>
-          )}
-        </div>
-
-        {/* Middle — 3x2 quick-glance KPI grid */}
-        <div className="grid grid-cols-2 gap-3 md:h-full md:grid-cols-3 md:grid-rows-2">
-          <KpiCard value={total} label="Total Trades" />
-          <KpiCard value={netPnl != null ? (netPnl >= 0 ? '+' : '-') + moneyShort(netPnl) : '—'} label="Net P&L" tone={netPnl != null ? (netPnl >= 0 ? 'text-emerald-400' : 'text-red-400') : 'text-white'} />
-          <KpiCard value={winRate != null ? winRate + '%' : '—'} label="Win Rate" tone={winRate != null && winRate >= 50 ? 'text-emerald-400' : 'text-white'} />
-          <KpiCard value={<>{sc.cleanTrades != null ? sc.cleanTrades : '—'}<span className="text-lg text-white/30">/{total}</span></>} label="Rules Kept" />
-          <KpiCard value={rate + '%'} label="Breach Rate" tone={rate > 0 ? 'text-red-400' : 'text-emerald-400'} />
-          <KpiCard value={topSetup ? <span className="text-lg font-bold">{topSetup.name}</span> : '—'} sub={topSetup ? topSetup.count + ' trades' : null} label="Most-used Setup" />
-        </div>
-
-        {/* Right — discipline radar (cone) */}
-        <div className="flex items-center justify-center">
-          {radarPoints.length >= 3
-            ? <AnimatedRadar points={radarPoints} size={300} />
-            : <div className="text-center text-[11px] leading-relaxed text-white/30">Discipline radar<br />unlocks with more<br />rule data</div>}
-        </div>
+    <div className="space-y-4">
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+        <KpiCard value={<span className={scoreTone}>{sc.score != null ? sc.score : '—'}</span>} sub={sc.provisional ? 'provisional' : 'of 100'} label="Discipline Index" />
+        <KpiCard value={(shownNet >= 0 ? '+' : '-') + moneyShort(shownNet)} tone={shownNet >= 0 ? 'text-emerald-400' : 'text-red-400'} sub={(simActive ? 'simulated · ' : '') + 'PF ' + (m.profitFactor != null ? m.profitFactor : '—')} label="Net P&L" />
+        <KpiCard value={shownWin + '%'} tone={shownWin >= 50 ? 'text-emerald-400' : 'text-white'} sub={'Exp ' + (m.expectancy >= 0 ? '+' : '') + moneyShort(m.expectancy) + '/t'} label="Win Rate" />
+        <KpiCard value={'-' + moneyShort(leakTotal)} tone="text-red-400" sub={leaks.length + ' leak' + (leaks.length === 1 ? '' : 's')} label="Leak Cost" />
+        <KpiCard value={m.realizedRR != null ? '1:' + m.realizedRR : '—'} sub="avg win / loss" label="Realized R:R" />
       </div>
-    </Card>
+
+      {/* Center split — equity curve + profile/radar */}
+      <div className="grid gap-4 lg:grid-cols-[1.55fr_1fr]">
+        <Card>
+          <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+            <SectionTitle emoji="📈">The cost of indiscipline</SectionTitle>
+          </div>
+          {leaks.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {leaks.map((l) => (
+                <button key={l.key} onClick={() => toggle(l.key)}
+                  className={'rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all ' + (excluded.has(l.key) ? 'bg-[#22d3ee]/20 text-[#67e8f9] ring-1 ring-[#22d3ee]/40' : 'bg-white/[0.04] text-white/50 hover:text-white/75')}>
+                  Hide {l.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <DualEquityCurve series={series} excluded={excluded} />
+          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-[11px]">
+            <span className="flex items-center gap-1.5 text-white/60"><span className="inline-block h-0.5 w-4" style={{ background: (m.netPnl || 0) >= 0 ? '#34d399' : '#fb7185' }} />Actual <b className="font-mono text-white/80">{(m.netPnl || 0) >= 0 ? '+' : '-'}{moneyShort(m.netPnl || 0)}</b></span>
+            {simActive && <span className="flex items-center gap-1.5 text-white/60"><span className="inline-block h-0 w-4 border-t-2 border-dashed border-[#22d3ee]" />Without hidden <b className="font-mono text-white/80">{disciplinedNet >= 0 ? '+' : '-'}{moneyShort(disciplinedNet)}</b> <span className={delta >= 0 ? 'text-emerald-400' : 'text-red-400'}>({delta >= 0 ? '+' : ''}{moneyShort(delta)})</span></span>}
+          </div>
+          <div className="mt-2 text-[11px] text-white/35">Toggle a behavior to see how those trades shaped your results — a historical simulation, not a prediction.</div>
+        </Card>
+
+        <Card>
+          <div className="flex items-center gap-3">
+            {id.avatarUrl
+              ? <img src={id.avatarUrl} alt="" className="h-12 w-12 flex-none rounded-full object-cover" />
+              : <div className="grid h-12 w-12 flex-none place-items-center rounded-full bg-gradient-to-br from-[#8b7cf6] to-[#22d3ee] text-xl font-extrabold text-[#0a0a12]">{id.initial || '?'}</div>}
+            <div>
+              <div className="text-[11px] uppercase tracking-[0.1em] text-white/40">Your profile</div>
+              <div className="text-lg font-bold tracking-tight">{id.archetype || 'Trader'}</div>
+            </div>
+          </div>
+          <div className="mt-3 flex justify-center">
+            {radarPoints.length >= 3
+              ? <AnimatedRadar points={radarPoints} size={220} />
+              : <div className="py-8 text-center text-[11px] text-white/30">Radar unlocks with more rule data</div>}
+          </div>
+          {pr && (
+            <div className="mt-2 rounded-2xl border border-[#fb7185]/20 bg-[#fb7185]/[0.05] p-3">
+              <div className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#fb7185]">Your #1 focus</div>
+              <div className="mt-1 text-sm font-semibold text-white">{LEAK_HEADLINE[pr.key] || pr.label}</div>
+              <div className="mt-0.5 text-[11px] text-white/50">-{moneyShort(pr.attributableLoss)} · {pr.pctOfAttributable}% of leak cost</div>
+              <Link href="/dashboard/rulebook" className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-[#c4b5fd] hover:text-white">Fix this rule →</Link>
+            </div>
+          )}
+        </Card>
+      </div>
+    </div>
   );
 }
 
@@ -667,7 +735,7 @@ function AITab({ data, preset }) {
 
 export default function AnalyticsPage() {
   const [tab, setTab] = useState('overview');
-  const [preset, setPreset] = useState('this_month');
+  const [preset, setPreset] = useState('all');
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(false);
   const [backfilling, setBackfilling] = useState(false);
@@ -677,8 +745,7 @@ export default function AnalyticsPage() {
     setLoading(true);
     let result;
     if (t === 'overview') {
-      const [v2, loss, pattern, setups] = await Promise.all([fetchAnalyticsOverviewV2(p), fetchLossAttribution(p), fetchDayPatternAnalytics(p), fetchSetupAnalytics(p)]);
-      result = { ...(v2 || {}), loss, pattern, setups };
+      result = await fetchCommandCenter(p);
     } else if (t === 'setups') { result = await fetchSetupAnalytics(p); }
     else if (t === 'breaches') { result = await fetchRuleBreachAnalytics(p); }
     else if (t === 'patterns') { result = await fetchDayPatternAnalytics(p); }
@@ -726,7 +793,7 @@ export default function AnalyticsPage() {
         <button onClick={handleBackfill} disabled={backfilling} className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/70 hover:text-white disabled:opacity-50">{backfilling ? 'Evaluating…' : 'Re-evaluate'}</button>
       </div>
 
-      <div className="mb-7 flex gap-6 overflow-x-auto border-b border-white/[0.07] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mb-7 flex gap-6 overflow-x-auto border-b border-white/[0.07]">
         {TABS.map((t) => (
           <button key={t.key} onClick={() => setTab(t.key)} className={'relative whitespace-nowrap pb-3 text-[13px] font-medium transition-colors ' + (tab === t.key ? 'text-white' : 'text-white/35 hover:text-white/60')}>
             {t.label}
