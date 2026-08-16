@@ -4,9 +4,7 @@ import CookieBanner from '@/components/landing/CookieBanner';
 import LandingFooter from '@/components/landing/LandingFooter';
 import DeferredMotion from '@/components/landing/DeferredMotion';
 import HeroSection from '@/components/landing/sections/HeroSection';
-import ThirtyDaySystemSection from '@/components/landing/sections/ThirtyDaySystemSection';
-import PainSection from '@/components/landing/sections/PainSection';
-import SolutionSection from '@/components/landing/sections/SolutionSection';
+import LoopSection from '@/components/landing/sections/LoopSection';
 import ShowcaseSection from '@/components/landing/sections/ShowcaseSection';
 import FeaturesSection from '@/components/landing/sections/FeaturesSection';
 import PricingSection from '@/components/landing/sections/PricingSection';
@@ -23,9 +21,7 @@ export default function Home() {
       <LandingNav logo={<Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />} />
 
       <HeroSection />
-      <ThirtyDaySystemSection />
-      <PainSection />
-      <SolutionSection />
+      <LoopSection />
       <ShowcaseSection />
       <FeaturesSection />
       <PricingSection />
