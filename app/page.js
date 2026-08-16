@@ -5,49 +5,73 @@ import CookieBanner from '@/components/landing/CookieBanner';
 import LandingFooter from '@/components/landing/LandingFooter';
 import DeferredMotion from '@/components/landing/DeferredMotion';
 import HeroSection from '@/components/landing/sections/HeroSection';
-import JourneySection from '@/components/landing/sections/JourneySection';
-import LoopSection from '@/components/landing/sections/LoopSection';
-import SystemSection from '@/components/landing/sections/SystemSection';
-import ShowcaseSection from '@/components/landing/sections/ShowcaseSection';
-import ShowcaseStrip from '@/components/landing/sections/ShowcaseStrip';
-import FeaturesSection from '@/components/landing/sections/FeaturesSection';
+import {
+  ProblemSection,
+  InvisibleLoopSection,
+  TradeLoggerSection,
+  PatternDetectorSection,
+  BlindSpotSection,
+} from '@/components/landing/sections/sections-story1';
+import {
+  DashboardSection,
+  DisciplineSection,
+  RulebookSection,
+  PnLCalendarSection,
+  PropJourneySection,
+  ROIFlowSection,
+} from '@/components/landing/sections/sections-story2';
+import {
+  VerifiedTraderSection,
+  FeatureConstellationSection,
+  ManualLoggingSection,
+  TransformationSection,
+  FinalCTASection,
+} from '@/components/landing/sections/sections-story3';
 import PricingSection from '@/components/landing/sections/PricingSection';
-import BottomSection from '@/components/landing/sections/BottomSection';
 
-// Full-page particle field + parallax depth + pointer/scroll motion layer —
-// all lazy (dynamic ssr:false) so they're off the critical LCP path.
+// Motion + depth layers — lazy, off the critical LCP path
 const LandingParticles = dynamic(() => import('@/components/landing/LandingParticles'), { ssr: false });
 const ParallaxDepth = dynamic(() => import('@/components/landing/ParallaxDepth'), { ssr: false });
 const LandingMotionLayer = dynamic(() => import('@/components/landing/LandingMotionLayer'), { ssr: false });
+const PathField = dynamic(() => import('@/components/landing/PathField'), { ssr: false });
 
 export const revalidate = 300;
 
 export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden">
+    <main className="min-h-screen overflow-hidden bg-[#050507]">
       <DeferredMotion />
       <LandingMotionLayer />
       <ParallaxDepth />
+      <PathField />
       <LandingParticles />
 
       {/* Nav */}
       <LandingNav logo={<Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />} />
 
-      {/* Content sits above the fixed particle canvas */}
+      {/* Content above the fixed path/particle/depth layers */}
       <div className="relative z-10">
         <HeroSection />
-        <JourneySection />
-        <LoopSection />
-        <SystemSection />
-        <ShowcaseSection />
-        <ShowcaseStrip />
-        <FeaturesSection />
+        <ProblemSection />
+        <InvisibleLoopSection />
+        <TradeLoggerSection />
+        <PatternDetectorSection />
+        <BlindSpotSection />
+        <DashboardSection />
+        <DisciplineSection />
+        <RulebookSection />
+        <PnLCalendarSection />
+        <PropJourneySection />
+        <ROIFlowSection />
+        <VerifiedTraderSection />
+        <FeatureConstellationSection />
+        <ManualLoggingSection />
+        <TransformationSection />
         <PricingSection />
-        <BottomSection />
+        <FinalCTASection />
       </div>
 
       <LandingFooter />
-
       <CookieBanner />
     </main>
   );

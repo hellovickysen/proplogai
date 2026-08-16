@@ -103,7 +103,7 @@ main.flex-1 > * {
 }
 
 .gradient-shimmer {
-  background: linear-gradient(110deg, #a78bfa 0%, #22d3ee 32%, #f8fafc 48%, #22d3ee 62%, #a78bfa 100%);
+  background: linear-gradient(110deg, #a3e635 0%, #34d399 35%, #f5f5f2 50%, #34d399 65%, #a3e635 100%);
   background-size: 220% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -219,4 +219,22 @@ main.flex-1 > * {
   [data-reveal][data-reveal-dir] {
     transform: none;
   }
+}
+
+
+/* Word-cycle (hero headline) */
+@keyframes word-cycle {
+  0% { opacity: 0; transform: translateY(24px); filter: blur(6px); }
+  12% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  88% { opacity: 1; transform: translateY(0); filter: blur(0); }
+  100% { opacity: 0; transform: translateY(-24px); filter: blur(6px); }
+}
+
+/* Slow rotation (invisible loop) */
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*='word-cycle'], [style*='spin-slow'] { animation: none !important; }
 }
