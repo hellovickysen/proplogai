@@ -5,6 +5,7 @@ import LandingFooter from '@/components/landing/LandingFooter';
 import DeferredMotion from '@/components/landing/DeferredMotion';
 import HeroSection from '@/components/landing/sections/HeroSection';
 import LoopSection from '@/components/landing/sections/LoopSection';
+import SystemSection from '@/components/landing/sections/SystemSection';
 import ShowcaseSection from '@/components/landing/sections/ShowcaseSection';
 import FeaturesSection from '@/components/landing/sections/FeaturesSection';
 import PricingSection from '@/components/landing/sections/PricingSection';
@@ -22,6 +23,7 @@ export default function Home() {
 
       <HeroSection />
       <LoopSection />
+      <SystemSection />
       <ShowcaseSection />
       <FeaturesSection />
       <PricingSection />

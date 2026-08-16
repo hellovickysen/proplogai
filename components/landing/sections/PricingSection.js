@@ -3,17 +3,20 @@ import { gradientText, gradientBtn } from '@/components/landing/LandingData';
 
 export default function PricingSection() {
   return (
-    <section id="pricing" className="px-4 py-20 sm:px-10 sm:py-24" data-reveal>
+    <section id="pricing" className="relative px-4 py-24 sm:px-10" data-reveal>
+      <div
+        className="absolute left-1/2 top-10 -z-10 h-80 w-[44rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.05),transparent_65%)] blur-2xl"
+        aria-hidden="true"
+      />
+
       <div className="mx-auto max-w-4xl">
         <div className="text-center">
-          <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/40">
+          <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.28em] text-white/40">
             Pricing
           </div>
           <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
             Start free.{' '}
-            <span className="bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee] bg-clip-text text-transparent">
-              Upgrade when it works.
-            </span>
+            <span className="gradient-shimmer">Upgrade when it works.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-md text-sm text-white/55">
             14 days of Elite, no credit card. Then Basic stays free forever.
@@ -22,7 +25,7 @@ export default function PricingSection() {
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2">
           {/* Basic */}
-          <div className="rounded-3xl border border-white/[0.07] bg-white/[0.028] p-8">
+          <div className="rounded-3xl border border-white/[0.08] bg-white/[0.028] p-8">
             <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/40">Basic</div>
             <div className="mt-3 font-display text-4xl font-extrabold text-white">$0</div>
             <div className="mt-1 text-sm text-white/40">Forever</div>
@@ -59,7 +62,7 @@ export default function PricingSection() {
             >
               MOST POPULAR
             </div>
-            <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#8b7cf6]">Elite</div>
+            <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-[#b3a5f8]">Elite</div>
             <div className="mt-3 flex items-baseline gap-1.5">
               <span className="font-display text-4xl font-extrabold" style={gradientText}>$9.99</span>
               <span className="text-sm text-white/40">/month</span>

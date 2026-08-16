@@ -34,10 +34,13 @@ export default function BottomSection() {
       {/* ═══════════════ FAQ ═══════════════ */}
       <section className="border-t border-white/[0.06] px-4 py-20 sm:px-10" data-reveal>
         <div className="mx-auto max-w-3xl">
+          <div className="mb-4 text-center font-mono text-[11px] uppercase tracking-[0.28em] text-white/40">
+            FAQ
+          </div>
           <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">
             Common questions
           </h2>
-          <div className="mt-10 divide-y divide-white/[0.06] rounded-3xl border border-white/[0.07] bg-white/[0.028]">
+          <div className="mt-10 divide-y divide-white/[0.06] rounded-3xl border border-white/[0.08] bg-white/[0.028]">
             {FAQS.map((faq) => (
               <div key={faq.q} className="p-6">
                 <h3 className="font-display text-sm font-semibold text-white">{faq.q}</h3>
@@ -49,13 +52,15 @@ export default function BottomSection() {
       </section>
 
       {/* ═══════════════ FINAL CTA ═══════════════ */}
-      <section className="px-4 pb-24 pt-4 sm:px-10" data-reveal>
+      <section className="relative overflow-hidden px-4 pb-28 pt-8 sm:px-10" data-reveal>
+        <div
+          className="absolute bottom-[-14rem] left-1/2 -z-10 h-96 w-[52rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(139,124,246,0.1),transparent_65%)] blur-2xl"
+          aria-hidden="true"
+        />
         <div className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+          <h2 className="font-display text-3xl font-bold leading-tight tracking-tight sm:text-[2.6rem]">
             Thirty days from now, the pattern{' '}
-            <span className="bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee] bg-clip-text text-transparent">
-              is either broken or repeated.
-            </span>
+            <span className="gradient-shimmer">is either broken or repeated.</span>
           </h2>
           <p className="mx-auto mt-5 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">
             Build your rulebook, expose the recurring mistake, and prove the fix
@@ -68,7 +73,9 @@ export default function BottomSection() {
           >
             Start my 30 days →
           </Link>
-          <p className="mt-4 text-xs text-white/35">14-day Elite trial · No credit card</p>
+          <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.18em] text-white/35">
+            14-day Elite trial · No credit card
+          </p>
         </div>
       </section>
     </>

@@ -1,37 +1,43 @@
 export default function ShowcaseSection() {
   return (
-    <section className="border-y border-white/[0.06] bg-white/[0.015] px-4 py-20 sm:px-10 sm:py-24" data-reveal>
+    <section className="relative overflow-hidden px-4 py-24 sm:px-10 sm:py-28" data-reveal>
+      <div
+        className="absolute right-[-12rem] top-20 -z-10 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(52,211,153,0.06),transparent_65%)] blur-2xl"
+        aria-hidden="true"
+      />
+
       <div className="mx-auto grid max-w-5xl items-center gap-12 lg:grid-cols-2">
         <div>
-          <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.24em] text-[#8b7cf6]">
+          <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.28em] text-[#8b7cf6]">
             Propol AI Coach
           </div>
-          <h2 className="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+          <h2 className="font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl lg:text-[2.75rem]">
             It doesn&apos;t analyze the market.
             <br />
             <span className="text-cyan-300">It analyzes you.</span>
           </h2>
           <p className="mt-5 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">
-            Propol reads your journal, your emotions, and your rulebook — then shows
-            you the mistake you couldn&apos;t see, with the evidence attached.
-            No financial advice. No signals. Just your own data, made honest.
+            Propol reads your journal, your emotions, and your rulebook — then
+            shows you the mistake you couldn&apos;t see, with the evidence
+            attached. No financial advice. No signals. Just your own data, made
+            honest.
           </p>
-          <ul className="mt-7 space-y-3 text-sm text-white/60">
+          <ul className="mt-7 space-y-3.5 text-sm text-white/60">
             {[
               'Recurring-mistake detection across every trade you log',
               'One focus rule per week — specific and measurable',
-              'Monthly reviews scored on discipline, not P&L',
+              'Monthly reviews scored on discipline, never P&L',
             ].map((item) => (
-              <li key={item} className="flex items-start gap-2.5">
-                <span className="mt-0.5 text-cyan-300">✓</span>
+              <li key={item} className="flex items-start gap-3">
+                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border border-cyan-300/25 bg-cyan-300/[0.08] text-[10px] text-cyan-300">✓</span>
                 {item}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Coach report mockup */}
-        <div className="rounded-3xl border border-white/[0.07] bg-[#0a0a13] p-5" data-reveal style={{ '--reveal-delay': '120ms' }}>
+        {/* Coach report mockup — placeholder for a real screenshot */}
+        <div className="product-mockup relative rounded-3xl border border-white/[0.09] bg-[#0a0c16]/95 p-5 shadow-[0_28px_90px_rgba(0,0,0,0.5)]" data-reveal style={{ '--reveal-delay': '120ms' }}>
           <div className="mb-4 flex items-center justify-between">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
               Weekly review
@@ -79,9 +85,8 @@ export default function ShowcaseSection() {
               Propol insight
             </div>
             <p className="text-xs leading-relaxed text-emerald-50/75">
-              Your journal shows you follow your rules 91% of the time after a
-              20-minute cool-down, vs 38% without. Next week&apos;s focus: take
-              the pause.
+              You follow your rules 91% of the time after a 20-minute cool-down,
+              vs 38% without. Next week&apos;s focus: take the pause.
             </p>
           </div>
         </div>

@@ -4,28 +4,28 @@ const PILLARS = [
     title: '30-second trade logging',
     description:
       'Pair, setup, emotions, screenshot. Fast enough that you actually do it — detailed enough that the patterns are real.',
-    accent: 'text-cyan-300',
+    color: '#22d3ee',
   },
   {
     label: 'Rulebook',
     title: 'Your rules, made measurable',
     description:
       'Write the setups you trust and the guardrails you keep breaking. Adherence becomes a number you can move.',
-    accent: 'text-[#8b7cf6]',
+    color: '#8b7cf6',
   },
   {
     label: 'Coach',
     title: 'Weekly focus, monthly review',
     description:
       'Propol finds the recurring mistake, sets one focus rule, and scores your follow-through. Evidence, not vibes.',
-    accent: 'text-emerald-300',
+    color: '#34d399',
   },
   {
     label: 'Prop firms',
     title: 'The full journey in one place',
     description:
       'Challenge costs, account phases, payouts, real ROI per firm. Know what the prop path actually costs you.',
-    accent: 'text-amber-300',
+    color: '#fbbf24',
   },
 ];
 
@@ -51,27 +51,33 @@ export default function FeaturesSection() {
   return (
     <>
       {/* ═══════════════ WHAT'S INSIDE ═══════════════ */}
-      <section className="px-4 py-20 sm:px-10 sm:py-24" data-reveal>
+      <section className="relative px-4 py-24 sm:px-10" data-reveal>
         <div className="mx-auto max-w-5xl">
           <div className="mx-auto max-w-2xl text-center">
-            <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/40">
+            <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.28em] text-white/40">
               What&apos;s inside
             </div>
             <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Four pieces.{' '}
-              <span className="bg-gradient-to-r from-[#8b7cf6] to-[#22d3ee] bg-clip-text text-transparent">
-                One loop.
-              </span>
+              <span className="gradient-shimmer">One loop.</span>
             </h2>
           </div>
 
-          <div className="mt-14 grid gap-x-10 gap-y-12 sm:grid-cols-2">
+          <div className="mt-14 grid gap-5 sm:grid-cols-2">
             {PILLARS.map((pillar, index) => (
-              <div key={pillar.title} data-reveal style={{ '--reveal-delay': `${index * 80}ms` }}>
-                <div className={`font-mono text-[10px] uppercase tracking-[0.22em] ${pillar.accent}`}>
-                  {pillar.label}
+              <div
+                key={pillar.title}
+                className="landing-card rounded-2xl border border-white/[0.08] bg-white/[0.028] p-7"
+                data-reveal
+                style={{ '--reveal-delay': `${index * 80}ms` }}
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: pillar.color }} />
+                  <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/45">
+                    {pillar.label}
+                  </span>
                 </div>
-                <h3 className="mt-2.5 font-display text-lg font-bold text-white">
+                <h3 className="mt-3.5 font-display text-lg font-bold text-white">
                   {pillar.title}
                 </h3>
                 <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-white/55">
@@ -84,11 +90,11 @@ export default function FeaturesSection() {
       </section>
 
       {/* ═══════════════ WHY MANUAL ENTRY ═══════════════ */}
-      <section className="px-4 pb-20 sm:px-10 sm:pb-24" data-reveal>
+      <section className="px-4 pb-24 sm:px-10" data-reveal>
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-3xl border border-white/[0.07] bg-white/[0.028] p-8 sm:p-12">
+          <div className="rounded-3xl border border-white/[0.08] bg-white/[0.028] p-8 sm:p-12">
             <div className="max-w-2xl">
-              <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.24em] text-white/40">
+              <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.28em] text-white/40">
                 Our philosophy
               </div>
               <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
