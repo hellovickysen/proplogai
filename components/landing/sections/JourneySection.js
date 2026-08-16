@@ -2,11 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const prefersReducedMotion = () => {
-  if (typeof window === 'undefined') return true;
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-};
-
 const STEPS = [
   {
     id: 'define',
@@ -139,72 +134,57 @@ function MockAnalyze() {
 }
 
 const MOCKS = { define: MockRules, setup: MockSetup, log: MockLog, analyze: MockAnalyze };
-
-/* ── Section ── */
+const COUNT = STEPS.length;
 
 export default function JourneySection() {
   const trackRef = useRef(null);
   const [progress, setProgress] = useState(0);
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [reduced, setReduced] = useState(true);
+  const [pinned, setPinned] = useState(false);
 
+  // Decide pin mode on mount + on resize; attach ONE always-on scroll listener.
   useEffect(() => {
-    setReduced(prefersReducedMotion());
     const mq = window.matchMedia('(min-width: 1024px)');
-    const setMQ = () => setIsDesktop(mq.matches);
-    setMQ();
-    mq.addEventListener('change', setMQ);
-    return () => mq.removeEventListener('change', setMQ);
-  }, []);
+    const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMode = () => setPinned(mq.matches && !rm.matches);
 
-  const pinned = isDesktop && !reduced;
-
-  useEffect(() => {
-    if (!pinned) return undefined;
-    let raf = 0;
     const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => {
-        const track = trackRef.current;
-        if (!track) return;
-        const rect = track.getBoundingClientRect();
-        const total = rect.height - window.innerHeight;
-        const passed = Math.min(Math.max(-rect.top, 0), total);
-        setProgress(total > 0 ? passed / total : 0);
-      });
+      const track = trackRef.current;
+      if (!track) return;
+      const rect = track.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const total = Math.max(rect.height - vh, 1);
+      const passed = Math.min(Math.max(-rect.top, 0), total);
+      setProgress(passed / total);
     };
+
+    updateMode();
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll);
+    mq.addEventListener('change', updateMode);
     return () => {
-      cancelAnimationFrame(raf);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
+      mq.removeEventListener('change', updateMode);
     };
-  }, [pinned]);
+  }, []);
 
-  const count = STEPS.length;
-  const active = Math.min(Math.floor(progress * count), count - 1);
+  const active = Math.min(Math.floor(progress * COUNT), COUNT - 1);
   const lineScale = pinned ? progress : 1;
 
-  /* ── shared rail + content renderers ── */
-
   const Rail = () => {
-    const H = 320; // px between first and last dot (fixed so line + dots align)
+    const H = 320;
     return (
       <div className="relative w-12 shrink-0 self-center" style={{ height: `${H}px` }}>
-        {/* track */}
         <div className="absolute left-1/2 top-4 h-[calc(100%-2rem)] w-px -translate-x-1/2 bg-white/[0.1]" aria-hidden="true" />
-        {/* fill — scaleY with scroll progress */}
         <div
           className="absolute left-1/2 top-4 h-[calc(100%-2rem)] w-px origin-top -translate-x-1/2 bg-gradient-to-b from-[#8b7cf6] to-[#22d3ee]"
-          style={{ transform: `translateX(-50%) scaleY(${lineScale})`, transition: 'transform 120ms linear' }}
+          style={{ transform: `translateX(-50%) scaleY(${lineScale})`, transition: 'transform 100ms linear' }}
           aria-hidden="true"
         />
-        {/* dots, evenly spaced top→bottom */}
         {STEPS.map((s, i) => {
           const on = pinned ? i <= active : true;
-          const top = 16 + (i * (H - 32)) / (count - 1); // 16px inset both ends
+          const top = 16 + (i * (H - 32)) / (COUNT - 1);
           return (
             <div
               key={s.id}
@@ -223,25 +203,20 @@ export default function JourneySection() {
     );
   };
 
-  const StepText = ({ step, index }) => {
-    const on = pinned ? index === active : true;
-    return (
-      <div
-        className={`transition-all duration-500 ${pinned ? (on ? 'opacity-100' : 'opacity-25') : 'opacity-100'}`}
-      >
-        <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-300/70">{step.eyebrow}</div>
-        <h3 className="mt-2 font-display text-xl font-bold text-white sm:text-2xl">{step.title}</h3>
-        <p className="mt-3 max-w-md text-sm leading-relaxed text-white/55">{step.desc}</p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {step.chips.map((c) => (
-            <span key={c} className="rounded-full border border-white/[0.09] bg-white/[0.03] px-2.5 py-1 text-[10px] text-white/50">
-              {c}
-            </span>
-          ))}
-        </div>
+  const StepText = ({ step }) => (
+    <div>
+      <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-300/70">{step.eyebrow}</div>
+      <h3 className="mt-2 font-display text-xl font-bold text-white sm:text-2xl">{step.title}</h3>
+      <p className="mt-3 max-w-md text-sm leading-relaxed text-white/55">{step.desc}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {step.chips.map((c) => (
+          <span key={c} className="rounded-full border border-white/[0.09] bg-white/[0.03] px-2.5 py-1 text-[10px] text-white/50">
+            {c}
+          </span>
+        ))}
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <section id="journey" className="relative px-4 py-20 sm:px-10 sm:py-24">
@@ -259,31 +234,25 @@ export default function JourneySection() {
           </p>
         </div>
 
-        {/* Desktop: pinned scrollytelling */}
         {pinned ? (
-          <div ref={trackRef} className="relative mt-10" style={{ height: `${count * 80}vh` }}>
-            <div className="sticky top-0 flex h-screen items-center">
+          <div ref={trackRef} className="relative mt-10" style={{ height: `${COUNT * 90}vh` }}>
+            <div className="sticky top-0 flex h-screen items-center overflow-hidden">
               <div className="flex w-full items-center gap-8">
                 <Rail />
                 <div className="grid flex-1 items-center gap-12 lg:grid-cols-2">
-                  {/* Step text — absolutely stacked so only the active one shows
-                      and the pinned panel never grows past the viewport */}
                   <div className="relative h-[300px] sm:h-[280px]">
                     {STEPS.map((s, i) => (
                       <div
                         key={s.id}
                         className={`absolute inset-0 transition-all duration-500 ${
-                          i === active
-                            ? 'translate-y-0 opacity-100'
-                            : 'pointer-events-none translate-y-4 opacity-0'
+                          i === active ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
                         }`}
                       >
-                        <StepText step={s} index={i} />
+                        <StepText step={s} />
                       </div>
                     ))}
                   </div>
-                  {/* Mockup panel — crossfades by active step */}
-                  <div className="relative self-center h-[380px] w-full max-w-md lg:max-w-none">
+                  <div className="relative h-[380px] w-full max-w-md self-center lg:max-w-none">
                     {STEPS.map((s, i) => {
                       const Mock = MOCKS[s.id];
                       const on = i === active;
@@ -306,14 +275,13 @@ export default function JourneySection() {
             </div>
           </div>
         ) : (
-          /* Mobile / reduced-motion: stacked, no pin, no rail */
           <div className="mt-12">
             <div className="space-y-12">
               {STEPS.map((s, i) => {
                 const Mock = MOCKS[s.id];
                 return (
                   <div key={s.id} className="space-y-5" data-reveal style={{ '--reveal-delay': `${i * 60}ms` }}>
-                    <StepText step={s} index={i} />
+                    <StepText step={s} />
                     <div className="rounded-2xl border border-white/[0.09] bg-[#0a0c16]/95 p-5">
                       <Mock />
                     </div>

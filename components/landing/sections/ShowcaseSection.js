@@ -36,59 +36,14 @@ export default function ShowcaseSection() {
           </ul>
         </div>
 
-        {/* Coach report mockup — placeholder for a real screenshot */}
-        <div className="product-mockup relative rounded-3xl border border-white/[0.09] bg-[#0a0c16]/95 p-5 shadow-[0_28px_90px_rgba(0,0,0,0.5)]" data-reveal style={{ '--reveal-delay': '120ms' }}>
-          <div className="mb-4 flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
-              Weekly review
-            </span>
-            <span className="rounded-full border border-amber-300/25 bg-amber-300/10 px-2.5 py-0.5 text-[10px] font-semibold text-amber-200">
-              2 patterns found
-            </span>
-          </div>
-
-          <div className="mb-3 rounded-xl border border-white/[0.07] bg-white/[0.028] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="font-mono text-[10px] uppercase tracking-wider text-rose-300/60">
-                  Recurring mistake #1
-                </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-                  Revenge re-entry after back-to-back losses at London close.
-                  6 occurrences in 3 weeks.
-                </p>
-              </div>
-              <span className="shrink-0 rounded-lg bg-rose-400/10 px-2 py-1 font-mono text-xs font-bold text-rose-300">
-                6×
-              </span>
-            </div>
-          </div>
-
-          <div className="mb-3 rounded-xl border border-white/[0.07] bg-white/[0.028] p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <div className="font-mono text-[10px] uppercase tracking-wider text-amber-300/60">
-                  Recurring mistake #2
-                </div>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-                  Stop-loss moved on 4 of 6 losing XAU/USD scalps this week.
-                </p>
-              </div>
-              <span className="shrink-0 rounded-lg bg-amber-400/10 px-2 py-1 font-mono text-xs font-bold text-amber-300">
-                4×
-              </span>
-            </div>
-          </div>
-
-          <div className="rounded-xl border border-emerald-300/15 bg-emerald-300/[0.06] p-4">
-            <div className="mb-1 font-mono text-[10px] uppercase tracking-wider text-emerald-300/60">
-              Propol insight
-            </div>
-            <p className="text-xs leading-relaxed text-emerald-50/75">
-              You follow your rules 91% of the time after a 20-minute cool-down,
-              vs 38% without. Next week&apos;s focus: take the pause.
-            </p>
-          </div>
+        {/* Real Propol AI Coach screenshot */}
+        <div className="product-mockup relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0a0c16]/95 shadow-[0_28px_90px_rgba(0,0,0,0.5)]" data-reveal style={{ '--reveal-delay': '120ms' }}>
+          <img
+            src="https://pub.hyperagent.com/api/published/pbf01M05X9PG7_AJGY8QQ7V7VW27VZ/ai-coach.webp"
+            alt="Propol AI Coach growth plan showing recurring mistakes, emotion heatmap, action plan, and Propol's notes"
+            className="block h-auto w-full"
+            loading="lazy"
+          />
         </div>
       </div>
     </section>
