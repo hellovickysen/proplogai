@@ -5,9 +5,10 @@ import CookieBanner from '@/components/landing/CookieBanner';
 import LandingFooter from '@/components/landing/LandingFooter';
 import DeferredMotion from '@/components/landing/DeferredMotion';
 import HeroSection from '@/components/landing/sections/HeroSection';
-import PainSection from '@/components/landing/sections/PainSection';
-import SolutionSection from '@/components/landing/sections/SolutionSection';
-import ShowcaseSection from '@/components/landing/sections/ShowcaseSection';
+import ProblemSection from '@/components/landing/sections/ProblemSection';
+import ShiftSection from '@/components/landing/sections/ShiftSection';
+import EvidenceSection from '@/components/landing/sections/EvidenceSection';
+import PhilosophySection from '@/components/landing/sections/PhilosophySection';
 import FeaturesSection from '@/components/landing/sections/FeaturesSection';
 import PricingSection from '@/components/landing/sections/PricingSection';
 import BottomSection from '@/components/landing/sections/BottomSection';
@@ -29,10 +30,12 @@ export default async function Home() {
       {/* Nav */}
       <LandingNav logo={<Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />} />
 
+      {/* One continuous story */}
       <HeroSection betaCount={betaCount} />
-      <PainSection />
-      <SolutionSection />
-      <ShowcaseSection />
+      <ProblemSection />
+      <ShiftSection />
+      <EvidenceSection />
+      <PhilosophySection />
       <FeaturesSection />
       <PricingSection />
       <BottomSection betaCount={betaCount} />

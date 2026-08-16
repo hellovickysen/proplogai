@@ -105,8 +105,8 @@ main.flex-1 > * {
 .gradient-shimmer {
   background: linear-gradient(110deg, #a78bfa 0%, #22d3ee 32%, #f8fafc 48%, #22d3ee 62%, #a78bfa 100%);
   background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
+  -webkit-backgroundClip: text;
+  backgroundClip: text;
   color: transparent;
   animation: gradient-shimmer 5.5s ease-in-out infinite;
 }
@@ -191,4 +191,59 @@ main.flex-1 > * {
 .styled-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+/* ═══════════════ STORY LANDING (2026 redesign) ═══════════════ */
+
+/* Hero video frame — faux browser chrome around the quick-add.mp4 loop */
+.story-video-frame {
+  position: relative;
+  isolation: isolate;
+}
+.story-video-frame::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.3), rgba(34, 211, 238, 0.22), rgba(255, 255, 255, 0.06));
+  opacity: 0.5;
+}
+.story-video-frame video {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* Real screenshot frames — used in EvidenceSection beats */
+.story-screenshot {
+  position: relative;
+  isolation: isolate;
+}
+.story-screenshot::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.22), rgba(34, 211, 238, 0.16), rgba(255, 255, 255, 0.05));
+  opacity: 0.45;
+  pointer-events: none;
+}
+.story-screenshot img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Vertical event ticker — signature rhythm device (ShiftSection) */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes ticker-scroll {
+    0%, 100% { transform: translateX(0); }
+  }
 }
