@@ -1,14 +1,12 @@
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import { gradientBtn } from '@/components/landing/LandingData';
 import HeroDashboardMock from '@/components/landing/sections/HeroDashboardMock';
-
-const HeroParticles = dynamic(() => import('./HeroParticles'), { ssr: false });
 
 export default function HeroSection() {
   return (
     <section className="relative overflow-hidden px-4 pb-24 pt-16 sm:px-10 sm:pt-24">
-      {/* Deep navy base + grid + glows */}
+      {/* Deep navy base + grid + glows (particles now come from the
+          full-page LandingParticles canvas behind everything) */}
       <div className="absolute inset-0 -z-20 bg-[#05070f]" aria-hidden="true" />
       <div
         className="absolute inset-0 -z-10 opacity-[0.16]"
@@ -29,8 +27,6 @@ export default function HeroSection() {
         className="absolute right-[-10rem] top-40 -z-10 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.1),transparent_65%)] blur-2xl"
         aria-hidden="true"
       />
-
-      <HeroParticles />
 
       <div className="relative z-10 mx-auto max-w-5xl text-center">
         <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.22em] text-white/55 backdrop-blur">
@@ -59,7 +55,7 @@ export default function HeroSection() {
             Start free →
           </Link>
           <Link
-            href="#the-loop"
+            href="#journey"
             className="whitespace-nowrap rounded-xl border border-white/12 bg-white/[0.04] px-8 py-3.5 text-sm font-semibold text-white/70 backdrop-blur transition hover:border-white/25 hover:bg-white/[0.08] hover:text-white sm:text-base"
           >
             See how it works ↓
@@ -74,7 +70,6 @@ export default function HeroSection() {
       {/* Floating dashboard mockup */}
       <div className="relative z-10 mx-auto mt-16 max-w-5xl sm:mt-20" data-reveal>
         <HeroDashboardMock />
-        {/* Floating evidence cards */}
         <div className="floating-card floating-card-one hidden rounded-2xl border border-rose-300/20 bg-[#0b0b16]/90 px-4 py-3 text-xs shadow-2xl shadow-rose-950/30 backdrop-blur-xl lg:block">
           <span className="font-mono uppercase tracking-wider text-rose-300/70">Pattern found</span>
           <div className="mt-0.5 font-semibold text-rose-100">Revenge re-entry · 6× in 3 weeks</div>
