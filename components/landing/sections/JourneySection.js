@@ -1,5 +1,6 @@
 import { gradientBtn } from '@/components/landing/LandingData';
 import Link from 'next/link';
+import JourneyLine from '@/components/landing/JourneyLine';
 
 const STEPS = [
   {
@@ -162,26 +163,32 @@ export default function JourneySection() {
         </div>
 
         <div className="relative mt-16">
-          {/* Connecting line down the center (desktop) / left (mobile) */}
-          <div
-            className="absolute left-5 top-0 h-full w-px bg-gradient-to-b from-[#8b7cf6]/50 via-cyan-300/40 to-emerald-300/40 sm:left-1/2 sm:-translate-x-1/2"
-            aria-hidden="true"
-          />
+          {/* Self-drawing connecting line (center on desktop / left on mobile) */}
+          <JourneyLine />
 
-          <div className="space-y-16 sm:space-y-20">
+          <div className="space-y-16 sm:space-y-24">
             {STEPS.map((step, i) => {
               const Mock = MOCKS[step.id];
               const leftSide = i % 2 === 0;
               return (
-                <div key={step.id} className="relative" data-reveal style={{ '--reveal-delay': `${i * 40}ms` }}>
-                  {/* Node dot on the line */}
-                  <div className="absolute left-5 top-2 z-10 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border border-cyan-300/40 bg-[#0b0d18] font-display text-sm font-bold text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.3)] sm:left-1/2">
+                <div key={step.id} className="relative">
+                  {/* Node dot on the line — pulses in sequence */}
+                  <div
+                    className="absolute left-5 top-2 z-10 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border border-cyan-300/40 bg-[#0b0d18] font-display text-sm font-bold text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.3)] sm:left-1/2"
+                    data-reveal
+                    style={{ '--reveal-delay': `${i * 120}ms` }}
+                  >
                     {i + 1}
                   </div>
 
-                  <div className={`grid items-center gap-8 pl-14 sm:pl-0 sm:grid-cols-2 sm:gap-12 ${leftSide ? '' : ''}`}>
-                    {/* Text — alternates sides on desktop */}
-                    <div className={leftSide ? 'sm:order-1 sm:pr-8 sm:text-right' : 'sm:order-2 sm:pl-8'}>
+                  <div className="grid items-center gap-8 pl-14 sm:pl-0 sm:grid-cols-2 sm:gap-12">
+                    {/* Text — zigzag: slides in from the line side on desktop */}
+                    <div
+                      className={leftSide ? 'sm:order-1 sm:pr-10 sm:text-right' : 'sm:order-2 sm:pl-10'}
+                      data-reveal
+                      data-reveal-dir={leftSide ? 'left' : 'right'}
+                      style={{ '--reveal-delay': `${i * 90}ms` }}
+                    >
                       <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-300/70">{step.eyebrow}</div>
                       <h3 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">{step.title}</h3>
                       <p className={`mt-3 max-w-md text-sm leading-relaxed text-white/55 sm:text-base ${leftSide ? 'sm:ml-auto' : ''}`}>
@@ -196,8 +203,13 @@ export default function JourneySection() {
                       </div>
                     </div>
 
-                    {/* Mockup — opposite side */}
-                    <div className={leftSide ? 'sm:order-2 sm:pl-8' : 'sm:order-1 sm:pr-8'}>
+                    {/* Mockup — opposite side, slides the other way (zigzag) */}
+                    <div
+                      className={leftSide ? 'sm:order-2 sm:pl-10' : 'sm:order-1 sm:pr-10'}
+                      data-reveal
+                      data-reveal-dir={leftSide ? 'right' : 'left'}
+                      style={{ '--reveal-delay': `${i * 90 + 120}ms` }}
+                    >
                       <div className="product-mockup relative rounded-2xl border border-white/[0.09] bg-[#0a0c16]/95 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
                         <Mock />
                       </div>

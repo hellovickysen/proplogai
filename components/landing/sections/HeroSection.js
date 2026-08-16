@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { gradientBtn } from '@/components/landing/LandingData';
 import HeroDashboardMock from '@/components/landing/sections/HeroDashboardMock';
+import HeroTilt from '@/components/landing/HeroTilt';
 
 export default function HeroSection() {
   return (
@@ -67,9 +68,11 @@ export default function HeroSection() {
         </p>
       </div>
 
-      {/* Floating dashboard mockup */}
+      {/* Floating dashboard mockup — 3D tilt + bob, layered floating cards */}
       <div className="relative z-10 mx-auto mt-16 max-w-5xl sm:mt-20" data-reveal>
-        <HeroDashboardMock />
+        <HeroTilt>
+          <HeroDashboardMock />
+        </HeroTilt>
         <div className="floating-card floating-card-one hidden rounded-2xl border border-rose-300/20 bg-[#0b0b16]/90 px-4 py-3 text-xs shadow-2xl shadow-rose-950/30 backdrop-blur-xl lg:block">
           <span className="font-mono uppercase tracking-wider text-rose-300/70">Pattern found</span>
           <div className="mt-0.5 font-semibold text-rose-100">Revenge re-entry · 6× in 3 weeks</div>

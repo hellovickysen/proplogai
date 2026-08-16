@@ -192,3 +192,31 @@ main.flex-1 > * {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
+
+/* Landing — directional reveals (zigzag) + parallax vars.
+ * Additive only; appended to the end of globals.css. */
+
+/* CSS vars written by LandingMotionLayer (pointer + smoothed scroll) */
+:root {
+  --mx: 0;
+  --my: 0;
+  --sy: 0;
+}
+
+/* Directional reveal variants. Base [data-reveal] handles opacity/translateY;
+ * these add a horizontal slide so the journey steps zigzag in from the line. */
+[data-reveal][data-reveal-dir='left'] {
+  transform: translateY(22px) translateX(-26px);
+}
+[data-reveal][data-reveal-dir='right'] {
+  transform: translateY(22px) translateX(26px);
+}
+[data-reveal][data-reveal-dir].is-visible {
+  transform: translateY(0) translateX(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal][data-reveal-dir] {
+    transform: none;
+  }
+}

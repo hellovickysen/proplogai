@@ -14,8 +14,11 @@ import FeaturesSection from '@/components/landing/sections/FeaturesSection';
 import PricingSection from '@/components/landing/sections/PricingSection';
 import BottomSection from '@/components/landing/sections/BottomSection';
 
-// Full-page particle field — lazy, off the critical LCP path
+// Full-page particle field + parallax depth + pointer/scroll motion layer —
+// all lazy (dynamic ssr:false) so they're off the critical LCP path.
 const LandingParticles = dynamic(() => import('@/components/landing/LandingParticles'), { ssr: false });
+const ParallaxDepth = dynamic(() => import('@/components/landing/ParallaxDepth'), { ssr: false });
+const LandingMotionLayer = dynamic(() => import('@/components/landing/LandingMotionLayer'), { ssr: false });
 
 export const revalidate = 300;
 
@@ -23,6 +26,8 @@ export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden">
       <DeferredMotion />
+      <LandingMotionLayer />
+      <ParallaxDepth />
       <LandingParticles />
 
       {/* Nav */}
