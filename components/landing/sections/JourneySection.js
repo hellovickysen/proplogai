@@ -186,8 +186,6 @@ export default function JourneySection() {
   const count = STEPS.length;
   const active = Math.min(Math.floor(progress * count), count - 1);
   const lineScale = pinned ? progress : 1;
-  // gate the pinned panel until it's actually scrolled into view to avoid a flash
-  const showPinned = !pinned || progress > 0;
 
   /* ── shared rail + content renderers ── */
 
@@ -263,12 +261,8 @@ export default function JourneySection() {
 
         {/* Desktop: pinned scrollytelling */}
         {pinned ? (
-          <div ref={trackRef} className="relative mt-10" style={{ height: `${count * 100}vh` }}>
-            <div
-              className={`sticky top-0 flex h-screen items-center transition-opacity duration-300 ${
-                showPinned ? 'opacity-100' : 'opacity-0'
-              }`}
-            >
+          <div ref={trackRef} className="relative mt-10" style={{ height: `${count * 80}vh` }}>
+            <div className="sticky top-0 flex h-screen items-center">
               <div className="flex w-full items-center gap-8">
                 <Rail />
                 <div className="grid flex-1 items-center gap-12 lg:grid-cols-2">

@@ -9,6 +9,7 @@ import JourneySection from '@/components/landing/sections/JourneySection';
 import LoopSection from '@/components/landing/sections/LoopSection';
 import SystemSection from '@/components/landing/sections/SystemSection';
 import ShowcaseSection from '@/components/landing/sections/ShowcaseSection';
+import ShowcaseStrip from '@/components/landing/sections/ShowcaseStrip';
 import FeaturesSection from '@/components/landing/sections/FeaturesSection';
 import PricingSection from '@/components/landing/sections/PricingSection';
 import BottomSection from '@/components/landing/sections/BottomSection';
@@ -34,6 +35,7 @@ export default function Home() {
         <LoopSection />
         <SystemSection />
         <ShowcaseSection />
+        <ShowcaseStrip />
         <FeaturesSection />
         <PricingSection />
         <BottomSection />
