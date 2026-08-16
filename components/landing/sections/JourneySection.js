@@ -186,37 +186,44 @@ export default function JourneySection() {
   const count = STEPS.length;
   const active = Math.min(Math.floor(progress * count), count - 1);
   const lineScale = pinned ? progress : 1;
+  // gate the pinned panel until it's actually scrolled into view to avoid a flash
+  const showPinned = !pinned || progress > 0;
 
   /* ── shared rail + content renderers ── */
 
-  const Rail = () => (
-    <div className="relative flex w-12 shrink-0 flex-col items-center">
-      <div className="absolute bottom-8 top-8 w-px bg-white/[0.1]" aria-hidden="true" />
-      <div
-        className="absolute bottom-8 top-8 w-px origin-top bg-gradient-to-b from-[#8b7cf6] to-[#22d3ee] transition-transform duration-150 ease-out"
-        style={{ transform: `scaleY(${lineScale})` }}
-        aria-hidden="true"
-      />
-      <div className="relative z-10 flex h-full flex-col justify-between py-8">
+  const Rail = () => {
+    const H = 320; // px between first and last dot (fixed so line + dots align)
+    return (
+      <div className="relative w-12 shrink-0 self-center" style={{ height: `${H}px` }}>
+        {/* track */}
+        <div className="absolute left-1/2 top-4 h-[calc(100%-2rem)] w-px -translate-x-1/2 bg-white/[0.1]" aria-hidden="true" />
+        {/* fill — scaleY with scroll progress */}
+        <div
+          className="absolute left-1/2 top-4 h-[calc(100%-2rem)] w-px origin-top -translate-x-1/2 bg-gradient-to-b from-[#8b7cf6] to-[#22d3ee]"
+          style={{ transform: `translateX(-50%) scaleY(${lineScale})`, transition: 'transform 120ms linear' }}
+          aria-hidden="true"
+        />
+        {/* dots, evenly spaced top→bottom */}
         {STEPS.map((s, i) => {
           const on = pinned ? i <= active : true;
+          const top = 16 + (i * (H - 32)) / (count - 1); // 16px inset both ends
           return (
-            <div key={s.id} className="flex flex-col items-center gap-2">
-              <div
-                className={`grid h-8 w-8 place-items-center rounded-full border font-mono text-[10px] font-semibold transition-all duration-300 ${
-                  on
-                    ? 'border-cyan-300/60 bg-[#0b0d18] text-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.35)]'
-                    : 'border-white/[0.12] bg-[#0b0d18] text-white/30'
-                }`}
-              >
-                {i + 1}
-              </div>
+            <div
+              key={s.id}
+              className={`absolute left-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border font-mono text-[10px] font-semibold transition-all duration-300 ${
+                on
+                  ? 'border-cyan-300/60 bg-[#0b0d18] text-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.35)]'
+                  : 'border-white/[0.12] bg-[#0b0d18] text-white/30'
+              }`}
+              style={{ top: `${top}px` }}
+            >
+              {i + 1}
             </div>
           );
         })}
       </div>
-    </div>
-  );
+    );
+  };
 
   const StepText = ({ step, index }) => {
     const on = pinned ? index === active : true;
@@ -257,17 +264,32 @@ export default function JourneySection() {
         {/* Desktop: pinned scrollytelling */}
         {pinned ? (
           <div ref={trackRef} className="relative mt-10" style={{ height: `${count * 100}vh` }}>
-            <div className="sticky top-0 flex h-screen items-center">
-              <div className="flex w-full gap-8">
+            <div
+              className={`sticky top-0 flex h-screen items-center transition-opacity duration-300 ${
+                showPinned ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              <div className="flex w-full items-center gap-8">
                 <Rail />
                 <div className="grid flex-1 items-center gap-12 lg:grid-cols-2">
-                  <div className="space-y-14">
+                  {/* Step text — absolutely stacked so only the active one shows
+                      and the pinned panel never grows past the viewport */}
+                  <div className="relative h-[300px] sm:h-[280px]">
                     {STEPS.map((s, i) => (
-                      <StepText key={s.id} step={s} index={i} />
+                      <div
+                        key={s.id}
+                        className={`absolute inset-0 transition-all duration-500 ${
+                          i === active
+                            ? 'translate-y-0 opacity-100'
+                            : 'pointer-events-none translate-y-4 opacity-0'
+                        }`}
+                      >
+                        <StepText step={s} index={i} />
+                      </div>
                     ))}
                   </div>
                   {/* Mockup panel — crossfades by active step */}
-                  <div className="relative h-[380px]">
+                  <div className="relative self-center h-[380px] w-full max-w-md lg:max-w-none">
                     {STEPS.map((s, i) => {
                       const Mock = MOCKS[s.id];
                       const on = i === active;
@@ -290,10 +312,9 @@ export default function JourneySection() {
             </div>
           </div>
         ) : (
-          /* Mobile / reduced-motion: stacked, no pin */
-          <div className="mt-12 flex gap-5">
-            <Rail />
-            <div className="flex-1 space-y-12">
+          /* Mobile / reduced-motion: stacked, no pin, no rail */
+          <div className="mt-12">
+            <div className="space-y-12">
               {STEPS.map((s, i) => {
                 const Mock = MOCKS[s.id];
                 return (
