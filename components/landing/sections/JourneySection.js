@@ -1,6 +1,5 @@
-'use client';
-
-import { useEffect, useRef, useState } from 'react';
+import { gradientBtn } from '@/components/landing/LandingData';
+import Link from 'next/link';
 
 const STEPS = [
   {
@@ -33,7 +32,7 @@ const STEPS = [
   },
 ];
 
-/* ── Step mockups (placeholders, swap for real screenshots) ── */
+/* ── Step mockups (stylized placeholders) ── */
 
 function MockRules() {
   return (
@@ -134,92 +133,20 @@ function MockAnalyze() {
 }
 
 const MOCKS = { define: MockRules, setup: MockSetup, log: MockLog, analyze: MockAnalyze };
-const COUNT = STEPS.length;
 
+/**
+ * JourneySection — reliable vertical timeline. NO sticky-pin, NO scroll math.
+ * A connecting line runs down the left; each step reveals on scroll via the
+ * existing [data-reveal] IntersectionObserver. Works on every device/browser.
+ */
 export default function JourneySection() {
-  const trackRef = useRef(null);
-  const [progress, setProgress] = useState(0);
-  const [pinned, setPinned] = useState(false);
-
-  // Decide pin mode on mount + on resize; attach ONE always-on scroll listener.
-  useEffect(() => {
-    const mq = window.matchMedia('(min-width: 1024px)');
-    const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const updateMode = () => setPinned(mq.matches && !rm.matches);
-
-    const onScroll = () => {
-      const track = trackRef.current;
-      if (!track) return;
-      const rect = track.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const total = Math.max(rect.height - vh, 1);
-      const passed = Math.min(Math.max(-rect.top, 0), total);
-      setProgress(passed / total);
-    };
-
-    updateMode();
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    mq.addEventListener('change', updateMode);
-    return () => {
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      mq.removeEventListener('change', updateMode);
-    };
-  }, []);
-
-  const active = Math.min(Math.floor(progress * COUNT), COUNT - 1);
-  const lineScale = pinned ? progress : 1;
-
-  const Rail = () => {
-    const H = 320;
-    return (
-      <div className="relative w-12 shrink-0 self-center" style={{ height: `${H}px` }}>
-        <div className="absolute left-1/2 top-4 h-[calc(100%-2rem)] w-px -translate-x-1/2 bg-white/[0.1]" aria-hidden="true" />
-        <div
-          className="absolute left-1/2 top-4 h-[calc(100%-2rem)] w-px origin-top -translate-x-1/2 bg-gradient-to-b from-[#8b7cf6] to-[#22d3ee]"
-          style={{ transform: `translateX(-50%) scaleY(${lineScale})`, transition: 'transform 100ms linear' }}
-          aria-hidden="true"
-        />
-        {STEPS.map((s, i) => {
-          const on = pinned ? i <= active : true;
-          const top = 16 + (i * (H - 32)) / (COUNT - 1);
-          return (
-            <div
-              key={s.id}
-              className={`absolute left-1/2 grid h-8 w-8 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border font-mono text-[10px] font-semibold transition-all duration-300 ${
-                on
-                  ? 'border-cyan-300/60 bg-[#0b0d18] text-cyan-300 shadow-[0_0_16px_rgba(34,211,238,0.35)]'
-                  : 'border-white/[0.12] bg-[#0b0d18] text-white/30'
-              }`}
-              style={{ top: `${top}px` }}
-            >
-              {i + 1}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const StepText = ({ step }) => (
-    <div>
-      <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-300/70">{step.eyebrow}</div>
-      <h3 className="mt-2 font-display text-xl font-bold text-white sm:text-2xl">{step.title}</h3>
-      <p className="mt-3 max-w-md text-sm leading-relaxed text-white/55">{step.desc}</p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {step.chips.map((c) => (
-          <span key={c} className="rounded-full border border-white/[0.09] bg-white/[0.03] px-2.5 py-1 text-[10px] text-white/50">
-            {c}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-
   return (
     <section id="journey" className="relative px-4 py-20 sm:px-10 sm:py-24">
+      <div
+        className="absolute left-1/2 top-0 -z-10 h-80 w-[50rem] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(34,211,238,0.05),transparent_65%)] blur-2xl"
+        aria-hidden="true"
+      />
+
       <div className="mx-auto max-w-5xl">
         <div className="mx-auto max-w-2xl text-center" data-reveal>
           <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.28em] text-cyan-300/70">
@@ -230,67 +157,75 @@ export default function JourneySection() {
             <span className="gradient-shimmer">to the pattern.</span>
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-white/55 sm:text-base">
-            Scroll — the line fills as the loop runs. Four steps, one review loop.
+            Four steps, one review loop — the line connects them all the way down.
           </p>
         </div>
 
-        {pinned ? (
-          <div ref={trackRef} className="relative mt-10" style={{ height: `${COUNT * 90}vh` }}>
-            <div className="sticky top-0 flex h-screen items-center overflow-hidden">
-              <div className="flex w-full items-center gap-8">
-                <Rail />
-                <div className="grid flex-1 items-center gap-12 lg:grid-cols-2">
-                  <div className="relative h-[300px] sm:h-[280px]">
-                    {STEPS.map((s, i) => (
-                      <div
-                        key={s.id}
-                        className={`absolute inset-0 transition-all duration-500 ${
-                          i === active ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
-                        }`}
-                      >
-                        <StepText step={s} />
+        <div className="relative mt-16">
+          {/* Connecting line down the center (desktop) / left (mobile) */}
+          <div
+            className="absolute left-5 top-0 h-full w-px bg-gradient-to-b from-[#8b7cf6]/50 via-cyan-300/40 to-emerald-300/40 sm:left-1/2 sm:-translate-x-1/2"
+            aria-hidden="true"
+          />
+
+          <div className="space-y-16 sm:space-y-20">
+            {STEPS.map((step, i) => {
+              const Mock = MOCKS[step.id];
+              const leftSide = i % 2 === 0;
+              return (
+                <div key={step.id} className="relative" data-reveal style={{ '--reveal-delay': `${i * 40}ms` }}>
+                  {/* Node dot on the line */}
+                  <div className="absolute left-5 top-2 z-10 grid h-10 w-10 -translate-x-1/2 place-items-center rounded-full border border-cyan-300/40 bg-[#0b0d18] font-display text-sm font-bold text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.3)] sm:left-1/2">
+                    {i + 1}
+                  </div>
+
+                  <div className={`grid items-center gap-8 pl-14 sm:pl-0 sm:grid-cols-2 sm:gap-12 ${leftSide ? '' : ''}`}>
+                    {/* Text — alternates sides on desktop */}
+                    <div className={leftSide ? 'sm:order-1 sm:pr-8 sm:text-right' : 'sm:order-2 sm:pl-8'}>
+                      <div className="font-mono text-[10px] uppercase tracking-[0.24em] text-cyan-300/70">{step.eyebrow}</div>
+                      <h3 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">{step.title}</h3>
+                      <p className={`mt-3 max-w-md text-sm leading-relaxed text-white/55 sm:text-base ${leftSide ? 'sm:ml-auto' : ''}`}>
+                        {step.desc}
+                      </p>
+                      <div className={`mt-4 flex flex-wrap gap-2 ${leftSide ? 'sm:justify-end' : ''}`}>
+                        {step.chips.map((c) => (
+                          <span key={c} className="rounded-full border border-white/[0.09] bg-white/[0.03] px-2.5 py-1 text-[10px] text-white/50">
+                            {c}
+                          </span>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  <div className="relative h-[380px] w-full max-w-md self-center lg:max-w-none">
-                    {STEPS.map((s, i) => {
-                      const Mock = MOCKS[s.id];
-                      const on = i === active;
-                      return (
-                        <div
-                          key={s.id}
-                          className={`absolute inset-0 transition-all duration-500 ${
-                            on ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
-                          }`}
-                        >
-                          <div className="product-mockup relative h-full rounded-2xl border border-white/[0.09] bg-[#0a0c16]/95 p-5 shadow-[0_28px_80px_rgba(0,0,0,0.5)]">
-                            <Mock />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-12">
-            <div className="space-y-12">
-              {STEPS.map((s, i) => {
-                const Mock = MOCKS[s.id];
-                return (
-                  <div key={s.id} className="space-y-5" data-reveal style={{ '--reveal-delay': `${i * 60}ms` }}>
-                    <StepText step={s} />
-                    <div className="rounded-2xl border border-white/[0.09] bg-[#0a0c16]/95 p-5">
-                      <Mock />
+                    </div>
+
+                    {/* Mockup — opposite side */}
+                    <div className={leftSide ? 'sm:order-2 sm:pl-8' : 'sm:order-1 sm:pr-8'}>
+                      <div className="product-mockup relative rounded-2xl border border-white/[0.09] bg-[#0a0c16]/95 p-5 shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+                        <Mock />
+                      </div>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Terminal node */}
+          <div className="relative mt-16 flex sm:justify-center" data-reveal>
+            <div className="ml-5 sm:ml-0 sm:-translate-x-0 flex -translate-x-1/2 items-center gap-3 rounded-full border border-emerald-300/30 bg-emerald-300/[0.06] px-5 py-2.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
+              <span className="text-sm font-semibold text-emerald-200">The loop runs every week</span>
             </div>
           </div>
-        )}
+        </div>
+
+        <div className="mt-14 text-center" data-reveal>
+          <Link
+            href="/login?mode=signup"
+            className="cta-glow inline-block rounded-xl px-8 py-3.5 text-sm font-semibold text-[#070710] transition-transform hover:-translate-y-0.5 sm:text-base"
+            style={gradientBtn}
+          >
+            Start your loop →
+          </Link>
+        </div>
       </div>
     </section>
   );

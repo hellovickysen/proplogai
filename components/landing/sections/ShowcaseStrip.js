@@ -1,10 +1,8 @@
 /**
  * ShowcaseStrip — the rest of the product. Trophy wall and prop expenses use
- * REAL screenshots; the quick-add log keeps a stylized form mockup (no clean
- * full screenshot was provided). TODO(owner): move the two .webp images into
- * repo public/landing/ and point src to /landing/*.webp (binary can't go
- * through the agent's GitHub tools). Money appears only in the prop-expense
- * ROI context, never as profit hype.
+ * REAL screenshots at public/landing/*.webp (owner uploads; binary can't go
+ * through the agent's GitHub tools); the quick-add log keeps a stylized form
+ * mockup. Money appears only in the prop-expense ROI context, never profit hype.
  */
 
 function QuickAddMock() {
@@ -47,8 +45,8 @@ function QuickAddMock() {
 
 const CARDS = [
   { title: 'Quick add trade', desc: 'Log in 30 seconds, on purpose.', type: 'mock' },
-  { title: 'Trophy wall', desc: 'Payout & funded certificates, verified.', type: 'img', src: 'https://pub.hyperagent.com/api/published/pbf01M05X9PHA_39SGRW1007PF4J4D/trophy.webp', alt: 'PropLogAI trophy wall with payout and funded certificates' },
-  { title: 'Prop expenses', desc: 'Know what the prop journey really costs.', type: 'img', src: 'https://pub.hyperagent.com/api/published/pbf01M05X9PGP_P3546MXPQCQGBD12/expenses.webp', alt: 'PropLogAI prop firm expenses and payouts tracker' },
+  { title: 'Trophy wall', desc: 'Payout & funded certificates, verified.', type: 'img', src: '/landing/trophy.webp', alt: 'PropLogAI trophy wall with payout and funded certificates' },
+  { title: 'Prop expenses', desc: 'Know what the prop journey really costs.', type: 'img', src: '/landing/expenses.webp', alt: 'PropLogAI prop firm expenses and payouts tracker' },
 ];
 
 export default function ShowcaseStrip() {

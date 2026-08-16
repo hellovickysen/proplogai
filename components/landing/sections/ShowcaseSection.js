@@ -39,7 +39,7 @@ export default function ShowcaseSection() {
         {/* Real Propol AI Coach screenshot */}
         <div className="product-mockup relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[#0a0c16]/95 shadow-[0_28px_90px_rgba(0,0,0,0.5)]" data-reveal style={{ '--reveal-delay': '120ms' }}>
           <img
-            src="https://pub.hyperagent.com/api/published/pbf01M05X9PG7_AJGY8QQ7V7VW27VZ/ai-coach.webp"
+            src="/landing/ai-coach.webp"
             alt="Propol AI Coach growth plan showing recurring mistakes, emotion heatmap, action plan, and Propol's notes"
             className="block h-auto w-full"
             loading="lazy"

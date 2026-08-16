@@ -1,11 +1,9 @@
 /**
  * Hero dashboard — REAL PropLogAI dashboard screenshot inside a browser frame.
- * TODO(owner): move image into repo public/landing/dashboard.webp (drag-and-drop
- * on GitHub, since binary can't go through the agent's GitHub tools), then point
- * src back to /landing/dashboard.webp. Currently served from a public CDN URL.
+ * Image lives at public/landing/dashboard.webp (owner uploads it; binary can't
+ * go through the agent's GitHub tools).
  */
-const DASHBOARD_IMG =
-  'https://pub.hyperagent.com/api/published/pbf01M05X9507_TK9GHKJSB64TV20C/dashboard.webp';
+const DASHBOARD_IMG = '/landing/dashboard.webp';
 
 export default function HeroDashboardMock() {
   return (
