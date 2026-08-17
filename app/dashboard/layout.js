@@ -23,6 +23,7 @@ import AccountSwitcher from '@/components/accounts/AccountSwitcher';
 import AccountScopeGate from '@/components/accounts/AccountScopeGate';
 import SmartHeader from '@/components/layout/SmartHeader';
 import { getAccounts, getActiveAccountId, getAccountStats } from '@/lib/accounts';
+import PwaInstallPrompt from '@/components/pwa/PwaInstallPrompt';
 
 /* Admin notification types — excluded from user dashboard bell */
 const ADMIN_NOTIF_TYPES = ['new_support_ticket', 'new_user_signup', 'ticket_user_replied', 'ticket_closed'];
@@ -249,6 +250,7 @@ export default async function DashboardLayout({ children }) {
         <main className="flex-1"><SubscriptionBanner subscription={subscription} planAccess={planAccess} /><AccountScopeGate accounts={accounts} activeAccountId={activeAccountId}>{children}</AccountScopeGate></main>
         <RiskFooter />
       </div>
+      <PwaInstallPrompt userId={user.id} />
       <QuickActions />
       <MobileBottomNav />
     </div>
