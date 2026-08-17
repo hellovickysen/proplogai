@@ -10,6 +10,10 @@ function fmtDate(d) {
   }
 }
 
+function FavoriteBookmark() {
+  return <span className="inline-flex h-4 w-3 items-start justify-center text-cyan-300" title="Saved trade" aria-label="Saved trade"><svg width="12" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4V3z" /></svg></span>;
+}
+
 export default function TradeTable({ rows, showFilters = false, compact = false, totalCount = 0 }) {
   if (!rows || rows.length === 0) {
     return <div className="py-6 text-center text-sm text-white/40">No trades to show yet.</div>;
@@ -51,7 +55,8 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               {/* Row 2: Meta info */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 font-mono text-[11px] text-white/40">
-                  <span className={'rounded border px-1 py-px ' + (t.is_favorite ? 'border-cyan-400/70 bg-cyan-400/[0.08] text-cyan-300' : 'border-transparent text-white/25')} aria-label={t.is_favorite ? 'Favorite trade' : undefined}>#{tradeNum}</span>
+                  {t.is_favorite && <FavoriteBookmark />}
+                  <span className="rounded border border-transparent px-1 py-px text-white/25">#{tradeNum}</span>
                   <span>{fmtDate(t.trade_date || t.closed_at || t.created_at)}</span>
                   {t.session && <><span className="text-white/20">·</span><span>{t.session}</span></>}
                   {t.setup && <><span className="text-white/20">·</span><span className="truncate max-w-[100px]">{t.setup.split(', ')[0]}</span></>}
@@ -112,9 +117,12 @@ export default function TradeTable({ rows, showFilters = false, compact = false,
               >
                 {/* Trade number */}
                 <td className="px-2 py-3.5">
-                  <span className={'flex h-6 w-6 items-center justify-center rounded-md border font-mono text-[10px] ' + (t.is_favorite ? 'border-cyan-400/70 bg-cyan-400/[0.08] text-cyan-300' : 'border-transparent bg-white/[0.06] text-white/30')} aria-label={t.is_favorite ? 'Favorite trade' : undefined}>
-                    {tradeNum}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    {t.is_favorite && <FavoriteBookmark />}
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md border border-transparent bg-white/[0.06] font-mono text-[10px] text-white/30">
+                      {tradeNum}
+                    </span>
+                  </div>
                 </td>
 
                 {/* Pair + journal icon */}
