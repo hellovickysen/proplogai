@@ -21,6 +21,14 @@ const BEATS = [
     img: '/landing/trophy-wall.png',
     alt: 'PropLogAI trophy wall with payout certificates and funded account achievements',
   },
+  {
+    eyebrow: 'Your real ROI',
+    headline: 'Know what prop trading actually costs — and returns.',
+    copy: 'Challenge fees, activation costs, and payouts tracked per firm. Total expense, total payout, and net P&L across every account — the honest number most traders never calculate.',
+    video: '/landing/payout.mp4',
+    poster: '/landing/payout-poster.jpg',
+    alt: 'PropLogAI prop expense tracker showing total expense, total payout, and net P&L across prop firm accounts',
+  },
 ];
 
 export default function ShowcaseSection() {
@@ -38,8 +46,14 @@ export default function ShowcaseSection() {
               <p className="mt-4 max-w-md text-base leading-relaxed text-white/55">{beat.copy}</p>
             </div>
             <div className="story-screenshot overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-violet-950/30" data-reveal style={{ '--reveal-delay': '120ms' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={beat.img} alt={beat.alt} loading="lazy" decoding="async" className="block w-full" />
+              {beat.video ? (
+                <video autoPlay muted loop playsInline preload="metadata" poster={beat.poster} className="block w-full" aria-label={beat.alt}>
+                  <source src={beat.video} type="video/mp4" />
+                </video>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={beat.img} alt={beat.alt} loading="lazy" decoding="async" className="block w-full" />
+              )}
             </div>
           </div>
         ))}

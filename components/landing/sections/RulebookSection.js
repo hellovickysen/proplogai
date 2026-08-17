@@ -1,13 +1,4 @@
 /* The Rulebook — rules become measurable behavior. */
-const RULES = [
-  'Risk max $100 per trade',
-  'Maximum 2 trades per day',
-  'Stop loss required',
-  'No revenge trades',
-  'Trade only approved setups',
-  'Stop after daily loss limit',
-];
-
 const CHECK = [
   { label: 'Risk within limit', pass: true },
   { label: 'Approved setup', pass: true },
@@ -29,17 +20,10 @@ export default function RulebookSection() {
         </div>
 
         <div className="mt-16 grid items-start gap-6 lg:grid-cols-3">
-          {/* My Rulebook */}
-          <div className="rounded-2xl border border-white/[0.08] bg-[#0a0a14] p-6" data-reveal>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">My rulebook</p>
-            <ul className="mt-5 space-y-3.5">
-              {RULES.map((rule) => (
-                <li key={rule} className="rule-row text-sm text-white/75">
-                  <span className="rule-ico rule-pass">✓</span>
-                  {rule}
-                </li>
-              ))}
-            </ul>
+          {/* Real Rulebook UI — the discipline guardrails */}
+          <div className="story-screenshot overflow-hidden rounded-2xl border border-white/10 shadow-xl shadow-violet-950/20" data-reveal>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/landing/rulebook.png" alt="PropLogAI Rulebook — non-negotiable guardrails like daily loss limit, maximum lot size, and consecutive loss limit" loading="lazy" decoding="async" className="block w-full" />
           </div>
 
           {/* A trade is logged */}
