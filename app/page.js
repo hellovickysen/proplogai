@@ -5,13 +5,24 @@ import CookieBanner from '@/components/landing/CookieBanner';
 import LandingFooter from '@/components/landing/LandingFooter';
 import DeferredMotion from '@/components/landing/DeferredMotion';
 import HeroSection from '@/components/landing/sections/HeroSection';
+import TrustStripSection from '@/components/landing/sections/TrustStripSection';
 import ProblemSection from '@/components/landing/sections/ProblemSection';
-import ShiftSection from '@/components/landing/sections/ShiftSection';
-import EvidenceSection from '@/components/landing/sections/EvidenceSection';
-import PhilosophySection from '@/components/landing/sections/PhilosophySection';
+import CoreStorySection from '@/components/landing/sections/CoreStorySection';
+import DisciplineScoreSection from '@/components/landing/sections/DisciplineScoreSection';
+import RulebookSection from '@/components/landing/sections/RulebookSection';
+import AICoachSection from '@/components/landing/sections/AICoachSection';
+import AnalyticsSection from '@/components/landing/sections/AnalyticsSection';
+import ChaosClaritySection from '@/components/landing/sections/ChaosClaritySection';
+import TraderJourneySection from '@/components/landing/sections/TraderJourneySection';
+import ProgressionSection from '@/components/landing/sections/ProgressionSection';
 import FeaturesSection from '@/components/landing/sections/FeaturesSection';
+import ShowcaseSection from '@/components/landing/sections/ShowcaseSection';
+import DifferentiationSection from '@/components/landing/sections/DifferentiationSection';
+import TraderTypesSection from '@/components/landing/sections/TraderTypesSection';
+import TestimonialsSection from '@/components/landing/sections/TestimonialsSection';
+import FAQSection from '@/components/landing/sections/FAQSection';
 import PricingSection from '@/components/landing/sections/PricingSection';
-import BottomSection from '@/components/landing/sections/BottomSection';
+import FinalCTASection from '@/components/landing/sections/FinalCTASection';
 
 export const revalidate = 300;
 
@@ -30,15 +41,26 @@ export default async function Home() {
       {/* Nav */}
       <LandingNav logo={<Logo size={32} rounded="rounded-lg" glow wordmarkClassName="font-display text-lg font-bold tracking-tight" />} />
 
-      {/* One continuous story */}
+      {/* One continuous journey: a trade enters, intelligence emerges, the trader improves */}
       <HeroSection betaCount={betaCount} />
+      <TrustStripSection />
       <ProblemSection />
-      <ShiftSection />
-      <EvidenceSection />
-      <PhilosophySection />
+      <CoreStorySection />
+      <DisciplineScoreSection />
+      <RulebookSection />
+      <AICoachSection />
+      <AnalyticsSection />
+      <ChaosClaritySection />
+      <TraderJourneySection />
+      <ProgressionSection />
       <FeaturesSection />
+      <ShowcaseSection />
+      <DifferentiationSection />
+      <TraderTypesSection />
+      <TestimonialsSection />
+      <FAQSection />
       <PricingSection />
-      <BottomSection betaCount={betaCount} />
+      <FinalCTASection betaCount={betaCount} />
 
       <LandingFooter />
 

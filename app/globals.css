@@ -247,3 +247,111 @@ main.flex-1 > * {
     0%, 100% { transform: translateX(0); }
   }
 }
+/* ═══════════════ LANDING REDESIGN v2 — data-story system ═══════════════
+ * Scoped additions for the rebuilt marketing page. Everything below is new;
+ * nothing above is modified. All motion is transform/opacity only and is
+ * disabled under prefers-reduced-motion.
+ */
+
+/* Thin data-grid backdrop used on several sections */
+.data-grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Soft radial glow behind hero / score visuals */
+.glow-violet { background: radial-gradient(closest-side, rgba(139, 92, 246, 0.16), transparent); }
+.glow-cyan { background: radial-gradient(closest-side, rgba(34, 211, 238, 0.12), transparent); }
+
+/* Section eyebrow / micro-label */
+.section-eyebrow {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(167, 139, 250, 0.6);
+}
+
+/* Animated rule-check row: pass = green, fail = red */
+.rule-row { display: flex; align-items: center; gap: 0.6rem; }
+.rule-row .rule-ico { flex-shrink: 0; font-style: normal; width: 1.1rem; text-align: center; }
+.rule-pass { color: #34d399; }
+.rule-fail { color: #fb7185; }
+
+/* AI-scan shimmer sweep across a card (transform-only gradient position) */
+.ai-scan { position: relative; overflow: hidden; }
+.ai-scan::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: -40%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, rgba(34, 211, 238, 0.10), transparent);
+  animation: ai-scan-sweep 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes ai-scan-sweep {
+  0% { left: -40%; }
+  60%, 100% { left: 130%; }
+}
+
+/* Floating module (dashboard cards drifting gently) */
+.float-slow { animation: float-y 7s ease-in-out infinite; }
+.float-slower { animation: float-y 9s ease-in-out infinite; animation-delay: 1.4s; }
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* Vertical journey timeline line */
+.journey-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.5), rgba(34, 211, 238, 0.4), rgba(52, 211, 153, 0.35));
+}
+@media (max-width: 768px) {
+  .journey-line { left: 18px; transform: none; }
+}
+
+/* Chaos-to-clarity scattered chip drift */
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) rotate(var(--rot, 0deg)); }
+  50% { transform: translate(var(--dx, 6px), var(--dy, -8px)) rotate(var(--rot, 0deg)); }
+}
+.chaos-chip { animation: drift 6s ease-in-out infinite; }
+
+/* The upward "progress path" that breaks out of the problem loop */
+.progress-path { stroke-linecap: round; stroke-linejoin: round; fill: none; }
+
+/* Orbit ring for the discipline score dimensions */
+@keyframes orbit-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.orbit-ring { animation: orbit-spin 40s linear infinite; }
+.orbit-ring-reverse { animation: orbit-spin 55s linear infinite reverse; }
+
+/* Marquee ticker for the capability trust strip */
+.capability-ticker {
+  display: flex;
+  gap: 3rem;
+  width: max-content;
+  animation: ticker-scroll 28s linear infinite;
+}
+
+/* Generic reduced-motion kill-switch for everything added above */
+@media (prefers-reduced-motion: reduce) {
+  .ai-scan::after,
+  .float-slow,
+  .float-slower,
+  .orbit-ring,
+  .orbit-ring-reverse,
+  .chaos-chip,
+  .capability-ticker { animation: none !important; }
+}
