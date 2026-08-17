@@ -12,7 +12,15 @@ const PAGE_SIZE = 20;
 /* ─── Custom themed dropdown (single-select) ──────────────── */
 function FilterDropdown({ label, value, onChange, placeholder, options, counts }) {
   const [open, setOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const ref = useRef(null);
+
+  function toggleOpen() {
+    if (open) { setOpen(false); return; }
+    const rect = ref.current?.getBoundingClientRect();
+    setOpenUp(!!rect && window.innerHeight - rect.bottom < 280);
+    setOpen(true);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -30,14 +38,14 @@ function FilterDropdown({ label, value, onChange, placeholder, options, counts }
       <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">{label}</label>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggleOpen}
         className={field + ' flex w-full cursor-pointer items-center justify-between gap-2 text-left sm:w-auto sm:min-w-[130px]'}
       >
         <span className={value ? 'text-white' : 'text-white/50'}>{displayValue}</span>
         <span className={'text-white/30 text-[10px] transition-transform ' + (open ? 'rotate-180' : '')}>&#9660;</span>
       </button>
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 min-w-[200px] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-64 overflow-y-auto styled-scrollbar">
+        <div className={'absolute left-0 z-[1000] min-w-[200px] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-[min(16rem,calc(100vh-10rem))] overflow-y-auto styled-scrollbar ' + (openUp ? 'bottom-full mb-1' : 'top-full mt-1')}>
           <button
             type="button"
             onClick={() => { onChange(''); setOpen(false); }}
@@ -129,9 +137,17 @@ function LegacyDateFilterDropdown({ label, value, onChange }) {
 }
 
 /* ─── Multi-select dropdown (toggle tags on/off) ──────────── */
-function MultiFilterDropdown({ label, selected, onChange, placeholder, options, counts }) {
+function MultiFilterDropdown({ label, selected, onChange, placeholder, options, counts, compact = false }) {
   const [open, setOpen] = useState(false);
+  const [openUp, setOpenUp] = useState(false);
   const ref = useRef(null);
+
+  function toggleOpen() {
+    if (open) { setOpen(false); return; }
+    const rect = ref.current?.getBoundingClientRect();
+    setOpenUp(!!rect && window.innerHeight - rect.bottom < 360);
+    setOpen(true);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -155,7 +171,7 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options, 
       <label className="mb-1 block font-mono text-xs uppercase tracking-wider text-white/50">{label}</label>
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggleOpen}
         className={field + ' flex w-full cursor-pointer items-center justify-between gap-2 text-left sm:w-auto sm:min-w-[130px]'}
       >
         {selected.length > 0 ? (
@@ -171,7 +187,7 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options, 
         <span className={'text-white/30 text-[10px] transition-transform ' + (open ? 'rotate-180' : '')}>&#9660;</span>
       </button>
       {/* Selected pills below the button */}
-      {selected.length > 0 && (
+      {!compact && selected.length > 0 && (
         <div className="mt-1 flex flex-wrap gap-1">
           {selected.map((tag) => (
             <span
@@ -191,7 +207,7 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options, 
         </div>
       )}
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 min-w-[200px] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-64 overflow-y-auto styled-scrollbar">
+        <div className={'absolute left-0 z-[1000] min-w-[200px] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-[min(16rem,calc(100vh-10rem))] overflow-y-auto styled-scrollbar ' + (openUp ? 'bottom-full mb-1' : 'top-full mt-1')}>
           {selected.length > 0 && (
             <button
               type="button"
@@ -517,7 +533,7 @@ export default function TradeFilters({ trades, prefs }) {
             <FilterDropdown label="Setup" value={setupFilter} onChange={setSetupFilter} placeholder="All setups" options={setupOptions} />
             <FilterDropdown label="Emotion" value={emotionFilter} onChange={setEmotionFilter} placeholder="All emotions" options={emotionOptions} />
             <FilterDropdown label="Session" value={sessionFilter} onChange={setSessionFilter} placeholder="All sessions" options={sessionOptions} />
-            {tagOptions.length > 0 && <MultiFilterDropdown label="Tags" selected={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} counts={tagCounts} />}
+            {tagOptions.length > 0 && <MultiFilterDropdown label="Tags" selected={tagFilter} onChange={setTagFilter} placeholder="All tags" options={tagOptions} counts={tagCounts} compact />}
             <div className="flex items-end pb-0.5">
               <button type="button" onClick={() => setFavoritesOnly(v => !v)} className={'flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2.5 transition-all ' + (favoritesOnly ? 'border-amber-400/40 bg-amber-400/[0.08] text-amber-300' : 'border-white/10 bg-black/30 text-white/55 hover:border-white/20')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill={favoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3 2.75 5.57 6.15.89-4.45 4.33 1.05 6.12L12 17.02l-5.5 2.89 1.05-6.12L3.1 9.46l6.15-.89L12 3Z" /></svg>
