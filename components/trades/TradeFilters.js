@@ -10,7 +10,7 @@ const field = 'w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2 te
 const PAGE_SIZE = 20;
 
 /* ─── Custom themed dropdown (single-select) ──────────────── */
-function FilterDropdown({ label, value, onChange, placeholder, options, counts }) {
+function FilterDropdown({ label, value, onChange, placeholder, options, counts, compact = false }) {
   const [open, setOpen] = useState(false);
   const [openUp, setOpenUp] = useState(false);
   const ref = useRef(null);
@@ -46,7 +46,7 @@ function FilterDropdown({ label, value, onChange, placeholder, options, counts }
         <span className={'text-white/30 text-[10px] transition-transform ' + (open ? 'rotate-180' : '')}>&#9660;</span>
       </button>
       {open && (
-        <div className={'absolute left-0 z-[1000] min-w-[200px] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-[min(16rem,calc(100vh-10rem))] overflow-y-auto styled-scrollbar ' + (openUp ? 'bottom-full mb-1' : 'top-full mt-1')}>
+        <div className={'absolute left-0 z-[1000] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl overflow-y-auto styled-scrollbar ' + (compact ? 'w-full min-w-0 max-h-48' : 'min-w-[200px] max-h-[min(16rem,calc(100vh-10rem))]') + ' ' + (openUp ? 'bottom-full mb-1' : 'top-full mt-1')}>
           <button
             type="button"
             onClick={() => { onChange(''); setOpen(false); }}
@@ -146,7 +146,7 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options, 
   function toggleOpen() {
     if (open) { setOpen(false); return; }
     const rect = ref.current?.getBoundingClientRect();
-    const requiredSpace = window.innerWidth < 640 ? 520 : 360;
+    const requiredSpace = window.innerWidth < 640 ? (compact ? 280 : 520) : 360;
     setOpenUp(!!rect && window.innerHeight - rect.bottom < requiredSpace);
     setOpen(true);
   }
@@ -209,7 +209,7 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options, 
         </div>
       )}
       {open && (
-        <div className={'absolute left-0 z-[1000] min-w-[200px] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl max-h-[min(16rem,calc(100vh-10rem))] overflow-y-auto styled-scrollbar ' + (openUp ? 'bottom-full mb-1' : 'top-full mt-1')}>
+        <div className={'absolute left-0 z-[1000] rounded-xl border border-white/10 bg-[#12121a] py-1 shadow-xl overflow-y-auto styled-scrollbar ' + (compact ? 'w-full min-w-0 max-h-48' : 'min-w-[200px] max-h-[min(16rem,calc(100vh-10rem))]') + ' ' + (openUp ? 'bottom-full mb-1' : 'top-full mt-1')}>
           {selected.length > 0 && (
             <button
               type="button"
