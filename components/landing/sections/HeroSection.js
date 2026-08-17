@@ -46,17 +46,8 @@ export default function HeroSection({ betaCount }) {
           No credit card. Log your first trade in 30 seconds.
         </p>
 
-        {/* Hero visual — floating dashboard / video with the pipeline rail */}
+        {/* Hero visual — the quick-add video inside a floating dashboard frame */}
         <div className="relative mx-auto mt-14 max-w-4xl" data-reveal style={{ '--reveal-delay': '280ms' }}>
-          {/* floating metric chips (parallax depth) */}
-          <div className="float-slow absolute -left-8 top-10 z-20 hidden rounded-xl border border-white/10 bg-[#0b0b16]/90 px-4 py-3 backdrop-blur md:block" data-parallax="0.06" aria-hidden="true">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-white/35">Discipline score</div>
-            <div className="font-display text-2xl font-bold text-emerald-300"><span data-count-to="84">0</span></div>
-          </div>
-          <div className="float-slower absolute -right-8 bottom-16 z-20 hidden rounded-xl border border-white/10 bg-[#0b0b16]/90 px-4 py-3 backdrop-blur md:block" data-parallax="0.09" aria-hidden="true">
-            <div className="font-mono text-[10px] uppercase tracking-widest text-white/35">Win rate</div>
-            <div className="font-display text-2xl font-bold"><span data-count-to="38" data-count-suffix="%">0%</span></div>
-          </div>
 
           <div className="story-video-frame relative overflow-hidden rounded-2xl border border-white/12 bg-[#0b0b14]/80 shadow-2xl shadow-cyan-950/30">
             <div className="flex items-center gap-2 border-b border-white/8 bg-black/30 px-4 py-2.5">

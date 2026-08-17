@@ -105,9 +105,10 @@ main.flex-1 > * {
 .gradient-shimmer {
   background: linear-gradient(110deg, #a78bfa 0%, #22d3ee 32%, #f8fafc 48%, #22d3ee 62%, #a78bfa 100%);
   background-size: 220% 100%;
-  -webkit-backgroundClip: text;
-  backgroundClip: text;
-  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: #c4b5fd; /* fallback if background-clip:text is unsupported */
+  -webkit-text-fill-color: transparent;
   animation: gradient-shimmer 5.5s ease-in-out infinite;
 }
 
@@ -213,7 +214,7 @@ main.flex-1 > * {
   display: block;
   width: 100%;
   height: auto;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* Real screenshot frames — used in EvidenceSection beats */
