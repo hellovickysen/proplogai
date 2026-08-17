@@ -18,7 +18,8 @@ function FilterDropdown({ label, value, onChange, placeholder, options, counts }
   function toggleOpen() {
     if (open) { setOpen(false); return; }
     const rect = ref.current?.getBoundingClientRect();
-    setOpenUp(!!rect && window.innerHeight - rect.bottom < 280);
+    const requiredSpace = label === 'Emotion' && window.innerWidth < 640 ? 460 : 280;
+    setOpenUp(!!rect && window.innerHeight - rect.bottom < requiredSpace);
     setOpen(true);
   }
 
@@ -145,7 +146,8 @@ function MultiFilterDropdown({ label, selected, onChange, placeholder, options, 
   function toggleOpen() {
     if (open) { setOpen(false); return; }
     const rect = ref.current?.getBoundingClientRect();
-    setOpenUp(!!rect && window.innerHeight - rect.bottom < 360);
+    const requiredSpace = window.innerWidth < 640 ? 520 : 360;
+    setOpenUp(!!rect && window.innerHeight - rect.bottom < requiredSpace);
     setOpen(true);
   }
 
