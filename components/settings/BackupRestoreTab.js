@@ -18,6 +18,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [previewBusy, setPreviewBusy] = useState(false);
+  const [restoreBusy, setRestoreBusy] = useState(false);
   const [driveBusy, setDriveBusy] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
@@ -66,9 +67,9 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   }
 
   async function restore() {
-    if (!file || !preview || previewBusy) return;
+    if (!file || !preview || previewBusy || restoreBusy) return;
     if (!window.confirm('Restore this backup with safe merge? Existing data will stay in place; exact duplicates will be skipped.')) return;
-    setPreviewBusy(true); setError(null);
+    setRestoreBusy(true); setError(null);
     try {
       const body = new FormData(); body.append('file', file);
       const response = await fetch('/api/backups/import', { method: 'POST', body });
@@ -78,7 +79,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
     } catch (err) {
       setError(err.message || 'Unable to restore this backup.');
       toast?.error(err.message || 'Unable to restore this backup.');
-    } finally { setPreviewBusy(false); }
+    } finally { setRestoreBusy(false); }
   }
 
   return (
@@ -103,9 +104,10 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
             <>
               <h3 className="mt-2 font-display text-lg font-semibold">{countPreview(preview).toLocaleString()} records ready for safe merge</h3>
               <p className="mt-1 text-sm text-white/55">Existing records are not deleted or silently overwritten. A repeated import skips items already mapped from this archive.</p>
-              <button type="button" onClick={restore} className={'mt-5 ' + primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>Restore with safe merge</button>
+              <button type="button" onClick={restore} disabled={restoreBusy} className={'mt-5 ' + primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{restoreBusy ? 'Restoring with safe merge…' : 'Restore with safe merge'}</button>
             </>
           )}
+          {restoreBusy && <p className="mt-3 text-sm text-cyan-300">Applying safe-merge mappings…</p>}
           {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
           {result && <p className="mt-3 text-sm text-emerald-300">Restored {result.inserted} records; skipped {result.skipped} known duplicates; {result.conflicts.length} conflicts need review.</p>}
         </section>
