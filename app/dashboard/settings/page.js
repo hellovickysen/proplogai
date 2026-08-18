@@ -38,6 +38,25 @@ export default async function SettingsPage({ searchParams }) {
     .eq('user_id', user.id)
     .maybeSingle();
 
+  // Backup status is optional until the staging migration has been applied.
+  const { data: backupConnection } = await supabase
+    .from('backup_drive_connections')
+    .select('id, status')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const { data: latestBackup } = await supabase
+    .from('backup_runs')
+    .select('completed_at')
+    .eq('user_id', user.id)
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const backupStatus = {
+    driveConnected: backupConnection?.status === 'connected',
+    lastCompletedAt: latestBackup?.completed_at || null,
+  };
+
   // From Razorpay callback redirect
   const paymentStatus = searchParams?.status || null;
   const activeTab = searchParams?.tab || null;
@@ -52,6 +71,7 @@ export default async function SettingsPage({ searchParams }) {
         prefs={prefs}
         planAccess={planAccess}
         subscription={subscription || null}
+        backupStatus={backupStatus}
         paymentStatus={paymentStatus}
         initialTab={activeTab}
       />
