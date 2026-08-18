@@ -17,7 +17,8 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const inputRef = useRef(null);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [busy, setBusy] = useState(false);
+  const [previewBusy, setPreviewBusy] = useState(false);
+  const [driveBusy, setDriveBusy] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [driveConnected, setDriveConnected] = useState(Boolean(backupStatus?.driveConnected));
@@ -25,7 +26,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   async function inspectSelectedFile(nextFile) {
     setFile(nextFile || null); setPreview(null); setResult(null); setError(null);
     if (!nextFile) return;
-    setBusy(true);
+    setPreviewBusy(true);
     try {
       const body = new FormData(); body.append('file', nextFile);
       const response = await fetch('/api/backups/import-preview', { method: 'POST', body });
@@ -34,12 +35,12 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       setPreview(payload);
     } catch (err) {
       setError(err.message || 'Unable to inspect this backup.');
-    } finally { setBusy(false); }
+    } finally { setPreviewBusy(false); }
   }
 
   async function uploadToDrive() {
-    if (busy) return;
-    setBusy(true); setError(null);
+    if (driveBusy) return;
+    setDriveBusy(true); setError(null);
     try {
       const response = await fetch('/api/backups/google/upload', { method: 'POST' });
       const payload = await response.json();
@@ -48,12 +49,12 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
     } catch (err) {
       setError(err.message || 'Unable to back up to Google Drive.');
       toast?.error(err.message || 'Unable to back up to Google Drive.');
-    } finally { setBusy(false); }
+    } finally { setDriveBusy(false); }
   }
 
   async function revokeDrive() {
-    if (busy || !window.confirm('Disconnect Google Drive? Scheduled backups will stop.')) return;
-    setBusy(true); setError(null);
+    if (driveBusy || !window.confirm('Disconnect Google Drive? Scheduled backups will stop.')) return;
+    setDriveBusy(true); setError(null);
     try {
       const response = await fetch('/api/backups/google/revoke', { method: 'POST' });
       const payload = await response.json();
@@ -61,13 +62,13 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       setDriveConnected(false); toast?.success('Google Drive disconnected.');
     } catch (err) {
       setError(err.message || 'Unable to disconnect Google Drive.');
-    } finally { setBusy(false); }
+    } finally { setDriveBusy(false); }
   }
 
   async function restore() {
-    if (!file || !preview || busy) return;
+    if (!file || !preview || previewBusy) return;
     if (!window.confirm('Restore this backup with safe merge? Existing data will stay in place; exact duplicates will be skipped.')) return;
-    setBusy(true); setError(null);
+    setPreviewBusy(true); setError(null);
     try {
       const body = new FormData(); body.append('file', file);
       const response = await fetch('/api/backups/import', { method: 'POST', body });
@@ -77,7 +78,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
     } catch (err) {
       setError(err.message || 'Unable to restore this backup.');
       toast?.error(err.message || 'Unable to restore this backup.');
-    } finally { setBusy(false); }
+    } finally { setPreviewBusy(false); }
   }
 
   return (
@@ -88,7 +89,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
         <p className="mt-2 max-w-xl text-sm leading-6 text-white/55">One backup includes every trading account, trade, journal, setup, AI analysis, discipline record, chart input, preference, and owned attachment. Dashboards rebuild from the restored source evidence.</p>
         <div className="mt-5 flex flex-wrap gap-3">
           <a href="/api/backups/export" className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>Download backup</a>
-          <button type="button" className={secondaryButton} onClick={() => inputRef.current?.click()} disabled={busy}>Choose backup to restore</button>
+          <button type="button" className={secondaryButton} onClick={() => inputRef.current?.click()} disabled={previewBusy}>Choose backup to restore</button>
           <input ref={inputRef} type="file" accept=".zip,application/zip" className="hidden" onChange={(event) => inspectSelectedFile(event.target.files?.[0])} />
         </div>
         <p className="mt-4 text-xs leading-5 text-white/35">For safety, backups never include login credentials, subscriptions, payment records, affiliate balances, support tickets, or Google Drive credentials.</p>
@@ -97,8 +98,8 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       {file && (
         <section className={card}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">Restore preview</p>
-          {busy && <p className="mt-3 text-sm text-cyan-300">Checking archive integrity…</p>}
-          {!busy && preview && (
+          {previewBusy && <p className="mt-3 text-sm text-cyan-300">Checking archive integrity…</p>}
+          {!previewBusy && preview && (
             <>
               <h3 className="mt-2 font-display text-lg font-semibold">{countPreview(preview).toLocaleString()} records ready for safe merge</h3>
               <p className="mt-1 text-sm text-white/55">Existing records are not deleted or silently overwritten. A repeated import skips items already mapped from this archive.</p>
@@ -117,8 +118,8 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
           <p className="mt-1 max-w-xl text-sm text-white/55">Connect your Google Drive for an on-demand cloud copy and a daily protected backup. The latest 30 are retained automatically.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <a href="/api/backups/google/start" className={secondaryButton}>{driveConnected ? 'Reconnect Google Drive' : 'Connect Google Drive'}</a>
-            <button type="button" onClick={uploadToDrive} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} disabled={!driveConnected || busy}>{busy ? 'Backing up…' : 'Back up to Drive'}</button>
-            {driveConnected && <button type="button" onClick={revokeDrive} className={secondaryButton} disabled={busy}>Disconnect</button>}
+            <button type="button" onClick={uploadToDrive} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} disabled={!driveConnected || driveBusy}>{driveBusy ? 'Backing up…' : 'Back up to Drive'}</button>
+            {driveConnected && <button type="button" onClick={revokeDrive} className={secondaryButton} disabled={driveBusy}>Disconnect</button>}
           </div>
           {backupStatus?.lastCompletedAt && <p className="mt-3 text-xs text-white/40">Last completed backup: {new Date(backupStatus.lastCompletedAt).toLocaleString()}</p>}
         </section>
