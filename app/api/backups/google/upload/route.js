@@ -16,7 +16,7 @@ export async function POST() {
 
   const { data: connection } = await supabase
     .from('backup_drive_connections')
-    .select('id,status,token_ciphertext,token_iv,token_tag,token_expires_at')
+    .select('id,status,token_ciphertext,token_iv,token_tag,token_expires_at,provider_folder_id')
     .eq('user_id', user.id)
     .eq('status', 'connected')
     .maybeSingle();
@@ -28,10 +28,10 @@ export async function POST() {
   try {
     const { archive, manifest } = await createProfileBackup(supabase, user);
     const filename = `proplogai-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
-    const providerFileId = await uploadGoogleDriveBackup(supabase, user.id, connection, archive, filename);
+    const { providerFileId, folderId } = await uploadGoogleDriveBackup(supabase, user.id, connection, archive, filename);
     await supabase.from('backup_runs').update({ status: 'completed', archive_version: manifest.version, bytes: archive.length, record_count: manifest.tables.reduce((sum, table) => sum + table.rows, 0), provider_file_id: providerFileId, completed_at: new Date().toISOString() }).eq('id', run.id).eq('user_id', user.id);
     await retainLatestGoogleDriveBackups(supabase, user.id, connection, 7);
-    return NextResponse.json({ ok: true, completedAt: new Date().toISOString() });
+    return NextResponse.json({ ok: true, completedAt: new Date().toISOString(), folderId });
   } catch (error) {
     await supabase.from('backup_runs').update({ status: 'failed', error_message: String(error?.message || 'Backup failed.').slice(0, 500), completed_at: new Date().toISOString() }).eq('id', run.id).eq('user_id', user.id);
     return NextResponse.json({ error: error?.message || 'Unable to create the cloud backup.' }, { status: 400 });

@@ -28,7 +28,7 @@ export async function GET(request) {
 
   const { data: connections, error } = await supabase
     .from('backup_drive_connections')
-    .select('id,user_id,status,token_ciphertext,token_iv,token_tag,token_expires_at')
+    .select('id,user_id,status,token_ciphertext,token_iv,token_tag,token_expires_at,provider_folder_id')
     .eq('status', 'connected');
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
@@ -40,7 +40,7 @@ export async function GET(request) {
     try {
       const { archive, manifest } = await createProfileBackup(supabase, { id: connection.user_id });
       const filename = `proplogai-daily-${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
-      const providerFileId = await uploadGoogleDriveBackup(supabase, connection.user_id, connection, archive, filename);
+      const { providerFileId } = await uploadGoogleDriveBackup(supabase, connection.user_id, connection, archive, filename);
       await supabase.from('backup_runs').update({ status: 'completed', archive_version: manifest.version, bytes: archive.length, record_count: manifest.tables.reduce((sum, table) => sum + table.rows, 0), provider_file_id: providerFileId, completed_at: new Date().toISOString() }).eq('id', run.id).eq('user_id', connection.user_id);
       await retainLatestGoogleDriveBackups(supabase, connection.user_id, connection, 7);
       results.push({ userId: connection.user_id, ok: true });
