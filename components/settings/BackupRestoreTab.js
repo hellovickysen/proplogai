@@ -37,6 +37,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const [result, setResult] = useState(null);
   const [confirmRestore, setConfirmRestore] = useState(false);
   const [driveConnected, setDriveConnected] = useState(Boolean(backupStatus?.driveConnected));
+  const [lastCloudBackup, setLastCloudBackup] = useState(backupStatus?.lastCloudBackupAt || null);
 
   async function downloadBackup() {
     if (exportState === 'preparing') return;
@@ -99,7 +100,8 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       const response = await fetch('/api/backups/google/upload', { method: 'POST' });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || 'Unable to back up to Google Drive.');
-      toast?.success('Backup saved to Google Drive.');
+      setLastCloudBackup(payload.completedAt || new Date().toISOString());
+      toast?.success('Cloud backup complete.');
     } catch (err) {
       setError(err.message || 'Unable to back up to Google Drive.');
       toast?.error(err.message || 'Unable to back up to Google Drive.');
@@ -107,7 +109,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   }
 
   async function restoreLatestCloudBackup() {
-    if (cloudRestoreBusy || !backupStatus?.lastCloudBackupAt) return;
+    if (cloudRestoreBusy || !lastCloudBackup) return;
     setCloudRestoreBusy(true); setError(null);
     try {
       const response = await fetch('/api/backups/google/restore-latest', { method: 'POST' });
@@ -215,10 +217,10 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
           <div className="mt-5 flex flex-wrap gap-3">
             <a href="/api/backups/google/start" className={secondaryButton}>{driveConnected ? 'Reconnect Google Drive' : 'Connect Google Drive'}</a>
             <button type="button" onClick={uploadToDrive} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} disabled={!driveConnected || driveBusy}>{driveBusy ? 'Backing up…' : 'Back up to Drive'}</button>
-            {backupStatus?.lastCloudBackupAt && <button type="button" onClick={restoreLatestCloudBackup} className={secondaryButton} disabled={cloudRestoreBusy}>{cloudRestoreBusy ? 'Restoring latest…' : 'Restore latest backup'}</button>}
+            {lastCloudBackup && <button type="button" onClick={restoreLatestCloudBackup} className={secondaryButton} disabled={cloudRestoreBusy}>{cloudRestoreBusy ? 'Restoring latest…' : 'Restore latest backup'}</button>}
             {driveConnected && <button type="button" onClick={revokeDrive} className={secondaryButton} disabled={driveBusy}>Disconnect</button>}
           </div>
-          {backupStatus?.lastCloudBackupAt && <p className="mt-3 text-xs text-white/40">Latest cloud backup: {new Date(backupStatus.lastCloudBackupAt).toLocaleString()}</p>}
+          <p className="mt-3 text-xs text-white/40">{lastCloudBackup ? `Latest cloud backup: ${new Date(lastCloudBackup).toLocaleString()}` : 'Cloud copies are stored privately in Google app data, not visible in normal Drive folders.'}</p>
         </section>
       </BlurGate>
 
