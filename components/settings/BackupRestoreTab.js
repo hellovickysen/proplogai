@@ -13,6 +13,10 @@ function countPreview(preview) {
   return Object.values(preview?.report?.tables || {}).reduce((total, item) => total + (item.proposed || 0), 0);
 }
 
+function startProgress(setProgress) {
+  return window.setInterval(() => setProgress((value) => value < 92 ? value + Math.max(1, Math.ceil((92 - value) / 10)) : value), 180);
+}
+
 export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const toast = useToast();
   const inputRef = useRef(null);
@@ -35,7 +39,8 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
 
   async function downloadBackup() {
     if (exportState === 'preparing') return;
-    setExportState('preparing'); setExportProgress(10); setError(null);
+    setExportState('preparing'); setExportProgress(0); setError(null);
+    const progressTimer = startProgress(setExportProgress);
     try {
       const response = await fetch('/api/backups/export');
       setExportProgress(70);
@@ -54,10 +59,13 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       URL.revokeObjectURL(link.href);
       setUnavailableAssets(Number(response.headers.get('X-Backup-Unavailable-Assets') || 0));
       setLastManualBackup(new Date().toISOString());
+      window.clearInterval(progressTimer);
       setExportProgress(100);
       setExportState('complete');
-      toast?.success('Backup downloaded.');
+      window.setTimeout(() => setExportState('idle'), 5000);
+      toast?.success('Manual backup complete.');
     } catch (err) {
+      window.clearInterval(progressTimer);
       setError(err.message || 'Unable to create a backup.');
       toast?.error(err.message || 'Unable to create a backup.');
       setExportState('idle');
@@ -67,15 +75,18 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   async function inspectSelectedFile(nextFile) {
     setFile(nextFile || null); setPreview(null); setResult(null); setError(null); setPreviewProgress(0);
     if (!nextFile) return;
-    setPreviewBusy(true); setPreviewProgress(10);
+    setPreviewBusy(true); setPreviewProgress(0);
+    const progressTimer = startProgress(setPreviewProgress);
     try {
       const body = new FormData(); body.append('file', nextFile);
       const response = await fetch('/api/backups/import-preview', { method: 'POST', body });
       const payload = await response.json();
       setPreviewProgress(85);
       if (!response.ok) throw new Error(payload.error || 'Unable to inspect this backup.');
+      window.clearInterval(progressTimer);
       setPreview(payload); setPreviewProgress(100);
     } catch (err) {
+      window.clearInterval(progressTimer);
       setError(err.message || 'Unable to inspect this backup.');
     } finally { setPreviewBusy(false); }
   }
@@ -115,15 +126,20 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   async function restore() {
     setConfirmRestore(false);
     if (!file || !preview || previewBusy || restoreBusy) return;
-    setRestoreBusy(true); setRestoreProgress(10); setError(null);
+    setRestoreBusy(true); setRestoreProgress(0); setError(null);
+    const progressTimer = startProgress(setRestoreProgress);
     try {
       const body = new FormData(); body.append('file', file);
       const response = await fetch('/api/backups/import', { method: 'POST', body });
       const payload = await response.json();
       setRestoreProgress(90);
       if (!response.ok) throw new Error(payload.error || 'Unable to restore this backup.');
-      setResult(payload.report); setLastRestore(payload.report); setFile(null); setPreview(null); setRestoreProgress(100); toast?.success('Backup restored with safe merge.');
+      window.clearInterval(progressTimer);
+      setResult(payload.report); setLastRestore(payload.report); setFile(null); setPreview(null); setRestoreProgress(100);
+      window.setTimeout(() => setLastRestore(null), 5000);
+      toast?.success('Recovery complete.');
     } catch (err) {
+      window.clearInterval(progressTimer);
       setError(err.message || 'Unable to restore this backup.');
       toast?.error(err.message || 'Unable to restore this backup.');
     } finally { setRestoreBusy(false); }
@@ -144,7 +160,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
           </div>
         </div>
         {exportState === 'preparing' && <div className="mt-6"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Preparing your archive</span><span>{exportProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-300 transition-all duration-300" style={{ width: `${exportProgress}%` }} /></div></div>}
-        {exportState === 'complete' && <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-5 text-sm text-emerald-300"><span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-400/15">✓</span><span>Backup downloaded and ready for recovery.</span></div>}
+        {exportState === 'complete' && <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-5 text-sm text-emerald-300"><span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-400/15">✓</span><span>Manual backup complete.</span></div>}
         <div className="mt-6 flex flex-wrap gap-3">
           <button type="button" onClick={downloadBackup} disabled={exportState === 'preparing'} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{exportState === 'preparing' ? 'Preparing backup…' : 'Create manual backup'}</button>
           <button type="button" className={secondaryButton} onClick={() => inputRef.current?.click()} disabled={previewBusy}>Restore an archive</button>
