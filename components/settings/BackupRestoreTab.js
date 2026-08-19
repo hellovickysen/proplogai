@@ -234,12 +234,14 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
           )}
           <div className="mt-5 flex flex-wrap gap-3">
             <a href="/api/backups/google/start" className={secondaryButton}>{driveConnected ? 'Reconnect Google Drive' : 'Connect Google Drive'}</a>
-            <button type="button" onClick={uploadToDrive} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} disabled={!driveConnected || driveBusy}>{driveBusy ? 'Backing up…' : 'Back up to Drive'}</button>
-            {lastCloudBackup && <button type="button" onClick={restoreLatestCloudBackup} className={secondaryButton} disabled={cloudRestoreBusy}>{cloudRestoreBusy ? 'Restoring latest…' : `Restore backup from ${new Date(lastCloudBackup).toLocaleDateString()}`}</button>}
-            {driveFolderId && <a href={`https://drive.google.com/drive/folders/${driveFolderId}`} target="_blank" rel="noopener noreferrer" className={secondaryButton}>Open backup folder</a>}
-            {driveConnected && <button type="button" onClick={requestDisconnectDrive} className={secondaryButton} disabled={driveBusy}>Disconnect</button>}
+            {driveConnected && <>
+              <button type="button" onClick={uploadToDrive} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} disabled={driveBusy}>{driveBusy ? 'Backing up…' : 'Back up to Drive'}</button>
+              {lastCloudBackup && <button type="button" onClick={restoreLatestCloudBackup} className={secondaryButton} disabled={cloudRestoreBusy}>{cloudRestoreBusy ? 'Restoring latest…' : `Restore backup from ${new Date(lastCloudBackup).toLocaleDateString()}`}</button>}
+              {driveFolderId && <a href={`https://drive.google.com/drive/folders/${driveFolderId}`} target="_blank" rel="noopener noreferrer" className={secondaryButton}>Open backup folder</a>}
+              <button type="button" onClick={requestDisconnectDrive} className={secondaryButton} disabled={driveBusy}>Disconnect</button>
+            </>}
           </div>
-          <p className="mt-3 text-xs text-white/40">{lastCloudBackup ? `Latest cloud backup: ${new Date(lastCloudBackup).toLocaleString()}` : 'Cloud copies will appear in your visible PropLogAI Backups Google Drive folder after the first backup.'}</p>
+          <p className="mt-3 text-xs text-white/40">{driveConnected ? (lastCloudBackup ? `Latest cloud backup: ${new Date(lastCloudBackup).toLocaleString()}` : 'Cloud copies will appear in your visible PropLogAI Backups Google Drive folder after the first backup.') : (lastCloudBackup ? `A backup from ${new Date(lastCloudBackup).toLocaleDateString()} remains available. Reconnect the same Google account to access it.` : 'Connect Google Drive to start cloud protection.')}</p>
         </section>
       </BlurGate>
 
