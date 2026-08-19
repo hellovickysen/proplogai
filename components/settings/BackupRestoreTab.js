@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import BlurGate from '@/components/ui/BlurGate';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -42,6 +42,16 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const [driveFolderId, setDriveFolderId] = useState(backupStatus?.driveFolderId || null);
   const [driveEmail] = useState(backupStatus?.driveEmail || null);
   const [cloudVersionCount, setCloudVersionCount] = useState(backupStatus?.cloudVersionCount || 0);
+
+  useEffect(() => {
+    if (!driveConnected) return;
+    fetch('/api/backups/google/status').then((response) => response.json()).then((status) => {
+      if (status.connected) {
+        setCloudVersionCount(status.count || 0);
+        setLastCloudBackup(status.latestCompletedAt || null);
+      }
+    }).catch(() => {});
+  }, [driveConnected]);
 
   async function downloadBackup() {
     if (exportState === 'preparing') return;
