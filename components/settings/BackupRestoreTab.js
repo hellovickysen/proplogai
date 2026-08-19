@@ -224,7 +224,14 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
         <section className={card}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">Elite cloud continuity</p>
           <h3 className="mt-2 font-display text-lg font-semibold">Google Drive backup</h3>
-          <p className="mt-1 max-w-xl text-sm text-white/55">{driveConnected ? `Connected as ${driveEmail || 'your Google account'} · ${cloudVersionCount} of 7 cloud versions protected` : 'Connect Google Drive for on-demand backup and a daily rolling window of seven protected versions.'}</p>
+          {driveConnected ? (
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+              <span className="inline-flex items-center gap-2 font-semibold text-emerald-300"><span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.7)]" />Connected</span>
+              <span className="text-white/55">as {driveEmail || 'your Google account'} · {cloudVersionCount} of 7 cloud versions protected</span>
+            </div>
+          ) : (
+            <div className="mt-2 flex items-center gap-2 text-sm text-rose-300"><span className="h-2 w-2 rounded-full bg-rose-400" />Not connected <span className="text-white/55">Connect Google Drive to enable cloud recovery.</span></div>
+          )}
           <div className="mt-5 flex flex-wrap gap-3">
             <a href="/api/backups/google/start" className={secondaryButton}>{driveConnected ? 'Reconnect Google Drive' : 'Connect Google Drive'}</a>
             <button type="button" onClick={uploadToDrive} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} disabled={!driveConnected || driveBusy}>{driveBusy ? 'Backing up…' : 'Back up to Drive'}</button>
