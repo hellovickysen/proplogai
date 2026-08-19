@@ -25,6 +25,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const [previewBusy, setPreviewBusy] = useState(false);
   const [restoreBusy, setRestoreBusy] = useState(false);
   const [driveBusy, setDriveBusy] = useState(false);
+  const [cloudRestoreBusy, setCloudRestoreBusy] = useState(false);
   const [exportState, setExportState] = useState('idle');
   const [exportProgress, setExportProgress] = useState(0);
   const [previewProgress, setPreviewProgress] = useState(0);
@@ -103,6 +104,21 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       setError(err.message || 'Unable to back up to Google Drive.');
       toast?.error(err.message || 'Unable to back up to Google Drive.');
     } finally { setDriveBusy(false); }
+  }
+
+  async function restoreLatestCloudBackup() {
+    if (cloudRestoreBusy || !backupStatus?.lastCloudBackupAt) return;
+    setCloudRestoreBusy(true); setError(null);
+    try {
+      const response = await fetch('/api/backups/google/restore-latest', { method: 'POST' });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || 'Unable to restore the latest cloud backup.');
+      setLastRestore(payload.report); window.setTimeout(() => setLastRestore(null), 5000);
+      toast?.success('Latest cloud backup restored.');
+    } catch (err) {
+      setError(err.message || 'Unable to restore the latest cloud backup.');
+      toast?.error(err.message || 'Unable to restore the latest cloud backup.');
+    } finally { setCloudRestoreBusy(false); }
   }
 
   async function revokeDrive() {
@@ -195,13 +211,14 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
         <section className={card}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">Elite cloud continuity</p>
           <h3 className="mt-2 font-display text-lg font-semibold">Google Drive backup</h3>
-          <p className="mt-1 max-w-xl text-sm text-white/55">Connect your Google Drive for an on-demand cloud copy and a daily protected backup. The latest 30 are retained automatically.</p>
+          <p className="mt-1 max-w-xl text-sm text-white/55">Connect Google Drive for on-demand backup and a daily rolling window of seven protected versions.</p>
           <div className="mt-5 flex flex-wrap gap-3">
             <a href="/api/backups/google/start" className={secondaryButton}>{driveConnected ? 'Reconnect Google Drive' : 'Connect Google Drive'}</a>
             <button type="button" onClick={uploadToDrive} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} disabled={!driveConnected || driveBusy}>{driveBusy ? 'Backing up…' : 'Back up to Drive'}</button>
+            {backupStatus?.lastCloudBackupAt && <button type="button" onClick={restoreLatestCloudBackup} className={secondaryButton} disabled={cloudRestoreBusy}>{cloudRestoreBusy ? 'Restoring latest…' : 'Restore latest backup'}</button>}
             {driveConnected && <button type="button" onClick={revokeDrive} className={secondaryButton} disabled={driveBusy}>Disconnect</button>}
           </div>
-          {backupStatus?.lastCompletedAt && <p className="mt-3 text-xs text-white/40">Last completed backup: {new Date(backupStatus.lastCompletedAt).toLocaleString()}</p>}
+          {backupStatus?.lastCloudBackupAt && <p className="mt-3 text-xs text-white/40">Latest cloud backup: {new Date(backupStatus.lastCloudBackupAt).toLocaleString()}</p>}
         </section>
       </BlurGate>
 

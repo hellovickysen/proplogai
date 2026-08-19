@@ -30,7 +30,7 @@ export async function POST() {
     const filename = `proplogai-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.zip`;
     const providerFileId = await uploadGoogleDriveBackup(supabase, user.id, connection, archive, filename);
     await supabase.from('backup_runs').update({ status: 'completed', archive_version: manifest.version, bytes: archive.length, record_count: manifest.tables.reduce((sum, table) => sum + table.rows, 0), provider_file_id: providerFileId, completed_at: new Date().toISOString() }).eq('id', run.id).eq('user_id', user.id);
-    await retainLatestGoogleDriveBackups(supabase, user.id, connection, 30);
+    await retainLatestGoogleDriveBackups(supabase, user.id, connection, 7);
     return NextResponse.json({ ok: true, completedAt: new Date().toISOString() });
   } catch (error) {
     await supabase.from('backup_runs').update({ status: 'failed', error_message: String(error?.message || 'Backup failed.').slice(0, 500), completed_at: new Date().toISOString() }).eq('id', run.id).eq('user_id', user.id);

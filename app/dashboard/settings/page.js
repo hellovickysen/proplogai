@@ -53,9 +53,11 @@ export default async function SettingsPage({ searchParams }) {
     .order('completed_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+  const { data: latestCloudBackup } = await supabase.from('backup_runs').select('completed_at').eq('user_id', user.id).eq('destination', 'google_drive').eq('status', 'completed').order('completed_at', { ascending: false }).limit(1).maybeSingle();
   const backupStatus = {
     driveConnected: backupConnection?.status === 'connected',
     lastCompletedAt: latestBackup?.completed_at || null,
+    lastCloudBackupAt: latestCloudBackup?.completed_at || null,
   };
 
   // From Razorpay callback redirect
