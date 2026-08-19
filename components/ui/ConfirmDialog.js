@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-export default function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel, loadingLabel, loading }) {
+export default function ConfirmDialog({ open, onClose, onConfirm, title, message, confirmLabel, loadingLabel, loading, variant = 'danger' }) {
   const cancelRef = useRef(null);
 
   // Escape key handler to dismiss
@@ -24,6 +24,7 @@ export default function ConfirmDialog({ open, onClose, onConfirm, title, message
 
   const titleId = 'confirm-dialog-title';
   const messageId = 'confirm-dialog-message';
+  const safeRestore = variant === 'safe-restore';
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
@@ -35,13 +36,18 @@ export default function ConfirmDialog({ open, onClose, onConfirm, title, message
         className="mx-4 w-full max-w-sm rounded-2xl border border-white/10 bg-[#0e0e18] p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Warning icon */}
-        <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full bg-red-500/15">
-          <svg className="h-6 w-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-            <line x1="12" y1="9" x2="12" y2="13" />
-            <line x1="12" y1="17" x2="12.01" y2="17" />
-          </svg>
+        <div className={'mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full ' + (safeRestore ? 'border border-cyan-300/25 bg-cyan-300/10' : 'bg-red-500/15')}>
+          {safeRestore ? (
+            <svg className="h-6 w-6 text-cyan-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 3v12" /><path d="M7 8l5-5 5 5" /><path d="M5 21h14" /><path d="M7 15h10v6H7z" />
+            </svg>
+          ) : (
+            <svg className="h-6 w-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          )}
         </div>
 
         <h2 id={titleId} className="text-center font-display text-lg font-bold">{title || 'Are you sure?'}</h2>
@@ -59,7 +65,7 @@ export default function ConfirmDialog({ open, onClose, onConfirm, title, message
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 rounded-xl border border-red-400/30 bg-red-500/20 px-4 py-2.5 text-sm font-semibold text-red-300 hover:bg-red-500/30 disabled:opacity-60"
+            className={'flex-1 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:opacity-60 ' + (safeRestore ? 'bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400 text-white hover:brightness-110' : 'border border-red-400/30 bg-red-500/20 text-red-300 hover:bg-red-500/30')}
           >
             {loading ? (loadingLabel || 'Deleting...') : (confirmLabel || 'Delete')}
           </button>
