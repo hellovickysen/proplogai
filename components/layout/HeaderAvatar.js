@@ -39,7 +39,7 @@ export default function HeaderAvatar({ email, fullName, avatarUrl, credits, isAd
       </button>
 
       {open && (
-        <div className={'absolute z-50 w-64 rounded-xl border border-white/10 bg-[#12121a] py-2 shadow-xl ' + (popoverAlign === 'left' ? 'left-0' : 'right-0') + ' ' + (popoverPosition === 'up' ? 'bottom-full mb-2' : 'top-full mt-2')}>
+        <div className={'absolute z-[10000] w-64 rounded-xl border border-white/10 bg-[#12121a] py-2 shadow-xl ' + (popoverAlign === 'left' ? 'left-0' : 'right-0') + ' ' + (popoverPosition === 'up' ? 'bottom-full mb-2' : 'top-full mt-2')}>
           {/* User info header */}
           <div className="px-4 py-3 border-b border-white/[0.06]">
             <div className="flex items-center gap-3">
