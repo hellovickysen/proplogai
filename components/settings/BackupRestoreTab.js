@@ -22,6 +22,10 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const [restoreBusy, setRestoreBusy] = useState(false);
   const [driveBusy, setDriveBusy] = useState(false);
   const [exportState, setExportState] = useState('idle');
+  const [exportProgress, setExportProgress] = useState(0);
+  const [previewProgress, setPreviewProgress] = useState(0);
+  const [restoreProgress, setRestoreProgress] = useState(0);
+  const [lastRestore, setLastRestore] = useState(null);
   const [lastManualBackup, setLastManualBackup] = useState(backupStatus?.lastCompletedAt || null);
   const [unavailableAssets, setUnavailableAssets] = useState(0);
   const [error, setError] = useState(null);
@@ -31,9 +35,10 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
 
   async function downloadBackup() {
     if (exportState === 'preparing') return;
-    setExportState('preparing'); setError(null);
+    setExportState('preparing'); setExportProgress(10); setError(null);
     try {
       const response = await fetch('/api/backups/export');
+      setExportProgress(70);
       if (!response.ok) {
         const payload = await response.json();
         throw new Error(payload.error || 'Unable to create a backup.');
@@ -49,6 +54,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       URL.revokeObjectURL(link.href);
       setUnavailableAssets(Number(response.headers.get('X-Backup-Unavailable-Assets') || 0));
       setLastManualBackup(new Date().toISOString());
+      setExportProgress(100);
       setExportState('complete');
       toast?.success('Backup downloaded.');
     } catch (err) {
@@ -59,15 +65,16 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   }
 
   async function inspectSelectedFile(nextFile) {
-    setFile(nextFile || null); setPreview(null); setResult(null); setError(null);
+    setFile(nextFile || null); setPreview(null); setResult(null); setError(null); setPreviewProgress(0);
     if (!nextFile) return;
-    setPreviewBusy(true);
+    setPreviewBusy(true); setPreviewProgress(10);
     try {
       const body = new FormData(); body.append('file', nextFile);
       const response = await fetch('/api/backups/import-preview', { method: 'POST', body });
       const payload = await response.json();
+      setPreviewProgress(85);
       if (!response.ok) throw new Error(payload.error || 'Unable to inspect this backup.');
-      setPreview(payload);
+      setPreview(payload); setPreviewProgress(100);
     } catch (err) {
       setError(err.message || 'Unable to inspect this backup.');
     } finally { setPreviewBusy(false); }
@@ -108,13 +115,14 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   async function restore() {
     setConfirmRestore(false);
     if (!file || !preview || previewBusy || restoreBusy) return;
-    setRestoreBusy(true); setError(null);
+    setRestoreBusy(true); setRestoreProgress(10); setError(null);
     try {
       const body = new FormData(); body.append('file', file);
       const response = await fetch('/api/backups/import', { method: 'POST', body });
       const payload = await response.json();
+      setRestoreProgress(90);
       if (!response.ok) throw new Error(payload.error || 'Unable to restore this backup.');
-      setResult(payload.report); toast?.success('Backup restored with safe merge.');
+      setResult(payload.report); setLastRestore(payload.report); setFile(null); setPreview(null); setRestoreProgress(100); toast?.success('Backup restored with safe merge.');
     } catch (err) {
       setError(err.message || 'Unable to restore this backup.');
       toast?.error(err.message || 'Unable to restore this backup.');
@@ -135,7 +143,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
             <p className="mt-1 text-sm font-semibold text-cyan-50">{lastManualBackup ? new Date(lastManualBackup).toLocaleString() : 'Not created yet'}</p>
           </div>
         </div>
-        {exportState === 'preparing' && <div className="mt-6"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Preparing your archive</span><span>Packaging records and available attachments</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-violet-500 to-cyan-300" /></div></div>}
+        {exportState === 'preparing' && <div className="mt-6"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Preparing your archive</span><span>{exportProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-300 transition-all duration-300" style={{ width: `${exportProgress}%` }} /></div></div>}
         {exportState === 'complete' && <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-5 text-sm text-emerald-300"><span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-400/15">✓</span><span>Backup downloaded and ready for recovery.</span></div>}
         <div className="mt-6 flex flex-wrap gap-3">
           <button type="button" onClick={downloadBackup} disabled={exportState === 'preparing'} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{exportState === 'preparing' ? 'Preparing backup…' : 'Create manual backup'}</button>
@@ -149,7 +157,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       {file && (
         <section className={card}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">Restore preview</p>
-          {previewBusy && <div className="mt-4"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Checking archive integrity</span><span>Validating ownership and records</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-3/5 animate-pulse rounded-full bg-gradient-to-r from-violet-500 to-cyan-300" /></div></div>}
+          {previewBusy && <div className="mt-4"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Checking archive integrity</span><span>{previewProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-300 transition-all duration-300" style={{ width: `${previewProgress}%` }} /></div></div>}
           {!previewBusy && preview && (
             <>
               <h3 className="mt-2 font-display text-lg font-semibold">{countPreview(preview).toLocaleString()} records ready for safe merge</h3>
@@ -157,11 +165,13 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
               <button type="button" onClick={requestRestore} disabled={restoreBusy} className={'mt-5 ' + primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{restoreBusy ? 'Restoring with safe merge…' : 'Restore with safe merge'}</button>
             </>
           )}
-          {restoreBusy && <div className="mt-4"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Restoring safely</span><span>Applying account-bound changes</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-4/5 animate-pulse rounded-full bg-gradient-to-r from-violet-500 to-cyan-300" /></div></div>}
+          {restoreBusy && <div className="mt-4"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Restoring safely</span><span>{restoreProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-300 transition-all duration-300" style={{ width: `${restoreProgress}%` }} /></div></div>}
           {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
           {result && <p className="mt-3 text-sm text-emerald-300">Restored {result.inserted} records; skipped {result.skipped} known duplicates; {result.conflicts.length} conflicts need review.</p>}
         </section>
       )}
+
+      {lastRestore && <section className="rounded-2xl border border-emerald-300/20 bg-emerald-300/[0.06] p-6"><p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-100/60">Recovery complete</p><div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-2"><span className="font-display text-2xl font-semibold text-emerald-50">{lastRestore.inserted} restored</span><span className="text-sm text-emerald-100/75">{lastRestore.skipped} known duplicates skipped</span><span className="text-sm text-emerald-100/75">{lastRestore.conflicts.length} conflicts</span></div></section>}
 
       <BlurGate feature="google_drive_backup" access={planAccess} message="Daily Google Drive backups are an Elite feature">
         <section className={card}>
