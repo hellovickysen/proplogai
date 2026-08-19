@@ -3,6 +3,7 @@
 import { useRef, useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
 import BlurGate from '@/components/ui/BlurGate';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 
 const card = 'rounded-2xl border border-white/10 bg-white/[0.03] p-6';
 const secondaryButton = 'rounded-xl border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50';
@@ -22,6 +23,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const [driveBusy, setDriveBusy] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
+  const [confirmRestore, setConfirmRestore] = useState(false);
   const [driveConnected, setDriveConnected] = useState(Boolean(backupStatus?.driveConnected));
 
   async function inspectSelectedFile(nextFile) {
@@ -66,9 +68,14 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
     } finally { setDriveBusy(false); }
   }
 
-  async function restore() {
+  function requestRestore() {
     if (!file || !preview || previewBusy || restoreBusy) return;
-    if (!window.confirm('Restore this backup with safe merge? Existing data will stay in place; exact duplicates will be skipped.')) return;
+    setConfirmRestore(true);
+  }
+
+  async function restore() {
+    setConfirmRestore(false);
+    if (!file || !preview || previewBusy || restoreBusy) return;
     setRestoreBusy(true); setError(null);
     try {
       const body = new FormData(); body.append('file', file);
@@ -104,7 +111,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
             <>
               <h3 className="mt-2 font-display text-lg font-semibold">{countPreview(preview).toLocaleString()} records ready for safe merge</h3>
               <p className="mt-1 text-sm text-white/55">Existing records are not deleted or silently overwritten. A repeated import skips items already mapped from this archive.</p>
-              <button type="button" onClick={restore} disabled={restoreBusy} className={'mt-5 ' + primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{restoreBusy ? 'Restoring with safe merge…' : 'Restore with safe merge'}</button>
+              <button type="button" onClick={requestRestore} disabled={restoreBusy} className={'mt-5 ' + primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{restoreBusy ? 'Restoring with safe merge…' : 'Restore with safe merge'}</button>
             </>
           )}
           {restoreBusy && <p className="mt-3 text-sm text-cyan-300">Applying safe-merge mappings…</p>}
@@ -126,6 +133,18 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
           {backupStatus?.lastCompletedAt && <p className="mt-3 text-xs text-white/40">Last completed backup: {new Date(backupStatus.lastCompletedAt).toLocaleString()}</p>}
         </section>
       </BlurGate>
+
+      <ConfirmDialog
+        open={confirmRestore}
+        onClose={() => setConfirmRestore(false)}
+        onConfirm={restore}
+        title="Restore this backup?"
+        message="Your existing data stays in place. Only records missing from this account will be restored; known duplicates are skipped."
+        confirmLabel="Restore safely"
+        loadingLabel="Restoring…"
+        loading={restoreBusy}
+        variant="safe-restore"
+      />
     </div>
   );
 }
