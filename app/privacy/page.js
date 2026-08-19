@@ -298,9 +298,10 @@ export default function PrivacyPage() {
             </p>
             <p>
               Google Drive backup is optional. If you connect it, PropLogAI requests limited access
-              only to its hidden application data folder (drive.appdata) to create, read, update,
-              and delete backup archives created by PropLogAI. We cannot access, view, modify, or
-              share files in your visible Google Drive.
+              to create, read, update, and delete only the files and folder it creates. PropLogAI
+              creates a visible folder named PropLogAI Backups in your Google Drive so you can browse
+              and manually download your backup archives. We cannot access, view, modify, or share
+              unrelated files in your Google Drive.
             </p>
             <p>
               Drive backup archives may contain your account data, trade records, journal entries,
