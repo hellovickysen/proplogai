@@ -38,6 +38,32 @@ export default async function SettingsPage({ searchParams }) {
     .eq('user_id', user.id)
     .maybeSingle();
 
+  // Backup status is optional until the staging migration has been applied.
+  const { data: backupConnection } = await supabase
+    .from('backup_drive_connections')
+    .select('id, status, provider_email, provider_folder_id')
+    .eq('user_id', user.id)
+    .maybeSingle();
+  const { data: latestBackup } = await supabase
+    .from('backup_runs')
+    .select('completed_at')
+    .eq('user_id', user.id)
+    .eq('destination', 'local_download')
+    .eq('status', 'completed')
+    .order('completed_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { data: latestCloudBackup } = await supabase.from('backup_runs').select('completed_at').eq('user_id', user.id).eq('destination', 'google_drive').eq('status', 'completed').order('completed_at', { ascending: false }).limit(1).maybeSingle();
+  const { count: cloudVersionCount } = await supabase.from('backup_runs').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('destination', 'google_drive').eq('status', 'completed').not('provider_file_id', 'is', null);
+  const backupStatus = {
+    driveConnected: backupConnection?.status === 'connected',
+    driveEmail: backupConnection?.provider_email || null,
+    driveFolderId: backupConnection?.provider_folder_id || null,
+    cloudVersionCount: cloudVersionCount || 0,
+    lastCompletedAt: latestBackup?.completed_at || null,
+    lastCloudBackupAt: latestCloudBackup?.completed_at || null,
+  };
+
   // From Razorpay callback redirect
   const paymentStatus = searchParams?.status || null;
   const activeTab = searchParams?.tab || null;
@@ -52,6 +78,7 @@ export default async function SettingsPage({ searchParams }) {
         prefs={prefs}
         planAccess={planAccess}
         subscription={subscription || null}
+        backupStatus={backupStatus}
         paymentStatus={paymentStatus}
         initialTab={activeTab}
       />

@@ -11,6 +11,7 @@ import { processImageFile } from '@/lib/imageUtils';
 import BillingTab from '@/components/settings/BillingTab';
 import PublicProfileSettings from '@/components/profile/PublicProfileSettings';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import BackupRestoreTab from '@/components/settings/BackupRestoreTab';
 
 const DEFAULT_EMOTIONS = ['Disciplined', 'Confident', 'FOMO', 'Greed', 'Boredom', 'Revenge'];
 const DEFAULT_TAGS = ['news', 'high-impact', 'low-volume', 'scalp', 'swing'];
@@ -437,7 +438,7 @@ function JournalSettingsTab({ prefs, planAccess, onSaved }) {
   );
 }
 
-export default function SettingsTabs({ user, prefs: initialPrefs, planAccess, subscription, paymentStatus, initialTab }) {
+export default function SettingsTabs({ user, prefs: initialPrefs, planAccess, subscription, paymentStatus, backupStatus, initialTab }) {
   const [tab, setTab] = useState(initialTab || 'profile');
   const [prefs, setPrefs] = useState(initialPrefs);
 
@@ -445,6 +446,7 @@ export default function SettingsTabs({ user, prefs: initialPrefs, planAccess, su
     { id: 'profile', label: 'Profile' },
     { id: 'public', label: 'Public Share' },
     { id: 'journal', label: 'Journal Settings' },
+    { id: 'backup', label: 'Backup & Restore' },
     { id: 'billing', label: 'Billing' },
   ];
 
@@ -460,6 +462,7 @@ export default function SettingsTabs({ user, prefs: initialPrefs, planAccess, su
       {tab === 'profile' && <ProfileTab user={user} prefs={prefs} />}
       {tab === 'public' && <PublicProfileSettings user={user} prefs={prefs} />}
       {tab === 'journal' && <JournalSettingsTab prefs={prefs} planAccess={planAccess} onSaved={(updated) => setPrefs((p) => ({ ...p, ...updated }))} />}
+      {tab === 'backup' && <BackupRestoreTab planAccess={planAccess} backupStatus={backupStatus} />}
       {tab === 'billing' && <BillingTab planAccess={planAccess} subscription={subscription} paymentStatus={paymentStatus} />}
     </div>
   );
