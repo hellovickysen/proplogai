@@ -72,7 +72,7 @@ export default function PrivacyPage() {
           <h1 className="mb-3 text-3xl font-bold" style={gradientText}>
             Privacy Policy
           </h1>
-          <p className="text-sm text-white/55">Last updated: June 23, 2026</p>
+          <p className="text-sm text-white/55">Last updated: August 19, 2026</p>
           <p className="mt-4 text-sm leading-relaxed text-white/70">
             PropLogAI (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting your
             personal information. This Privacy Policy explains what data we collect, how we use it,
@@ -176,6 +176,7 @@ export default function PrivacyPage() {
               'To display your trade history, equity curve, statistics, and calendar within the Service.',
               'To generate AI coaching insights and pattern analysis by passing your trade and journal data to our AI provider.',
               'To store and serve screenshots and avatars you upload.',
+              'To create, retain, and restore optional Google Drive backup archives at your request.',
               'To send transactional emails such as email verification and password reset messages.',
               'To analyse aggregate, anonymised usage patterns so we can improve the Service.',
               'To detect and prevent fraud, abuse, or violations of our Terms of Service.',
@@ -198,6 +199,11 @@ export default function PrivacyPage() {
           <p>
             Screenshots, chart images, and profile avatars are stored in Supabase Storage, which
             uses object-level encryption at rest.
+          </p>
+          <p>
+            If you choose Google Drive backup, connection credentials are encrypted at rest and used
+            only to create, retain, and restore your backup archives. We do not store your Google
+            password.
           </p>
           <p>
             While we implement industry-standard safeguards, no method of electronic storage or
@@ -284,11 +290,28 @@ export default function PrivacyPage() {
             </p>
           </SubSection>
 
-          <SubSection title="Google OAuth">
+          <SubSection title="Google OAuth and Google Drive Backup">
             <p>
               If you choose to sign in with Google, Google authenticates you and shares your
               name, email address, and profile picture with us. We do not receive your Google
-              password. Your use of Google Sign-In is governed by Google&apos;s Privacy Policy.{' '}
+              password.
+            </p>
+            <p>
+              Google Drive backup is optional. If you connect it, PropLogAI requests limited access
+              only to its hidden application data folder (drive.appdata) to create, read, update,
+              and delete backup archives created by PropLogAI. We cannot access, view, modify, or
+              share files in your visible Google Drive.
+            </p>
+            <p>
+              Drive backup archives may contain your account data, trade records, journal entries,
+              discipline evidence, and available attachments. We retain the seven most recent cloud
+              backup versions on a rolling basis. You may create an on-demand backup and restore only
+              the latest owner-bound backup associated with your own PropLogAI account. Disconnecting
+              Google Drive revokes the connection and removes stored connection credentials from our
+              systems.
+            </p>
+            <p>
+              Your use of Google services is governed by Google&apos;s Privacy Policy.{' '}
               <a
                 href="https://policies.google.com/privacy"
                 className="text-cyan-400 hover:opacity-80"
@@ -351,6 +374,11 @@ export default function PrivacyPage() {
           <p>
             We retain your data for as long as your account is active or as needed to provide the
             Service.
+          </p>
+          <p>
+            Optional Google Drive backup uses a rolling seven-version window. When a newer cloud
+            backup is created, the oldest version beyond that window is deleted from the connected
+            app data folder.
           </p>
           <p>
             You may delete your account at any time from your account settings. Upon account
