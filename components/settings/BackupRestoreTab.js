@@ -109,6 +109,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
       setCloudVersionCount((count) => Math.min(7, count + 1));
       toast?.success('Cloud backup complete.');
     } catch (err) {
+      if (String(err.message || '').includes('permission changed')) setDriveConnected(false);
       setError(err.message || 'Unable to back up to Google Drive.');
       toast?.error(err.message || 'Unable to back up to Google Drive.');
     } finally { setDriveBusy(false); }
