@@ -36,6 +36,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [confirmRestore, setConfirmRestore] = useState(false);
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [driveConnected, setDriveConnected] = useState(Boolean(backupStatus?.driveConnected));
   const [lastCloudBackup, setLastCloudBackup] = useState(backupStatus?.lastCloudBackupAt || null);
   const [driveFolderId, setDriveFolderId] = useState(backupStatus?.driveFolderId || null);
@@ -128,8 +129,13 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
     } finally { setCloudRestoreBusy(false); }
   }
 
+  function requestDisconnectDrive() {
+    if (!driveBusy) setConfirmDisconnect(true);
+  }
+
   async function revokeDrive() {
-    if (driveBusy || !window.confirm('Disconnect Google Drive? Scheduled backups will stop.')) return;
+    setConfirmDisconnect(false);
+    if (driveBusy) return;
     setDriveBusy(true); setError(null);
     try {
       const response = await fetch('/api/backups/google/revoke', { method: 'POST' });
@@ -224,7 +230,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
             <button type="button" onClick={uploadToDrive} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }} disabled={!driveConnected || driveBusy}>{driveBusy ? 'Backing up…' : 'Back up to Drive'}</button>
             {lastCloudBackup && <button type="button" onClick={restoreLatestCloudBackup} className={secondaryButton} disabled={cloudRestoreBusy}>{cloudRestoreBusy ? 'Restoring latest…' : `Restore backup from ${new Date(lastCloudBackup).toLocaleDateString()}`}</button>}
             {driveFolderId && <a href={`https://drive.google.com/drive/folders/${driveFolderId}`} target="_blank" rel="noopener noreferrer" className={secondaryButton}>Open backup folder</a>}
-            {driveConnected && <button type="button" onClick={revokeDrive} className={secondaryButton} disabled={driveBusy}>Disconnect</button>}
+            {driveConnected && <button type="button" onClick={requestDisconnectDrive} className={secondaryButton} disabled={driveBusy}>Disconnect</button>}
           </div>
           <p className="mt-3 text-xs text-white/40">{lastCloudBackup ? `Latest cloud backup: ${new Date(lastCloudBackup).toLocaleString()}` : 'Cloud copies will appear in your visible PropLogAI Backups Google Drive folder after the first backup.'}</p>
         </section>
@@ -240,6 +246,16 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
         loadingLabel="Restoring…"
         loading={restoreBusy}
         variant="safe-restore"
+      />
+      <ConfirmDialog
+        open={confirmDisconnect}
+        onClose={() => setConfirmDisconnect(false)}
+        onConfirm={revokeDrive}
+        title="Disconnect Google Drive?"
+        message="Scheduled cloud backups will stop. Your existing backup files stay in your PropLogAI Backups folder."
+        confirmLabel="Disconnect"
+        loadingLabel="Disconnecting…"
+        loading={driveBusy}
       />
     </div>
   );
