@@ -174,13 +174,15 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
         <section className={card}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">Restore preview</p>
           {previewBusy && <div className="mt-4"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Checking archive integrity</span><span>{previewProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-300 transition-all duration-300" style={{ width: `${previewProgress}%` }} /></div></div>}
-          {!previewBusy && preview && (
+          {!previewBusy && preview && (countPreview(preview) > 0 ? (
             <>
               <h3 className="mt-2 font-display text-lg font-semibold">{countPreview(preview).toLocaleString()} records ready for safe merge</h3>
-              <p className="mt-1 text-sm text-white/55">Existing records are not deleted or silently overwritten. A repeated import skips items already mapped from this archive.</p>
-              <button type="button" onClick={requestRestore} disabled={restoreBusy} className={'mt-5 ' + primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{restoreBusy ? 'Restoring with safe merge…' : 'Restore with safe merge'}</button>
+              <p className="mt-1 text-sm text-white/55">Existing data stays in place. Only missing records will be restored.</p>
+              <button type="button" onClick={requestRestore} disabled={restoreBusy} className={'mt-5 ' + primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{restoreBusy ? 'Restoring…' : 'Restore now'}</button>
             </>
-          )}
+          ) : (
+            <div className="mt-3 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.06] p-4"><p className="font-semibold text-emerald-100">Already up to date</p><p className="mt-1 text-sm text-emerald-100/70">No records need restoring. {preview.report?.duplicates || 0} known records are already present in this account.</p></div>
+          ))}
           {restoreBusy && <div className="mt-4"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Restoring safely</span><span>{restoreProgress}%</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full rounded-full bg-gradient-to-r from-violet-500 to-cyan-300 transition-all duration-300" style={{ width: `${restoreProgress}%` }} /></div></div>}
           {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
           {result && <p className="mt-3 text-sm text-emerald-300">Restored {result.inserted} records; skipped {result.skipped} known duplicates; {result.conflicts.length} conflicts need review.</p>}
