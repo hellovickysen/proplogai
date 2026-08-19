@@ -21,10 +21,42 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
   const [previewBusy, setPreviewBusy] = useState(false);
   const [restoreBusy, setRestoreBusy] = useState(false);
   const [driveBusy, setDriveBusy] = useState(false);
+  const [exportState, setExportState] = useState('idle');
+  const [lastManualBackup, setLastManualBackup] = useState(backupStatus?.lastCompletedAt || null);
+  const [unavailableAssets, setUnavailableAssets] = useState(0);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [confirmRestore, setConfirmRestore] = useState(false);
   const [driveConnected, setDriveConnected] = useState(Boolean(backupStatus?.driveConnected));
+
+  async function downloadBackup() {
+    if (exportState === 'preparing') return;
+    setExportState('preparing'); setError(null);
+    try {
+      const response = await fetch('/api/backups/export');
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload.error || 'Unable to create a backup.');
+      }
+      const blob = await response.blob();
+      const filename = response.headers.get('Content-Disposition')?.match(/filename="?([^";]+)"?/)?.[1] || 'proplogai-backup.zip';
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(link.href);
+      setUnavailableAssets(Number(response.headers.get('X-Backup-Unavailable-Assets') || 0));
+      setLastManualBackup(new Date().toISOString());
+      setExportState('complete');
+      toast?.success('Backup downloaded.');
+    } catch (err) {
+      setError(err.message || 'Unable to create a backup.');
+      toast?.error(err.message || 'Unable to create a backup.');
+      setExportState('idle');
+    }
+  }
 
   async function inspectSelectedFile(nextFile) {
     setFile(nextFile || null); setPreview(null); setResult(null); setError(null);
@@ -91,22 +123,33 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
 
   return (
     <div className="space-y-6">
-      <section className={card}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">Whole profile backup</p>
-        <h2 className="mt-2 font-display text-xl font-semibold text-white">Keep your discipline evidence portable.</h2>
-        <p className="mt-2 max-w-xl text-sm leading-6 text-white/55">One backup includes every trading account, trade, journal, setup, AI analysis, discipline record, chart input, preference, and owned attachment. Dashboards rebuild from the restored source evidence.</p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <a href="/api/backups/export" className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>Download backup</a>
-          <button type="button" className={secondaryButton} onClick={() => inputRef.current?.click()} disabled={previewBusy}>Choose backup to restore</button>
+      <section className={card + ' overflow-hidden'}>
+        <div className="flex flex-wrap items-start justify-between gap-5">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">Recovery centre</p>
+            <h2 className="mt-2 font-display text-2xl font-semibold text-white">Your account is recoverable.</h2>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-white/55">One owner-bound archive protects every account, trade, journal, discipline record and available attachment.</p>
+          </div>
+          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.06] px-4 py-3">
+            <p className="text-[10px] uppercase tracking-[0.15em] text-cyan-100/55">Last manual backup</p>
+            <p className="mt-1 text-sm font-semibold text-cyan-50">{lastManualBackup ? new Date(lastManualBackup).toLocaleString() : 'Not created yet'}</p>
+          </div>
+        </div>
+        {exportState === 'preparing' && <div className="mt-6"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Preparing your archive</span><span>Packaging records and available attachments</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-2/3 animate-pulse rounded-full bg-gradient-to-r from-violet-500 to-cyan-300" /></div></div>}
+        {exportState === 'complete' && <div className="mt-6 flex items-center gap-3 border-t border-white/10 pt-5 text-sm text-emerald-300"><span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-400/15">✓</span><span>Backup downloaded and ready for recovery.</span></div>}
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button type="button" onClick={downloadBackup} disabled={exportState === 'preparing'} className={primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{exportState === 'preparing' ? 'Preparing backup…' : 'Create manual backup'}</button>
+          <button type="button" className={secondaryButton} onClick={() => inputRef.current?.click()} disabled={previewBusy}>Restore an archive</button>
           <input ref={inputRef} type="file" accept=".zip,application/zip" className="hidden" onChange={(event) => inspectSelectedFile(event.target.files?.[0])} />
         </div>
-        <p className="mt-4 text-xs leading-5 text-white/35">For safety, backups never include login credentials, subscriptions, payment records, affiliate balances, support tickets, or Google Drive credentials.</p>
+        {unavailableAssets > 0 && <p className="mt-4 text-xs text-amber-200">{unavailableAssets} stale attachment reference{unavailableAssets === 1 ? '' : 's'} could not be included. Your account data and available files were backed up.</p>}
+        <p className="mt-4 text-xs leading-5 text-white/35">Owner-bound backups never include login credentials, subscriptions, payment records, affiliate balances, support tickets or Drive credentials.</p>
       </section>
 
       {file && (
         <section className={card}>
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/35">Restore preview</p>
-          {previewBusy && <p className="mt-3 text-sm text-cyan-300">Checking archive integrity…</p>}
+          {previewBusy && <div className="mt-4"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Checking archive integrity</span><span>Validating ownership and records</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-3/5 animate-pulse rounded-full bg-gradient-to-r from-violet-500 to-cyan-300" /></div></div>}
           {!previewBusy && preview && (
             <>
               <h3 className="mt-2 font-display text-lg font-semibold">{countPreview(preview).toLocaleString()} records ready for safe merge</h3>
@@ -114,7 +157,7 @@ export default function BackupRestoreTab({ planAccess, backupStatus }) {
               <button type="button" onClick={requestRestore} disabled={restoreBusy} className={'mt-5 ' + primaryButton} style={{ background: 'linear-gradient(120deg,#a78bfa,#22d3ee)' }}>{restoreBusy ? 'Restoring with safe merge…' : 'Restore with safe merge'}</button>
             </>
           )}
-          {restoreBusy && <p className="mt-3 text-sm text-cyan-300">Applying safe-merge mappings…</p>}
+          {restoreBusy && <div className="mt-4"><div className="mb-2 flex justify-between text-xs text-cyan-100"><span>Restoring safely</span><span>Applying account-bound changes</span></div><div className="h-1.5 overflow-hidden rounded-full bg-white/10"><div className="h-full w-4/5 animate-pulse rounded-full bg-gradient-to-r from-violet-500 to-cyan-300" /></div></div>}
           {error && <p className="mt-3 text-sm text-red-300">{error}</p>}
           {result && <p className="mt-3 text-sm text-emerald-300">Restored {result.inserted} records; skipped {result.skipped} known duplicates; {result.conflicts.length} conflicts need review.</p>}
         </section>

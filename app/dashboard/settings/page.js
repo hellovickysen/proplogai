@@ -48,6 +48,7 @@ export default async function SettingsPage({ searchParams }) {
     .from('backup_runs')
     .select('completed_at')
     .eq('user_id', user.id)
+    .eq('destination', 'local_download')
     .eq('status', 'completed')
     .order('completed_at', { ascending: false })
     .limit(1)

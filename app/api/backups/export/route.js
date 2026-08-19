@@ -28,6 +28,7 @@ export async function GET() {
         'Content-Type': 'application/zip',
         'Content-Disposition': `attachment; filename="${filename}"`,
         'Cache-Control': 'no-store',
+        'X-Backup-Unavailable-Assets': String(manifest.unavailableAssets?.length || 0),
       },
     });
   } catch (error) {
