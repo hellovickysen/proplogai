@@ -87,7 +87,7 @@ export default function Sidebar({ email = '', fullName = '', avatarUrl = '', pla
 
   return (
     <aside
-      className="relative hidden flex-shrink-0 overflow-visible border-r border-white/10 bg-[#0b0b14] sm:block transition-all duration-300 ease-in-out"
+      className="relative z-50 hidden flex-shrink-0 overflow-visible border-r border-white/10 bg-[#0b0b14] sm:block transition-all duration-300 ease-in-out"
       style={{ width: collapsed ? 60 : 200 }}
     >
       <div className="sticky top-0 flex h-dvh flex-col py-5" style={{ width: collapsed ? 60 : 200, transition: 'width 300ms ease-in-out' }}>
