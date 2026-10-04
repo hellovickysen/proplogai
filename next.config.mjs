@@ -17,6 +17,22 @@ const nextConfig = {
       },
     ],
   },
+  webpack(config, { isServer }) {
+    // Keep Next's Link runtime in a named browser chunk. Some desktop content
+    // blockers falsely reject the deterministic numeric chunk URL, which can
+    // leave otherwise healthy pages blank while mobile continues to work.
+    if (!isServer) {
+      config.optimization.splitChunks.cacheGroups.nextLinkRuntime = {
+        test: /[\\/]next[\\/]dist[\\/]client[\\/]link\.js$/,
+        name: 'next-link-runtime',
+        chunks: 'all',
+        enforce: true,
+        priority: 100,
+      };
+    }
+
+    return config;
+  },
   async headers() {
     return [
       {
