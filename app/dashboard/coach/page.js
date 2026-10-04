@@ -5,6 +5,7 @@ import { getUserAccess } from '@/lib/plans';
 import { computePersona, computeStreaks } from '@/lib/persona';
 import BetaFeatureWarning from '@/components/ui/BetaFeatureWarning';
 import UpgradeCard from '@/components/ui/UpgradeCard';
+import { getPreviewAccessConfig, isPreviewUserAllowed } from '@/app/ai-analytics-mockup/preview-access.mjs';
 
 export const dynamic = 'force-dynamic';
 
@@ -101,6 +102,11 @@ export default async function CoachPage() {
   const coachLimit = access.limit('coach_report');
   const analysisLimit = access.limit('ai_analysis');
   const emailEnabled = isEmailConfigured();
+  const analyticsPreviewAccess = getPreviewAccessConfig(process.env);
+  const canPreviewAnalytics = process.env.NODE_ENV === 'development' || (
+    analyticsPreviewAccess.enabled &&
+    isPreviewUserAllowed(user.id, analyticsPreviewAccess.allowedUserIds)
+  );
 
   // Serialize limits for client (Infinity → -1)
   const safeCoachLimit = coachLimit === Infinity ? -1 : coachLimit;
@@ -128,6 +134,7 @@ export default async function CoachPage() {
         streaks={streaks}
         userName={userName}
         planAccess={access.toJSON()}
+        canPreviewAnalytics={canPreviewAnalytics}
       />
     </div>
   );

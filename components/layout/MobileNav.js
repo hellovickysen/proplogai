@@ -46,6 +46,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
 
   function isActive(href) {
     if (href === '/dashboard') return pathname === '/dashboard';
+    if (href === '/dashboard/coach' && pathname === '/ai-analytics-mockup') return true;
     if (href.includes('?')) {
       const [path, qs] = href.split('?');
       if (pathname !== path) return false;

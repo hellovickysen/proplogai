@@ -14,7 +14,7 @@ const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', We
 export default function PropolCoachHub({
   coachReports: reports, tradeAnalyses, tradeCount, planAccess: access,
   coachUsed, coachLimit, analysisUsed, analysisLimit, emailEnabled,
-  persona, streaks, userName,
+  persona, streaks, userName, canPreviewAnalytics,
 }) {
   const [tab, setTab] = useState('overview');
   const [generating, setGenerating] = useState(false);
@@ -38,7 +38,7 @@ export default function PropolCoachHub({
         <span className="font-display text-2xl font-bold text-white">AI Coach</span>
       </div>
 
-      <CoachTabs active={tab} onChange={setTab} />
+      <CoachTabs active={tab} onChange={setTab} showAnalytics={canPreviewAnalytics} />
 
       {error && (
         <div className="rounded-xl border border-red-400/20 bg-red-500/[0.05] px-4 py-3">

@@ -712,7 +712,7 @@ function PeriodSelect({ value, onChange, className = "" }) {
       aria-label="Analytics period"
       value={value}
       onChange={(event) => onChange(event.target.value)}
-      className={`rounded-lg border border-white/25 bg-[#0b111b] px-3 py-2 text-xs text-white/80 sm:px-4 sm:py-2.5 sm:text-sm ${className}`}
+      className={`max-w-full rounded-lg border border-white/25 bg-[#0b111b] px-3 py-2 text-xs text-white/80 sm:px-4 sm:py-2.5 sm:text-sm ${className}`}
     >
       <option value="all">▣ All time</option>
       <option value="thisMonth">▣ {periodProfiles.thisMonth.label}</option>
@@ -2415,14 +2415,14 @@ export default function AIAnalyticsMockup() {
   if (!mounted)
     return (
       <div
-        className="min-h-screen bg-[#07101a]"
+        className="min-h-full bg-[#07101a]"
         aria-label="Loading AI Analytics mockup"
       />
     );
   return (
     <IntroMotionContext.Provider value={introActive}>
-    <div className={`ai-analytics-motion min-h-screen overflow-x-hidden bg-[#07101a] text-[#f4f6fb] ${introActive ? "ai-analytics-intro" : ""}`}>
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#07101a]/95 backdrop-blur">
+    <div className={`ai-analytics-motion min-h-full w-full min-w-0 max-w-full overflow-x-hidden bg-[#07101a] text-[#f4f6fb] ${introActive ? "ai-analytics-intro" : ""}`}>
+      <header className="sticky top-0 z-10 border-b border-white/10 bg-[#07101a]/95 backdrop-blur">
         <div className="flex h-[60px] items-center justify-between gap-4 px-4 sm:px-7">
           <nav
             className="flex"
@@ -2448,7 +2448,7 @@ export default function AIAnalyticsMockup() {
           <PeriodSelect value={period} onChange={handlePeriodChange} className="hidden sm:block" />
         </div>
       </header>
-      <main className="px-4 pb-0 pt-6 sm:px-6">
+      <main className="w-full min-w-0 max-w-full px-4 pb-0 pt-6 sm:px-6">
         {tab === "Overview" && (
           <>
             <div className="mb-4 flex flex-col items-start gap-3 sm:block">
