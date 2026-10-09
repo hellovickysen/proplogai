@@ -1,0 +1,89 @@
+.heroPaper {
+  position: relative;
+  max-width: 680px;
+  width: 100%;
+  margin-inline: auto;
+  padding: clamp(1.5rem, 4.4vw, 3rem);
+  color: #132145;
+  border-radius: 10px 24px 12px 22px;
+  background:
+    linear-gradient(90deg, transparent 0 42px, rgba(231, 107, 127, .28) 42px 44px, transparent 44px),
+    repeating-linear-gradient(to bottom, transparent 0 40px, rgba(95, 143, 205, .2) 41px 42px),
+    #fffdf2;
+  box-shadow: 0 28px 76px rgba(0, 0, 0, .38), 0 2px 0 rgba(255,255,255,.55) inset;
+  transform: rotate(-1.25deg);
+}
+
+.paperTape {
+  position: absolute;
+  top: -15px;
+  left: 42%;
+  width: 100px;
+  height: 31px;
+  background: rgba(171, 143, 236, .57);
+  transform: rotate(3deg);
+  clip-path: polygon(4% 0, 100% 5%, 96% 100%, 0 95%);
+}
+
+.paperTopline {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font: 700 .67rem/1.4 ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: .13em;
+  color: #4b5c7b;
+}
+
+.paperTitle {
+  margin: 1.25rem 0 1.4rem;
+  width: fit-content;
+  font: 700 clamp(1.6rem, 3.2vw, 2.9rem)/1.1 'Segoe Print', 'Comic Sans MS', cursive;
+  letter-spacing: -.04em;
+  box-shadow: 0 10px 0 -5px #94e9eb;
+}
+
+.paperGrid { display: grid; gap: clamp(.8rem, 2vw, 1.25rem); }
+
+.paperRow {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  align-items: start;
+  gap: .75rem;
+  font: 500 clamp(.9rem, 1.55vw, 1.08rem)/1.65 'Segoe Print', 'Comic Sans MS', cursive;
+}
+
+.paperRow strong { font-weight: 800; color: #0a3973; }
+.paperNum {
+  display: grid;
+  place-items: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 999px;
+  background: #ffe481;
+  font: 800 .92rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  transform: rotate(-8deg);
+}
+
+.paperFooter {
+  margin: 1.55rem 0 0;
+  padding: .7rem .85rem;
+  width: fit-content;
+  background: #d6f8ec;
+  font: 700 clamp(.8rem, 1.4vw, .98rem)/1.55 'Segoe Print', 'Comic Sans MS', cursive;
+  transform: rotate(1deg);
+}
+
+.paperExample {
+  display: block;
+  margin-top: 1.1rem;
+  text-align: right;
+  font: 600 .7rem/1 ui-monospace, SFMono-Regular, Consolas, monospace;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #65738b;
+}
+
+@media (max-width: 640px) {
+  .heroPaper { transform: rotate(-.5deg); }
+  .paperRow { grid-template-columns: 1.8rem 1fr; gap: .6rem; }
+}

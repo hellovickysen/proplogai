@@ -28,7 +28,7 @@ function DefaultLogo() {
   );
 }
 
-export default function LandingNav({ logo }) {
+export default function LandingNav({ logo, showTrial = true, ctaLabel = 'Start Free Trial', pricingHref = '#pricing', blogHref = '/blogs' }) {
   const navLogo = logo || <DefaultLogo />;
   const [open, setOpen] = useState(false);
 
@@ -44,7 +44,7 @@ export default function LandingNav({ logo }) {
               return (
                 <a
                   key={link.label}
-                  href={link.href}
+                  href={link.label === 'Blog' ? blogHref : link.href}
                   className="rounded-full px-4 py-2 text-sm text-white/50 transition-colors hover:text-white"
                 >
                   {link.label}
@@ -55,7 +55,7 @@ export default function LandingNav({ logo }) {
               return (
                 <a
                   key={link.label}
-                  href={link.href}
+                  href={pricingHref}
                   className="rounded-full px-4 py-2 text-sm text-white/50 transition-colors hover:text-white"
                 >
                   {link.label}
@@ -74,10 +74,10 @@ export default function LandingNav({ logo }) {
           })}
 
           {/* 14-Day Trial static badge */}
-          <span className="flex items-center gap-1.5 rounded-full border border-violet-400/20 bg-violet-500/[0.08] px-3.5 py-1.5 text-xs font-medium text-violet-300/80">
+          {showTrial && <span className="flex items-center gap-1.5 rounded-full border border-violet-400/20 bg-violet-500/[0.08] px-3.5 py-1.5 text-xs font-medium text-violet-300/80">
             <span>✦</span>
             14-Day Trial
-          </span>
+          </span>}
 
           <Link
             href="/login"
@@ -95,7 +95,7 @@ export default function LandingNav({ logo }) {
             className="cta-glow rounded-full px-5 py-2 text-sm font-semibold text-[#08080f]"
             style={gradientBtn}
           >
-            Start Free Trial
+            {ctaLabel}
           </Link>
         </div>
         </div>
@@ -149,7 +149,7 @@ export default function LandingNav({ logo }) {
               {NAV_LINKS.map((link) => (
                 <a
                   key={link.label}
-                  href={link.href}
+                  href={link.label === 'Pricing' ? pricingHref : link.label === 'Blog' ? blogHref : link.href}
                   onClick={() => setOpen(false)}
                   className="flex w-full items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-semibold text-white/80 transition-colors hover:border-white/20"
                   {...(link.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
@@ -159,9 +159,9 @@ export default function LandingNav({ logo }) {
               ))}
 
               {/* 14-Day Trial badge in mobile */}
-              <div className="flex items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/[0.08] px-4 py-3 text-sm font-medium text-violet-300/80">
+              {showTrial && <div className="flex items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/[0.08] px-4 py-3 text-sm font-medium text-violet-300/80">
                 ✦ 14-Day Free Trial
-              </div>
+              </div>}
 
               <Link
                 href="/login"
@@ -176,7 +176,7 @@ export default function LandingNav({ logo }) {
                 className="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-[#08080f]"
                 style={gradientBtn}
               >
-                Start Free Trial
+                {ctaLabel}
               </Link>
             </div>
           </div>

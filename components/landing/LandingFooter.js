@@ -87,6 +87,7 @@ export default function LandingFooter() {
             </h4>
             <ul className="space-y-3.5">
               <li><Link href="/dashboard" className="text-[13px] text-white/50 hover:text-white/80 transition-colors">Dashboard</Link></li>
+              <li><Link href="/trading-journal" className="text-[13px] text-white/50 hover:text-white/80 transition-colors">Free Trading Journal</Link></li>
               <li><Link href="/pricing" className="text-[13px] text-white/50 hover:text-white/80 transition-colors">Pricing</Link></li>
               <li><Link href="/dashboard/coach" className="text-[13px] text-white/50 hover:text-white/80 transition-colors">Propol AI Coach</Link></li>
               <li><Link href="/login?mode=signup" className="text-[13px] text-white/50 hover:text-white/80 transition-colors">Sign Up</Link></li>
