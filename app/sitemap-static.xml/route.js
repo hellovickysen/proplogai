@@ -7,6 +7,7 @@ const PAGES = [
   { path: '/pricing', changefreq: 'weekly', priority: '0.8' },
   { path: '/tools', changefreq: 'weekly', priority: '0.8' },
   { path: '/tools/consistency-calculator', changefreq: 'monthly', priority: '0.7' },
+  { path: '/tools/position-size-calculator', changefreq: 'monthly', priority: '0.8' },
   { path: '/privacy', changefreq: 'yearly', priority: '0.3' },
   { path: '/terms', changefreq: 'yearly', priority: '0.3' },
   { path: '/refund-policy', changefreq: 'yearly', priority: '0.3' },

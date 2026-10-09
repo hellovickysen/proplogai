@@ -55,6 +55,15 @@ const TOOLS = [
     href: '/tools/consistency-calculator',
     color: 'linear-gradient(120deg, #a78bfa, #22d3ee)',
   },
+  {
+    title: 'Forex Position Size Calculator',
+    subtitle:
+      'Estimate lot size from your planned USD risk, stop distance, and the value shown by your platform',
+    icon: '📏',
+    href: '/tools/position-size-calculator',
+    color: 'linear-gradient(120deg, #22d3ee, #a78bfa)',
+    tag: 'New',
+  },
 ];
 
 export default function PublicToolsPage() {
