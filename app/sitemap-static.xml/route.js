@@ -5,6 +5,7 @@ const PAGES = [
   { path: '/about', changefreq: 'monthly', priority: '0.6' },
   { path: '/contact', changefreq: 'monthly', priority: '0.5' },
   { path: '/pricing', changefreq: 'weekly', priority: '0.8' },
+  { path: '/trading-journal', changefreq: 'monthly', priority: '0.8' },
   { path: '/tools', changefreq: 'weekly', priority: '0.8' },
   { path: '/tools/consistency-calculator', changefreq: 'monthly', priority: '0.7' },
   { path: '/tools/position-size-calculator', changefreq: 'monthly', priority: '0.8' },
