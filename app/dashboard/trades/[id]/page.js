@@ -8,13 +8,15 @@ import AnalyzeButton from '@/components/trades/AnalyzeButton';
 import DeleteTradeButton from '@/components/trades/DeleteTradeButton';
 import FavoriteTradeButton from '@/components/trades/FavoriteTradeButton';
 import ScreenshotGallery from '@/components/ui/ScreenshotGallery';
-import { getActiveAccountId } from '@/lib/accounts';
+import { readAnalyticsAccountScope, canReviewAnalyticsTrade } from '@/lib/analytics-account-scope.mjs';
 
 export const dynamic = 'force-dynamic';
 
 export default async function TradeDetailPage({ params, searchParams }) {
-  const isViewOnly = searchParams?.from === 'search';
+  const fromAnalytics = searchParams?.from === 'analytics';
+  const isViewOnly = fromAnalytics || searchParams?.from === 'search';
   const { id } = params;
+  const backHref = fromAnalytics ? '/dashboard/analytics' : '/dashboard/trades';
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -22,7 +24,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
   // Fetch trade with user_id check
   const { data: trade, error: tradeErr } = await supabase
     .from('trades')
-    .select('id, account_id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_follow_map, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, is_favorite, share_id, shared_until, created_at')
+    .select('id, user_id, account_id, pair, direction, entry_price, exit_price, stop_loss, lot_size, pnl, setup, setup_id, setup_ids, setup_follow_map, setup_followed, no_setup_reason, timeframe, session, trade_date, opened_at, closed_at, is_favorite, share_id, shared_until, created_at')
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle();
@@ -42,11 +44,10 @@ export default async function TradeDetailPage({ params, searchParams }) {
     );
   }
 
-  // A selected account scopes direct detail routes as well as the trade list.
-  const activeAccountId = await getActiveAccountId(supabase, user.id);
-  if (activeAccountId && trade.account_id !== activeAccountId) {
-    redirect('/dashboard/trades');
-  }
+  // Direct and Analytics links use the same effective selection as the list/header.
+  const accountScope = await readAnalyticsAccountScope(supabase, user);
+  if (accountScope.error) return <main className="p-6 text-white"><h1 className="text-xl font-semibold">Account selection unavailable</h1><p className="mt-2 text-sm text-white/60">{accountScope.error}</p></main>;
+  if (!canReviewAnalyticsTrade(trade, user.id, accountScope)) redirect(backHref);
 
   // Fetch journal entry
   const { data: journal } = await supabase
@@ -101,11 +102,11 @@ export default async function TradeDetailPage({ params, searchParams }) {
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       {/* Top bar: Back + Share buttons */}
       <div className="flex items-center justify-between mb-4">
-        <Link href="/dashboard/trades" className="text-sm text-violet-400 hover:text-violet-300 inline-flex items-center gap-1.5 transition-colors">
+        <Link href={backHref} className="text-sm text-violet-400 hover:text-violet-300 inline-flex items-center gap-1.5 transition-colors">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          Back to Trades
+          {fromAnalytics ? "Back to AI Analytics" : "Back to Trades"}
         </Link>
-        <div className="flex items-center gap-2">
+        {!fromAnalytics && <div className="flex items-center gap-2">
           <FavoriteTradeButton tradeId={trade.id} initialFavorite={trade.is_favorite} />
           <TradeShareMenu
             tradeId={trade.id}
@@ -113,7 +114,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
             initialShareId={trade.share_id}
             initialSharedUntil={trade.shared_until}
           />
-        </div>
+        </div>}
       </div>
 
       {/* Trade Header */}
@@ -161,8 +162,10 @@ export default async function TradeDetailPage({ params, searchParams }) {
                 pillClass = 'bg-emerald-400/[0.1] border border-emerald-400/20 text-emerald-400';
               } else if (followStatus === 'no' || (!followStatus && isBadOrNoSetup)) {
                 pillClass = 'bg-red-400/[0.1] border border-red-400/20 text-red-400';
-              } else {
+              } else if (followStatus === 'partial') {
                 pillClass = 'bg-amber-400/[0.1] border border-amber-400/20 text-amber-400';
+              } else {
+                pillClass = 'bg-slate-400/[0.08] border border-slate-400/20 text-slate-300';
               }
               return (
                 <span key={i} className={`px-3 py-1 rounded-lg text-xs font-medium ${pillClass}`}>
@@ -307,7 +310,7 @@ export default async function TradeDetailPage({ params, searchParams }) {
       )}
 
       {/* No AI analysis — show CTA */}
-      {!aiData && (
+      {!aiData && !fromAnalytics && (
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 sm:p-6 mb-4 text-center">
           <div className="text-2xl mb-2 opacity-40">✦</div>
           <h3 className="text-sm font-semibold text-white/60 mb-1">AI Analysis</h3>
@@ -318,11 +321,11 @@ export default async function TradeDetailPage({ params, searchParams }) {
 
       {/* Actions */}
       <div className="flex items-center justify-between mt-6">
-        <Link href="/dashboard/trades" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/60 hover:text-white/80 hover:bg-white/[0.06] transition-colors">
+        <Link href={backHref} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-white/10 bg-white/[0.03] text-sm text-white/60 hover:text-white/80 hover:bg-white/[0.06] transition-colors">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg>
-          All Trades
+          {fromAnalytics ? "Back to AI Analytics" : "All Trades"}
         </Link>
-        <DeleteTradeButton tradeId={id} pair={trade.pair} />
+        {!fromAnalytics && <DeleteTradeButton tradeId={id} pair={trade.pair} />}
       </div>
     </div>
   );

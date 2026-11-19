@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import EditTradeClient from '@/components/trades/EditTradeClient';
-import { getActiveAccountId } from '@/lib/accounts';
+import { readAnalyticsAccountScope, canReviewAnalyticsTrade } from '@/lib/analytics-account-scope.mjs';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,11 +35,11 @@ export default async function EditTradePage({ params }) {
     );
   }
 
-  // A selected account scopes direct edit routes as well as the trade list.
-  const activeAccountId = await getActiveAccountId(supabase, user.id);
-  if (activeAccountId && trade.account_id !== activeAccountId) {
-    redirect('/dashboard/trades');
-  }
+  // Use the visible effective selection, not a saved preference hidden by plan access.
+  const accountScope = await readAnalyticsAccountScope(supabase, user);
+  if (accountScope.error) return <main className="p-6 text-white"><h1 className="text-xl font-semibold">Account selection unavailable</h1><p className="mt-2 text-sm text-white/60">{accountScope.error}</p></main>;
+  if (!canReviewAnalyticsTrade(trade, user.id, accountScope)) redirect('/dashboard/trades');
+  const { activeAccountId } = accountScope;
 
   // Fetch user prefs
   const { data: prefs } = await supabase

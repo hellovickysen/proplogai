@@ -409,6 +409,17 @@ These are the user's (Varun Sen, founder) strong preferences accumulated over mo
 
 ---
 
+### AI Analytics
+
+**Removed by user on 2026-11-14:** the manual Rule Reviews screen, trade-by-trade review list, and Analytics review/backfill entry points. Old review URLs redirect to Analytics; stale manual-review actions reject saves. Keep automatic trade-log calculations and saved data. Do not restore this workflow without a new request.
+
+**Deferred by user on 2026-11-13:** clickable KPI trade breakdowns. Resume when the user requests this feature; the current view keeps the KPI percentages and calculation help.
+
+- **Post-loss discipline:** inspect losing trade → next trade within the same account/day, setup-following status, actual lot size versus the applicable Rulebook limit, and pass/fail reason. Show missing-evidence cases and days when trading stopped separately. Label saved log order and retrospective limit comparisons.
+- **Risk consistency:** inspect breached days/trades with actual daily P&L, lot size, or trade count beside the applicable limit and effective date. Day-level rows should reveal all trades from that account/day.
+- **Setup adherence:** list fully followed, partially followed, explicit No Setup, and missing-review trades.
+- **Shared requirements:** original trade links, result/rule filters, pagination, synchronized timeframe/account scope, responsive internal table scrolling, and totals that reconcile with the KPI denominators. Preserve existing calculations and keep all work isolated until release approval.
+
 ## 14. Quick Checklist Before Any Code Change
 
 - [ ] Did I fetch the CURRENT file from the correct git commit (not a cached URL)?

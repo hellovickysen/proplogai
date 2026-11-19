@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { appendRuleVersion, latestRuleVersion, RULE_HISTORY_KEY, rulebookDate } from '@/lib/rulebook-history.mjs';
 
 const RULES = {
   daily_loss_limit: {
@@ -35,7 +36,7 @@ async function getCtx() {
 export async function saveRulebookRule(ruleKey, value) {
   if (!RULES[ruleKey]) return { error: 'Unknown rule.' };
   const cleanValue = sanitizeValue(value);
-  if (!cleanValue) return { error: 'A personal limit is required.' };
+  if (!cleanValue || !Number.isFinite(Number(cleanValue)) || Number(cleanValue) <= 0) return { error: 'Enter a personal limit greater than 0.' };
 
   const { supabase, user } = await getCtx();
   if (!user) return { error: 'You must be signed in.' };
@@ -43,19 +44,26 @@ export async function saveRulebookRule(ruleKey, value) {
   const rule = RULES[ruleKey];
   const { data: existing, error: readError } = await supabase
     .from('rulebook_rules')
-    .select('id')
+    .select('id,value,unit,enabled,metadata,created_at,updated_at')
     .eq('user_id', user.id)
     .eq('rule_key', ruleKey)
+    .is('account_id', null)
     .maybeSingle();
   if (readError) return { error: readError.message };
 
-  const payload = { ...rule, value: cleanValue, updated_at: new Date().toISOString() };
-  const { error } = existing
-    ? await supabase.from('rulebook_rules').update(payload).eq('id', existing.id).eq('user_id', user.id)
-    : await supabase.from('rulebook_rules').insert({ ...payload, user_id: user.id });
+  const recordedAt = new Date().toISOString();
+  const history = appendRuleVersion(existing, { ...rule, value: cleanValue, enabled: true }, rulebookDate(recordedAt), recordedAt);
+  const latest = latestRuleVersion(history, rulebookDate(recordedAt)) || latestRuleVersion(history);
+  const payload = { ...rule, value: latest.value, unit: latest.unit, enabled: latest.enabled, metadata: { ...latest.settings, [RULE_HISTORY_KEY]: history }, updated_at: recordedAt };
+  const { data: saved, error } = existing
+    ? await supabase.from('rulebook_rules').update(payload).eq('id', existing.id).eq('user_id', user.id).eq('updated_at', existing.updated_at).select('id')
+    : await supabase.from('rulebook_rules').insert({ ...payload, user_id: user.id }).select('id');
   if (error) return { error: error.message };
+  if (!saved?.length) return { error: 'This rule changed elsewhere. Refresh and try again.' };
 
   revalidatePath('/dashboard/rulebook');
+  revalidatePath('/dashboard/analytics');
+  revalidatePath('/dashboard/analytics/review');
   return { ok: true };
 }
 

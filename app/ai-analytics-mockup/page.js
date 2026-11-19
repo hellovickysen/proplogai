@@ -8,8 +8,15 @@ import {
   useRef,
   useState,
 } from "react";
-import { buildMockPeriodAnalytics } from "./mock-analytics-adapter.mjs";
-
+import {
+  setupComposition,
+  compareSetupEvidence,
+  buildMockPeriodAnalytics,
+  buildPeriodAnalyticsFromTrades,
+} from "./mock-analytics-adapter.mjs";
+import PerformanceHistory from "@/components/analytics/PerformanceHistory";
+import PerformanceTable from "@/components/analytics/PerformanceTable";
+import { loggedSetupStatus } from "@/app/api/ai-analytics/local-data/rule-evidence.mjs";
 const IntroMotionContext = createContext(false);
 const INTRO_SESSION_KEY = "proplogai:ai-analytics:intro-v1";
 const PERIOD_SESSION_KEY = "proplogai:ai-analytics:period-v1";
@@ -561,25 +568,11 @@ function buildSetup(setup) {
   };
 }
 
-function getSetupsForPeriod(period) {
-  return buildMockPeriodAnalytics(period).setups;
+function getSetupsForPeriod(period, analytics) {
+  return analytics?.setups || buildMockPeriodAnalytics(period).setups;
 }
 
-const sampleRank = { Established: 3, Developing: 2, Provisional: 1 };
-
-function sortByEvidence(a, b) {
-  return (
-    sampleRank[b.sampleConfidence] - sampleRank[a.sampleConfidence] ||
-    b.executionScore - a.executionScore ||
-    b.trades - a.trades
-  );
-}
-const logRows = [
-  ["May 13, 2025", "1", "London Breakout", "Clean", "0.75R", "+0.9R"],
-  ["May 13, 2025", "2", "London Breakout", "Clean", "1.00R", "-0.6R"],
-  ["May 13, 2025", "3", "NY Open Reversal", "Clean", "0.75R", "+1.2R"],
-  ["May 6, 2025", "1", "London Breakout", "Daily loss limit", "1.00R", "-1.0R"],
-];
+const sortByEvidence = compareSetupEvidence;
 
 function AnimatedNumber({ value, prefix = "", suffix = "", duration = 1050 }) {
   const valueRef = useRef(null);
@@ -682,22 +675,22 @@ function OutcomeIcon({ type }) {
     wins: <><path d="M7 4h10v6a5 5 0 0 1-10 0V4Z"/><path d="M7 7H3v2a4 4 0 0 0 5 4m9-6h4v2a4 4 0 0 1-5 4M12 15v4m-4 2h8"/></>,
     drawdown: <><path d="M3 4v16h18"/><path d="m6 7 5 5 4-4 6 7"/><path d="M16 15h5v-5"/></>,
   };
-  return <svg viewBox="0 0 24 24" className={`h-9 w-9 shrink-0 fill-none ${type === "drawdown" ? "stroke-rose-400" : "stroke-[#8394bd]"}`} strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[type]}</svg>;
+  return <svg viewBox="0 0 24 24" className={`h-5 w-5 shrink-0 fill-none sm:h-7 sm:w-7 ${type === "drawdown" ? "stroke-rose-400" : "stroke-[#8394bd]"}`} strokeWidth="1.35" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[type]}</svg>;
 }
 
 function HistoricalMetric({ icon, label, value, tone = "text-white" }) {
-  return <div className="flex min-w-0 items-center justify-center gap-3 border-l border-white/15 px-4 first:border-0"><OutcomeIcon type={icon}/><div className="min-w-0"><div className="text-[11px] text-white/55">{label}</div><div className={`mt-0.5 font-mono text-xl font-semibold leading-none ${tone}`}>{value}</div></div></div>;
+  return <div className="flex min-w-0 items-center justify-center gap-1 border-l border-white/15 px-1 py-2 first:border-0 sm:gap-2 sm:px-2"><OutcomeIcon type={icon}/><div className="min-w-0 whitespace-nowrap"><div className="text-[9px] text-white/55 sm:text-[11px]">{label}</div><div className={`mt-0.5 font-mono text-xs font-semibold leading-none sm:text-base min-[1500px]:text-xl ${tone}`}>{value}</div></div></div>;
 }
 function PillTabs({ value, onChange, items, textSize = "text-xs" }) {
   return (
-    <div className="inline-flex rounded-xl border border-white/10 bg-black/20 p-1">
+    <div className="analytics-scrollbar-hidden inline-flex max-w-full overflow-x-auto rounded-xl border border-white/10 bg-black/20 p-1">
       {items.map((item) => (
         <button
           key={item}
           type="button"
           aria-pressed={value === item}
           onClick={() => onChange(item)}
-          className={`rounded-lg px-4 py-2 ${textSize} transition ${value === item ? "bg-gradient-to-r from-violet-600 to-blue-500 font-semibold text-white" : "text-white/50 hover:text-white"}`}
+          className={`shrink-0 whitespace-nowrap rounded-lg px-4 py-2 ${textSize} transition ${value === item ? "bg-gradient-to-r from-violet-600 to-blue-500 font-semibold text-white" : "text-white/50 hover:text-white"}`}
         >
           {item}
         </button>
@@ -723,14 +716,14 @@ function PeriodSelect({ value, onChange, className = "" }) {
   );
 }
 
-function Ring({ value, delta }) {
+function Ring({ value, delta, provisional = false }) {
   return (
     <div className="analytics-gauge analytics-ring-enter relative grid h-[222px] w-[222px] shrink-0 place-items-center rounded-full">
-      <svg viewBox="0 0 222 222" className="absolute inset-0 h-full w-full" aria-hidden="true">
+      <svg viewBox="0 0 222 222" className={`absolute inset-0 h-full w-full ${kpiValueTone(value)}`} aria-hidden="true">
         <defs>
           <linearGradient id="disciplineRingGradient" gradientUnits="userSpaceOnUse" x1="35" y1="190" x2="190" y2="20">
-            <stop stopColor="#7868ff" />
-            <stop offset="1" stopColor="#42c9ee" />
+            <stop stopColor="currentColor" stopOpacity=".65" />
+            <stop offset="1" stopColor="currentColor" />
           </linearGradient>
         </defs>
         <circle
@@ -742,8 +735,8 @@ function Ring({ value, delta }) {
           strokeWidth="15"
           strokeLinecap="round"
           pathLength="360"
-          strokeDasharray="45 315"
-          strokeDashoffset="-379"
+          strokeDasharray="254 106"
+          strokeDashoffset="-120"
         />
         <circle
           cx="111"
@@ -754,31 +747,33 @@ function Ring({ value, delta }) {
           strokeWidth="15"
           strokeLinecap="round"
           pathLength="360"
-          strokeDasharray="254 106"
+          strokeDasharray={Number.isFinite(value) ? `${254 * Math.max(0, Math.min(100, value)) / 100} 360` : "0 360"}
           strokeDashoffset="-120"
         />
       </svg>
       <div className="relative grid h-[86%] w-[86%] place-items-center rounded-full bg-[#0b111b] text-center">
         <div>
-          <div className="font-mono text-[68px] font-bold leading-none tracking-[-.06em]">
-            <AnimatedNumber value={value} />
+          <div className={`font-mono text-[68px] font-bold leading-none tracking-[-.06em] ${kpiValueTone(value)}`}>
+            {Number.isFinite(value) ? <AnimatedNumber value={value} /> : <span aria-label="Insufficient rule evidence">—</span>}
           </div>
           <div className="mt-1 text-xs tracking-wide text-white/55">
             DISCIPLINE / 100
           </div>
+          {provisional && <div className="mt-2 text-[10px] font-medium text-violet-300">Provisional score</div>}
           <PeriodDelta delta={delta} />
         </div>
       </div>
     </div>
   );
 }
-function ComplianceDome({ data, onNeedsEvidence, needsEvidenceOpen }) {
+function ComplianceDome({ data }) {
+  const segments = setupComposition(data);
   return (
-    <div className="analytics-gauge relative mx-auto h-[195px] w-full min-w-0 max-w-[430px] shrink-0 overflow-hidden sm:h-auto sm:aspect-[300/160] sm:justify-self-center sm:shrink">
+    <div className="analytics-gauge relative mx-auto h-[195px] w-full min-w-0 max-w-[430px] shrink-0 overflow-hidden sm:h-auto sm:min-h-[215px] sm:aspect-[300/160] sm:justify-self-center sm:shrink">
       <svg
         viewBox="0 0 300 160"
         className="absolute inset-x-0 top-0 h-[78%] w-full"
-        aria-label={`${data.totalTrades} total trades: ${data.clean} clean, ${data.notFollowed} not followed, and ${data.needsEvidence} need evidence`}
+        aria-label={`${data.totalTrades} total trades: ${data.clean} setups fully followed, ${data.partial || 0} partially followed, ${data.notFollowed} not followed, and ${data.needsEvidence} need setup review`}
       >
         <path
           className="analytics-arc-draw"
@@ -809,7 +804,7 @@ function ComplianceDome({ data, onNeedsEvidence, needsEvidenceOpen }) {
           strokeLinecap="round"
         />
         <path d="M40 130 A110 110 0 0 1 260 130" fill="none" stroke="#91a0ba" strokeOpacity=".38" strokeWidth="1" strokeDasharray="3 4" />
-        <path d="M250 60 A127 127 0 0 1 274 103" fill="none" stroke="#f45b72" strokeOpacity=".65" strokeWidth="1.5" strokeDasharray="4 4" />
+
         <g stroke="#4f78bd" strokeOpacity=".55" strokeWidth="1">
           <path d="M82 72v8m-4-4h8" />
           <path d="M150 42v9m-4.5-4.5h9" />
@@ -824,48 +819,50 @@ function ComplianceDome({ data, onNeedsEvidence, needsEvidenceOpen }) {
           </linearGradient>
         </defs>
       </svg>
-      <div className="absolute inset-x-0 top-[36%] -translate-y-1/2 text-center sm:top-[44%]">
+      <div className="absolute inset-x-0 top-[36%] -translate-y-1/2 text-center sm:top-[40%]">
         <div className="font-mono text-[30px] font-bold leading-none sm:text-[38px]"><AnimatedNumber value={data.totalTrades} /></div>
         <div className="mt-1 text-sm text-white/60 sm:mt-2 sm:text-base">Total trades</div>
         <div className="mt-1 flex justify-center">
           <PeriodDelta delta={data.totalTradesDelta} sentiment="neutral" compact />
         </div>
       </div>
-      <div className="absolute inset-x-0 top-[64%] flex justify-center sm:top-[68%]">
-        <button
-          type="button"
-          onClick={onNeedsEvidence}
-          aria-expanded={needsEvidenceOpen}
-          aria-controls="needs-evidence-review"
-          className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-1 text-[9px] leading-none transition ${needsEvidenceOpen ? "border-violet-300/45 bg-violet-400/15 text-violet-100" : "border-slate-300/15 bg-slate-300/[0.05] text-slate-300/75 hover:border-violet-300/35 hover:text-violet-200"}`}
-        >
-          Needs evidence <b className="font-mono text-slate-200"><AnimatedNumber value={data.needsEvidence} /></b>
+      <div className="absolute inset-x-0 top-[55%] flex justify-center sm:top-[58%]">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/15 bg-slate-300/[0.05] px-2 py-1 text-[9px] leading-none text-slate-300/75">
+          {data.partial > 0 && <><span className="text-amber-300">Partial <b className="font-mono"><AnimatedNumber value={data.partial} /></b></span><span aria-hidden="true">·</span></>}
+          Needs setup review <b className="font-mono text-slate-200"><AnimatedNumber value={data.needsEvidence} /></b>
           <PeriodDelta delta={data.needsEvidenceDelta} sentiment="neutral" compact />
-        </button>
+        </span>
       </div>
-      <div className="absolute bottom-0 left-[18%] text-left sm:left-[11%]">
-        <div className="flex items-center gap-1.5">
-          <PeriodDelta delta={data.cleanDelta} compact />
-          <b className="font-mono text-[27px] text-[#7ee45f] sm:text-[31px]"><AnimatedNumber value={data.clean} /></b>
+      <div className="absolute inset-x-[7%] top-[63.4%] grid grid-cols-2 items-start gap-4 sm:inset-x-[7%]">
+        <div className="min-w-0 text-left">
+          <div className="flex h-9 items-center gap-1.5 sm:h-10">
+            <PeriodDelta delta={data.cleanDelta} compact />
+            <b className="font-mono text-[27px] leading-none text-[#7ee45f] sm:text-[31px]"><AnimatedNumber value={data.clean} /></b>
+
+          </div>
+          <span className="mb-1 block font-mono text-[10px] leading-none text-[#7ee45f]/75">({segments[0].percent}%)</span>
+          <span className="block text-xs leading-tight text-white/60 sm:text-sm">Setup followed</span>
         </div>
-        <span className="block text-sm text-white/60 sm:text-base">Clean</span>
-      </div>
-      <div className="absolute bottom-0 right-[18%] text-right sm:right-[11%]">
-        <div className="flex items-center justify-end gap-1.5">
-          <b className="font-mono text-[27px] text-rose-400 sm:text-[31px]"><AnimatedNumber value={data.notFollowed} /></b>
-          <PeriodDelta
-            delta={data.notFollowedDelta}
-            sentiment={data.notFollowedDelta < 0 ? "positive" : "negative"}
-            compact
-          />
+        <div className="min-w-0 text-right">
+          <div className="flex h-9 items-center justify-end gap-1.5 sm:h-10">
+            <b className="font-mono text-[27px] leading-none text-rose-400 sm:text-[31px]"><AnimatedNumber value={data.notFollowed} /></b>
+
+            <PeriodDelta
+              delta={data.notFollowedDelta}
+              sentiment={data.notFollowedDelta < 0 ? "positive" : "negative"}
+              compact
+            />
+          </div>
+          <span className="mb-1 block font-mono text-[10px] leading-none text-rose-400/75">({segments[2].percent}%)</span>
+          <span className="block text-xs leading-tight text-white/60 sm:text-sm">Not followed</span>
         </div>
-        <span className="block text-sm text-white/60 sm:text-base">Not followed</span>
       </div>
     </div>
   );
 }
 
-function FrequencyRateSegments({ value }) {
+function FrequencyRateSegments({ value, label = "Clean-day rate" }) {
+  if (!Number.isFinite(value)) return <span className="font-sans tabular-nums text-xs text-white/45" aria-label="Rule evidence unavailable">—</span>;
   const activeSegments = Math.round(value / 5);
   const tone =
     value >= 80
@@ -878,9 +875,9 @@ function FrequencyRateSegments({ value }) {
     <div
       className="flex items-center gap-2"
       role="img"
-      aria-label={`Clean-day rate ${value}%`}
+      aria-label={`${label} ${value}%`}
     >
-      <b className={`w-7 shrink-0 font-mono text-xs ${tone.text}`}>
+      <b className={`w-7 shrink-0 font-sans tabular-nums text-xs ${tone.text}`}>
         {value}%
       </b>
       <span
@@ -898,22 +895,18 @@ function FrequencyRateSegments({ value }) {
   );
 }
 
-function Frequency({ period }) {
-  const [activeFrequency, setActiveFrequency] = useState("one");
+function Frequency({ period, analytics, activeFrequency, setActiveFrequency }) {
   const [frequencyMode, setFrequencyMode] = useState("Per day");
   const [session, setSession] = useState("All sessions");
-  const periodAnalytics = useMemo(() => buildMockPeriodAnalytics(period), [period]);
+  const periodAnalytics = analytics || buildMockPeriodAnalytics(period);
   const frequencyData = periodAnalytics.frequency;
   const sessionRows = periodAnalytics.sessionFrequency[session];
-  const selectedFrequency = frequencyData.rows.find(
-    (row) => row.key === activeFrequency,
-  );
   const strongestSessionRow = sessionRows
     .filter((row) => row.occurrences >= 10)
     .sort((a, b) => b.winRate - a.winRate)[0];
 
   return (
-    <Panel className="h-full min-h-[382px] min-w-0 p-4">
+    <Panel className="min-w-0 p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="flex items-center gap-2 text-[18px] font-semibold">
@@ -943,7 +936,7 @@ function Frequency({ period }) {
 
       {frequencyMode === "Per day" ? (
       <>
-      <div className="analytics-scrollbar-hidden mt-4 overflow-x-auto">
+      <div tabIndex={0} role="region" aria-label="Trade frequency by day" className="analytics-table-scrollbar mt-4 overflow-x-auto">
         <div className="min-w-[880px]">
           <div className="grid grid-cols-[110px_105px_minmax(190px,1fr)_125px_155px_110px] items-center gap-3 border-y border-white/15 py-2 text-[11px] text-white/50">
             <span className="pl-3">Trade/day</span>
@@ -973,43 +966,43 @@ function Frequency({ period }) {
                 </span>
               </div>
               <div>
-                <b className="font-mono text-base text-white/90">
-                  {Math.round(row.averageDays)} days
+                <b className="font-sans tabular-nums text-base text-white/90">
+                  {Number.isFinite(row.averageDays) ? `${Math.round(row.averageDays)} days` : "—"}
                 </b>
                 <span className="mt-1 block text-[10px] text-white/40">
-                  {row.share}% of trading days
+                  {formatPercent(row.share)} of trading days
                 </span>
               </div>
               <div
                 role="img"
-                aria-label={`${row.green}% green days, ${row.red}% red days, ${row.breakEven}% break-even days`}
+                aria-label={row.sampleDays ? `${formatPercent(row.green)} green days, ${formatPercent(row.red)} red days, ${formatPercent(row.breakEven)} break-even days` : "No completed days in this frequency group"}
               >
                 <div className="analytics-segments flex h-2.5 w-full overflow-hidden rounded-full bg-white/10">
                   <span
                     className="bg-emerald-400"
-                    style={{ width: `${row.green}%` }}
+                    style={{ width: `${row.green ?? 0}%` }}
                   />
                   <span
                     className="bg-rose-400"
-                    style={{ width: `${row.red}%` }}
+                    style={{ width: `${row.red ?? 0}%` }}
                   />
                   {row.breakEven > 0 && (
                     <span
                       className="bg-slate-400"
-                      style={{ width: `${row.breakEven}%` }}
+                      style={{ width: `${row.breakEven ?? 0}%` }}
                     />
                   )}
                 </div>
-                <div className="mt-1.5 flex gap-3 font-mono text-[10px]" aria-hidden="true">
-                  <span className="text-emerald-400">{row.green}% Green</span>
-                  <span className="text-rose-400">{row.red}% Red</span>
-                  <span className="text-white/45">{row.breakEven}% BE</span>
+                <div className="mt-1.5 flex gap-3 font-sans tabular-nums text-[10px]" aria-hidden="true">
+                  <span className="text-emerald-400">{formatPercent(row.green)} Green</span>
+                  <span className="text-rose-400">{formatPercent(row.red)} Red</span>
+                  <span className="text-white/45">{formatPercent(row.breakEven)} BE</span>
                 </div>
               </div>
-              <div className="font-mono">
+              <div className="font-sans tabular-nums">
                 <b
                   className={
-                    row.averagePnl >= 0 ? "text-emerald-400" : "text-rose-400"
+                    weekdayMoneyTone(row.averagePnl)
                   }
                 >
                   Avg {formatCurrency(row.averagePnl)}
@@ -1028,11 +1021,11 @@ function Frequency({ period }) {
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <span className="text-[10px] text-white/45">Setup followed</span>
                   <span aria-hidden="true" className="text-[10px] text-white/25">—</span>
-                  <b className="font-mono text-violet-200">{row.setupRate}%</b>
+                  <b className="font-sans tabular-nums text-violet-200">{Number.isFinite(row.setupRate) ? `${row.setupRate}%` : "—"}</b>
                 </div>
               </div>
               <div className="border-l border-white/10 pl-4">
-                <b className="font-mono text-rose-400">{row.breachDayRate}%</b>
+                <b className="font-sans tabular-nums text-rose-400">{formatPercent(row.breachDayRate)}</b>
                 <span className="mt-1 block text-[9px] leading-3 text-white/35">
                   of logged days
                 </span>
@@ -1042,27 +1035,12 @@ function Frequency({ period }) {
         </div>
       </div>
 
-      <div className="mt-4 flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-semibold text-white/90">What counts as a clean day?</h3>
-          <p className="mt-1 text-xs leading-5 text-white/50">
-            A clean day means you followed every logged rule and executed with proper discipline. Example: on {selectedFrequency.exampleLabel}, the trade matched your setup, stayed within the planned risk, and no rule was broken. That day counts as clean. In these logs, {selectedFrequency.cleanDayRate}% of {selectedFrequency.sampleDays} completed {selectedFrequency.dayDescription} were clean.
-          </p>
-        </div>
-        <span className="w-fit shrink-0 rounded-full border border-violet-400/30 bg-violet-400/10 px-3 py-2 text-[10px] text-violet-200">
-          Selected · {selectedFrequency.sampleDays} days
-        </span>
-      </div>
-
-      <p className="mt-3 text-[10px] leading-4 text-white/35">
-        A day is Green, Red, or BE from its final net P&amp;L. These historical rates describe completed logs and do not predict future outcomes.
-      </p>
       </>
       ) : (
         <>
           <div className="mt-4 flex flex-wrap items-center gap-2 border-y border-white/10 py-3">
             <span className="mr-1 text-[11px] text-white/45">Session</span>
-            {["All sessions", "Asian", "London", "New York"].map((item) => (
+            {["All sessions", "Asian", "London", "New York", "Unassigned"].map((item) => (
               <button
                 key={item}
                 type="button"
@@ -1074,7 +1052,7 @@ function Frequency({ period }) {
               </button>
             ))}
           </div>
-          <div className="analytics-table-scrollbar mt-3 overflow-x-auto">
+          <div tabIndex={0} role="region" aria-label="Trade frequency by session" className="analytics-table-scrollbar mt-3 overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="text-[10px] text-white/40">
                 <tr>
@@ -1093,10 +1071,10 @@ function Frequency({ period }) {
                         <b className="text-white/90">{row.label}</b>
                         {isStrongest && <span className="ml-2 rounded-full border border-cyan-400/20 bg-cyan-400/[0.08] px-2 py-0.5 text-[9px] text-cyan-200">Highest observed</span>}
                       </td>
-                      <td className="border-b border-white/10 px-3 py-3 font-mono text-white/85">{row.winRate}%</td>
-                      <td className={`border-b border-white/10 px-3 py-3 font-mono ${row.averagePnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{formatCurrency(row.averagePnl)}</td>
-                      <td className="border-b border-white/10 px-3 py-3"><FrequencyRateSegments value={row.cleanRate} /></td>
-                      <td className="border-b border-white/10 px-3 py-3 font-mono text-white/75">{row.occurrences}</td>
+                      <td className="border-b border-white/10 px-3 py-3 font-sans tabular-nums text-white/85">{formatPercent(row.winRate)}</td>
+                      <td className={`border-b border-white/10 px-3 py-3 font-sans tabular-nums ${weekdayMoneyTone(row.averagePnl)}`}>{formatCurrency(row.averagePnl)}</td>
+                      <td className="border-b border-white/10 px-3 py-3"><FrequencyRateSegments value={row.cleanRate} label="Clean-session rate" /></td>
+                      <td className="border-b border-white/10 px-3 py-3 font-sans tabular-nums text-white/75">{row.occurrences}</td>
                       <td className="border-b border-white/10 px-3 py-3">
                         <span className={`rounded-full border px-2 py-1 text-[9px] ${rankable ? "border-emerald-400/20 bg-emerald-400/[0.07] text-emerald-300" : "border-amber-400/20 bg-amber-400/[0.07] text-amber-300"}`}>
                           {rankable ? "Rankable" : "Provisional"}
@@ -1116,16 +1094,31 @@ function Frequency({ period }) {
             )}
           </div>
           <p className="mt-3 text-[10px] leading-4 text-white/35">
-            A session is counted only when it contains at least one completed trade. Results describe historical logs and are not trading recommendations.
+            A session is counted per account, date, and saved session when it contains a completed trade. Green-session rate measures profitable sessions, not individual trade win rate. Missing rule evidence remains unscored. Results describe historical logs and are not trading recommendations.
           </p>
         </>
       )}
     </Panel>
   );
 }
+function weekdayMoneyTone(value) {
+  if (!Number.isFinite(value) || value === 0) return "text-white/55";
+  return value > 0 ? "text-emerald-400" : "text-rose-400";
+}
+function weekdayPnlDirection(value) {
+  return Number.isFinite(value) && value !== 0 ? value > 0 : null;
+}
+function formatAverageTrades(value) {
+  return Number.isFinite(value) ? value.toFixed(1) : "—";
+}
+
 function formatCurrency(value) {
   if (value === null || value === undefined) return "—";
-  return `${value >= 0 ? "+" : "-"}$${Math.abs(value).toLocaleString()}`;
+  return `${value >= 0 ? "+" : "-"}$${Math.abs(value).toLocaleString("en-US", { minimumFractionDigits: Number.isInteger(value) ? 0 : 2, maximumFractionDigits: 2 })}`;
+}
+
+function formatPercent(value) {
+  return Number.isFinite(value) ? `${value}%` : "—";
 }
 
 function buildOverviewData(period, analytics) {
@@ -1139,6 +1132,8 @@ function buildOverviewData(period, analytics) {
     totalTradesDelta: summary.totalTradesDelta,
     clean: summary.clean,
     cleanDelta: summary.cleanDelta,
+    partial: summary.partial,
+    partialDelta: summary.partialDelta,
     notFollowed: summary.notFollowed,
     notFollowedDelta: summary.notFollowedDelta,
     needsEvidence: summary.needsEvidence,
@@ -1159,7 +1154,7 @@ function buildOverviewData(period, analytics) {
 
 function OutcomeRecord({ setup }) {
   return (
-    <span className="inline-flex items-center gap-1.5 font-mono text-xs whitespace-nowrap" aria-label={`${setup.wins} wins, ${setup.losses} losses, ${setup.breakEven} break-even`}>
+    <span className="inline-flex items-center gap-2 font-sans tabular-nums text-[15px] font-medium leading-5 whitespace-nowrap" aria-label={`${setup.wins} wins, ${setup.losses} losses, ${setup.breakEven} break-even`}>
       <span className="text-emerald-400">{setup.wins}W</span>
       <span aria-hidden="true" className="text-white/25">·</span>
       <span className="text-rose-400">{setup.losses}L</span>
@@ -1191,7 +1186,7 @@ function OutcomeMix({ setup, compact = false }) {
           )),
         )}
       </div>
-      <div className="mt-1 flex gap-2 font-mono text-[10px] whitespace-nowrap">
+      <div className="mt-1.5 flex gap-2 font-sans tabular-nums text-xs font-medium leading-4 whitespace-nowrap">
         {groups.map(([key, label, count], index) => (
           <span
             key={key}
@@ -1206,6 +1201,7 @@ function OutcomeMix({ setup, compact = false }) {
 }
 
 function QualityBadge({ setup }) {
+  if (setup.executionScore === null) return <span className="inline-flex rounded-full border border-slate-300/20 bg-slate-300/[0.05] px-2.5 py-1 text-[10px] text-slate-300" title="Full rule evidence is needed to calculate execution quality">Needs rule evidence</span>;
   const tone = {
     "A+": "border-cyan-300/35 bg-cyan-300/10 text-cyan-200",
     A: "border-violet-300/35 bg-violet-300/10 text-violet-200",
@@ -1237,10 +1233,10 @@ function SampleBadge({ confidence }) {
   );
 }
 
-function SetupTable({ onViewAll, period }) {
-  const periodSetups = useMemo(() => getSetupsForPeriod(period), [period]);
+function SetupTable({ onViewAll, period, analytics }) {
+  const periodSetups = useMemo(() => getSetupsForPeriod(period, analytics), [period, analytics]);
   const visibleSetups = [...periodSetups].sort(sortByEvidence).slice(0, 4);
-  const [selectedSetupName, setSelectedSetupName] = useState(visibleSetups[0].name);
+  const [selectedSetupName, setSelectedSetupName] = useState(visibleSetups[0]?.name || "");
   const selectedSetup = visibleSetups.find((setup) => setup.name === selectedSetupName) || visibleSetups[0];
   const confidenceSummary = [
     {
@@ -1276,7 +1272,7 @@ function SetupTable({ onViewAll, period }) {
       <h2 className="text-[18px] font-semibold">Setup quality &amp; adherence</h2>
       <div className="analytics-scrollbar-hidden mt-3 overflow-x-auto">
         <div className="min-w-[960px]">
-          <div className="grid grid-cols-[1.2fr_.35fr_.72fr_.92fr_.62fr_.7fr_.72fr] items-center gap-3 border-b border-white/20 pb-2 text-[11px] text-white/60">
+          <div className="grid grid-cols-[1.15fr_.35fr_.95fr_.85fr_.62fr_.7fr_.72fr] items-center gap-3 border-b border-white/20 pb-2 text-[11px] text-white/60">
             <span>Setup</span>
             <span>Trades</span>
             <span>Record</span>
@@ -1289,20 +1285,20 @@ function SetupTable({ onViewAll, period }) {
             <button
               key={setup.name}
               type="button"
-              aria-pressed={selectedSetup.name === setup.name}
+              aria-pressed={selectedSetup?.name === setup.name}
               onClick={() => setSelectedSetupName(setup.name)}
-              className={`analytics-row grid w-full grid-cols-[1.2fr_.35fr_.72fr_.92fr_.62fr_.7fr_.72fr] items-center gap-3 border-b border-white/15 py-3 text-left text-sm ${selectedSetup.name === setup.name ? "bg-violet-400/[0.07] shadow-[inset_3px_0_0_#7c68ff]" : ""}`}
+              className={`analytics-row grid w-full grid-cols-[1.15fr_.35fr_.95fr_.85fr_.62fr_.7fr_.72fr] items-center gap-3 border-b border-white/15 py-3 text-left text-sm ${selectedSetup?.name === setup.name ? "bg-violet-400/[0.07] shadow-[inset_3px_0_0_#7c68ff]" : ""}`}
             >
               <b className="pl-3 font-medium text-violet-300">{setup.name}</b>
               <span>{setup.trades}</span>
               <OutcomeRecord setup={setup} />
               <OutcomeMix setup={setup} compact />
-              <span className="font-mono text-white/85" aria-label={`${setup.historicalWinRate} percent historical win rate`}>
+              <span className="font-sans tabular-nums text-white/85" aria-label={`${setup.historicalWinRate} percent historical win rate`}>
                 {setup.historicalWinRate}%
               </span>
               <QualityBadge setup={setup} />
               <span
-                className={`font-mono ${setup.pnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}
+                className={`font-sans tabular-nums ${setup.pnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}
               >
                 {formatCurrency(setup.pnl)}
               </span>
@@ -1313,19 +1309,19 @@ function SetupTable({ onViewAll, period }) {
       <p className="mt-3 text-[10px] leading-4 text-white/40">
         Higher grades reflect more consistent rule execution in past logs — not expected profitability.
       </p>
-      <div className="mt-4 flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      {selectedSetup ? <div className="mt-4 flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-white/90">
             {selectedSetup.name}: what the percentages mean
           </h3>
           <p className="mt-1 text-xs leading-5 text-white/50">
-            Historical win rate: {selectedSetup.wins} wins from {selectedSetup.trades} completed trades = {selectedSetup.historicalWinRate}%. Execution quality: {selectedSetup.executionScore}% ({selectedSetup.executionGrade}), calculated from 60% setup adherence and 40% clean-trade rate. Win rate describes past outcomes; execution quality describes how consistently the rules were followed. Neither predicts future results.
+            Historical win rate: {selectedSetup.wins} wins from {selectedSetup.trades} completed trades = {selectedSetup.historicalWinRate}%. {selectedSetup.executionScore === null ? "Execution quality needs both setup adherence and conclusive rule evaluations; it cannot yet be graded from these logs." : `Execution quality: ${selectedSetup.executionScore}% (${selectedSetup.executionGrade}), calculated from 60% setup adherence and 40% clean-trade rate.`} Historical outcomes do not predict future results.
           </p>
         </div>
         <span className="w-fit shrink-0 rounded-full border border-violet-400/30 bg-violet-400/10 px-3 py-2 text-[10px] text-violet-200">
           Selected · {selectedSetup.trades} trades
         </span>
-      </div>
+      </div> : <p className="mt-4 text-xs text-white/50">No completed trades with a named setup in this period.</p>}
       <div className="mt-auto pt-4">
         <div className="rounded-xl border border-white/10 bg-white/[0.025] p-3.5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -1357,7 +1353,7 @@ function SetupTable({ onViewAll, period }) {
                     <div className="mt-1 text-[10px] text-white/45">{item.threshold}</div>
                   </div>
                   <b className="flex items-baseline gap-1 whitespace-nowrap text-white">
-                    <span className="font-mono text-2xl leading-none">{item.count}</span>
+                    <span className="font-sans tabular-nums text-2xl leading-none">{item.count}</span>
                     <span className="text-[10px] font-medium text-white/55">setups</span>
                   </b>
                 </div>
@@ -1374,43 +1370,55 @@ function SetupTable({ onViewAll, period }) {
     </Panel>
   );
 }
-function MiniDayChart({ onExplore, data }) {
-  const baseline = data.kpis[0].value;
-  const chartValues = [baseline - 2, baseline - 5, baseline - 8, baseline - 3, baseline - 6];
-  const chartPoints = chartValues.map((value, index) => ({
-    day: ["Mon", "Tue", "Wed", "Thu", "Fri"][index],
-    x: 85 + index * 100,
-    y: 14 + ((100 - value) / 100) * 80,
-    value,
+function MiniDayChart({ onExplore, analytics }) {
+  const points = analytics.days.map((day) => ({
+    ...day,
+    setupRate: day.selectedSetupAdherence,
+    winRate: day.trades > 0 ? analytics.weekdayDetails[day.day]?.tradeWinRate ?? null : null,
   }));
-  const chartPath = chartPoints.map((point, index) => `${index ? "L" : "M"}${point.x} ${point.y}`).join(" ");
+  const series = [
+    { key: "setupRate", label: "Setup followed", color: "#a78bfa" },
+    { key: "winRate", label: "Win rate", color: "#38bdf8" },
+  ];
   return (
-    <Panel className="relative h-[174px] min-w-0 overflow-hidden p-4">
-      <div className="relative h-full w-full min-[980px]:grid min-[980px]:grid-cols-[minmax(0,520px)_auto] min-[980px]:gap-3">
-        <div className="relative h-full w-full max-w-[520px] min-[980px]:max-w-none">
-          <h2 className="absolute left-[7.31%] top-0 z-10 flex items-center gap-2 text-[18px] font-semibold">Compliance by day <span className="grid h-5 w-5 place-items-center rounded-full border border-white/60 text-[11px] text-white/70">i</span></h2>
-          <svg viewBox="0 0 520 110" className="absolute inset-x-0 top-8 aspect-[520/110] w-full" aria-label="Compliance by day line chart with percentage scale and visible axes">
-            {[["100%",14],["75%",34],["50%",54],["25%",74],["0%",94]].map(([label,y])=><g key={label}><text x="2" y={y+4} fill="white" fillOpacity=".55" fontSize="10">{label}</text><line x1="38" y1={y} x2="510" y2={y} stroke="white" strokeOpacity=".12" strokeDasharray="3 3" /></g>)}
-            <line x1="38" y1="14" x2="38" y2="94" stroke="white" strokeOpacity=".28" strokeWidth="1" />
-            <line x1="38" y1="94" x2="510" y2="94" stroke="white" strokeOpacity=".28" strokeWidth="1" />
-            <path className="analytics-line-draw analytics-line-delay" pathLength="1" d={chartPath} fill="none" stroke="#7187ff" strokeWidth="2" />
-            {chartPoints.map(({day,x,y,value},index)=><g className="analytics-chart-point" style={{animationDelay:`${420 + index * 85}ms`}} key={day}><circle cx={x} cy={y} r="4" fill="#7187ff"/><text x={x} y={y-9} fill="white" fontSize="12" textAnchor="middle">{value}%</text><text x={x} y="108" fill="white" fillOpacity=".65" fontSize="12" textAnchor="middle">{day}</text></g>)}
-          </svg>
-        </div>
-        <button
-          onClick={onExplore}
-          className="absolute right-0 top-0 z-20 rounded-lg border border-violet-400 px-3 py-2 text-xs text-[#8191ff] hover:bg-violet-500/10 sm:px-4 sm:py-2.5 sm:text-sm min-[980px]:static min-[980px]:self-center min-[980px]:justify-self-end"
-        >
-          <span className="min-[1500px]:hidden">EDGE</span>
-          <span className="hidden min-[1500px]:inline">Explore in EDGE</span>
-        </button>
+    <Panel className="flex min-h-[330px] min-w-0 flex-1 flex-col p-4">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="text-base font-semibold leading-5">Setup adherence &amp; win rate by weekday</h2>
+        <button onClick={onExplore} className="shrink-0 rounded-lg border border-violet-400 px-2.5 py-1.5 text-xs text-violet-300 hover:bg-violet-500/10">EDGE →</button>
       </div>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-white/65">
+        {series.map((item) => <span key={item.key} className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-sm" style={{ backgroundColor: item.color }} aria-hidden="true" />{item.label}</span>)}
+      </div>
+      <div className="mt-3 flex min-w-0 flex-1 flex-col overflow-x-auto">
+        <div className="flex min-w-[360px] flex-1 flex-col" role="img" aria-label="Setup-followed percentage and trade win-rate percentage for each weekday in the selected period">
+          <div className="relative ml-9 min-h-[180px] flex-1">
+            {[0, 25, 50, 75, 100].map((value) => <div key={value} className="absolute inset-x-0 border-t border-dashed border-white/10" style={{ bottom: `${value / 1.2}%` }}>
+              <span className="absolute -left-9 -top-2 w-7 text-right text-[10px] leading-4 text-slate-400">{value}%</span>
+            </div>)}
+            <div className="absolute inset-0 grid grid-cols-5">
+              {points.map((day) => <div key={day.day} className="flex h-full items-end justify-center gap-3 px-1" aria-label={`${day.day}: setup followed ${formatPercent(day.setupRate)}, win rate ${formatPercent(day.winRate)}; ${day.trades} completed trades`}>
+                {series.map((item) => {
+                  const value = day[item.key];
+                  return <div key={item.key} className="relative w-[22%] max-w-9 rounded-t analytics-bar-rise" style={{ height: Number.isFinite(value) ? `${Math.max(0.5, value / 1.2)}%` : "1px", backgroundColor: Number.isFinite(value) ? item.color : "transparent" }}>
+                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap font-sans text-xs font-semibold tabular-nums" style={{ color: item.color }}>{formatPercent(value)}</span>
+                  </div>;
+                })}
+              </div>)}
+            </div>
+          </div>
+          <div className="ml-9 mt-2 grid grid-cols-5 text-center">
+            {points.map((day) => <div key={day.day}><p className="text-xs text-slate-300">{day.day}</p><p className="mt-1 font-sans text-[10px] tabular-nums text-slate-400">{day.trades} trades</p></div>)}
+          </div>
+        </div>
+      </div>
+      <span className="mt-1 text-[10px] text-cyan-300 sm:hidden">Swipe to see all weekdays →</span>
+      <p className="mt-3 text-[10px] leading-4 text-white/45">Setup followed = fully followed ÷ reviewed setups. Win rate = wins ÷ completed trades, including break-even. Missing data appears as —.</p>
     </Panel>
   );
 }
 
 function BreachConcentration({ data }) {
-  const repeatedBreaches = Math.max(1, Math.round(data.notFollowed * 0.35));
+  const repeatedBreaches = data.notFollowed > 0 ? Math.max(1, Math.round(data.notFollowed * 0.35)) : 0;
   return (
     <Panel className="h-[174px] min-w-0 overflow-hidden p-4">
       <h2 className="text-[18px] font-semibold">Breach concentration</h2>
@@ -1435,246 +1443,185 @@ function BreachConcentration({ data }) {
     </Panel>
   );
 }
-function NeedsEvidenceReview({ trades, onClose }) {
-  const visibleTrades = trades.slice(0, 8);
-  const [selectedTradeId, setSelectedTradeId] = useState(null);
-  const [reviewAnswers, setReviewAnswers] = useState({});
-  const selectedTrade = trades.find((trade) => trade.id === selectedTradeId);
-  const selectedAnswers = reviewAnswers[selectedTradeId] || {};
-  const reviewQuestions = [
-    { key: "entry", label: "Planned entry and setup followed" },
-    { key: "risk", label: "Risk stayed within the planned limit" },
-    { key: "exit", label: "Exit followed the logged trade plan" },
-  ];
-  const reviewComplete = reviewQuestions.every((question) => selectedAnswers[question.key]);
-  const previewClassification = !reviewComplete
-    ? "Needs evidence"
-    : reviewQuestions.some((question) => selectedAnswers[question.key] === "no")
-      ? "Not followed"
-      : "Clean";
-  const previewTone = {
-    Clean: "border-emerald-300/30 bg-emerald-400/[0.08] text-emerald-200",
-    "Not followed": "border-rose-300/30 bg-rose-400/[0.08] text-rose-200",
-    "Needs evidence": "border-amber-300/25 bg-amber-300/[0.07] text-amber-200",
-  }[previewClassification];
-  const setupEvidence = selectedTrade?.setup_follow_map?.[selectedTrade.setup];
-  const setupEvidenceLabel = {
-    yes: "Setup marked as followed",
-    partial: "Setup marked as partially followed",
-    no: "Setup marked as not followed",
-  }[setupEvidence] || "Setup review not recorded";
-  return (
-    <Panel id="needs-evidence-review" className="overflow-hidden p-4 sm:p-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="grid h-7 w-7 place-items-center rounded-full border border-slate-300/20 bg-slate-300/[0.06] text-sm text-slate-300">?</span>
-            <h2 className="text-[18px] font-semibold">Trades needing evidence</h2>
-          </div>
-          <p className="mt-2 max-w-3xl text-xs leading-5 text-white/50">
-            These completed trades do not yet have enough rule-review evidence to classify them as Clean or Not followed. Add or finish the review before using them in discipline-rate calculations.
-          </p>
-        </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <span className="rounded-full border border-slate-300/15 bg-slate-300/[0.05] px-3 py-2 font-mono text-[10px] text-slate-300">
-            {trades.length} incomplete {trades.length === 1 ? "review" : "reviews"}
-          </span>
-          <button type="button" onClick={onClose} className="rounded-lg border border-white/15 px-3 py-2 text-[10px] text-white/60 transition hover:bg-white/5 hover:text-white">
-            Close
-          </button>
-        </div>
-      </div>
+function kpiValueTone(value) {
+  if (!Number.isFinite(value)) return "text-white/45";
+  if (value >= 70) return "text-emerald-400";
+  if (value >= 50) return "text-orange-400";
+  if (value >= 30) return "text-sky-300";
+  return "text-rose-400";
+}
 
-      {visibleTrades.length ? (
-        <div className="analytics-table-scrollbar mt-4 overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-xs">
-            <thead className="text-[10px] text-white/40">
-              <tr>{["Trade date", "Session", "Setup", "Planned risk", "Historical P&L", "Evidence review"].map((heading) => <th key={heading} className="border-b border-white/15 px-3 py-2.5 font-normal">{heading}</th>)}</tr>
-            </thead>
-            <tbody>
-              {visibleTrades.map((trade) => (
-                <tr key={trade.id} className="analytics-row">
-                  <td className="border-b border-white/10 px-3 py-3 font-mono text-white/70">{trade.trade_date}</td>
-                  <td className="border-b border-white/10 px-3 py-3 text-white/70">{trade.session}</td>
-                  <td className="border-b border-white/10 px-3 py-3 font-medium text-violet-300">{trade.setup}</td>
-                  <td className="border-b border-white/10 px-3 py-3 font-mono text-white/70">{trade.riskR.toFixed(2)}R</td>
-                  <td className={`border-b border-white/10 px-3 py-3 font-mono ${trade.pnl > 0 ? "text-emerald-400" : trade.pnl < 0 ? "text-rose-400" : "text-white/50"}`}>{formatCurrency(trade.pnl)}</td>
-                  <td className="border-b border-white/10 px-3 py-3">
-                    <button
-                      type="button"
-                      aria-expanded={selectedTradeId === trade.id}
-                      aria-controls="trade-evidence-detail"
-                      onClick={() => setSelectedTradeId((current) => current === trade.id ? null : trade.id)}
-                      className={`rounded-lg border px-2.5 py-1.5 text-[10px] transition ${selectedTradeId === trade.id ? "border-violet-300/45 bg-violet-400/15 text-violet-100" : "border-amber-300/25 bg-amber-300/[0.07] text-amber-200 hover:border-violet-300/35 hover:text-violet-200"}`}
-                    >
-                      {selectedTradeId === trade.id ? "Hide review" : "Review evidence"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-400/[0.05] px-4 py-5 text-sm text-emerald-200">
-          Every completed trade in this period has enough evidence to classify.
-        </div>
-      )}
-      {selectedTrade && (
-        <div id="trade-evidence-detail" className="mt-4 rounded-xl border border-violet-300/20 bg-violet-400/[0.045] p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-[10px] font-medium uppercase tracking-[.12em] text-violet-300/75">Evidence review</p>
-              <h3 className="mt-1 text-base font-semibold">{selectedTrade.setup} · {selectedTrade.trade_date}</h3>
-              <p className="mt-1 text-xs text-white/45">{selectedTrade.session} session · {selectedTrade.riskR.toFixed(2)}R planned risk · historical P&amp;L {formatCurrency(selectedTrade.pnl)}</p>
-            </div>
-            <span className={`w-fit rounded-full border px-3 py-2 text-[10px] ${previewTone}`}>Preview · {previewClassification}</span>
-          </div>
-          <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <div className="rounded-lg border border-white/10 bg-black/10 p-3">
-              <span className="text-[10px] text-white/40">Setup evidence</span>
-              <p className={`mt-1 text-xs font-medium ${setupEvidence === "yes" ? "text-emerald-300" : setupEvidence ? "text-amber-200" : "text-white/60"}`}>{setupEvidenceLabel}</p>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-black/10 p-3">
-              <span className="text-[10px] text-white/40">Rule checklist</span>
-              <p className="mt-1 text-xs font-medium text-amber-200">Not completed</p>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-black/10 p-3">
-              <span className="text-[10px] text-white/40">Discipline classification</span>
-              <p className={`mt-1 text-xs font-medium ${previewClassification === "Clean" ? "text-emerald-300" : previewClassification === "Not followed" ? "text-rose-300" : "text-amber-200"}`}>{previewClassification}</p>
-            </div>
-          </div>
-          <div className="mt-3 rounded-lg border border-white/10 bg-black/10 p-3">
-            <div className="flex flex-col gap-2.5">
-              {reviewQuestions.map((question) => (
-                <div key={question.key} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <span className="text-[11px] text-white/65">{question.label}</span>
-                  <div className="inline-flex w-fit rounded-lg border border-white/10 bg-[#0b111b] p-0.5" role="group" aria-label={question.label}>
-                    {["yes", "no"].map((answer) => (
-                      <button
-                        key={answer}
-                        type="button"
-                        aria-pressed={selectedAnswers[question.key] === answer}
-                        onClick={() => setReviewAnswers((current) => ({
-                          ...current,
-                          [selectedTradeId]: { ...(current[selectedTradeId] || {}), [question.key]: answer },
-                        }))}
-                        className={`rounded-md px-3 py-1.5 text-[10px] font-medium transition ${selectedAnswers[question.key] === answer ? answer === "yes" ? "bg-emerald-400/15 text-emerald-200" : "bg-rose-400/15 text-rose-200" : "text-white/40 hover:text-white/70"}`}
-                      >
-                        {answer === "yes" ? "Yes" : "No"}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className={`mt-3 rounded-lg border px-3 py-2.5 text-[11px] leading-5 ${previewTone}`}>
-            {previewClassification === "Needs evidence" && <><b>Preview incomplete:</b> answer all three checks before the trade can be classified.</>}
-            {previewClassification === "Clean" && <><b>Preview classification: Clean.</b> All reviewed rules were followed.</>}
-            {previewClassification === "Not followed" && <><b>Preview classification: Not followed.</b> At least one reviewed rule was not followed.</>}
-          </div>
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <p className="text-[10px] text-white/30">Mockup preview only · Overview totals remain unchanged and no journal data is saved.</p>
-            {Object.keys(selectedAnswers).length > 0 && <button type="button" onClick={() => setReviewAnswers((current) => ({ ...current, [selectedTradeId]: {} }))} className="shrink-0 text-[10px] text-white/45 underline decoration-white/20 underline-offset-2 hover:text-white/75">Reset answers</button>}
-          </div>
-        </div>
-      )}
-      {trades.length > visibleTrades.length && <p className="mt-3 text-[10px] text-white/35">Showing the first {visibleTrades.length} of {trades.length} incomplete reviews.</p>}
+
+function OutcomeBreakdown({ summary }) {
+  const record = [
+    { label: "Wins", count: summary.wins, tone: "text-emerald-400" },
+    { label: "Losses", count: summary.losses, tone: "text-rose-400" },
+    { label: "Break-even", count: summary.breakEven, tone: "text-slate-300" },
+  ];
+  return (
+    <Panel className="flex h-full min-w-0 flex-col p-4 sm:p-5">
+      <h2 className="text-[18px] font-semibold">Trade outcome breakdown</h2>
+      <p className="mt-1 text-[11px] text-white/45">{summary.totalTrades} completed trades · selected period</p>
+      <div className="mt-4 grid grid-cols-3 gap-2 border-b border-white/10 pb-4">
+        {record.map(({ label, count, tone }) => <div key={label} className="min-w-0">
+          <p className="text-[11px] text-white/55">{label}</p>
+          <b className={`mt-1 block font-sans text-2xl font-semibold tabular-nums ${tone}`}>{count}</b>
+        </div>)}
+      </div>
+      <dl className="mt-4 grid grid-cols-2 gap-4">
+        <div><dt className="text-[11px] text-white/55">Average win</dt><dd className={`mt-1 font-sans text-lg font-semibold tabular-nums ${weekdayMoneyTone(summary.averageWin)}`}>{formatCurrency(summary.averageWin)}</dd></div>
+        <div><dt className="text-[11px] text-white/55">Average loss</dt><dd className={`mt-1 font-sans text-lg font-semibold tabular-nums ${weekdayMoneyTone(summary.averageLoss)}`}>{formatCurrency(summary.averageLoss)}</dd></div>
+        <div className="border-t border-white/10 pt-3"><dt className="min-h-[32px] text-[11px] text-white/55 sm:min-h-0">Avg profitable days / month</dt><dd className="mt-1 font-sans text-xl font-semibold tabular-nums text-emerald-400">{summary.monthlyDays.averageProfitableDays ?? "—"}{" "}<span className="ml-1.5 text-xs font-normal text-white/45">out of {summary.monthlyDays.averageTradedDays ?? "—"}</span></dd></div>
+        <div className="border-t border-white/10 pt-3"><dt className="min-h-[32px] text-[11px] text-white/55 sm:min-h-0">Avg losing days / month</dt><dd className="mt-1 font-sans text-xl font-semibold tabular-nums text-rose-400">{summary.monthlyDays.averageLosingDays ?? "—"}{" "}<span className="ml-1.5 text-xs font-normal text-white/45">out of {summary.monthlyDays.averageTradedDays ?? "—"}</span></dd></div>
+        <p className="col-span-2 -mt-2 text-[10px] leading-4 text-white/40">Based on {summary.monthlyDays.activeMonths} active {summary.monthlyDays.activeMonths === 1 ? "month" : "months"} · {summary.monthlyDays.tradedDays} traded days. Whole-day averages are rounded together.{summary.monthlyDays.breakEvenDays > 0 ? ` Break-even: ${summary.monthlyDays.averageBreakEvenDays} days/month.` : ""} One date counts once; partial months use only logged days in the selected period.</p>
+        <div className="col-span-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3"><div><dt className="text-[11px] text-white/55">Win days %</dt><p className="mt-1 text-[10px] text-white/40">{summary.monthlyDays.profitableDays} profitable / {summary.monthlyDays.tradedDays} traded days · BE included</p></div><dd className={`font-sans text-2xl font-semibold tabular-nums ${Number.isFinite(summary.monthlyDays.winDayRate) ? "text-emerald-400" : "text-white/45"}`}>{formatPercent(summary.monthlyDays.winDayRate)}</dd></div>
+        <div className="col-span-2 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3"><div><dt className="text-[11px] text-white/55">Profit factor</dt><p className="mt-1 text-[10px] text-white/35">Gross profit ÷ gross loss</p></div><dd className="font-sans text-2xl font-semibold tabular-nums text-white/90">{Number.isFinite(summary.profitFactor) ? summary.profitFactor.toFixed(2) : summary.grossProfit > 0 ? <span className="text-sm font-medium">No losses</span> : "—"}</dd></div>
+      </dl>
+      <p className="mt-auto pt-4 text-[10px] leading-4 text-white/40">Historical outcomes only. These values do not affect your Discipline score or predict future results.</p>
     </Panel>
   );
 }
 
-function Overview({ setTab, onViewSetups, data, period, analytics }) {
-  const [needsEvidenceOpen, setNeedsEvidenceOpen] = useState(false);
-  const needsEvidenceTrades = analytics.trades.filter((trade) => trade.evidenceStatus === "unknown");
+function Overview({ setTab, onViewSetups, data, period, analytics, accountScope }) {
+  const [activeHelp, setActiveHelp] = useState(null);
+  const [activeFrequency, setActiveFrequency] = useState("one");
+  const selectedFrequency = analytics.frequency.rows.find((row) => row.key === activeFrequency) || analytics.frequency.rows[0];
+  const helpText = {
+    shield: "Rule adherence = followed checks ÷ completed checks × 100. Missing evidence is excluded. Each rule is checked for each completed trade, so day-level checks repeat for trades on the same day. Retrospective comparisons are labelled.",
+    target: "Setup adherence = fully followed setups ÷ trades with a known setup status × 100. All green means fully followed. Orange is partial, and No Setup is not followed. Partial and not-followed trades stay in the total; missing reviews are excluded.",
+    scale: "Risk consistency is the average compliance rate for daily loss, lot / contract size, and trades per day. Daily loss and trade count are checked once per account/day; lot size once per trade. Missing values are excluded. Saved rule changes apply from their effective dates; older comparisons are labelled retrospective.",
+    focus: "After every losing trade, check the very next trade on that account in the same day—including the 2nd, 3rd and later trades. It counts as disciplined when the setup was fully followed and lot size stayed within the applicable Rulebook limit. Its profit or loss does not change the result. Percentage = disciplined follow-ups ÷ follow-ups with enough evidence × 100. Stopping after a loss is shown separately and excluded. Uses execution times when available, otherwise saved log order.",
+  };
+
+  if (analytics.trades.length === 0) return <Panel className="p-6"><h2 className="text-xl font-semibold">No completed trades in {periodProfiles[period].label.toLowerCase()}</h2><p className="mt-2 text-sm text-white/55">Choose another period to review your logged trades and analytics.</p></Panel>;
   return (
     <div className="space-y-3">
       <div className="grid gap-3 min-[1120px]:grid-cols-[1.08fr_.95fr]">
-        <Panel className="grid min-h-[300px] grid-cols-1 items-start gap-6 px-5 py-5 sm:grid-cols-2">
-          <div className="flex h-full w-full flex-col items-center border-b border-white/15 pb-6 text-center sm:justify-self-center sm:border-b-0 sm:border-r sm:pb-0">
-            <Ring value={data.discipline} delta={data.disciplineDelta} />
+        <Panel className="grid min-h-[300px] grid-cols-1 items-start gap-6 px-5 py-5 min-[900px]:grid-cols-2">
+          <div className="flex h-full w-full flex-col items-center border-b border-white/15 pb-6 text-center min-[900px]:justify-self-center min-[900px]:border-b-0 min-[900px]:border-r min-[900px]:pb-0">
+            <Ring value={data.discipline} delta={data.disciplineDelta} provisional={analytics.summary.disciplineProvisional} />
             <p className="mt-4 text-sm text-white/65">
               Based on rule adherence — not P&amp;L.
             </p>
           </div>
-          <ComplianceDome
-            data={data}
-            needsEvidenceOpen={needsEvidenceOpen}
-            onNeedsEvidence={() => setNeedsEvidenceOpen((current) => !current)}
-          />
+          <ComplianceDome data={data} />
           <p className="col-span-full -mt-3 text-center text-[10px] leading-4 text-white/40 sm:text-left">
-            Needs evidence means the rule review is incomplete. It is not counted as Clean or Not followed.
+            Setup counts come from the saved green, orange, and No Setup tags—not P&amp;L. {analytics.summary.needsEvidence} trades still need a setup review. Rule adherence measures completed rule checks; behavioural rules still need their own evidence.
           </p>
         </Panel>
-        <div className="space-y-3">
-          <Panel className="grid min-h-[190px] grid-cols-2 gap-0 px-3 py-5 sm:grid-cols-4">
+        <div className="grid grid-rows-[1fr_auto] gap-3">
+          <Panel className="grid min-h-[190px] grid-cols-2 gap-x-0 gap-y-5 px-3 py-5 sm:grid-cols-4">
             {data.kpis.map(({ label, value, type, delta }) => (
-              <div key={label} className="analytics-kpi flex flex-col items-center border-l border-white/20 px-3 first:border-0">
+              <div key={label} className="analytics-kpi relative flex flex-col items-center border-l border-white/20 px-3 first:border-0">
+                <button type="button" aria-label={"How " + label + " is calculated"} aria-expanded={activeHelp === type} aria-controls="analytics-kpi-help" onKeyDown={(event) => { if (event.key === "Escape") setActiveHelp(null); }} onClick={() => setActiveHelp(activeHelp === type ? null : type)} className="absolute right-1 top-0 inline-flex h-6 w-6 items-center justify-center rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300"><span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-white/30 text-[9px] leading-none text-white/50 hover:border-cyan-300 hover:text-cyan-200">?</span></button>
                 <KpiIcon type={type}/>
-                <div className="mt-2 text-center text-sm text-white/75">{label}</div>
-                <div className="mt-1 font-mono text-[30px] font-semibold leading-none"><AnimatedNumber value={value} suffix="%" /></div>
+                <div className="mt-2 min-h-[40px] text-center text-sm text-white/75">{label}</div>
+                <div className={`mt-1 font-mono text-[30px] font-semibold leading-none ${kpiValueTone(value)}`}>
+                  {Number.isFinite(value) ? <AnimatedNumber value={value} suffix="%" /> : <span aria-label="Not enough evidence">—</span>}
+                </div>
                 <PeriodDelta delta={delta} percent />
-                <Sparkline/>
+                {type === "shield" && analytics.summary.ruleCheckCounts && <p className="mt-2 text-center text-[10px] leading-4 text-white/50">{analytics.summary.ruleCheckCounts.followed} / {analytics.summary.ruleCheckCounts.checked} checks followed{analytics.summary.retrospectiveRuleChecks > 0 && <span className="mt-1 block text-violet-300">Includes retrospective checks</span>}</p>}
+                {type === "scale" && <p className="mt-2 text-center text-[10px] leading-4 text-white/50">{analytics.summary.riskConsistencyComponents} of 3 limits evaluable</p>}
+                {type === "focus" && <p className="mt-2 text-center text-[10px] leading-4 text-white/50">{analytics.summary.postLossEvidence.reviewed > 0 ? analytics.summary.postLossEvidence.followed + " / " + analytics.summary.postLossEvidence.reviewed + " follow-ups fully followed" : "No evaluable follow-ups"}</p>}
+                {type === "focus" && analytics.summary.postLossEvidence.loggedOrderFollowUps > 0 && <span className="mt-1 text-center text-[10px] text-violet-300">Includes saved log order</span>}
+                {analytics.source === "mock" && <Sparkline/>}
               </div>
             ))}
           </Panel>
-          <Panel className="min-h-[117px] px-6 py-3">
+
+          <Panel className="min-w-0 min-h-[117px] px-3 py-3 sm:px-6">
             <p className="mb-2 border-b border-white/15 pb-2 text-center text-sm text-white/70">
               Historical outcomes · not used in Discipline score
             </p>
-            <div className="grid grid-cols-3 gap-5">
-              <HistoricalMetric icon="pnl" label="Net P&L" value={data.outcomes.pnl} tone="text-emerald-400" />
+            <div className="overflow-x-auto"><div className="grid min-w-[300px] grid-cols-[1.2fr_.8fr_1.1fr]">
+              <HistoricalMetric icon="pnl" label="Net P&L" value={data.outcomes.pnl} tone={analytics.summary.netPnl < 0 ? "text-rose-400" : analytics.summary.netPnl > 0 ? "text-emerald-400" : "text-white/70"} />
               <HistoricalMetric icon="wins" label="Win rate" value={data.outcomes.winRate} />
               <HistoricalMetric icon="drawdown" label="Max drawdown" value={data.outcomes.drawdown} tone="text-rose-400" />
-            </div>
+            </div></div>
           </Panel>
         </div>
       </div>
-      {needsEvidenceOpen && <NeedsEvidenceReview trades={needsEvidenceTrades} onClose={() => setNeedsEvidenceOpen(false)} />}
-      <div className="grid items-stretch gap-3 min-[2000px]:grid-cols-[.94fr_1.02fr]">
-        <div className="min-w-0"><Frequency period={period} /></div>
-        <div className="min-w-0"><SetupTable onViewAll={onViewSetups} period={period} /></div>
+      {activeHelp && <aside id="analytics-kpi-help" role="note" className="analytics-panel rounded-xl border border-cyan-400/25 bg-[#0b111b] p-4 text-sm leading-6 text-white/70" onKeyDown={(event) => { if (event.key === "Escape") setActiveHelp(null); }}>
+        <div className="flex items-start justify-between gap-4"><div><p className="font-semibold text-cyan-200">{data.kpis.find((item) => item.type === activeHelp)?.label}</p><p className="mt-2">{helpText[activeHelp]}</p><p className="mt-3 text-xs text-white/55">Colour ranges: <span className="text-rose-400">29% and below</span> · <span className="text-sky-300">30–49%</span> · <span className="text-orange-400">50–69%</span> · <span className="text-emerald-400">70% and above</span>.</p></div><button type="button" aria-label="Close metric explanation" onClick={() => setActiveHelp(null)} className="shrink-0 rounded px-2 py-1 text-white/60 hover:bg-white/10">×</button></div>
+      </aside>}
+      <PerformanceHistory trades={analytics.trades} scope={accountScope} periodLabel={periodProfiles[period].label} />
+      <div className="grid items-stretch gap-3 min-[980px]:grid-cols-[1.15fr_1fr] min-[1600px]:grid-cols-[.94fr_1.02fr]">
+        <div className="contents min-[1600px]:flex min-[1600px]:min-w-0 min-[1600px]:flex-col min-[1600px]:gap-3">
+          <div className="order-1 min-w-0 min-[980px]:col-span-2"><Frequency period={period} analytics={analytics} activeFrequency={activeFrequency} setActiveFrequency={setActiveFrequency} /></div>
+          <div className="order-3 flex min-w-0 flex-col min-[1600px]:flex-1"><MiniDayChart onExplore={() => setTab("EDGE")} analytics={analytics} /></div>
+        </div>
+        <div className="contents min-[1600px]:flex min-[1600px]:min-w-0 min-[1600px]:flex-col min-[1600px]:gap-3">
+          <div className="order-2 min-w-0 min-[980px]:col-span-2"><SetupTable onViewAll={onViewSetups} period={period} analytics={analytics} /></div>
+          <div className="order-4 min-w-0"><OutcomeBreakdown summary={analytics.summary} /></div>
+          {analytics.source === "mock" && <div className="order-5 min-w-0"><BreachConcentration data={data} /></div>}
+        </div>
       </div>
-      <div className="grid items-stretch gap-3 min-[980px]:grid-cols-3">
-        <MiniDayChart onExplore={() => setTab("EDGE")} data={data} />
-        <BreachConcentration data={data} />
-        <Panel className="flex h-[174px] items-center gap-4 px-5 py-5 text-xs leading-5 text-white/55"><span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-[#8092bd] text-lg text-[#8092bd]">i</span><span>Historical outcomes describe past logs.<br/>They do not affect your Discipline score and are not trading recommendations.</span></Panel>
-      </div>
+      <section aria-labelledby="analytics-faq-title" className="analytics-panel rounded-xl border border-white/15 px-4 pt-4 sm:px-5 sm:pt-5">
+        <h2 id="analytics-faq-title" className="text-[18px] font-semibold">Analytics FAQs</h2>
+        <div className="mt-2 divide-y divide-white/10">
+      <details className="group text-xs text-white/65">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-sm font-medium text-white/80 transition hover:text-cyan-200 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 [&::-webkit-details-marker]:hidden"><span>What counts as a clean day?</span><span aria-hidden="true" className="shrink-0 text-lg leading-none text-cyan-200"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">−</span></span></summary>
+        <p className="mt-1 leading-5">A clean day means you followed every applicable rule and executed with discipline. For example, if you followed your setup, stayed within your lot-size and daily limits, and broke no other rules, the day is clean even if it ended in a loss. Missing rule evidence cannot prove a clean day.</p>
+        <p className="mt-3 leading-5">{selectedFrequency.sampleDays === 0 ? "No completed days in the selected frequency group for this period." : selectedFrequency.cleanDayRate === null ? `These ${selectedFrequency.sampleDays} completed ${selectedFrequency.dayDescription} have historical outcomes, but incomplete rule evaluations. Setup following alone cannot establish a clean day.` : `In these logs, ${selectedFrequency.cleanDayRate}% of ${selectedFrequency.sampleDays} completed ${selectedFrequency.dayDescription} were clean.`}</p>
+        <p className="mt-2 text-[10px] text-violet-200">Selected frequency: {selectedFrequency.label} · {selectedFrequency.sampleDays} days</p>
+        <p className="mt-3 pb-4 leading-5">A day is Green, Red, or BE from its final net P&amp;L. In All accounts, each account/day is counted separately. These historical rates describe completed logs and do not predict future outcomes.</p>
+      </details>
+      {analytics.summary.ruleCheckCounts && <details className="group text-xs text-white/65">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-sm font-medium text-white/80 transition hover:text-cyan-200 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 [&::-webkit-details-marker]:hidden"><span>How is rule adherence calculated?</span><span aria-hidden="true" className="shrink-0 text-lg leading-none text-cyan-200"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">−</span></span></summary>
+        <p className="mt-3 leading-5">{analytics.summary.ruleCheckCounts.followed} followed ÷ {analytics.summary.ruleCheckCounts.checked} completed checks = {analytics.summary.ruleAdherence ?? "—"}%. Each rule is checked for each completed trade. Day limits apply to every trade on that account and day.</p>
+        <div className="mt-3 space-y-2">{analytics.summary.ruleCheckBreakdown.map((row) => <div key={row.key} className="flex flex-wrap justify-between gap-x-3 gap-y-1 border-b border-white/10 pb-2"><span>{{ daily_loss_limit: "Daily loss limit", maximum_lot_contract_size: "Lot / contract size", maximum_trades_per_day: "Trades per day", no_overtrading: "No overtrading", trading_hours: "Allowed sessions" }[row.key] || row.key}</span><span className="font-mono">{row.followed} followed · {row.broken} breached{row.partial > 0 ? " · " + row.partial + " partial" : ""} · {row.unknown} need evidence</span></div>)}</div>
+        <p className="mt-3 pb-4 leading-5">{analytics.summary.ruleCheckCounts.unknown} checks need evidence and are excluded from this percentage. A passing check alone does not make a whole trade clean. {analytics.summary.retrospectiveRuleChecks > 0 ? "Some checks compare older trades against the earliest saved rule or a displayed Rulebook default. These are retrospective comparisons, not proof that the limit applied at the time." : "Saved rule changes apply from their effective dates."}</p>
+      </details>}
+      <details className="group text-xs text-white/65">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-left text-sm font-medium text-white/80 transition hover:text-cyan-200 focus-visible:rounded focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-300 [&::-webkit-details-marker]:hidden"><span>How are risk consistency and post-loss discipline calculated?</span><span aria-hidden="true" className="shrink-0 text-lg leading-none text-cyan-200"><span className="group-open:hidden">+</span><span className="hidden group-open:inline">−</span></span></summary>
+        <div className="mt-3 grid gap-5 pb-4 md:grid-cols-2">
+          <div><h3 className="font-semibold text-white/85">Risk consistency</h3>
+            <p className="mt-2 leading-5">The average compliance rate across daily loss, lot / contract size, and trades per day. Day limits count once per account and trading day; lot size counts once per trade. Missing limits or values stay unscored.</p>
+            <div className="mt-3 space-y-2">{analytics.summary.riskConsistencyBreakdown.map((row) => <div key={row.key} className="flex flex-wrap justify-between gap-2 border-b border-white/10 pb-2"><span>{row.label}</span><span className="font-mono">{row.rate === null ? "—" : Math.round(row.rate) + "%"} · {row.followed}/{row.reviewed} within limit · {row.unknown} unscored</span></div>)}</div>
+            <p className="mt-3 leading-5">Daily loss uses final net day P&amp;L; it does not establish whether trading stopped after an earlier intraday loss. {analytics.summary.riskConsistencyBreakdown.some((row) => row.retrospective > 0) ? "Includes retrospective comparisons with displayed defaults or the earliest known saved limits. Dated rule changes apply from their effective dates." : "Saved limits apply from their effective dates."}</p>
+          </div>
+          <div><h3 className="font-semibold text-white/85">Post-loss discipline</h3>
+            <p className="mt-2 leading-5">After each loss, check the next trade in the same account and day: was the setup fully followed and was lot size within its Rulebook limit? Repeat for the 2nd, 3rd and every later trade following a loss. The next trade’s profit or loss does not affect this check.</p>
+            <p className="mt-3 font-mono">{analytics.summary.postLossEvidence.followed} fully followed / {analytics.summary.postLossEvidence.reviewed} evaluable follow-ups{analytics.summary.postLossDiscipline === null ? "" : " = " + analytics.summary.postLossDiscipline + "%"}</p>
+            <p className="mt-3 leading-5">{analytics.summary.postLossEvidence.unknown} follow-ups need setup or lot-size evidence. Stopped after a loss: {analytics.summary.postLossEvidence.stopped}. Both are excluded from the percentage. {analytics.summary.postLossEvidence.loggedOrderFollowUps > 0 ? analytics.summary.postLossEvidence.loggedOrderFollowUps + " follow-ups use saved log order because execution times were not logged." : "Follow-ups use logged execution order."} No checks cross into another day. {analytics.summary.postLossEvidence.retrospective > 0 ? "Includes retrospective lot-limit comparisons." : ""}</p>
+          </div>
+        </div>
+      </details>
+        </div>
+      </section>
     </div>
   );
 }
 
 function formatDayBarValue(value, metric) {
+  if (!Number.isFinite(value)) return "—";
   if (metric === "Historical P&L") {
     const sign = value > 0 ? "+" : value < 0 ? "−" : "";
     return `${sign}$${Math.abs(value).toLocaleString()}`;
   }
-  return metric === "Compliance" || metric === "Breaches" ? `${value}%` : value;
+  return metric === "Compliance" || metric === "Breaches" || metric === "Setup followed" || metric === "Win rate" ? `${value}%` : value;
 }
 
 function DayBars({ metric, active, setActive, period, daysData }) {
   const profile = periodProfiles[period] || periodProfiles.all;
   const showComparison = period !== "all";
-  const pnlAll = [410, 760, 690, 470, -340];
-  const pnlPeriod = pnlAll.map((value) => Math.round(value * profile.setupFactor));
-  const values = daysData.map((d, i) => ({
+  const values = daysData.map((d) => ({
     ...d,
     month:
       metric === "Compliance"
         ? d.month
         : metric === "Breaches"
-          ? 100 - d.month
-          : pnlPeriod[i],
+          ? Number.isFinite(d.month) ? 100 - d.month : null
+          : metric === "Win rate" ? d.selectedWinRate : metric === "Setup followed" ? d.selectedSetupAdherence : d.selectedPnl,
     all:
       metric === "Compliance"
         ? d.all
         : metric === "Breaches"
-          ? 100 - d.all
-          : pnlAll[i],
+          ? Number.isFinite(d.all) ? 100 - d.all : null
+          : metric === "Win rate" ? d.allWinRate : metric === "Setup followed" ? d.allSetupAdherence : d.allPnl,
   }));
   const max =
-    metric === "Historical P&L" ? 1400 : 100;
+    metric === "Historical P&L" ? Math.max(1, ...values.flatMap((value) => [Math.abs(value.month || 0), Math.abs(value.all || 0)])) : 100;
   return (
     <div className="mt-6 flex h-72 items-end gap-3 border-b border-white/10 px-2 sm:gap-6">
       {values.map((d, index) => {
@@ -1685,9 +1632,9 @@ function DayBars({ metric, active, setActive, period, daysData }) {
             value: d.month,
             barTone:
               metric === "Historical P&L"
-                ? d.month >= 0
+                ? d.month > 0
                   ? "bg-emerald-400"
-                  : "bg-rose-400"
+                  : d.month < 0 ? "bg-rose-400" : "bg-slate-500"
                 : "bg-violet-500",
           },
           ...(showComparison
@@ -1698,9 +1645,9 @@ function DayBars({ metric, active, setActive, period, daysData }) {
                   value: d.all,
                   barTone:
                     metric === "Historical P&L"
-                      ? d.all >= 0
+                      ? d.all > 0
                         ? "bg-emerald-400/45"
-                        : "bg-rose-400/45"
+                        : d.all < 0 ? "bg-rose-400/45" : "bg-slate-500/45"
                       : "bg-cyan-500/80",
                 },
               ]
@@ -1719,31 +1666,28 @@ function DayBars({ metric, active, setActive, period, daysData }) {
                 className={`flex h-full flex-col items-center justify-end ${showComparison ? "w-[45%]" : "w-[58%] max-w-16"}`}
               >
                 <span
-                  className={`mb-1 whitespace-nowrap font-mono text-[9px] font-semibold sm:text-[10px] ${metric === "Historical P&L" ? (item.value >= 0 ? "text-emerald-300" : "text-rose-300") : item.key === "period" ? "text-violet-300" : "text-cyan-300"}`}
+                  className={`mb-1 whitespace-nowrap font-mono text-[9px] font-semibold sm:text-[10px] ${!Number.isFinite(item.value) ? "text-white/40" : metric === "Historical P&L" ? weekdayMoneyTone(item.value) : item.key === "period" ? "text-violet-300" : "text-cyan-300"}`}
                 >
-                  <span className="block text-[8px] font-normal text-white/35 sm:text-[9px]">
-                    {item.label}
-                  </span>
+                  {showComparison && <span className="block text-[8px] font-normal text-white/35 sm:text-[9px]">{item.label}</span>}
                   {formatDayBarValue(item.value, metric)}
                 </span>
-                <span
+                {Number.isFinite(item.value) && <span
                   className={`analytics-bar-rise w-full rounded-t ${item.barTone}`}
                   style={{
                     height: `${Math.max(4, (Math.abs(item.value) / max) * 68)}%`,
                     animationDelay: `${index * 70 + seriesIndex * 80}ms`,
                   }}
-                />
+                />}
               </span>
             ))}
-            <span className="absolute bottom-[-48px] inset-x-0 text-center">
+            <span className="absolute inset-x-0 top-full mt-2 text-center">
               <b
                 className={active === d.day ? "text-violet-300" : "text-white/70"}
               >
                 {d.day}
               </b>
-              <span className="mt-1 block text-[10px] text-white/35">
-                {d.trades} trades
-              </span>
+              <span className="mt-1 block font-mono text-[10px] font-semibold text-white/75 sm:text-xs">{d.trades} trades</span>
+              {metric !== "Win rate" && <span className="mt-0.5 block text-[9px] text-cyan-300 sm:text-[10px]">WR {formatPercent(d.selectedWinRate)}</span>}
             </span>
           </button>
         );
@@ -1764,23 +1708,23 @@ function WeekdayComparisonTable({ daysData, details }) {
   const rows = [
     { group: "Sample", label: "Completed trades", value: (day) => day.trades },
     { label: "Trading days", value: (day) => details[day.day].tradingDays },
-    { group: "Daily outcomes", label: "Avg day P&L", value: (day) => formatCurrency(details[day.day].averageDayPnl), tone: (day) => details[day.day].averageDayPnl >= 0 },
-    { label: "Median day P&L", value: (day) => formatCurrency(details[day.day].medianDayPnl), tone: (day) => details[day.day].medianDayPnl >= 0 },
-    { label: "Green-day rate", value: (day) => `${details[day.day].greenDayRate}%` },
-    { label: "Historical trade win rate", value: (day) => `${details[day.day].tradeWinRate}%` },
+    { group: "Daily outcomes", label: "Avg day P&L", value: (day) => formatCurrency(details[day.day].averageDayPnl), tone: (day) => weekdayPnlDirection(details[day.day].averageDayPnl) },
+    { label: "Median day P&L", value: (day) => formatCurrency(details[day.day].medianDayPnl), tone: (day) => weekdayPnlDirection(details[day.day].medianDayPnl) },
+    { label: "Green-day rate", value: (day) => formatPercent(details[day.day].greenDayRate) },
+    { label: "Historical trade win rate", value: (day) => formatPercent(details[day.day].tradeWinRate) },
     { label: "Avg win / Avg loss", value: (day) => `${formatCurrency(details[day.day].averageWin)} / ${formatCurrency(details[day.day].averageLoss)}` },
-    { label: "Total P&L", value: (day) => formatCurrency(details[day.day].totalPnl), tone: (day) => details[day.day].totalPnl >= 0 },
+    { label: "Total P&L", value: (day) => formatCurrency(details[day.day].totalPnl), tone: (day) => weekdayPnlDirection(details[day.day].totalPnl) },
     { group: "Discipline", label: "Clean trades", value: (day) => `${day.clean} / ${day.trades}` },
-    { label: "Rule adherence", value: (day) => `${day.month}%` },
-    { label: "Setup adherence", value: (day) => `${details[day.day].setupAdherence}%` },
+    { label: "Clean-trade rate", value: (day) => formatPercent(day.month) },
+    { label: "Setup adherence", value: (day) => formatPercent(details[day.day].setupAdherence) },
     { label: "Rule breaches", value: (day) => day.breached },
-    { group: "Trade frequency", label: "Avg trades / day", value: (day) => details[day.day].averageTradesPerDay.toFixed(1) },
-    { label: "1-trade days", value: (day) => `${details[day.day].distribution[0]}%` },
-    { label: "2-trade days", value: (day) => `${details[day.day].distribution[1]}%` },
-    { label: "3+ trade days", value: (day) => `${details[day.day].distribution[2]}%` },
-    { group: "Setup & session context", label: "Most logged setup", value: (day) => `${day.setup} · ${details[day.day].setupShare}%` },
+    { group: "Trade frequency", label: "Avg trades / day", value: (day) => formatAverageTrades(details[day.day].averageTradesPerDay) },
+    { label: "1-trade days", value: (day) => formatPercent(details[day.day].distribution[0]) },
+    { label: "2-trade days", value: (day) => formatPercent(details[day.day].distribution[1]) },
+    { label: "3+ trade days", value: (day) => formatPercent(details[day.day].distribution[2]) },
+    { group: "Setup & session context", label: "Most logged setup", value: (day) => details[day.day].setupTrades > 0 ? `${day.setup} · ${formatPercent(details[day.day].setupShare)}` : "—" },
     { label: "Highest observed session WR", value: (day) => {
-      const ranked = [...details[day.day].sessions].filter((session) => session.trades >= 10).sort((a, b) => b.winRate - a.winRate)[0];
+      const ranked = [...details[day.day].sessions].filter((session) => session.name !== "Unassigned" && session.trades >= 10).sort((a, b) => b.winRate - a.winRate)[0];
       return ranked ? `${ranked.name} · ${ranked.winRate}% · ${formatCurrency(ranked.averagePnl)} avg` : "Not enough data";
     } },
   ];
@@ -1825,18 +1769,19 @@ function WeekdayComparisonTable({ daysData, details }) {
   );
 }
 
-function DayEdge({ period }) {
-  const [metric, setMetric] = useState("Compliance");
+function DayEdge({ period, analytics }) {
+  const [metric, setMetric] = useState("Win rate");
   const [active, setActive] = useState("Mon");
   const [view, setView] = useState("Weekday detail");
-  const periodAnalytics = useMemo(() => buildMockPeriodAnalytics(period), [period]);
+  const periodAnalytics = analytics || buildMockPeriodAnalytics(period);
   const daysData = periodAnalytics.days;
   const details = periodAnalytics.weekdayDetails;
   const selected = daysData.find((day) => day.day === active);
   const detail = details[active];
   const fullDay = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday" }[active];
-  const rankedSessions = [...detail.sessions].filter((session) => session.trades >= 10).sort((a, b) => b.winRate - a.winRate);
+  const rankedSessions = [...detail.sessions].filter((session) => session.name !== "Unassigned" && session.trades >= 10).sort((a, b) => b.winRate - a.winRate);
   const strongestSession = rankedSessions[0];
+  if (periodAnalytics.trades.length === 0) return <Panel className="p-6"><h1 className="text-xl font-semibold">No completed trades in {periodProfiles[period].label.toLowerCase()}</h1><p className="mt-2 text-sm text-white/55">Choose another period to compare weekdays and sessions.</p></Panel>;
 
   return (
     <div>
@@ -1845,11 +1790,11 @@ function DayEdge({ period }) {
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Day-of-week behaviour</h1>
           <p className="mt-2 text-sm text-white/50">See when your execution is most consistent — without turning past outcomes into trading advice.</p>
         </div>
-        <span className="w-fit rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/55">{periodProfiles[period].label}</span>
+        <span className="w-fit shrink-0 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/55">{periodProfiles[period].label}</span>
       </div>
-      <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="mt-5 flex flex-col items-start gap-3 min-[1100px]:flex-row min-[1100px]:items-center min-[1100px]:justify-between">
         <PillTabs value={view} onChange={setView} items={["Weekday detail", "All days comparison"]} textSize="text-[13px] sm:text-sm" />
-        {view === "Weekday detail" && <PillTabs value={metric} onChange={setMetric} items={["Compliance", "Breaches", "Historical P&L"]} />}
+        {view === "Weekday detail" && <div className="max-w-full lg:hidden"><PillTabs value={metric} onChange={setMetric} items={analytics?.source === "account" ? ["Win rate", "Setup followed", "Historical P&L"] : ["Win rate", "Compliance", "Breaches", "Historical P&L"]} /></div>}
       </div>
 
       {view === "All days comparison" ? (
@@ -1858,38 +1803,40 @@ function DayEdge({ period }) {
         <>
           <div className="mt-3 grid gap-3 xl:grid-cols-[1.55fr_.75fr]">
             <Panel className="overflow-hidden p-5">
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs text-white/45">{metric === "Compliance" ? "Clean-trade rate (%)" : metric === "Breaches" ? "Breach rate (%) · lower is better" : metric}</span>
-                <div className="flex gap-4 text-[10px] text-white/50">
-                  <span><i className={`mr-2 inline-block h-2 w-2 ${metric === "Historical P&L" ? "bg-white/80" : "bg-violet-500"}`} />{periodProfiles[period].label}</span>
-                  {period !== "all" && <span><i className={`mr-2 inline-block h-2 w-2 ${metric === "Historical P&L" ? "bg-white/35" : "bg-cyan-500"}`} />All time</span>}
+              <div className="mb-3 hidden justify-end lg:flex"><PillTabs value={metric} onChange={setMetric} items={analytics?.source === "account" ? ["Win rate", "Setup followed", "Historical P&L"] : ["Win rate", "Compliance", "Breaches", "Historical P&L"]} /></div>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <span className="text-xs font-medium text-white/65">{metric === "Compliance" ? "Clean-trade rate (%)" : metric === "Breaches" ? "Breach rate (%) · lower is better" : metric === "Setup followed" ? "Setup adherence (%)" : metric === "Win rate" ? "Historical trade win rate (%)" : metric}</span>
+                <div className="flex flex-wrap items-center gap-2 text-[11px] text-white/65" aria-label="Chart legend">
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1"><i className={`h-2 w-2 rounded-full ${metric === "Historical P&L" ? "bg-white/80" : "bg-violet-500"}`} aria-hidden="true" />{periodProfiles[period].label}</span>
+                  {period !== "all" && <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1"><i className={`h-2 w-2 rounded-full ${metric === "Historical P&L" ? "bg-white/35" : "bg-cyan-500"}`} aria-hidden="true" />All time</span>}
                 </div>
               </div>
               <DayBars metric={metric} active={active} setActive={setActive} period={period} daysData={daysData} />
-              <div className="h-12" />
+              <div className="h-20" />
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3 text-[10px] text-white/45">
-                <span>{period === "all" ? "Each bar shows the All-time value." : `Left bar: ${periodProfiles[period].chartLabel} · Right bar: All time.`}</span>
-                <span>{metric === "Historical P&L" ? "Green = profit · Red = loss · faded = All time." : metric === "Breaches" ? "Lower breach rate means fewer rule violations." : "Select a weekday to see its details."}</span>
+                <span>{period === "all" ? "Each bar shows the All-time value." : `Left bar: ${periodProfiles[period].chartLabel} · Right bar: All time. Trade counts use the selected period.`}</span>
+                <span>{metric === "Win rate" ? "Win rate = wins ÷ completed trades; break-even stays in the total. Trade counts appear below each weekday." : metric === "Historical P&L" ? "Green = profit · Red = loss · faded = All time." : metric === "Breaches" ? "Lower breach rate means fewer rule violations." : "Select a weekday to see its details. WR = historical trade win rate."}</span>
               </div>
             </Panel>
             <Panel className="p-5">
               <h2 className="text-2xl font-semibold">{fullDay} snapshot</h2>
               <p className="mt-1 text-xs text-white/45">{selected.trades} completed trades · {detail.tradingDays} trading days</p>
+              {selected.trades > 0 && <p className="mt-2 text-xs text-white/60"><span className="text-emerald-400">{detail.wins} wins</span> · <span className="text-rose-400">{detail.losses} losses</span> · {detail.breakEven} break-even</p>}
               <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-4 border-y border-white/10 py-4">
-                <Metric label="Avg day P&L" value={formatCurrency(detail.averageDayPnl)} tone={detail.averageDayPnl >= 0 ? "text-emerald-400" : "text-rose-400"} />
-                <Metric label="Median day P&L" value={formatCurrency(detail.medianDayPnl)} tone={detail.medianDayPnl >= 0 ? "text-emerald-400" : "text-rose-400"} />
-                <Metric label="Green-day rate" value={`${detail.greenDayRate}%`} />
-                <Metric label="Trade win rate" value={`${detail.tradeWinRate}%`} />
-                <Metric label="Rule adherence" value={`${selected.month}%`} />
-                <Metric label="Setup adherence" value={`${detail.setupAdherence}%`} />
+                <Metric label="Avg P&L / trading day" value={formatCurrency(detail.averageDayPnl)} tone={weekdayMoneyTone(detail.averageDayPnl)} />
+                <Metric label="Median day P&L" value={formatCurrency(detail.medianDayPnl)} tone={weekdayMoneyTone(detail.medianDayPnl)} />
+                <Metric label="Green-day rate" value={formatPercent(detail.greenDayRate)} />
+                <Metric label="Trade win rate" value={formatPercent(detail.tradeWinRate)} />
+                <Metric label="Clean-trade rate" value={formatPercent(selected.month)} />
+                <Metric label="Setup adherence" value={formatPercent(detail.setupAdherence)} />
               </div>
               <p className="mt-4 text-xs text-white/45">Trades per day distribution</p>
               {[["1 trade", detail.distribution[0]], ["2 trades", detail.distribution[1]], ["3+ trades", detail.distribution[2]]].map(([label, value]) => (
                 <div key={label} className="mt-3 grid grid-cols-[70px_1fr_35px] items-center gap-3 text-xs">
-                  <span className="text-white/55">{label}</span><span className="h-1.5 overflow-hidden rounded bg-white/10"><i className="block h-full bg-violet-500" style={{ width: `${value}%` }} /></span><span>{value}%</span>
+                  <span className="text-white/55">{label}</span><span className="h-1.5 overflow-hidden rounded bg-white/10"><i className="block h-full bg-violet-500" style={{ width: `${value ?? 0}%` }} /></span><span>{formatPercent(value)}</span>
                 </div>
               ))}
-              <p className="mt-5 border-t border-white/10 pt-4 text-xs text-white/55">Most logged setup: <b className="text-violet-300">{selected.setup}</b> · {detail.setupTrades} trades ({detail.setupShare}%)</p>
+              <p className="mt-5 border-t border-white/10 pt-4 text-xs text-white/55">Most logged setup: <b className="text-violet-300">{detail.setupTrades > 0 ? selected.setup : "—"}</b>{detail.setupTrades > 0 && <> · {detail.setupTrades} trades ({formatPercent(detail.setupShare)})</>}</p>
             </Panel>
           </div>
 
@@ -1899,51 +1846,49 @@ function DayEdge({ period }) {
               {strongestSession ? <span className="rounded-full border border-cyan-400/20 bg-cyan-400/[0.07] px-3 py-2 text-[10px] text-cyan-200">Highest observed win rate · {strongestSession.name} {strongestSession.winRate}%</span> : <span className="rounded-full border border-amber-400/20 bg-amber-400/[0.07] px-3 py-2 text-[10px] text-amber-200">Not enough data to rank reliably</span>}
             </div>
             <div className="analytics-table-scrollbar mt-4 overflow-x-auto">
-              <table className="w-full min-w-[760px] text-left text-xs">
-                <thead className="text-[10px] text-white/40"><tr>{["Session", "Completed trades", "Share of weekday", "Historical win rate", "Avg session P&L", "Evidence"].map((heading) => <th key={heading} className="border-b border-white/15 px-3 py-2.5 font-normal">{heading}</th>)}</tr></thead>
+              <table className="w-full min-w-[880px] text-left text-xs">
+                <thead className="text-[10px] text-white/40"><tr>{["Session", "Completed trades", "Session days", "Share of weekday", "Historical win rate", "Avg P&L / session day", "Evidence"].map((heading) => <th key={heading} className="border-b border-white/15 px-3 py-2.5 font-normal">{heading}</th>)}</tr></thead>
                 <tbody>{detail.sessions.map((session) => <tr key={session.name}>
                   <td className="border-b border-white/10 px-3 py-3 font-medium text-white/85">{session.name}</td>
-                  <td className="border-b border-white/10 px-3 py-3 font-mono text-white/75">{session.trades || "—"}</td>
+                  <td className="border-b border-white/10 px-3 py-3 font-mono text-white/75">{session.trades}</td>
+                  <td className="border-b border-white/10 px-3 py-3 font-mono text-white/75">{session.occurrences}</td>
                   <td className="border-b border-white/10 px-3 py-3 font-mono text-white/75">{session.trades ? `${session.share}%` : "—"}</td>
-                  <td className="border-b border-white/10 px-3 py-3"><div className="flex items-center gap-3"><b className="w-9 font-mono text-white/85">{session.winRate === null ? "—" : `${session.winRate}%`}</b>{session.winRate !== null && <span className="h-1.5 w-28 overflow-hidden rounded bg-white/10"><i className="block h-full bg-cyan-400" style={{ width: `${session.winRate}%` }} /></span>}</div></td>
-                  <td className={`border-b border-white/10 px-3 py-3 font-mono ${session.averagePnl === null ? "text-white/35" : session.averagePnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}>{formatCurrency(session.averagePnl)}</td>
-                  <td className="border-b border-white/10 px-3 py-3">{session.trades ? <EvidenceBadge trades={session.trades} /> : <span className="text-white/30">No logged trades</span>}</td>
+                  <td className="border-b border-white/10 px-3 py-3"><div className="flex items-center gap-3"><b className="w-9 font-mono text-white/85">{session.winRate === null ? "—" : `${session.winRate}%`}</b>{session.winRate !== null && <span className="h-1.5 w-28 overflow-hidden rounded bg-white/10"><i className="block h-full bg-cyan-400" style={{ width: `${session.winRate}%` }} /></span>}</div>{session.trades > 0 && <span className="mt-1 block text-[10px] text-white/45">{session.wins} wins / {session.trades} trades</span>}</td>
+                  <td className={`border-b border-white/10 px-3 py-3 font-mono ${weekdayMoneyTone(session.averagePnl)}`}>{formatCurrency(session.averagePnl)}</td>
+                  <td className="border-b border-white/10 px-3 py-3">{session.trades ? session.name === "Unassigned" ? <span className="text-slate-300">Session not logged</span> : <EvidenceBadge trades={session.trades} /> : <span className="text-white/30">No logged trades</span>}</td>
                 </tr>)}</tbody>
               </table>
             </div>
-            <p className="mt-3 text-[10px] leading-4 text-white/35">Average session P&amp;L = session P&amp;L across selected weekdays ÷ selected weekdays where that session had at least one completed trade. Ranking requires 10 completed trades.</p>
+            <p className="mt-3 text-[10px] leading-4 text-white/35">Average day P&amp;L uses all {detail.tradingDays} logged {fullDay}s. Average P&amp;L per session day = that session’s total P&amp;L ÷ its session days. A date can appear in more than one session row. Session trade counts add up to the weekday total. Ranking requires a named session with at least 10 completed trades.</p>
           </Panel>
 
           <Panel className="mt-3 p-5">
             <h2 className="font-semibold">Historical outcome context</h2>
             <p className="mt-1 text-[11px] text-white/40">Describes past logs only. It does not affect your Discipline score and is not a recommendation to trade or avoid {fullDay}.</p>
-            <div className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3 xl:grid-cols-6">
-              <Metric label="Clean / not followed / needs evidence" value={`${selected.clean} / ${selected.breached} / ${selected.unknown}`} />
-              <Metric label="Trade win rate" value={`${detail.tradeWinRate}%`} />
-              <Metric label="Total P&L" value={formatCurrency(detail.totalPnl)} tone={detail.totalPnl >= 0 ? "text-emerald-400" : "text-rose-400"} />
-              <Metric label="Avg win" value={formatCurrency(detail.averageWin)} tone="text-emerald-400" />
-              <Metric label="Avg loss" value={formatCurrency(detail.averageLoss)} tone="text-rose-400" />
-              <Metric label="Avg trades / day" value={detail.averageTradesPerDay.toFixed(1)} />
+            <div className="mt-5 grid grid-cols-2 gap-5 sm:grid-cols-3 xl:grid-cols-6 [&>div>div:first-child]:min-h-[48px] [&>div>div:last-child]:whitespace-nowrap">
+              <Metric label="Rule evidence: clean / partial / broken / unknown" value={<span className="whitespace-nowrap text-xs sm:text-base">{selected.clean} / {selected.partial} / {selected.breached} / {selected.unknown}</span>} />
+              <Metric label="Trade win rate" value={formatPercent(detail.tradeWinRate)} />
+              <Metric label="Total P&L" value={formatCurrency(detail.totalPnl)} tone={weekdayMoneyTone(detail.totalPnl)} />
+              <Metric label="Avg win" value={formatCurrency(detail.averageWin)} tone={weekdayMoneyTone(detail.averageWin)} />
+              <Metric label="Avg loss" value={formatCurrency(detail.averageLoss)} tone={weekdayMoneyTone(detail.averageLoss)} />
+              <Metric label="Avg trades / day" value={formatAverageTrades(detail.averageTradesPerDay)} />
             </div>
           </Panel>
 
-          <div className="mt-3 grid gap-3 xl:grid-cols-[1.45fr_.55fr]">
-            <Panel className="overflow-hidden p-5"><h2 className="font-semibold">{fullDay} trade log</h2><div className="mt-4 overflow-x-auto"><table className="w-full min-w-[720px] text-left text-xs"><thead className="text-[10px] text-white/40"><tr>{["Date", "Trade #", "Setup", "Rule status", "Risk", "Outcome context", "Review"].map((heading) => <th key={heading} className="border-b border-white/10 py-2 font-normal">{heading}</th>)}</tr></thead><tbody>{logRows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, columnIndex) => <td key={columnIndex} className={`border-b border-white/[0.07] py-2.5 ${columnIndex === 3 ? (cell === "Clean" ? "text-emerald-400" : "text-rose-400") : columnIndex === 5 ? (cell.startsWith("+") ? "text-emerald-400" : "text-rose-400") : "text-white/65"}`}>{cell}</td>)}<td className="border-b border-white/[0.07] py-2.5"><button className="rounded-lg border border-white/15 px-3 py-1 text-[10px] hover:bg-white/5">View trade</button></td></tr>)}</tbody></table></div></Panel>
-            <Panel className="flex flex-col justify-center p-6"><h2 className="text-xl font-semibold leading-tight">Review {fullDay}&apos;s rule-adherence pattern.</h2><p className="mt-3 text-sm leading-6 text-white/50">Review what was consistent across these {selected.clean} clean trades.</p><button className="mt-6 rounded-xl bg-gradient-to-r from-violet-600 to-blue-500 px-4 py-3 text-sm font-semibold hover:brightness-110">Review clean trades</button></Panel>
-          </div>
+
         </>
       )}
       <p className="mt-4 text-center text-[11px] text-white/40">Insights describe behaviour in your journal. They do not provide trading signals or predict results.</p>
     </div>
   );
 }
-function SetupEdge({ period }) {
+function SetupEdge({ period, analytics }) {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("All grades");
   const [sortBy, setSortBy] = useState("Evidence-ranked");
   const [page, setPage] = useState(1);
   const pageSize = 10;
-  const periodSetups = useMemo(() => getSetupsForPeriod(period), [period]);
+  const periodSetups = useMemo(() => getSetupsForPeriod(period, analytics), [period, analytics]);
   const filteredSetups = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return [...periodSetups]
@@ -1951,14 +1896,15 @@ function SetupEdge({ period }) {
         const matchesQuery = setup.name.toLowerCase().includes(normalizedQuery);
         const matchesStatus =
           status === "All grades" ||
-          (status === "A / A+ quality" && setup.executionScore >= 80) ||
-          (status === "B / C quality" && setup.executionScore >= 60 && setup.executionScore < 80) ||
-          (status === "D quality" && setup.executionScore < 60) ||
+          (status === "A / A+ quality" && setup.executionScore !== null && setup.executionScore >= 80) ||
+          (status === "B / C quality" && setup.executionScore !== null && setup.executionScore >= 60 && setup.executionScore < 80) ||
+          (status === "D quality" && setup.executionScore !== null && setup.executionScore < 60) ||
+          (status === "Needs rule evidence" && setup.executionScore === null) ||
           (status === "Provisional sample" && setup.sampleConfidence === "Provisional");
         return matchesQuery && matchesStatus;
       })
       .sort((a, b) => {
-        if (sortBy === "Highest quality") return b.executionScore - a.executionScore;
+        if (sortBy === "Highest quality") return (b.executionScore ?? -1) - (a.executionScore ?? -1);
         if (sortBy === "Most trades") return b.trades - a.trades;
         if (sortBy === "Historical P&L") return b.pnl - a.pnl;
         if (sortBy === "Name A–Z") return a.name.localeCompare(b.name);
@@ -1971,6 +1917,7 @@ function SetupEdge({ period }) {
     (activePage - 1) * pageSize,
     activePage * pageSize,
   );
+  if (analytics.trades.length === 0) return <Panel className="p-6"><h1 className="text-xl font-semibold">No completed trades in {periodProfiles[period].label.toLowerCase()}</h1><p className="mt-2 text-sm text-white/55">Choose another period to review your setups.</p></Panel>;
 
   return (
     <div>
@@ -1984,14 +1931,14 @@ function SetupEdge({ period }) {
             outcomes remain separate context and do not determine quality.
           </p>
         </div>
-        <span className="w-fit rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/55">
+        <span className="w-fit shrink-0 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-xs text-white/55">
           {periodSetups.length} logged setups · {periodProfiles[period].label}
         </span>
       </div>
 
       <Panel className="mt-5 overflow-hidden p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-[minmax(220px,1fr)_auto_auto] sm:items-center">
-          <label className="relative block">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(220px,1fr)_auto_auto] lg:items-center">
+          <label className="relative block sm:col-span-2 lg:col-span-1">
             <span className="sr-only">Search setups</span>
             <input
               value={query}
@@ -2012,7 +1959,7 @@ function SetupEdge({ period }) {
             }}
             className="rounded-xl border border-white/15 bg-[#0b121d] px-4 py-2.5 text-sm text-white/75"
           >
-            {["All grades", "A / A+ quality", "B / C quality", "D quality", "Provisional sample"].map(
+            {["All grades", "A / A+ quality", "B / C quality", "D quality", "Needs rule evidence", "Provisional sample"].map(
               (item) => (
                 <option key={item}>{item}</option>
               ),
@@ -2043,12 +1990,13 @@ function SetupEdge({ period }) {
           <span>Sample: Established 30+ · Developing 10–29 · Provisional below 10</span>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3 text-[11px] text-white/45 xl:hidden">
+        <div className="mt-4 flex items-center justify-between gap-3 text-[11px] text-white/45 min-[1800px]:hidden">
           <span>Setup and Trades stay visible</span>
           <span className="whitespace-nowrap text-cyan-200/80">Swipe to see more →</span>
         </div>
 
-        <div className="analytics-table-scrollbar mt-3 overflow-x-auto xl:mt-5">
+        <p className="mt-3 text-[11px] leading-5 text-white/45">Execution quality = 60% setup adherence + 40% clean-trade rate. A trade with several setup tags appears once in each relevant row; row totals can exceed total trades. Streaks use recorded close times when complete, otherwise saved log order.</p>
+        <div tabIndex={0} role="region" aria-label="Setup analysis table" className="analytics-table-scrollbar mt-3 overflow-x-auto xl:mt-5">
           <table className="w-full min-w-[1540px] border-separate border-spacing-0 text-left text-sm">
             <thead className="text-[11px] text-white/45">
               <tr>
@@ -2058,9 +2006,9 @@ function SetupEdge({ period }) {
                       key={heading}
                       className={`border-b border-white/15 pb-3 pr-5 font-normal ${
                         index === 0
-                          ? "sticky left-0 z-30 w-[210px] min-w-[210px] bg-[#0b111b]"
+                          ? "sticky left-0 z-30 w-[140px] min-w-[140px] sm:w-[210px] sm:min-w-[210px] bg-[#0b111b]"
                           : index === 1
-                            ? "sticky left-[210px] z-30 w-[90px] min-w-[90px] bg-[#0b111b] shadow-[12px_0_18px_-16px_rgba(0,0,0,.95)]"
+                            ? "sticky left-[140px] sm:left-[210px] z-30 w-[64px] min-w-[64px] sm:w-[90px] sm:min-w-[90px] bg-[#0b111b] shadow-[12px_0_18px_-16px_rgba(0,0,0,.95)]"
                             : ""
                       }`}
                     >
@@ -2073,21 +2021,21 @@ function SetupEdge({ period }) {
             <tbody>
               {visibleSetups.map((setup) => (
                 <tr key={setup.name} className="analytics-row">
-                  <td className="sticky left-0 z-20 w-[210px] min-w-[210px] border-b border-white/10 bg-[#0b111b] py-3.5 pr-5 font-medium text-violet-300">
+                  <td className="sticky left-0 z-20 w-[140px] min-w-[140px] sm:w-[210px] sm:min-w-[210px] border-b border-white/10 bg-[#0b111b] py-3.5 pr-5 font-medium text-violet-300">
                     {setup.name}
                   </td>
-                  <td className="sticky left-[210px] z-20 w-[90px] min-w-[90px] border-b border-white/10 bg-[#0b111b] py-3.5 pr-5 shadow-[12px_0_18px_-16px_rgba(0,0,0,.95)]">
+                  <td className="sticky left-[140px] sm:left-[210px] z-20 w-[64px] min-w-[64px] sm:w-[90px] sm:min-w-[90px] border-b border-white/10 bg-[#0b111b] py-3.5 pr-5 shadow-[12px_0_18px_-16px_rgba(0,0,0,.95)]">
                     {setup.trades}
                   </td>
                   <td className="border-b border-white/10 py-3.5 pr-5"><OutcomeRecord setup={setup} /></td>
                   <td className="border-b border-white/10 py-3.5 pr-5">
-                    <span className="inline-flex gap-2 font-mono text-xs whitespace-nowrap" aria-label={`Average win ${formatCurrency(setup.avgWin)}, average loss ${formatCurrency(setup.avgLoss)}`}>
-                      <span className="text-emerald-400">{formatCurrency(setup.avgWin)}</span>
-                      <span className="text-rose-400">{formatCurrency(setup.avgLoss)}</span>
+                    <span className="inline-flex gap-2 font-sans tabular-nums text-sm font-medium whitespace-nowrap" aria-label={`Average win ${formatCurrency(setup.avgWin)}, average loss ${formatCurrency(setup.avgLoss)}`}>
+                      <span className={weekdayMoneyTone(setup.avgWin)}>{formatCurrency(setup.avgWin)}</span>
+                      <span className={weekdayMoneyTone(setup.avgLoss)}>{formatCurrency(setup.avgLoss)}</span>
                     </span>
                   </td>
                   <td className="border-b border-white/10 py-3.5 pr-5">
-                    <span className="font-mono text-xs whitespace-nowrap" aria-label={`Maximum win streak ${setup.maxWinStreak}, maximum loss streak ${setup.maxLossStreak}`}>
+                    <span className="font-sans tabular-nums text-sm font-medium whitespace-nowrap" aria-label={`Maximum win streak ${setup.maxWinStreak}, maximum loss streak ${setup.maxLossStreak}; ${setup.streakOrder}`} title={setup.streakOrder}>
                       <span className="text-emerald-400">W{setup.maxWinStreak}</span>
                       <span className="px-1 text-white/25">/</span>
                       <span className="text-rose-400">L{setup.maxLossStreak}</span>
@@ -2097,7 +2045,7 @@ function SetupEdge({ period }) {
                     <OutcomeMix setup={setup} />
                   </td>
                   <td
-                    className="border-b border-white/10 py-3.5 pr-5 font-mono text-white/85"
+                    className="border-b border-white/10 py-3.5 pr-5 font-sans tabular-nums text-white/85"
                     aria-label={`${setup.historicalWinRate} percent historical win rate`}
                   >
                     {setup.historicalWinRate}%
@@ -2106,7 +2054,7 @@ function SetupEdge({ period }) {
                     <QualityBadge setup={setup} />
                   </td>
                   <td
-                    className={`border-b border-white/10 py-3.5 pr-5 font-mono ${setup.pnl >= 0 ? "text-emerald-400" : "text-rose-400"}`}
+                    className={`border-b border-white/10 py-3.5 pr-5 font-sans tabular-nums ${weekdayMoneyTone(setup.pnl)}`}
                   >
                     {formatCurrency(setup.pnl)}
                   </td>
@@ -2156,14 +2104,16 @@ function SetupEdge({ period }) {
   );
 }
 
-function Edge({ view, onChangeView, period }) {
+function Edge({ view, onChangeView, period, analytics, accountScope }) {
   return (
     <div>
-      <div className="mb-5 inline-flex rounded-xl border border-white/10 bg-white/[0.025] p-1">
-        {[['days', 'Day analysis'], ['setups', 'Setup analysis']].map(
+      <div className="mb-5 inline-flex max-w-full flex-wrap gap-1 rounded-xl border border-white/10 bg-white/[0.025] p-1">
+        {[['days', 'Day analysis'], ['setups', 'Setup analysis'], ['performance', 'Performance']].map(
           ([value, label]) => (
             <button
               key={value}
+              type="button"
+              aria-pressed={view === value}
               onClick={() => onChangeView(value)}
               className={`rounded-lg px-3 py-2 text-xs font-medium transition sm:px-4 ${view === value ? "bg-violet-500/20 text-violet-200" : "text-white/50 hover:text-white/80"}`}
             >
@@ -2172,7 +2122,7 @@ function Edge({ view, onChangeView, period }) {
           ),
         )}
       </div>
-      {view === "setups" ? <SetupEdge period={period} /> : <DayEdge period={period} />}
+      {view === "performance" ? <PerformanceTable trades={analytics.trades} scope={accountScope} periodLabel={periodProfiles[period].label} /> : view === "setups" ? <SetupEdge period={period} analytics={analytics} /> : <DayEdge period={period} analytics={analytics} />}
     </div>
   );
 }
@@ -2351,7 +2301,7 @@ function Coach({ analytics, period }) {
             <div className="mt-4 space-y-3">
               <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3"><div><p className="text-xs font-medium text-white/80">Complete the practice</p><p className="mt-1 text-[10px] text-white/40">Use all three checks across five sessions.</p></div><b className="whitespace-nowrap font-mono text-violet-200">{completedSessions}/{sessionGoal} sessions</b></div>
               <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-3"><div><p className="text-xs font-medium text-white/80">Improve clean execution</p><p className="mt-1 text-[10px] text-white/40">{practiceCleanRate === null ? "Measure only conclusive rule evidence." : `${conclusiveSessions.length} conclusive ${conclusiveSessions.length === 1 ? "session" : "sessions"} · ${focusRow.cleanDayRate}% baseline`}</p></div><b className="whitespace-nowrap font-mono text-cyan-200">{practiceCleanRate === null ? `${focusRow.cleanDayRate}% baseline` : `${practiceCleanRate}% practice`}</b></div>
-              <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-medium text-white/80">Close evidence gaps</p><p className="mt-1 text-[10px] text-white/40">Finish incomplete rule reviews.</p></div><b className="font-mono text-slate-300">{analytics.summary.needsEvidence} open</b></div>
+              <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-medium text-white/80">Close evidence gaps</p><p className="mt-1 text-[10px] text-white/40">Finish incomplete rule evaluations.</p></div><b className="font-mono text-slate-300">{analytics.summary.needsEvidence} need review</b></div>
             </div>
           </Panel>
           <Panel className="p-5 text-xs leading-5 text-white/45">
@@ -2372,7 +2322,8 @@ export default function AIAnalyticsMockup() {
     [tab, setTab] = useState("Overview"),
     [edgeView, setEdgeView] = useState("days"),
     [period, setPeriod] = useState("all"),
-    [introActive, setIntroActive] = useState(false);
+    [introActive, setIntroActive] = useState(false),
+    [accountAnalytics, setAccountAnalytics] = useState({ status: "loading", trades: [], setupNames: [], accountScope: "all accounts", error: null });
   useEffect(() => {
     let hasPlayed = false;
     try {
@@ -2398,6 +2349,30 @@ export default function AIAnalyticsMockup() {
       window.clearTimeout(timerId);
     };
   }, []);
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/ai-analytics/local-data", { cache: "no-store" })
+      .then(async (response) => {
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Unable to load account analytics.");
+        return payload;
+      })
+      .then((payload) => {
+        if (!cancelled) {
+          setAccountAnalytics({
+            status: "ready",
+            trades: payload.trades || [],
+            setupNames: payload.setupNames || [],
+            accountScope: payload.accountScope || "all accounts",
+            error: null,
+          });
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) setAccountAnalytics({ status: "error", trades: [], setupNames: [], accountScope: "all accounts", error: error.message });
+      });
+    return () => { cancelled = true; };
+  }, []);
   const handlePeriodChange = (nextPeriod) => {
     setIntroActive(false);
     setPeriod(nextPeriod);
@@ -2407,18 +2382,32 @@ export default function AIAnalyticsMockup() {
       // Keep the shared period control usable when browser storage is unavailable.
     }
   };
-  const periodAnalytics = useMemo(() => buildMockPeriodAnalytics(period), [period]);
+  const periodAnalytics = useMemo(
+    () => accountAnalytics.status === "ready"
+      ? buildPeriodAnalyticsFromTrades(accountAnalytics.trades, period, undefined, accountAnalytics.setupNames)
+      : buildMockPeriodAnalytics(period),
+    [accountAnalytics, period],
+  );
   const overviewData = useMemo(
     () => buildOverviewData(period, periodAnalytics),
     [period, periodAnalytics],
   );
-  if (!mounted)
+  if (!mounted || accountAnalytics.status === "loading")
     return (
       <div
         className="min-h-full bg-[#07101a]"
         aria-label="Loading AI Analytics mockup"
       />
     );
+  if (accountAnalytics.status === "error") return (
+    <div className="min-h-full bg-[#07101a] p-6 text-[#f4f6fb]">
+      <div className="mx-auto max-w-xl rounded-xl border border-amber-300/25 bg-amber-300/[0.05] p-5">
+        <h1 className="text-xl font-semibold">Account analytics could not load</h1>
+        <p className="mt-2 text-sm text-white/60">{accountAnalytics.error}</p>
+        <button type="button" onClick={() => window.location.reload()} className="mt-4 rounded-lg border border-white/20 px-3 py-2 text-sm hover:bg-white/5">Retry</button>
+      </div>
+    </div>
+  );
   return (
     <IntroMotionContext.Provider value={introActive}>
     <div className={`ai-analytics-motion min-h-full w-full min-w-0 max-w-full overflow-x-hidden bg-[#07101a] text-[#f4f6fb] ${introActive ? "ai-analytics-intro" : ""}`}>
@@ -2429,7 +2418,7 @@ export default function AIAnalyticsMockup() {
             aria-label="AI Analytics sections"
           >
             <div className="flex gap-3 sm:gap-7">
-              {["Overview", "EDGE", "Coach Me"].map((item) => (
+              {["Overview", "EDGE"].map((item) => (
                 <button
                   key={item}
                   onClick={() => {
@@ -2459,12 +2448,14 @@ export default function AIAnalyticsMockup() {
                 <p className="mt-1 text-base text-white/60">
                   Your trading discipline, clearly explained.
                 </p>
+                <p className="mt-2 text-[11px] text-cyan-300/75">Account logs · {accountAnalytics.trades.length} completed trades for {accountAnalytics.accountScope}</p>
               </div>
               <PeriodSelect value={period} onChange={handlePeriodChange} className="self-end sm:hidden" />
             </div>
             <Overview
               data={overviewData}
               analytics={periodAnalytics}
+              accountScope={accountAnalytics.accountScope}
               period={period}
               setTab={(item) => {
                 setIntroActive(false);
@@ -2486,20 +2477,14 @@ export default function AIAnalyticsMockup() {
             </div>
             <Edge
               view={edgeView}
+              accountScope={accountAnalytics.accountScope}
               period={period}
+              analytics={periodAnalytics}
               onChangeView={(view) => {
                 setIntroActive(false);
                 setEdgeView(view);
               }}
             />
-          </>
-        )}
-        {tab === "Coach Me" && (
-          <>
-            <div className="mb-4 flex justify-end sm:hidden">
-              <PeriodSelect value={period} onChange={handlePeriodChange} />
-            </div>
-            <Coach analytics={periodAnalytics} period={period} />
           </>
         )}
       </main>
