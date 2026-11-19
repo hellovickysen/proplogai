@@ -26,19 +26,19 @@ const shimmerStyle = `
 const gradientText = { background: 'linear-gradient(120deg,#a78bfa,#22d3ee)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
 
 const AI_PREVIEW = [
-  'Your biggest recurring mistake',
-  'Best and worst trading sessions',
-  'Emotional patterns that cost you money',
-  'Discipline score across all trades',
-  'One habit to improve this week',
+  'Historical win rate by setup',
+  'Patterns across sessions and weekdays',
+  'Which trades still need rule evidence',
+  'Trade frequency by day and session',
+  'One pattern to review next',
 ];
 
 const AI_UNDERSTANDS = [
-  { icon: '📖', label: 'Your trading rules' },
-  { icon: '📊', label: 'Your first trade' },
-  { icon: '📝', label: 'Your journal' },
-  { icon: '🧠', label: 'Your psychology' },
-  { icon: '🎯', label: 'Your trading style' },
+  { icon: '📖', label: 'Recorded rule evidence' },
+  { icon: '📊', label: 'Trade outcomes' },
+  { icon: '📝', label: 'Logged setups' },
+  { icon: '🕒', label: 'Trading sessions' },
+  { icon: '🎯', label: 'Trade frequency' },
 ];
 
 function StepBadge({ step, done, locked }) {
@@ -134,7 +134,7 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
   const coreMilestones = milestones.filter((m) => !m.bonus);
   const bonusMilestones = milestones.filter((m) => m.bonus);
 
-  // ─── AI Coach Activated (core 4 steps done) ───
+  // ─── AI Analytics ready (core 4 steps done) ───
   if (coreComplete) {
     return (
       <div className="mb-6 space-y-3">
@@ -142,13 +142,13 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
           <div className="flex flex-col items-center text-center">
             <div className="mb-3 text-4xl">🎉</div>
             <h3 className="mb-1 font-display text-xl font-bold" style={gradientText}>
-              Your AI Coach is Ready
+              Your AI Analytics is Ready
             </h3>
             <p className="mb-2 text-sm font-medium text-white">
               Congratulations, {displayName}!
             </p>
             <p className="mb-4 max-w-md text-sm leading-relaxed text-white/50">
-              Your AI now understands how you trade. The more you journal, the smarter it gets.
+              Your logged trades are ready to explore. Complete records make the historical patterns easier to interpret.
             </p>
             <div className="mb-5 flex flex-wrap justify-center gap-2">
               {AI_UNDERSTANDS.map((item) => (
@@ -160,11 +160,11 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
             </div>
             <div className="flex items-center gap-3">
               <Link
-                href="/dashboard/coach"
+                href="/dashboard/analytics"
                 className="rounded-xl px-6 py-2.5 text-sm font-semibold text-[#08080f]"
                 style={gradientBtn}
               >
-                Open AI Coach &rarr;
+                Open AI Analytics &rarr;
               </Link>
               <button
                 onClick={dismiss}
@@ -211,8 +211,8 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
           Welcome, {displayName} <span className="inline-block">👋</span>
         </h2>
         <p className="mt-1.5 text-sm leading-relaxed text-white/50">
-          You&apos;re not setting up an app &mdash; you&apos;re training your personal AI trading
-          coach. The more honestly you journal, the more personalized your coaching becomes.
+          You&apos;re building a trading record you can learn from. Complete logs make your
+          analytics more useful and easier to interpret.
         </p>
       </div>
 
@@ -330,7 +330,7 @@ export default function OnboardingChecklist({ milestones: rawMilestones, complet
               {showAiPreview && (
                 <div className="mt-2 mb-1 rounded-xl border border-violet-400/15 bg-violet-500/[0.04] p-3.5">
                   <div className="mb-2 text-xs font-semibold" style={gradientText}>
-                    After learning your trading habits, your AI coach will help you discover:
+                    With enough logged trades, AI Analytics can help you review:
                   </div>
                   <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
                     {AI_PREVIEW.map((item) => (

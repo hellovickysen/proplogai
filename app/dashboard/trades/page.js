@@ -4,7 +4,10 @@ import TradeFilters from '@/components/trades/TradeFilters';
 import ExportButton from '@/components/trades/ExportButton';
 import BlurGate from '@/components/ui/BlurGate';
 import { getUserAccess } from '@/lib/plans';
-import { getActiveAccountId, applyAccountFilter } from '@/lib/accounts';
+import { applyAccountFilter } from '@/lib/accounts';
+import { readAnalyticsAccountScope } from '@/lib/analytics-account-scope.mjs';
+import { redirect } from 'next/navigation';
+import { readTradeListJournals } from '@/lib/trade-list-data.mjs';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,12 +17,16 @@ export default async function TradesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Multi-account: get active account filter
-  const activeAccountId = await getActiveAccountId(supabase, user.id);
+  if (!user) redirect('/login');
+
+  // Match the effective selection shown in the header, including Basic access.
+  const scope = await readAnalyticsAccountScope(supabase, user);
+  if (scope.error) return <main className="p-6 text-white"><h1 className="text-xl font-semibold">Account selection unavailable</h1><p className="mt-2 text-sm text-white/60">{scope.error}</p></main>;
+  const { activeAccountId } = scope;
 
   let tradesQuery = supabase
     .from('trades')
-    .select('id, pair, direction, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, source, is_favorite')
+    .select('id, pair, direction, pnl, setup, setup_id, setup_followed, no_setup_reason, timeframe, session, trade_date, closed_at, created_at, entry_price, exit_price, stop_loss, take_profit, lot_size, is_favorite')
     .eq('user_id', user.id);
   tradesQuery = applyAccountFilter(tradesQuery, activeAccountId);
   const { data: trades, error: tradesError } = await tradesQuery
@@ -47,10 +54,7 @@ export default async function TradesPage() {
   const tradeIds = list.map((t) => t.id);
   let journalMap = {};
   if (tradeIds.length > 0) {
-    const { data: journals, error: journalError } = await supabase
-      .from('journal_entries')
-      .select('trade_id, emotions, tags, note, lesson, screenshot_url, screenshot_urls, confidence')
-      .in('trade_id', tradeIds);
+    const { data: journals, error: journalError } = await readTradeListJournals(supabase, user.id, tradeIds);
     if (journalError) console.error('journal entries error', journalError);
     (journals || []).forEach((j) => {
       const urls = Array.isArray(j.screenshot_urls) ? j.screenshot_urls.filter(Boolean) : [];

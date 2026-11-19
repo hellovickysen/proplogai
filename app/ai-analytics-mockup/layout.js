@@ -14,10 +14,21 @@ export const metadata = {
 export const dynamic = 'force-dynamic';
 
 export default async function AIAnalyticsMockupLayout({ children }) {
-  // Local review uses the same shared chrome components without requiring a
-  // Supabase session. Production uses DashboardLayout with the real user data.
-  if (process.env.NODE_ENV === 'development') {
+  // Local standalone review can use shared chrome without a Supabase session.
+  // Full-site local validation opts into the real authenticated dashboard shell.
+  if (
+    process.env.NODE_ENV === 'development'
+    && process.env.AI_ANALYTICS_USE_LOCAL_AUTH !== 'true'
+  ) {
     return <PreviewDashboardShell>{children}</PreviewDashboardShell>;
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    return (
+      <DashboardLayout>
+        <div className="min-w-0 w-full max-w-full overflow-x-hidden">{children}</div>
+      </DashboardLayout>
+    );
   }
 
   const access = getPreviewAccessConfig(process.env);
