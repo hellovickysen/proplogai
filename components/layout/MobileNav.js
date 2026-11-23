@@ -16,7 +16,8 @@ const NAV = [
   { label: 'Accounts',  icon: '📂', href: '/dashboard/accounts', elite: true },
   { label: 'Prop Expenses', icon: '💳', href: '/dashboard/prop-expenses' },
   { label: 'Trophies',  icon: '🏆', href: '/dashboard/trophies' },
-  { label: 'AI Coach',  icon: '✦', href: '/dashboard/coach' },
+  { label: 'AI Analytics', icon: '✦', href: '/dashboard/analytics' },
+  { label: 'AI Coach', icon: '✧', href: '/dashboard/coach' },
   { label: 'Tools',     icon: '🛠', href: '/dashboard/tools' },
   { label: 'Rewards',   icon: '🎁', href: '/dashboard/rewards' },
 ];
@@ -46,7 +47,7 @@ export default function MobileNav({ email, avatarUrl, isAdmin, adminNotifCount =
 
   function isActive(href) {
     if (href === '/dashboard') return pathname === '/dashboard';
-    if (href === '/dashboard/coach' && pathname === '/ai-analytics-mockup') return true;
+    if (href === '/dashboard/analytics' && pathname === '/ai-analytics-mockup') return true;
     if (href.includes('?')) {
       const [path, qs] = href.split('?');
       if (pathname !== path) return false;

@@ -4,7 +4,6 @@ import { computeStats, equitySeries, equityChartData, fmtMoney, num, getTradingD
 import EquityChart from '@/components/dashboard/EquityChart';
 import { computeDisciplineStats, computeWeeklyScore, computeEliteWeekStreak } from '@/lib/discipline';
 import { getUserAccess } from '@/lib/plans';
-import BetaFeatureWarning from '@/components/ui/BetaFeatureWarning';
 import UpgradeCard from '@/components/ui/UpgradeCard';
 import { computeAchievements } from '@/lib/achievements';
 import TradeTable from '@/components/trades/TradeTable';
@@ -159,8 +158,6 @@ export default async function DashboardPage() {
     .limit(1)
     .maybeSingle();
   if (coachError) console.error('coach insight error', coachError);
-  const report = coach && coach.mistakes ? coach.mistakes : null;
-  const topMistake = report && Array.isArray(report.recurring_mistakes) ? report.recurring_mistakes[0] : null;
 
   // Persona for daily coaching card
   const journalMap = {};
@@ -338,7 +335,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Right column: Calendar + Expenses + AI Coach */}
+        {/* Right column: Calendar + Expenses + AI Analytics */}
         <div className="min-w-0 space-y-6">
           <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <PnlCalendar trades={list} monthPnl={monthPnl} />
@@ -376,30 +373,15 @@ export default async function DashboardPage() {
             </div>
           )}
 
-          {/* AI Coach */}
+          {/* AI Analytics */}
           <div className="rounded-2xl border border-white/15 bg-gradient-to-b from-violet-500/10 to-cyan-500/5 p-5">
             <div className="flex items-center justify-between">
-              <div className="font-display text-sm font-semibold" style={gradientText}>&#10022; AI Coach</div>
-              <Link href="/dashboard/coach" className="flex min-h-[44px] items-center font-mono text-xs text-cyan-400">Open &rarr;</Link>
+              <div className="font-display text-sm font-semibold" style={gradientText}>&#10022; AI Analytics</div>
+              <Link href="/dashboard/analytics" className="flex min-h-[44px] items-center font-mono text-xs text-cyan-400">Open &rarr;</Link>
             </div>
-            {access.showWarning('coach_report') && (
-              <div className="mt-2"><BetaFeatureWarning feature="coach_report" featureLabel="AI Coach reports" /></div>
-            )}
-            {report ? (
-              <div className="mt-2">
-                {coach.summary ? <p className="text-sm leading-relaxed text-white/80">{coach.summary}</p> : null}
-                {topMistake ? (
-                  <p className="mt-2 text-xs text-white/55">
-                    Top recurring leak: <span className="text-white/80">{topMistake.pattern}</span>
-                    {topMistake.frequency ? ' (' + topMistake.frequency + ')' : ''}
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              <p className="mt-2 text-sm leading-relaxed text-white/55">
-                Generate a coaching report to see your recurring patterns.
-              </p>
-            )}
+            <p className="mt-2 text-sm leading-relaxed text-white/55">
+              Explore historical trade outcomes, setup patterns, and rule evidence from your logs.
+            </p>
           </div>
         </div>
       </div>

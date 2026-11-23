@@ -46,8 +46,8 @@ const TOUR_STEPS = [
   {
     page: '/dashboard',
     target: '[data-tour="nav-coach"]',
-    title: 'Get AI coaching',
-    description: 'After logging 5+ trades, the AI Coach analyzes your patterns — finds recurring mistakes, ranks them by cost, and gives you concrete fixes. Your personal trading psychologist.',
+    title: 'Explore AI Analytics',
+    description: 'Review historical trade outcomes, setup patterns, and the rule evidence available in your logs. Past performance does not predict future results.',
     icon: '✦',
     position: 'right',
   },

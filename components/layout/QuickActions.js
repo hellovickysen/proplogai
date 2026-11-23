@@ -10,7 +10,7 @@ const ACTIONS = [
   { label: 'Add Expense', icon: '💳', href: '/dashboard/prop-expenses?action=add' },
   { label: 'Add Payout', icon: '💰', href: '/dashboard/prop-expenses?tab=payouts&action=add' },
   { label: 'Add Trophy', icon: '🏆', href: '/dashboard/trophies?action=add' },
-  { label: 'AI Coach', icon: '✦', href: '/dashboard/coach' },
+  { label: 'AI Analytics', icon: '✦', href: '/dashboard/analytics' },
 ];
 
 export default function QuickActions() {
